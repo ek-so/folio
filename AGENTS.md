@@ -32,7 +32,7 @@ React + Vite PWA. Reads/writes markdown files from any GitHub repo via the GitHu
 - Use `cn()` from `@/lib/utils` to merge classes conditionally.
 - **One control size.** Every tappable or input element is 40px tall: `Button` (default), `size="icon"` (40×40), `Input`, menu items, list rows, sheet close. Breadcrumb links sit on 24px lines with an invisible 40px tap area. Segmented toggles: a 40px track (`rounded-lg`, `p-1`) with 32px segments (`rounded-sm`) inside. Build controls from `Button`/`Input` instead of raw elements; don't override heights or add size variants.
 - **Icons are 16px** (`size-4`). `Button` and menu items size icons by default — don't pass size classes.
-- **Every screen uses `Header`.** Inner screens (folders, notes) show `← title`, with `PathBreadcrumbs` at the top of the scrolling content (not fixed); no separate home button.
+- **Every screen uses `Header`.** Inner screens (folders, notes) show `← title`, with `PathBreadcrumbs` at the top of the scrolling content (not fixed); no separate home button. On mobile, 2+ levels below home collapse into one dropdown (current ▾, current checked).
 - Never hardcode colors — use Tailwind semantic tokens (`bg-background`, `text-foreground`, `text-muted-foreground`, `bg-primary`, etc.).
 
 ### CSS variables (defined in `src/index.css`, with light and dark values)
