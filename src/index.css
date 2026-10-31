@@ -51,6 +51,14 @@
     /* Code block background: very light accent tint */
     --code-bg: oklch(0.94 0.025 240);
 
+    /* Callout (GitHub alert) colors; both themes tint them against --background */
+    --callout-note: oklch(0.6 0.15 250);
+    --callout-tip: oklch(0.62 0.15 150);
+    --callout-important: oklch(0.58 0.18 300);
+    --callout-warning: oklch(0.72 0.15 75);
+    --callout-caution: oklch(0.6 0.2 27);
+    --callout-tint: 14%;
+
     --radius: 0.75rem;
 
     --safe-top: env(safe-area-inset-top, 0px);
@@ -96,6 +104,7 @@
 
       /* Code block background: darker than secondary, slight accent tint */
       --code-bg: oklch(0.13 0.025 240);
+      --callout-tint: 24%;
     }
   }
 
@@ -137,6 +146,7 @@
 
     /* Code block background: darker than secondary, slight accent tint */
     --code-bg: oklch(0.13 0.025 240);
+    --callout-tint: 24%;
   }
 }
 

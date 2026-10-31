@@ -50,6 +50,7 @@ React + Vite PWA. Reads/writes markdown files from any GitHub repo via the GitHu
 | `bg-destructive` | Errors / danger |
 | `bg-success` / `text-success-foreground` | Success feedback, e.g. "Synced" (light green) |
 | `bg-segment` / `bg-segment-active` | Segmented toggle track / selected segment (lighter in both themes) |
+| `--callout-*` / `--callout-tint` | GitHub alert callouts in the preview (note, tip, important, warning, caution); tinted against the background |
 | `--radius` | `0.75rem` base radius |
 
 `--safe-top` / `--safe-bottom` hold the iOS safe-area insets. `src/App.css` only styles the generated markdown preview HTML, using the tokens above.

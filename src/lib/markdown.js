@@ -16,6 +16,18 @@ marked.use({ extensions: [{
   },
 }] })
 
+// GitHub alerts: "> [!NOTE]" (TIP, IMPORTANT, WARNING, CAUTION) on its own
+// line becomes a colored callout, without the label.
+const ALERT = /^\[!(note|tip|important|warning|caution)\][ \t]*(?:\n|$)/i
+marked.use({ useNewRenderer: true, renderer: {
+  blockquote({ text }) {
+    const m = text.match(ALERT)
+    if (!m) return false
+    const body = this.parser.parse(marked.lexer(text.slice(m[0].length)))
+    return `<blockquote class="callout callout-${m[1].toLowerCase()}">\n${body}</blockquote>\n`
+  },
+} })
+
 // HTML (unsanitized) where each top-level block is wrapped in
 // <div data-src="start" data-len="length"> pointing at its markdown source.
 export function renderBlocks(markdown) {

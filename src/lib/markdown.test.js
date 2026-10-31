@@ -16,6 +16,14 @@ describe('markdown', () => {
     expect(renderBlocks('—')).not.toContain('<hr>')
   })
 
+  it('renders GitHub alerts as callouts without the label', () => {
+    const html = renderBlocks('> [!WARNING]\n> Mind the **gap**.')
+    expect(html).toContain('class="callout callout-warning"')
+    expect(html).toContain('Mind the <strong>gap</strong>.')
+    expect(html).not.toContain('[!WARNING]')
+    expect(renderBlocks('> plain quote')).not.toContain('callout')
+  })
+
   it('maps a tap to the same occurrence and letter of the word', () => {
     const raw = 'a cat and a **cat** here'
     // rendered "a cat and a cat here", tap inside the second "cat" after "c"
