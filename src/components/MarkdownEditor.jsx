@@ -5,38 +5,17 @@ import { cn } from '@/lib/utils.js'
 // Shared by the textarea and its styling layer so they line up exactly
 const TEXT_LAYOUT = 'w-full h-full px-5 py-4 font-mono text-base leading-relaxed whitespace-pre-wrap break-words'
 
-const DRAG_PX = 10
-const LONG_PRESS_MS = 400
-
 // Markdown text box with live styling: a transparent textarea over a styled
 // copy of the same text. The ref is the textarea.
 //
 // Closing the keyboard in any way calls onDone (back to preview): iOS Done,
-// tapping elsewhere, Escape, or dragging the text while typing. A long
-// press (text selection) doesn't count as a drag.
+// tapping elsewhere or Escape. Scrolling keeps editing.
 const MarkdownEditor = forwardRef(function MarkdownEditor({ content, onChange, onDone }, textareaRef) {
   const highlightRef = useRef()
-  const dragRef = useRef(null)
   const highlighted = useMemo(() => highlightMarkdown(content), [content])
 
-  function handleTouchStart(e) {
-    const focused = document.activeElement === e.currentTarget
-    dragRef.current = focused ? { y: e.touches[0].clientY, time: e.timeStamp } : null
-  }
-
-  function handleTouchMove(e) {
-    const drag = dragRef.current
-    if (!drag) return
-    if (e.timeStamp - drag.time > LONG_PRESS_MS) {
-      dragRef.current = null
-    } else if (Math.abs(e.touches[0].clientY - drag.y) > DRAG_PX) {
-      dragRef.current = null
-      e.currentTarget.blur()
-    }
-  }
-
   return (
-    // data-no-pull: drags here scroll or hide the keyboard, never refresh
+    // data-no-pull: drags here scroll, never refresh
     <div className="relative flex-1 min-h-0 bg-background" data-no-pull>
       <pre
         ref={highlightRef}
@@ -53,8 +32,6 @@ const MarkdownEditor = forwardRef(function MarkdownEditor({ content, onChange, o
         onScroll={e => { highlightRef.current.scrollTop = e.currentTarget.scrollTop }}
         onBlur={onDone}
         onKeyDown={e => e.key === 'Escape' && e.currentTarget.blur()}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
         spellCheck="true"
         autoCorrect="on"
         placeholder="Start writing…"
