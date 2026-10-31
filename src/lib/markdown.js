@@ -17,14 +17,16 @@ marked.use({ extensions: [{
 }] })
 
 // GitHub alerts: "> [!NOTE]" (TIP, IMPORTANT, WARNING, CAUTION) on its own
-// line becomes a colored callout, without the label.
+// line becomes a colored callout, titled "Note", "Tip"…
 const ALERT = /^\[!(note|tip|important|warning|caution)\][ \t]*(?:\n|$)/i
 marked.use({ useNewRenderer: true, renderer: {
   blockquote({ text }) {
     const m = text.match(ALERT)
     if (!m) return false
     const body = this.parser.parse(marked.lexer(text.slice(m[0].length)))
-    return `<blockquote class="callout callout-${m[1].toLowerCase()}">\n${body}</blockquote>\n`
+    const type = m[1].toLowerCase()
+    const title = type[0].toUpperCase() + type.slice(1)
+    return `<blockquote class="callout callout-${type}">\n<p class="callout-title">${title}</p>\n${body}</blockquote>\n`
   },
 } })
 

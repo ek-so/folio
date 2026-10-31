@@ -16,9 +16,10 @@ describe('markdown', () => {
     expect(renderBlocks('—')).not.toContain('<hr>')
   })
 
-  it('renders GitHub alerts as callouts without the label', () => {
+  it('renders GitHub alerts as titled callouts', () => {
     const html = renderBlocks('> [!WARNING]\n> Mind the **gap**.')
     expect(html).toContain('class="callout callout-warning"')
+    expect(html).toContain('<p class="callout-title">Warning</p>')
     expect(html).toContain('Mind the <strong>gap</strong>.')
     expect(html).not.toContain('[!WARNING]')
     expect(renderBlocks('> plain quote')).not.toContain('callout')
