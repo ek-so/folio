@@ -3,6 +3,7 @@ import { flushSync } from 'react-dom'
 import { Check, MagnifyingGlass } from '@phosphor-icons/react'
 import { Button } from './ui/button.jsx'
 import Header from './Header.jsx'
+import Footer from './Footer.jsx'
 import ItemMenu from './ItemMenu.jsx'
 import PathBreadcrumbs from './PathBreadcrumbs.jsx'
 import Spinner from './Spinner.jsx'
@@ -13,7 +14,7 @@ import { displayName } from '../lib/files.js'
 import PageLayout from './PageLayout.jsx'
 
 // A note: shown as preview; tapping text edits its markdown there. Edits
-// save on their own; ✓ / Done only switches back to preview.
+// save on their own; ✓ (in the footer, above the keyboard) only switches back to preview.
 export default function Editor({ path, root, entry, files, edited, onEdit, onNavigate, onOpenFile, onRename, onDelete, onMove, folders, syncButton, onSearch }) {
   const { content, change, loading, loadError } = useNote(entry, edited, onEdit)
   const [mode, setMode] = useState('preview')
@@ -50,13 +51,6 @@ export default function Editor({ path, root, entry, files, edited, onEdit, onNav
           <MagnifyingGlass />
         </Button>
         <ItemMenu item={{ name: path.split('/').pop(), path, type: 'file' }} onRename={onRename} onDelete={onDelete} onMove={onMove} folders={folders} />
-        {mode === 'edit' && (
-          // For desktop, where there's no keyboard Done
-          <Button size="icon" onClick={finishEditing} aria-label="Done" className="shrink-0">
-            <Check />
-          </Button>
-        )}
-        {syncButton}
       </Header>
       <div className="flex flex-col flex-1 min-h-0 max-w-[1000px] mx-auto w-full">
         {loading || loadError ? (
@@ -73,6 +67,14 @@ export default function Editor({ path, root, entry, files, edited, onEdit, onNav
           <MarkdownPreview content={content} path={path} files={files} scrollTo={editedAt} onTap={startEditing} onOpenFile={onOpenFile} onNavigate={onNavigate} />
         )}
       </div>
+      <Footer>
+        {mode === 'edit' && (
+          <Button size="icon" onClick={finishEditing} aria-label="Done" className="shrink-0">
+            <Check />
+          </Button>
+        )}
+        {syncButton}
+      </Footer>
     </PageLayout>
   )
 }

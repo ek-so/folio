@@ -3,6 +3,7 @@ import { Plus, FileText, Folder, MagnifyingGlass } from '@phosphor-icons/react'
 import { Button } from './ui/button.jsx'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from './ui/dropdown-menu.jsx'
 import Header from './Header.jsx'
+import Footer from './Footer.jsx'
 import PathBreadcrumbs from './PathBreadcrumbs.jsx'
 import ItemMenu from './ItemMenu.jsx'
 import { splitName } from '../lib/changes.js'
@@ -77,21 +78,9 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
         {path && (
           <ItemMenu item={{ name: currentFolder, path, type: 'dir' }} onRename={onRename} onDelete={onDelete} onMove={onMove} folders={folders} />
         )}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button size="icon" aria-label="New" className="shrink-0">
-              <Plus />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" onCloseAutoFocus={e => e.preventDefault()}>
-            <DropdownMenuItem onSelect={() => onNewFile(path, 'note')}><FileText /> New note</DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => onNewFile(path, 'folder')}><Folder /> New folder</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-        {syncButton}
       </Header>
 
-      <div className="flex-1 min-h-0 overflow-y-auto overscroll-y-contain" style={{ WebkitOverflowScrolling: 'touch', paddingBottom: 'var(--safe-bottom)' }}>
+      <div className="flex-1 min-h-0 overflow-y-auto overscroll-y-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
         <div className="max-w-[1000px] mx-auto">
         {loading && (
           <div className="flex justify-center py-12">
@@ -175,6 +164,21 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
         )}
         </div>
       </div>
+
+      <Footer>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button size="icon" aria-label="New" className="shrink-0">
+              <Plus />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" onCloseAutoFocus={e => e.preventDefault()}>
+            <DropdownMenuItem onSelect={() => onNewFile(path, 'note')}><FileText /> New note</DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => onNewFile(path, 'folder')}><Folder /> New folder</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        {syncButton}
+      </Footer>
     </PageLayout>
   )
 }
