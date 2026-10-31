@@ -9,6 +9,7 @@ import ConflictModal from './components/ConflictModal.jsx'
 import SyncButton from './components/SyncButton.jsx'
 import SearchSheet from './components/SearchSheet.jsx'
 import SignOutModal from './components/SignOutModal.jsx'
+import DiscardModal from './components/DiscardModal.jsx'
 import AccountMenu from './components/AccountMenu.jsx'
 import Settings from './components/Settings.jsx'
 import Spinner from './components/Spinner.jsx'
@@ -34,6 +35,8 @@ export default function App() {
   const [newFile, setNewFile] = useState(null) // { folder, kind } while the sheet is open
   const [showSettings, setShowSettings] = useState(storage.getSettingsOpen)
   const [confirmSignOut, setConfirmSignOut] = useState(false)
+  const [confirmDiscard, setConfirmDiscard] = useState(false)
+  const [discards, setDiscards] = useState(0) // remounts the open note after a discard
   const [searchOpen, setSearchOpen] = useState(false)
 
   useEffect(() => { storage.setFolder(folder) }, [folder])
@@ -101,6 +104,16 @@ export default function App() {
     return null
   }
 
+  // Drop all local changes; leave a note or folder that only existed locally
+  function discardChanges() {
+    setConfirmDiscard(false)
+    repo.discardAll()
+    const files = repo.remote?.files ?? {}
+    if (selectedFile && !files[selectedFile]) setSelectedFile(null)
+    if (folder && !getAllFolders(files).includes(folder)) setFolder('')
+    setDiscards(n => n + 1)
+  }
+
   async function signOut() {
     setConfirmSignOut(false)
     setShowSettings(false)
@@ -125,6 +138,17 @@ export default function App() {
   const entry = selectedFile && virtual[selectedFile]
   const repoName = auth.repo.split('/')[1]
   const allFolders = getAllFolders(virtual)
+  const syncButton = (
+    <SyncButton
+      syncState={repo.syncState}
+      syncing={repo.syncing}
+      changeCount={repo.changeCount}
+      remoteAhead={repo.remoteAhead}
+      onSync={repo.sync}
+      onPull={repo.pullChanges}
+      onDiscard={() => setConfirmDiscard(true)}
+    />
+  )
 
   return (
     <div className="flex flex-col h-full bg-background">
@@ -133,7 +157,7 @@ export default function App() {
           <Settings login={auth.user.login} repo={auth.repo} onBack={() => setShowSettings(false)} />
         ) : entry ? (
           <Editor
-            key={selectedFile}
+            key={`${selectedFile}:${discards}`}
             path={selectedFile}
             entry={entry}
             files={virtual}
@@ -147,7 +171,7 @@ export default function App() {
             onDelete={handleDelete}
             onMove={handleMove}
             folders={allFolders}
-            syncButton={<SyncButton syncState={repo.syncState} syncing={repo.syncing} changeCount={repo.changeCount} remoteAhead={repo.remoteAhead} onSync={repo.sync} />}
+            syncButton={syncButton}
             onSearch={() => setSearchOpen(true)}
           />
         ) : (
@@ -174,11 +198,15 @@ export default function App() {
             onSelect={setSelectedFile}
             onNewFile={(f, kind) => setNewFile({ folder: f, kind })}
             repoName={repoName}
-            syncButton={<SyncButton syncState={repo.syncState} syncing={repo.syncing} changeCount={repo.changeCount} remoteAhead={repo.remoteAhead} onSync={repo.sync} />}
+            syncButton={syncButton}
             onSearch={() => setSearchOpen(true)}
           />
         )}
       </PullToRefresh>
+
+      {confirmDiscard && (
+        <DiscardModal changeCount={repo.changeCount} onDiscard={discardChanges} onClose={() => setConfirmDiscard(false)} />
+      )}
 
       {confirmSignOut && (
         <SignOutModal changeCount={repo.changeCount} onSignOut={signOut} onClose={() => setConfirmSignOut(false)} />

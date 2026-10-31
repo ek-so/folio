@@ -141,11 +141,15 @@ export function useRepo(repo) {
   }
 
   // Fetch the latest tree; warn about conflicts with local changes
+  async function fetchLatest() {
+    const latest = await pull()
+    setError('')
+    setConflictPaths(conflicts(changesRef.current, latest.files))
+  }
+
   async function refresh() {
     try {
-      const latest = await pull()
-      setError('')
-      setConflictPaths(conflicts(changesRef.current, latest.files))
+      await fetchLatest()
     } catch (e) {
       handleError(e)
     }
@@ -195,6 +199,12 @@ export function useRepo(repo) {
     })
   }
 
+  // Pull only, from the Sync menu; local changes stay
+  function pullChanges() {
+    if (syncing) return
+    return run(fetchLatest)
+  }
+
   function pushLocal() {
     return run(async () => {
       await push(await pull())
@@ -207,7 +217,10 @@ export function useRepo(repo) {
     setConflictPaths([])
   }
 
+  // Drop every local change, including typing not yet reported by an open note
   function discardAll() {
+    window.dispatchEvent(new Event('folio:flush'))
+    setConflictPaths([])
     localChanges.clear(repo)
     changesRef.current = empty()
     setChanges(changesRef.current)
@@ -216,6 +229,6 @@ export function useRepo(repo) {
   return {
     remote, error, online, virtual, changes, changed, changeCount: count(changes),
     conflictPaths, dismissConflicts: () => setConflictPaths([]),
-    syncing, syncState, remoteAhead, update, sync, pushLocal, takeRemote, discardAll,
+    syncing, syncState, remoteAhead, update, sync, pullChanges, pushLocal, takeRemote, discardAll,
   }
 }
