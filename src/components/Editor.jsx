@@ -14,7 +14,7 @@ import { displayName } from '../lib/files.js'
 import PageLayout from './PageLayout.jsx'
 
 // A note: shown as preview; tapping text edits its markdown there. Edits
-// save on their own; ✓ (in the footer, above the keyboard) only switches back to preview.
+// save on their own; ✓ in the footer only switches back to preview.
 export default function Editor({ path, root, entry, files, edited, onEdit, onNavigate, onOpenFile, onRename, onDelete, onMove, folders, syncButton, onSearch }) {
   const { content, change, loading, loadError } = useNote(entry, edited, onEdit)
   const [mode, setMode] = useState('preview')
