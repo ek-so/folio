@@ -20,7 +20,7 @@ export default function PullToRefresh({ onRefresh, children }) {
 
   function onTouchStart(e) {
     // Not while typing, nor inside areas that opt out (the markdown editor):
-    // there a drag scrolls or hides the keyboard
+    // there a drag scrolls
     const typing = document.activeElement?.matches('textarea, input')
     const optedOut = e.target.closest('[data-no-pull]')
     const blocked = refreshing || typing || optedOut || scrolledAncestor(e.target, rootRef.current)
