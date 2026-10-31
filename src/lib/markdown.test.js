@@ -9,6 +9,13 @@ describe('markdown', () => {
     expect(starts).toEqual(['# Title\n\n', 'Some **bold** text.\n'])
   })
 
+  it('renders smart-punctuated dashes as a divider', () => {
+    expect(renderBlocks('a\n\n—-\n\nb')).toContain('<hr>')
+    expect(renderBlocks('a\n—-\nb')).toContain('<hr>')
+    expect(renderBlocks('x — y')).not.toContain('<hr>')
+    expect(renderBlocks('—')).not.toContain('<hr>')
+  })
+
   it('maps a tap to the same occurrence and letter of the word', () => {
     const raw = 'a cat and a **cat** here'
     // rendered "a cat and a cat here", tap inside the second "cat" after "c"

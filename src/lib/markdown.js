@@ -2,6 +2,20 @@ import { marked } from 'marked'
 
 marked.setOptions({ breaks: true, gfm: true })
 
+// Phones' smart punctuation turns "---" into "—-" (and "--" into "—").
+// Treat a line of em dashes and hyphens worth 3+ hyphens as a divider.
+const DASH_LINE = /^ {0,3}([—-]*—[—-]*)[ \t]*(?:\n+|$)/
+marked.use({ extensions: [{
+  name: 'dashDivider',
+  level: 'block',
+  start: src => src.match(/^ {0,3}[—-]*—[—-]*[ \t]*$/m)?.index,
+  tokenizer(src) {
+    const m = src.match(DASH_LINE)
+    if (!m || [...m[1]].reduce((n, c) => n + (c === '—' ? 2 : 1), 0) < 3) return
+    return { type: 'hr', raw: m[0] }
+  },
+}] })
+
 // HTML (unsanitized) where each top-level block is wrapped in
 // <div data-src="start" data-len="length"> pointing at its markdown source.
 export function renderBlocks(markdown) {
