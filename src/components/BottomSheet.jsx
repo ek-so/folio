@@ -14,9 +14,20 @@ function useIsDesktop() {
   return isDesktop
 }
 
+// Radix locks the page while a dialog is open. If a lock outlives every open
+// dialog (overlapping menus/dialogs can cause that), nothing reacts until a
+// reload, so clear it once this sheet is gone and no other dialog is open.
+function releaseStalePageLock() {
+  setTimeout(() => {
+    if (document.querySelector('[role=dialog][data-state=open]')) return
+    if (document.body.style.pointerEvents === 'none') document.body.style.pointerEvents = ''
+  }, 0)
+}
+
 export default function BottomSheet({ title, description, onClose, onOpenAutoFocus, children }) {
   const isDesktop = useIsDesktop()
   const keyboard = useKeyboardInset()
+  useEffect(() => releaseStalePageLock, [])
 
   if (isDesktop) {
     return (

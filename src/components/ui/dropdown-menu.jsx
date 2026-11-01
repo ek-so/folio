@@ -2,8 +2,10 @@ import * as React from 'react'
 import * as DropdownMenuPrimitive from '@radix-ui/react-dropdown-menu'
 import { cn } from '@/lib/utils'
 
-function DropdownMenu(props) {
-  return <DropdownMenuPrimitive.Root data-slot="dropdown-menu" {...props} />
+// Non-modal: a modal menu locks the page (pointer-events: none on body), and
+// when it opens a dialog that lock can be left behind, freezing every button
+function DropdownMenu({ modal = false, ...props }) {
+  return <DropdownMenuPrimitive.Root data-slot="dropdown-menu" modal={modal} {...props} />
 }
 
 function DropdownMenuTrigger(props) {
