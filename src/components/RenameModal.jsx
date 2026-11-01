@@ -1,8 +1,9 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useContext } from 'react'
 import { Button } from './ui/button.jsx'
 import { Input } from './ui/input.jsx'
 import BottomSheet from './BottomSheet.jsx'
-import { splitName } from '../lib/changes.js'
+import { splitName, renameTarget } from '../lib/changes.js'
+import { LinksContext } from '../hooks/useLinkIndex.js'
 
 export default function RenameModal({ item, onRename, onClose }) {
   const isDir = item.type === 'dir'
@@ -10,6 +11,10 @@ export default function RenameModal({ item, onRename, onClose }) {
   const [name, setName] = useState(currentName)
   const [error, setError] = useState('')
   const inputRef = useRef()
+  const linkInfo = useContext(LinksContext)
+  const trimmed = name.trim()
+  const linkCount = trimmed && trimmed !== currentName && linkInfo
+    ? linkInfo.rewriteCount(item, renameTarget(item, trimmed)) : 0
 
   function handleRename(e) {
     e.preventDefault()
@@ -37,6 +42,9 @@ export default function RenameModal({ item, onRename, onClose }) {
           {ext && <span className="text-muted-foreground shrink-0">{ext}</span>}
         </div>
         {error && <p className="text-destructive text-xs">{error}</p>}
+        {linkCount > 0 && (
+          <p className="text-muted-foreground text-xs">Also updates links in {linkCount} note{linkCount === 1 ? '' : 's'}.</p>
+        )}
         <div className="flex justify-end gap-2">
           <Button type="button" variant="secondary" onClick={onClose}>Cancel</Button>
           <Button type="submit" disabled={!name.trim()}>Save</Button>

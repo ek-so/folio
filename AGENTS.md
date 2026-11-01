@@ -65,13 +65,15 @@ React + Vite PWA. Reads/writes markdown files from any GitHub repo via the GitHu
 - `src/lib/github.js` — all GitHub API calls. `init(token)` sets up Octokit; `setRepo(owner, repo)` sets target repo. Blob reads go through the offline cache.
 - `src/lib/changes.js` — pure model of local changes (edits, renames, deletes, new files) layered over the remote tree. Covered by `changes.test.js` (`npm test`).
 - `src/lib/markdown.js` — preview rendering (blocks tagged with their source range), tap-to-source mapping, markdown highlighting for the editor, image paths.
+- `src/lib/links.js` — internal links (regular markdown only, no wiki links): extracting them (code ignored), the backlink / broken-link index, rewriting them when files move (same style: relative, `.md` or not, encoding, anchors; link text equal to the old name follows), and Fix suggestions for broken links. Tested in `links.test.js`.
 - `src/lib/files.js` — file-type and name helpers (`imageMime`, `isImage`, `displayName`).
 - `src/lib/cache.js` — IndexedDB copies of the last tree and of blobs (by sha) for offline use.
-- `src/lib/storage.js` — localStorage/sessionStorage: token, repo, cached user, theme, local changes, open folder/note.
-- `src/hooks/` — `useAuth` (token/user/repo), `useRepo` (remote tree, local changes, sync), `useNote` (one note's text, edit tracking), `useRepoImages`, `useTheme`. `App.jsx` is layout and UI actions.
+- `src/lib/storage.js` — localStorage/sessionStorage: token, repo, cached user, theme, local changes, open folder/note/page, recent files.
+- `src/hooks/` — `useAuth` (token/user/repo), `useRepo` (remote tree, local changes, sync), `useNote` (one note's text, edit tracking), `useLinkIndex` (link index), `useRepoImages`, `useTheme`. `App.jsx` is layout and UI actions.
 - Notes: `Editor` switches between `MarkdownPreview` (tap to edit) and `MarkdownEditor` (highlighted textarea). Scrolling while editing stays in markdown; closing the keyboard (iOS Done, tapping elsewhere, Escape) or ✓ returns to preview.
 - Images and PDFs open read-only in `FileViewer` (content via `useBlob`); PDFs render every page with pdf.js (`PdfView`, loaded on first use). `Editor` and `FileViewer` share `FilePage` (header, footer).
-- Home header: `AccountMenu` (☰ owner / repo) opens a popover with theme (light/dark/system) and Settings / Sign out. `Settings` is its own page.
+- Home header: `AccountMenu` (☰ owner / repo) opens a popover with theme (light/dark/system), Broken links (count), Settings and Sign out. `Settings` and `BrokenLinks` are app pages (`page` in App, remembered across reloads).
+- Links: `useLinkIndex` reads every note (local edit, else the offline copy) and indexes links on the device — nothing is stored in the repo. Notes show `Backlinks` ("Linked from") under the preview. Rename and Move rewrite every affected link in the same local changes (one commit on Sync); the sheets say how many notes are affected (`LinksContext`).
 - Rename/Move/Delete for any file or folder go through `ItemMenu` (⋯), on list rows and in the header of the open folder or note. `SearchSheet` finds any visible file by path; with no query it lists recently opened files.
 - A failed Sync / Push / Pull (not offline) opens `SyncErrorModal`: plain explanation from `lib/syncErrors.js` (`describeSyncError`), what to do, GitHub's raw answer and the step it failed at (tagged in `lib/github.js`), plus Try again.
 - Dropdown menus are non-modal (`ui/dropdown-menu` default): a modal menu locks the page, and when it opens a dialog that lock can stick and freeze every button. `BottomSheet` also clears a stale lock when it closes. On iOS, `lib/viewport.js` scrolls the page back after the keyboard closes.

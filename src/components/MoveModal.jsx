@@ -1,12 +1,14 @@
-import { useState } from 'react'
+import { useState, useContext } from 'react'
 import { Folder } from '@phosphor-icons/react'
 import { Button } from './ui/button.jsx'
 import { Input } from './ui/input.jsx'
 import BottomSheet from './BottomSheet.jsx'
+import { LinksContext } from '../hooks/useLinkIndex.js'
 
 export default function MoveModal({ item, folders, onMove, onClose }) {
   const [query, setQuery] = useState('')
   const [error, setError] = useState('')
+  const linkedFrom = useContext(LinksContext)?.linkedFrom(item) ?? 0
 
   const itemFolder = item.path.includes('/') ? item.path.slice(0, item.path.lastIndexOf('/')) : ''
 
@@ -42,6 +44,11 @@ export default function MoveModal({ item, folders, onMove, onClose }) {
           className="bg-background border-border"
         />
         {error && <p className="text-destructive text-xs">{error}</p>}
+        {linkedFrom > 0 && (
+          <p className="text-muted-foreground text-xs">
+            {linkedFrom} note{linkedFrom === 1 ? ' links' : 's link'} here; {linkedFrom === 1 ? 'its link' : 'their links'} will be updated.
+          </p>
+        )}
         <ul className="flex flex-col gap-0.5 max-h-64 overflow-y-auto -mx-1">
           {filtered.map(folder => (
             <li key={folder || '__root__'}>

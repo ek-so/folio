@@ -2,6 +2,7 @@ import { useMemo, useEffect, useRef, useState } from 'react'
 import DOMPurify from 'dompurify'
 import { renderBlocks, tapOffset, resolveImage } from '../lib/markdown.js'
 import { useRepoImages } from '../hooks/useRepoImages.js'
+import { linkTarget } from '../lib/links.js'
 
 // Text node and offset under a screen point
 function caretAt(x, y) {
@@ -38,16 +39,6 @@ function breakLongWords(root) {
 }
 
 // Phosphor LinkSimple (regular), inline because preview content is HTML
-// What an internal link points to: { kind: 'note' | 'file' | 'folder', path },
-// or null when nothing in the repo matches. Links may omit ".md".
-function linkTarget(repoPath, files) {
-  for (const candidate of [repoPath, repoPath + '.md']) {
-    if (files[candidate]) return { kind: candidate.endsWith('.md') ? 'note' : 'file', path: candidate }
-  }
-  if (Object.keys(files).some(p => p.startsWith(repoPath + '/'))) return { kind: 'folder', path: repoPath }
-  return null
-}
-
 // Phosphor icons (regular), inline because preview content is HTML. Same
 // shapes as the file list: Folder, FileText for notes, File otherwise;
 // LinkBreak (grey, .link-broken) when the target is missing.
@@ -69,9 +60,10 @@ const repoImages = (html, notePath) => {
 
 // Rendered note. Tapping text (not links or images) calls onTap with the
 // markdown offset of the tapped word. On mount, scrolls the block holding
-// `scrollTo` (a markdown offset) into view. `children` render above the
+// `scrollTo` (a markdown offset) into view. `footer` renders below the note
+// and scrolls with it. `children` render above the
 // note and scroll with it.
-export default function MarkdownPreview({ content, path, files, scrollTo, onTap, onOpenFile, onNavigate, children }) {
+export default function MarkdownPreview({ content, path, files, scrollTo, onTap, onOpenFile, onNavigate, footer, children }) {
   const ref = useRef()
   const [brokenTip, setBrokenTip] = useState(null)
   const tipTimer = useRef()
@@ -200,6 +192,7 @@ export default function MarkdownPreview({ content, path, files, scrollTo, onTap,
         onClick={handleClick}
         dangerouslySetInnerHTML={{ __html: withImages || '<p class="text-muted-foreground italic">Nothing to preview yet.</p>' }}
       />
+      {footer}
       {brokenTip && (
         <div
           className="fixed z-50 rounded-md border border-border bg-popover text-foreground text-sm px-2 py-1 shadow-md pointer-events-none -translate-x-1/2 -translate-y-full"

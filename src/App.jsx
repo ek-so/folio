@@ -13,6 +13,9 @@ import SearchSheet from './components/SearchSheet.jsx'
 import SignOutModal from './components/SignOutModal.jsx'
 import DiscardModal from './components/DiscardModal.jsx'
 import SyncErrorModal from './components/SyncErrorModal.jsx'
+import BrokenLinks from './components/BrokenLinks.jsx'
+import { useLinkIndex, LinksContext } from './hooks/useLinkIndex.js'
+import { rewriteLinks, retargetLink, extractLinks } from './lib/links.js'
 import AccountMenu from './components/AccountMenu.jsx'
 import Settings from './components/Settings.jsx'
 import Spinner from './components/Spinner.jsx'
@@ -36,7 +39,7 @@ export default function App() {
   }
   const [folder, setFolder] = useState(storage.getFolder)
   const [newFile, setNewFile] = useState(null) // { folder, kind } while the sheet is open
-  const [showSettings, setShowSettings] = useState(storage.getSettingsOpen)
+  const [page, setPage] = useState(storage.getPage) // 'settings' | 'links' | null
   const [confirmSignOut, setConfirmSignOut] = useState(false)
   const [confirmDiscard, setConfirmDiscard] = useState(false)
   const [discards, setDiscards] = useState(0) // remounts the open note after a discard
@@ -44,7 +47,7 @@ export default function App() {
 
   useEffect(() => { storage.setFolder(folder) }, [folder])
   useEffect(() => { storage.setFile(selectedFile) }, [selectedFile])
-  useEffect(() => { storage.setSettingsOpen(showSettings) }, [showSettings])
+  useEffect(() => { storage.setPage(page) }, [page])
 
   // Keep browser URL in sync with the current view
   useEffect(() => {
@@ -55,10 +58,36 @@ export default function App() {
 
   const { virtual, changes, update } = repo
   const allFolders = useMemo(() => getAllFolders(virtual), [virtual])
+  const links = useLinkIndex(virtual, changes)
+
+  // Notes whose links change if `item` moves to `to` (their path -> new text),
+  // from `edits` (the latest local changes). The moved notes' own links are
+  // rewritten too, so relative paths keep working from the new place.
+  function linkRewrites(item, to, edits) {
+    const mapPath = p => p === item.path || p.startsWith(item.path + '/') ? to + p.slice(item.path.length) : p
+    const out = new Map()
+    for (const [path, entry] of Object.entries(virtual)) {
+      if (!path.endsWith('.md')) continue
+      const text = edits[entry.orig] ?? links.remoteText(entry.sha)
+      if (text === undefined) continue // not on this device yet
+      const next = rewriteLinks(text, path, mapPath(path), mapPath, virtual)
+      if (next !== text) out.set(path, next)
+    }
+    return out
+  }
 
   // Rename or move `item` to path `to`; the open folder / note follows it
+  // Links to and from it are rewritten in the same local changes (one commit).
   function relocate(item, to) {
-    update(ch => rename(ch, virtual, item.path, to, item.type === 'dir'))
+    window.dispatchEvent(new Event('folio:flush')) // typing in an open note first
+    update(ch => {
+      let next = rename(ch, virtual, item.path, to, item.type === 'dir')
+      for (const [path, text] of linkRewrites(item, to, ch.edits)) {
+        const entry = virtual[path]
+        next = setEdit(next, entry, text, links.remoteText(entry.sha) ?? '')
+      }
+      return next
+    })
     const follow = p => p && (p === item.path || p.startsWith(item.path + '/')) ? to + p.slice(item.path.length) : p
     setFolder(follow)
     setSelectedFile(follow)
@@ -118,9 +147,25 @@ export default function App() {
     setDiscards(n => n + 1)
   }
 
+  // Point a broken link at the file it most likely meant
+  function fixBrokenLink(broken, targetPath) {
+    const entry = virtual[broken.from]
+    update(ch => {
+      const text = ch.edits[entry.orig] ?? links.remoteText(entry.sha)
+      if (text === undefined) return ch
+      // The index may lag behind typing: find the same link in the latest text
+      const found = extractLinks(text)
+      const l = found.find(x => x.target === broken.link.target && x.targetStart === broken.link.targetStart)
+        ?? found.find(x => x.target === broken.link.target)
+      if (!l) return ch
+      const fixed = retargetLink(text, broken.from, l, targetPath)
+      return setEdit(ch, entry, fixed, links.remoteText(entry.sha) ?? '')
+    })
+  }
+
   async function signOut() {
     setConfirmSignOut(false)
-    setShowSettings(false)
+    setPage(null)
     repo.discardAll()
     await cache.clearAll()
     auth.signOut()
@@ -153,114 +198,137 @@ export default function App() {
     />
   )
 
+  // For the Rename / Move sheets: how many notes' links a change would touch
+  const linkInfo = {
+    rewriteCount: (item, to) => linkRewrites(item, to, changes.edits).size,
+    linkedFrom: item => new Set(Object.entries(links.index.backlinks)
+      .filter(([target]) => target === item.path || target.startsWith(item.path + '/'))
+      .flatMap(([, refs]) => refs.map(r => r.from))
+      .filter(from => !(from === item.path || from.startsWith(item.path + '/')))).size,
+  }
+
   return (
-    <div className="flex flex-col h-full bg-background">
-      <PullToRefresh onRefresh={() => window.location.reload()}>
-        {showSettings ? (
-          <Settings login={auth.user.login} repo={auth.repo} onBack={() => setShowSettings(false)} />
-        ) : entry && ['image', 'pdf'].includes(fileKind(selectedFile)) ? (
-          <FileViewer
-            key={selectedFile}
-            path={selectedFile}
-            entry={entry}
-            root={repoName}
-            onNavigate={p => { setFolder(p); setSelectedFile(null) }}
-            onRename={handleRename}
-            onDelete={handleDelete}
-            onMove={handleMove}
-            folders={allFolders}
-            syncButton={syncButton}
-            onSearch={() => setSearchOpen(true)}
-          />
-        ) : entry ? (
-          <Editor
-            key={`${selectedFile}:${discards}`}
-            path={selectedFile}
-            entry={entry}
-            files={virtual}
-            edited={changes.edits[entry.orig]}
-            onEdit={(content, original) =>
-              update(ch => setEdit(ch, virtual[selectedFile], content, original))}
-            root={repoName}
-            onNavigate={p => { setFolder(p); setSelectedFile(null) }}
-            onOpenFile={setSelectedFile}
-            onRename={handleRename}
-            onDelete={handleDelete}
-            onMove={handleMove}
-            folders={allFolders}
-            syncButton={syncButton}
-            onSearch={() => setSearchOpen(true)}
-          />
-        ) : (
-          <FileBrowser
-            path={folder}
-            onNavigate={setFolder}
-            listDir={dir => listDir(virtual, dir, repo.changed)}
-            loading={!repo.remote && !repo.error}
-            error={repo.error}
-            notice={repo.remote?.truncated ? 'This repo is too large to list in full; some files are missing.' : ''}
-            onRename={handleRename}
-            onDelete={handleDelete}
-            onMove={handleMove}
-            folders={allFolders}
-            menu={
-              <AccountMenu
-                repo={auth.repo}
-                theme={theme}
-                onTheme={setTheme}
-                onSettings={() => setShowSettings(true)}
-                onSignOut={() => repo.changeCount ? setConfirmSignOut(true) : signOut()}
-              />
-            }
-            onSelect={setSelectedFile}
-            onNewFile={(f, kind) => setNewFile({ folder: f, kind })}
-            repoName={repoName}
-            syncButton={syncButton}
-            onSearch={() => setSearchOpen(true)}
+    <LinksContext.Provider value={linkInfo}>
+      <div className="flex flex-col h-full bg-background">
+        <PullToRefresh onRefresh={() => window.location.reload()}>
+          {page === 'settings' ? (
+            <Settings login={auth.user.login} repo={auth.repo} onBack={() => setPage(null)} />
+          ) : page === 'links' ? (
+            <BrokenLinks
+              broken={links.index.broken}
+              files={virtual}
+              missing={links.missing}
+              onOpen={path => { setPage(null); setSelectedFile(path) }}
+              onFix={fixBrokenLink}
+              onBack={() => setPage(null)}
+            />
+          ) : entry && ['image', 'pdf'].includes(fileKind(selectedFile)) ? (
+            <FileViewer
+              key={selectedFile}
+              path={selectedFile}
+              entry={entry}
+              root={repoName}
+              onNavigate={p => { setFolder(p); setSelectedFile(null) }}
+              onRename={handleRename}
+              onDelete={handleDelete}
+              onMove={handleMove}
+              folders={allFolders}
+              syncButton={syncButton}
+              onSearch={() => setSearchOpen(true)}
+            />
+          ) : entry ? (
+            <Editor
+              key={`${selectedFile}:${discards}`}
+              path={selectedFile}
+              entry={entry}
+              files={virtual}
+              edited={changes.edits[entry.orig]}
+              onEdit={(content, original) =>
+                update(ch => setEdit(ch, virtual[selectedFile], content, original))}
+              root={repoName}
+              onNavigate={p => { setFolder(p); setSelectedFile(null) }}
+              onOpenFile={setSelectedFile}
+              onRename={handleRename}
+              onDelete={handleDelete}
+              onMove={handleMove}
+              folders={allFolders}
+              syncButton={syncButton}
+              onSearch={() => setSearchOpen(true)}
+              backlinks={links.index.backlinks[selectedFile]}
+            />
+          ) : (
+            <FileBrowser
+              path={folder}
+              onNavigate={setFolder}
+              listDir={dir => listDir(virtual, dir, repo.changed)}
+              loading={!repo.remote && !repo.error}
+              error={repo.error}
+              notice={repo.remote?.truncated ? 'This repo is too large to list in full; some files are missing.' : ''}
+              onRename={handleRename}
+              onDelete={handleDelete}
+              onMove={handleMove}
+              folders={allFolders}
+              menu={
+                <AccountMenu
+                  repo={auth.repo}
+                  theme={theme}
+                  onTheme={setTheme}
+                  onSettings={() => setPage('settings')}
+                  brokenCount={links.index.broken.length}
+                  onBrokenLinks={() => setPage('links')}
+                  onSignOut={() => repo.changeCount ? setConfirmSignOut(true) : signOut()}
+                />
+              }
+              onSelect={setSelectedFile}
+              onNewFile={(f, kind) => setNewFile({ folder: f, kind })}
+              repoName={repoName}
+              syncButton={syncButton}
+              onSearch={() => setSearchOpen(true)}
+            />
+          )}
+        </PullToRefresh>
+
+        {repo.syncError && (
+          <SyncErrorModal error={repo.syncError} onRetry={repo.syncError.retry} onClose={repo.dismissSyncError} />
+        )}
+
+        {confirmDiscard && (
+          <DiscardModal changeCount={repo.changeCount} onDiscard={discardChanges} onClose={() => setConfirmDiscard(false)} />
+        )}
+
+        {confirmSignOut && (
+          <SignOutModal changeCount={repo.changeCount} onSignOut={signOut} onClose={() => setConfirmSignOut(false)} />
+        )}
+
+        {newFile && (
+          <NewFileModal
+            folder={newFile.folder}
+            kind={newFile.kind}
+            onCreate={handleCreate}
+            onClose={() => setNewFile(null)}
           />
         )}
-      </PullToRefresh>
 
-      {repo.syncError && (
-        <SyncErrorModal error={repo.syncError} onRetry={repo.syncError.retry} onClose={repo.dismissSyncError} />
-      )}
+        {repo.conflictPaths.length > 0 && (
+          <ConflictModal
+            paths={repo.conflictPaths}
+            busy={repo.syncing}
+            onPushLocal={repo.pushLocal}
+            onUseRemote={repo.takeRemote}
+            onClose={repo.dismissConflicts}
+          />
+        )}
 
-      {confirmDiscard && (
-        <DiscardModal changeCount={repo.changeCount} onDiscard={discardChanges} onClose={() => setConfirmDiscard(false)} />
-      )}
-
-      {confirmSignOut && (
-        <SignOutModal changeCount={repo.changeCount} onSignOut={signOut} onClose={() => setConfirmSignOut(false)} />
-      )}
-
-      {newFile && (
-        <NewFileModal
-          folder={newFile.folder}
-          kind={newFile.kind}
-          onCreate={handleCreate}
-          onClose={() => setNewFile(null)}
-        />
-      )}
-
-      {repo.conflictPaths.length > 0 && (
-        <ConflictModal
-          paths={repo.conflictPaths}
-          busy={repo.syncing}
-          onPushLocal={repo.pushLocal}
-          onUseRemote={repo.takeRemote}
-          onClose={repo.dismissConflicts}
-        />
-      )}
-
-      {searchOpen && (
-        <SearchSheet
-          onClose={() => setSearchOpen(false)}
-          onSelect={path => { setSelectedFile(path); setFolder('') }}
-          virtual={virtual}
-          changes={changes}
-          recent={storage.getRecentFiles()}
-        />
-      )}
-    </div>
+        {searchOpen && (
+          <SearchSheet
+            onClose={() => setSearchOpen(false)}
+            onSelect={path => { setSelectedFile(path); setFolder('') }}
+            virtual={virtual}
+            changes={changes}
+            recent={storage.getRecentFiles()}
+          />
+        )}
+      </div>
+    </LinksContext.Provider>
   )
 }
