@@ -38,7 +38,26 @@ function breakLongWords(root) {
 }
 
 // Phosphor LinkSimple (regular), inline because preview content is HTML
-const LINK_ICON = '<svg class="link-icon" aria-hidden="true" viewBox="0 0 256 256" fill="currentColor"><path d="M165.66,90.34a8,8,0,0,1,0,11.32l-64,64a8,8,0,0,1-11.32-11.32l64-64A8,8,0,0,1,165.66,90.34ZM215.6,40.4a56,56,0,0,0-79.2,0L106.34,70.45a8,8,0,0,0,11.32,11.32l30.06-30a40,40,0,0,1,56.57,56.56l-30.07,30.06a8,8,0,0,0,11.31,11.32L215.6,119.6a56,56,0,0,0,0-79.2ZM138.34,174.22l-30.06,30.06a40,40,0,1,1-56.56-56.57l30.05-30.05a8,8,0,0,0-11.32-11.32L40.4,136.4a56,56,0,0,0,79.2,79.2l30.06-30.07a8,8,0,0,0-11.32-11.31Z"/></svg>'
+// What an internal link points to: { kind: 'note' | 'file' | 'folder', path },
+// or null when nothing in the repo matches. Links may omit ".md".
+function linkTarget(repoPath, files) {
+  for (const candidate of [repoPath, repoPath + '.md']) {
+    if (files[candidate]) return { kind: candidate.endsWith('.md') ? 'note' : 'file', path: candidate }
+  }
+  if (Object.keys(files).some(p => p.startsWith(repoPath + '/'))) return { kind: 'folder', path: repoPath }
+  return null
+}
+
+// Phosphor icons (regular), inline because preview content is HTML. Same
+// shapes as the file list: Folder, FileText for notes, File otherwise;
+// LinkSimple when the target is missing.
+const ICON_PATHS = {
+  folder: 'M216,72H131.31L104,44.69A15.86,15.86,0,0,0,92.69,40H40A16,16,0,0,0,24,56V200.62A15.4,15.4,0,0,0,39.38,216H216.89A15.13,15.13,0,0,0,232,200.89V88A16,16,0,0,0,216,72ZM40,56H92.69l16,16H40ZM216,200H40V88H216Z',
+  note: 'M213.66,82.34l-56-56A8,8,0,0,0,152,24H56A16,16,0,0,0,40,40V216a16,16,0,0,0,16,16H200a16,16,0,0,0,16-16V88A8,8,0,0,0,213.66,82.34ZM160,51.31,188.69,80H160ZM200,216H56V40h88V88a8,8,0,0,0,8,8h48V216Zm-32-80a8,8,0,0,1-8,8H96a8,8,0,0,1,0-16h64A8,8,0,0,1,168,136Zm0,32a8,8,0,0,1-8,8H96a8,8,0,0,1,0-16h64A8,8,0,0,1,168,168Z',
+  file: 'M213.66,82.34l-56-56A8,8,0,0,0,152,24H56A16,16,0,0,0,40,40V216a16,16,0,0,0,16,16H200a16,16,0,0,0,16-16V88A8,8,0,0,0,213.66,82.34ZM160,51.31,188.69,80H160ZM200,216H56V40h88V88a8,8,0,0,0,8,8h48V216Z',
+  missing: 'M165.66,90.34a8,8,0,0,1,0,11.32l-64,64a8,8,0,0,1-11.32-11.32l64-64A8,8,0,0,1,165.66,90.34ZM215.6,40.4a56,56,0,0,0-79.2,0L106.34,70.45a8,8,0,0,0,11.32,11.32l30.06-30a40,40,0,0,1,56.57,56.56l-30.07,30.06a8,8,0,0,0,11.31,11.32L215.6,119.6a56,56,0,0,0,0-79.2ZM138.34,174.22l-30.06,30.06a40,40,0,1,1-56.56-56.57l30.05-30.05a8,8,0,0,0-11.32-11.32L40.4,136.4a56,56,0,0,0,79.2,79.2l30.06-30.07a8,8,0,0,0-11.32-11.31Z',
+}
+const linkIcon = kind => `<svg class="link-icon" aria-hidden="true" viewBox="0 0 256 256" fill="currentColor"><path d="${ICON_PATHS[kind]}"/></svg>`
 
 const repoImages = (html, notePath) => {
   const tpl = document.createElement('template')
@@ -63,14 +82,15 @@ export default function MarkdownPreview({ content, path, files, scrollTo, onTap,
     const tpl = document.createElement('template')
     tpl.innerHTML = sanitized
     // External links (websites) get a colored ↗ after them; internal links
-    // (notes and folders in the repo) a colored link icon before them.
+    // (notes, files, folders in the repo) a colored icon of what they point to.
     // Styles: .link-external / .link-internal in App.css
     for (const a of tpl.content.querySelectorAll('a[href]')) {
       const href = a.getAttribute('href')
       if (!href || href.startsWith('#')) continue
-      if (resolveImage(path, href)) {
+      const repoPath = resolveImage(path, href)
+      if (repoPath) {
         a.classList.add('link-internal')
-        a.insertAdjacentHTML('afterbegin', LINK_ICON)
+        a.insertAdjacentHTML('afterbegin', linkIcon(linkTarget(repoPath, files)?.kind ?? 'missing'))
       } else {
         a.classList.add('link-external')
         a.insertAdjacentHTML('beforeend', '<span class="link-arrow" aria-hidden="true">↗</span>')
@@ -93,7 +113,7 @@ export default function MarkdownPreview({ content, path, files, scrollTo, onTap,
       .map(img => [img, resolveImage(path, img.getAttribute('src'))])
       .filter(([, repoPath]) => repoPath !== null)
     return [tpl.innerHTML, imgs.map(([, repoPath]) => repoPath)]
-  }, [content, path])
+  }, [content, path, files])
 
   const images = useRepoImages(imagePaths, files)
 
@@ -128,12 +148,11 @@ export default function MarkdownPreview({ content, path, files, scrollTo, onTap,
       window.open(href, '_blank', 'noopener,noreferrer')
       return
     }
-    // Try exact path, then with .md extension (for links that omit it)
-    const target = files[repoPath] ? repoPath : files[repoPath + '.md'] ? repoPath + '.md' : null
-    if (target) {
-      onOpenFile?.(target)
-    } else if (Object.keys(files).some(p => p.startsWith(repoPath + '/'))) {
-      onNavigate?.(repoPath)
+    const target = linkTarget(repoPath, files)
+    if (target?.kind === 'folder') {
+      onNavigate?.(target.path)
+    } else if (target) {
+      onOpenFile?.(target.path)
     } else {
       clearTimeout(tipTimer.current)
       setBrokenTip({ x: e.clientX, y: e.clientY })

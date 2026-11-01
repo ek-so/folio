@@ -21,7 +21,7 @@
 .editor-preview a { color: var(--accent); text-decoration: none; }
 /* Websites: accent text, accent ↗ after */
 .editor-preview a.link-external .link-arrow { margin-left: 2px; font-size: 0.85em; color: var(--primary); }
-/* Notes/folders in the repo: normal text, dashed accent underline, accent link icon before */
+/* Notes/folders in the repo: normal text, dashed accent underline, accent note/file/folder icon before */
 .editor-preview a.link-internal {
   color: var(--foreground);
   text-decoration: underline dashed var(--primary);
