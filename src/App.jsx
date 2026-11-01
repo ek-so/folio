@@ -92,7 +92,7 @@ export default function App() {
     })
     const follow = p => p && (p === item.path || p.startsWith(item.path + '/')) ? to + p.slice(item.path.length) : p
     setFolder(follow)
-    setSelectedFile(follow)
+    setSelectedFileState(follow) // the same file, not a newly opened one
   }
 
   function handleRename(item, name) {
@@ -299,6 +299,7 @@ export default function App() {
               repoName={repoName}
               syncButton={syncButton}
               onSearch={() => setSearchOpen(true)}
+              notes={links.notes}
             />
           )}
         </PullToRefresh>

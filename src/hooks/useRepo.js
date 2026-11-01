@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
-import { getTree, getBlobBase64, commitTree, isNetworkError, getLatestCommitSha } from '../lib/github.js'
+import { getTree, getBlobBase64, commitTree, isNetworkError, getLatestCommitSha, blobSha, encodeText } from '../lib/github.js'
 import { cache } from '../lib/cache.js'
 import { localChanges } from '../lib/storage.js'
 import { describeSyncError } from '../lib/syncErrors.js'
 import {
-  empty, count, virtualFiles, changedPaths, conflicts, discard, settle, treeEntries, commitMessage,
+  empty, count, virtualFiles, changedPaths, conflicts, discard, settle, treeEntries, commitMessage, filesAfter,
 } from '../lib/changes.js'
 
 const PREFETCH_WORKERS = 4
@@ -168,13 +168,24 @@ export function useRepo(repo) {
   }
 
   // Commit all local changes on top of `latest`. Changes made while the
-  // commit was in flight are kept.
+  // commit was in flight are kept. GitHub's new state is worked out here
+  // rather than fetched, so a dropped connection right after the commit
+  // can't leave pushed changes looking unsynced.
   async function push(latest) {
     const committed = changesRef.current
     if (!count(committed)) return
-    await commitTree(latest, treeEntries(committed, latest.files), commitMessage(committed))
-    const after = await pull()
+    const { commitSha, treeSha } = await commitTree(latest, treeEntries(committed, latest.files), commitMessage(committed))
+    const editShas = {}
+    for (const [orig, text] of Object.entries(committed.edits)) {
+      editShas[orig] = await blobSha(text)
+      cache.setBlob(editShas[orig], encodeText(text))
+    }
+    const after = { ...latest, commitSha, treeSha, files: filesAfter(latest.files, committed, editShas) }
+    setRemoteTree(after)
+    cache.setTree(repo, after)
+    knownCommitSha.current = commitSha
     update(current => settle(current, committed, after.files))
+    pull().catch(() => {}) // anything else that changed; offline is fine
   }
 
   // Runs a sync step, showing its outcome on the Sync button. A task

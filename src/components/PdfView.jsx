@@ -14,14 +14,20 @@ function toBytes(base64) {
   return Uint8Array.from(atob(base64), c => c.charCodeAt(0))
 }
 
-// Every page of a PDF, one under another, fitted to the width.
+// How far beyond the screen pages are drawn; further ones are released,
+// because iOS limits the memory all canvases may use together
+const NEAR = '100% 0px'
+
+// Every page of a PDF, one under another, fitted to the width. Each page
+// keeps its size; only pages near the screen are drawn.
 export default function PdfView({ base64 }) {
-  const containerRef = useRef()
+  const scrollRef = useRef()
+  const pagesRef = useRef()
   const [width, setWidth] = useState(0)
   const [status, setStatus] = useState('loading') // loading | ready | error
 
   useEffect(() => {
-    const el = containerRef.current
+    const el = pagesRef.current
     const observer = new ResizeObserver(() => setWidth(Math.round(el.clientWidth)))
     observer.observe(el)
     return () => observer.disconnect()
@@ -30,37 +36,70 @@ export default function PdfView({ base64 }) {
   useEffect(() => {
     if (!width) return
     let cancelled = false
+    let task
     let doc
-    const pages = containerRef.current
+    let observer
+    const container = pagesRef.current
+
+    async function draw(slot) {
+      if (slot.canvas) return
+      const page = await doc.getPage(slot.n)
+      const viewport = page.getViewport({ scale: width / page.getViewport({ scale: 1 }).width * window.devicePixelRatio })
+      const canvas = document.createElement('canvas')
+      canvas.width = viewport.width
+      canvas.height = viewport.height
+      canvas.className = 'size-full'
+      slot.canvas = canvas
+      slot.task = page.render({ canvas, viewport })
+      try {
+        await slot.task.promise
+        if (slot.canvas === canvas) slot.el.replaceChildren(canvas)
+      } catch { /* cancelled while scrolling past */ }
+    }
+
+    function release(slot) {
+      slot.task?.cancel()
+      if (slot.canvas) slot.canvas.width = slot.canvas.height = 0 // frees the memory on iOS
+      slot.canvas = slot.task = null
+      slot.el.replaceChildren()
+    }
+
     ;(async () => {
       try {
         const pdfjs = await loadPdfjs()
-        doc = await pdfjs.getDocument({ data: toBytes(base64) }).promise
+        task = pdfjs.getDocument({ data: toBytes(base64) })
+        doc = await task.promise
+        const slots = []
         for (let n = 1; n <= doc.numPages; n++) {
+          const { width: w, height: h } = (await doc.getPage(n)).getViewport({ scale: 1 })
           if (cancelled) return
-          const page = await doc.getPage(n)
-          const scale = width / page.getViewport({ scale: 1 }).width
-          const viewport = page.getViewport({ scale: scale * window.devicePixelRatio })
-          const canvas = document.createElement('canvas')
-          canvas.width = viewport.width
-          canvas.height = viewport.height
-          canvas.className = 'w-full h-auto rounded-md bg-white shadow-sm'
-          await page.render({ canvas, viewport }).promise
-          if (n === 1 && !cancelled) { pages.replaceChildren(canvas); setStatus('ready') }
-          else if (!cancelled) pages.append(canvas)
+          const el = document.createElement('div')
+          el.className = 'w-full overflow-hidden rounded-md bg-card shadow-sm'
+          el.style.aspectRatio = `${w} / ${h}`
+          slots.push({ n, el })
         }
+        container.replaceChildren(...slots.map(s => s.el))
+        observer = new IntersectionObserver(entries => {
+          for (const e of entries) {
+            const slot = slots.find(s => s.el === e.target)
+            if (e.isIntersecting) draw(slot)
+            else release(slot)
+          }
+        }, { root: scrollRef.current, rootMargin: NEAR })
+        slots.forEach(s => observer.observe(s.el))
+        setStatus('ready')
       } catch {
         if (!cancelled) setStatus('error')
       }
     })()
-    return () => { cancelled = true; doc?.destroy() }
+    return () => { cancelled = true; observer?.disconnect(); task?.destroy() }
   }, [base64, width])
 
   return (
-    <div className="flex-1 min-h-0 overflow-y-auto px-4 py-4" style={{ WebkitOverflowScrolling: 'touch' }}>
+    <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto px-4 py-4" style={{ WebkitOverflowScrolling: 'touch' }}>
       {status === 'loading' && <div className="flex justify-center py-12"><Spinner /></div>}
       {status === 'error' && <p className="text-muted-foreground text-sm text-center py-12 px-6">Couldn't show this PDF.</p>}
-      <div ref={containerRef} className="flex flex-col gap-4" />
+      <div ref={pagesRef} className="flex flex-col gap-4" />
     </div>
   )
 }

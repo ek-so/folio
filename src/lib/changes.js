@@ -255,6 +255,21 @@ export function treeEntries(ch, files) {
   return entries
 }
 
+// GitHub's files after `ch` is committed onto `files`, mirroring
+// treeEntries. `editShas` maps each edited orig path to its new blob sha.
+export function filesAfter(files, ch, editShas) {
+  const result = { ...files }
+  for (const orig of Object.keys(ch.base)) {
+    if (targetOf(ch, orig) !== orig) delete result[orig]
+  }
+  for (const orig of Object.keys(ch.base)) {
+    const target = targetOf(ch, orig)
+    if (target === null) continue
+    const sha = orig in ch.edits ? editShas[orig] : ch.base[orig]
+    result[target] = { sha, mode: files[orig]?.mode || '100644' }
+  }
+  return result
+}
 
 export function getAllFolders(virtual) {
   const folders = new Set()

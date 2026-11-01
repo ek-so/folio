@@ -17,9 +17,10 @@ export function setRepo(ownerVal, repoVal) {
 }
 
 // No response from GitHub at all (offline, DNS, CORS) as opposed to an HTTP
-// error. Octokit reports these as status 500 without a response.
+// error. Octokit reports these as an HttpError without a response; any other
+// error (e.g. a bug in Folio) is not "offline".
 export function isNetworkError(e) {
-  return !e?.response
+  return e?.name === 'HttpError' && !e.response
 }
 
 export function isAuthError(e) {
@@ -95,6 +96,7 @@ export async function getBlob(sha) {
 }
 
 // Creates one commit on top of `remote` with the given tree entries.
+// Returns the new commit's and tree's shas.
 export async function commitTree(remote, entries, message) {
   const { data: tree } = await step('upload', octokit.rest.git.createTree({
     owner, repo, base_tree: remote.treeSha, tree: entries,
@@ -103,4 +105,23 @@ export async function commitTree(remote, entries, message) {
     owner, repo, message, tree: tree.sha, parents: [remote.commitSha],
   }))
   await step('save', octokit.rest.git.updateRef({ owner, repo, ref: `heads/${remote.branch}`, sha: commit.sha }))
+  return { commitSha: commit.sha, treeSha: tree.sha }
+}
+
+// Git's sha for a blob holding `text` (UTF-8), the same GitHub gives it
+export async function blobSha(text) {
+  const body = new TextEncoder().encode(text)
+  const head = new TextEncoder().encode(`blob ${body.length}\0`)
+  const bytes = new Uint8Array(head.length + body.length)
+  bytes.set(head)
+  bytes.set(body, head.length)
+  const hash = await crypto.subtle.digest('SHA-1', bytes)
+  return [...new Uint8Array(hash)].map(b => b.toString(16).padStart(2, '0')).join('')
+}
+
+// base64 of `text` as UTF-8, the form blobs are cached in
+export function encodeText(text) {
+  let bin = ''
+  for (const b of new TextEncoder().encode(text)) bin += String.fromCharCode(b)
+  return btoa(bin)
 }

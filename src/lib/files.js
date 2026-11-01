@@ -27,3 +27,14 @@ export function fileKind(path) {
 export function displayName(path) {
   return path.split('/').pop().replace(/\.md$/, '')
 }
+
+// Emoji-like first character (anything past the box-drawing block)
+export const isEmoji = char => !!char && char.codePointAt(0) > 0x2500
+
+// The emoji a note's first "# heading" starts with, or null
+export function headingEmoji(text) {
+  const m = /^# /m.exec(text ?? '')
+  if (!m) return null
+  const first = [...text.slice(m.index + 2)][0]
+  return isEmoji(first) ? first : null
+}

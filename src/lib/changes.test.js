@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import {
-  empty, count, virtualFiles, add, setEdit, rename, remove, conflicts, settle, treeEntries,
+  empty, count, virtualFiles, add, setEdit, rename, remove, conflicts, settle, treeEntries, filesAfter,
   renameTarget, renameError, createError, getAllFolders,
 } from './changes.js'
 
@@ -53,6 +53,16 @@ describe('changes', () => {
       { path: 'b.md', mode: '100644', type: 'blob', content: 'text' },
       { path: 'dir/x.md', mode: '100644', type: 'blob', sha: null },
     ])
+  })
+
+  it('works out GitHub\'s files after a commit, with nothing left to sync', () => {
+    let ch = setEdit(empty(), view(empty())['a.md'], 'text', 'old')
+    ch = rename(ch, view(ch), 'a.md', 'b.md', false)
+    ch = remove(ch, view(ch), 'dir/x.md', false)
+    const after = filesAfter(files, ch, { 'a.md': 'b2' })
+    expect(after).toEqual({ 'b.md': { sha: 'b2', mode: '100644' } })
+    expect(count(settle(ch, ch, after))).toBe(0)
+    expect(conflicts(settle(ch, ch, after), after)).toEqual([])
   })
 
   it('settle keeps edits made while a commit was in flight', () => {

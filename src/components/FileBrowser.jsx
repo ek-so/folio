@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef } from 'react'
 import { Plus, FileText, Folder, MagnifyingGlass } from '@phosphor-icons/react'
 import { Button } from './ui/button.jsx'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from './ui/dropdown-menu.jsx'
@@ -7,50 +7,14 @@ import Footer from './Footer.jsx'
 import PathBreadcrumbs from './PathBreadcrumbs.jsx'
 import ItemMenu from './ItemMenu.jsx'
 import { splitName } from '../lib/changes.js'
-import { fileKind } from '../lib/files.js'
+import { fileKind, headingEmoji } from '../lib/files.js'
 import FileIcon from './FileIcon.jsx'
-import { cache } from '../lib/cache.js'
-
-// Returns the leading emoji from a markdown file's first H1, or null.
-function extractLeadingEmoji(text) {
-  const m = /^# /m.exec(text)
-  if (!m) return null
-  const after = text.slice(m.index + 2)
-  const first = [...after][0]
-  if (!first) return null
-  return first.codePointAt(0) > 0x2500 ? first : null
-}
-
-function useFileEmojis(items) {
-  const [emojis, setEmojis] = useState({})
-  const shaKey = items.map(i => i.type === 'file' ? (i.sha ?? '') : '').join('|')
-  useEffect(() => {
-    let cancelled = false
-    const mdItems = items.filter(i => i.type === 'file' && i.path.endsWith('.md') && i.sha)
-    if (!mdItems.length) return
-    ;(async () => {
-      const updates = {}
-      for (const item of mdItems) {
-        const b64 = await cache.getBlob(item.sha)
-        if (cancelled || b64 === undefined) continue
-        try {
-          const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0))
-          updates[item.path] = extractLeadingEmoji(new TextDecoder().decode(bytes))
-        } catch { /* skip */ }
-      }
-      if (!cancelled) setEmojis(updates)
-    })()
-    return () => { cancelled = true }
-  }, [shaKey]) // eslint-disable-line react-hooks/exhaustive-deps
-  return emojis
-}
 import Spinner from './Spinner.jsx'
 import PageLayout from './PageLayout.jsx'
 import { cn } from '@/lib/utils.js'
 
-export default function FileBrowser({ path, onNavigate, listDir, loading, error, notice, onSelect, onNewFile, repoName, onRename, onDelete, onMove, folders, menu, syncButton, onSearch }) {
+export default function FileBrowser({ path, onNavigate, listDir, loading, error, notice, onSelect, onNewFile, repoName, onRename, onDelete, onMove, folders, menu, syncButton, onSearch, notes }) {
   const items = loading ? [] : listDir(path)
-  const emojis = useFileEmojis(items)
   const draggingRef = useRef(null) // always current for event handlers
   const [dragging, setDragging] = useState(null) // for rendering only
   const [dragOverPath, setDragOverPath] = useState(null)
@@ -147,7 +111,7 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
                       onClick={() => navigate(item)}
                       disabled={!openable}
                     >
-                      <FileIcon path={item.path} dir={item.type === 'dir'} emoji={emojis[item.path]} />
+                      <FileIcon path={item.path} dir={item.type === 'dir'} emoji={headingEmoji(notes[item.path])} />
                       <span className="flex-1 text-base truncate">
                         {base}
                         {ext && <span className="text-muted-foreground">{ext}</span>}

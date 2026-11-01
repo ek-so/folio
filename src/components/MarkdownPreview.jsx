@@ -3,6 +3,7 @@ import DOMPurify from 'dompurify'
 import { renderBlocks, tapOffset, resolveImage } from '../lib/markdown.js'
 import { useRepoImages } from '../hooks/useRepoImages.js'
 import { linkTarget } from '../lib/links.js'
+import { isEmoji } from '../lib/files.js'
 
 // Text node and offset under a screen point
 function caretAt(x, y) {
@@ -38,7 +39,6 @@ function breakLongWords(root) {
   }
 }
 
-// Phosphor LinkSimple (regular), inline because preview content is HTML
 // Phosphor icons (regular), inline because preview content is HTML. Same
 // shapes as the file list: Folder, FileText for notes, File otherwise;
 // LinkBreak (grey, .link-broken) when the target is missing.
@@ -50,19 +50,15 @@ const ICON_PATHS = {
 }
 const linkIcon = kind => `<svg class="link-icon" aria-hidden="true" viewBox="0 0 256 256" fill="currentColor"><path d="${ICON_PATHS[kind]}"/></svg>`
 
-const repoImages = (html, notePath) => {
-  const tpl = document.createElement('template')
-  tpl.innerHTML = html
-  return [tpl, [...tpl.content.querySelectorAll('img')]
-    .map(img => [img, resolveImage(notePath, img.getAttribute('src'))])
-    .filter(([, repoPath]) => repoPath !== null)]
-}
+// <img> elements in `root` that show repo files: [img, repo path]
+const repoImages = (root, notePath) => [...root.querySelectorAll('img')]
+  .map(img => [img, resolveImage(notePath, img.getAttribute('src'))])
+  .filter(([, repoPath]) => repoPath !== null)
 
 // Rendered note. Tapping text (not links or images) calls onTap with the
 // markdown offset of the tapped word. On mount, scrolls the block holding
-// `scrollTo` (a markdown offset) into view. `footer` renders below the note
-// and scrolls with it. `children` render above the
-// note and scroll with it.
+// `scrollTo` (a markdown offset) into view. `children` render above the
+// note and `footer` below it; both scroll with it.
 export default function MarkdownPreview({ content, path, files, scrollTo, onTap, onOpenFile, onNavigate, footer, children }) {
   const ref = useRef()
   const [brokenTip, setBrokenTip] = useState(null)
@@ -96,25 +92,23 @@ export default function MarkdownPreview({ content, path, files, scrollTo, onTap,
       const first = h1.firstChild
       if (!first || first.nodeType !== Node.TEXT_NODE) continue
       const chars = [...first.textContent]
-      if (!chars.length || chars[0].codePointAt(0) <= 0x2500) continue
+      if (!isEmoji(chars[0])) continue
       const span = document.createElement('span')
       span.className = 'emoji-icon'
       span.textContent = chars[0]
       first.textContent = chars.slice(1).join('').trimStart()
       h1.insertBefore(span, first)
     }
-    const imgs = [...tpl.content.querySelectorAll('img')]
-      .map(img => [img, resolveImage(path, img.getAttribute('src'))])
-      .filter(([, repoPath]) => repoPath !== null)
-    return [tpl.innerHTML, imgs.map(([, repoPath]) => repoPath)]
+    return [tpl.innerHTML, repoImages(tpl.content, path).map(([, repoPath]) => repoPath)]
   }, [content, path, files])
 
   const images = useRepoImages(imagePaths, files)
 
   // Repo images swapped for loaded data URLs
   const withImages = useMemo(() => {
-    const [tpl, imgs] = repoImages(html, path)
-    for (const [img, repoPath] of imgs) {
+    const tpl = document.createElement('template')
+    tpl.innerHTML = html
+    for (const [img, repoPath] of repoImages(tpl.content, path)) {
       if (images[repoPath]) img.setAttribute('src', images[repoPath])
       else img.removeAttribute('src')
     }
