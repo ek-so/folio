@@ -1,15 +1,12 @@
-import { List, Sun, Moon, Monitor, Gear, SignOut, LinkBreak } from '@phosphor-icons/react'
+import { List, Gear, SignOut, LinkBreak } from '@phosphor-icons/react'
 import { Button } from './ui/button.jsx'
 import {
-  DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuRadioGroup, DropdownMenuRadioItem,
+  DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem,
 } from './ui/dropdown-menu.jsx'
-import { cn } from '@/lib/utils.js'
-
-const THEMES = [['light', 'Light', Sun], ['dark', 'Dark', Moon], ['system', 'System', Monitor]]
 
 // Home header's left side: ☰ owner / repo, opening the account popover.
 // The account is shown in Settings; the header already names the owner.
-export default function AccountMenu({ repo, theme, onTheme, onSettings, brokenCount, onBrokenLinks, onSignOut }) {
+export default function AccountMenu({ repo, onSettings, brokenCount, onBrokenLinks, onSignOut }) {
   const [owner, name] = repo.split('/')
   return (
     <DropdownMenu>
@@ -25,27 +22,6 @@ export default function AccountMenu({ repo, theme, onTheme, onSettings, brokenCo
         </span>
       </div>
       <DropdownMenuContent align="start" className="w-64" onCloseAutoFocus={e => e.preventDefault()}>
-        {/* Radio items: arrow keys reach them; selecting keeps the menu open */}
-        <DropdownMenuRadioGroup
-          value={theme}
-          onValueChange={onTheme}
-          aria-label="Theme"
-          className="flex h-10 gap-1 rounded-lg bg-segment p-1 mx-1 my-1"
-        >
-          {THEMES.map(([value, label, Icon]) => (
-            <DropdownMenuRadioItem
-              key={value}
-              value={value}
-              aria-label={label}
-              onSelect={e => { e.preventDefault(); onTheme(value) }}
-              className={cn(
-                'flex h-8 flex-1 items-center justify-center rounded-sm transition-colors [&_svg]:size-4',
-                'data-[highlighted]:ring-1 data-[highlighted]:ring-ring',
-                theme === value ? 'bg-segment-active text-foreground shadow-sm' : 'text-muted-foreground'
-              )}
-            ><Icon /></DropdownMenuRadioItem>
-          ))}
-        </DropdownMenuRadioGroup>
         <DropdownMenuItem onSelect={onBrokenLinks}>
           <LinkBreak /> Broken links
           {brokenCount > 0 && <span className="ml-auto pl-4 text-muted-foreground">{brokenCount}</span>}

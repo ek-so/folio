@@ -229,7 +229,7 @@ export default function App() {
       <div className="flex flex-col h-full bg-background">
         <PullToRefresh onRefresh={() => window.location.reload()}>
           {page === 'settings' ? (
-            <Settings login={auth.user.login} repo={auth.repo} onBack={() => setPage(null)} />
+            <Settings login={auth.user.login} repo={auth.repo} theme={theme} onTheme={setTheme} onBack={() => setPage(null)} />
           ) : page === 'links' ? (
             <BrokenLinks
               broken={links.index.broken}
@@ -288,8 +288,6 @@ export default function App() {
               menu={
                 <AccountMenu
                   repo={auth.repo}
-                  theme={theme}
-                  onTheme={setTheme}
                   onSettings={() => setPage('settings')}
                   brokenCount={links.index.broken.length}
                   onBrokenLinks={() => setPage('links')}
