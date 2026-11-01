@@ -106,7 +106,8 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
                 >
                   <div
                     className={cn(
-                      'flex items-center pr-1 rounded-lg transition-colors',
+                      // One row: hovering anywhere on it (⋯ included) or an open ⋯ menu highlights it
+                      'flex items-center pr-1 rounded-lg transition-colors hover:bg-secondary has-[[data-state=open]]:bg-secondary',
                       dragOverPath === item.path && item.type === 'dir' && 'bg-primary/10 ring-1 ring-primary/40'
                     )}
                     onDragOver={e => {
@@ -142,7 +143,7 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
                   >
                     <Button
                       variant="ghost"
-                      className="flex-1 min-w-0 justify-start gap-3 pl-3 pr-0 rounded-lg font-normal text-left hover:bg-secondary disabled:opacity-100 disabled:cursor-default"
+                      className="flex-1 min-w-0 justify-start gap-3 pl-3 pr-0 rounded-lg font-normal text-left hover:bg-transparent disabled:opacity-100 disabled:cursor-default"
                       onClick={() => navigate(item)}
                       disabled={!openable}
                     >
