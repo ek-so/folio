@@ -25,6 +25,9 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run build
+      # GitHub Pages serves 404.html for unknown paths, so deep links like
+      # /folio/Life/note.md load the app instead of a 404 page
+      - run: cp dist/index.html dist/404.html
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist

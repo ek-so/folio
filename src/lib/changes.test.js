@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   empty, count, virtualFiles, add, setEdit, rename, remove, conflicts, settle, treeEntries,
-  renameTarget, renameError, createError,
+  renameTarget, renameError, createError, getAllFolders,
 } from './changes.js'
 
 const files = {
@@ -91,5 +91,11 @@ describe('name checks', () => {
     ch = remove(empty(), view(empty()), 'a.md', false)
     expect(createError(ch, view(ch), ['a.md'])).toBeNull()
     expect(renameError(ch, view(ch), item('dir/x.md'), 'a.md')).toMatch(/Sync first/)
+  })
+})
+
+describe('getAllFolders', () => {
+  it('lists every folder level, sorted', () => {
+    expect(getAllFolders({ 'a.md': {}, 'x/y/z.md': {}, 'x/w.md': {} })).toEqual(['x', 'x/y'])
   })
 })

@@ -20,7 +20,7 @@ export default function MoveModal({ item, folders, onMove, onClose }) {
   })
 
   const q = query.trim().toLowerCase()
-  const filtered = q ? available.filter(f => (f || 'root').includes(q)) : available
+  const filtered = q ? available.filter(f => (f || 'root').toLowerCase().includes(q)) : available
 
   function handleMove(folder) {
     const err = onMove(item, folder)

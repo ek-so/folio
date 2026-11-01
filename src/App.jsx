@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import Auth from './components/Auth.jsx'
 import RepoSetup from './components/RepoSetup.jsx'
 import FileBrowser from './components/FileBrowser.jsx'
@@ -53,16 +53,21 @@ export default function App() {
   }, [selectedFile, folder])
 
   const { virtual, changes, update } = repo
+  const allFolders = useMemo(() => getAllFolders(virtual), [virtual])
+
+  // Rename or move `item` to path `to`; the open folder / note follows it
+  function relocate(item, to) {
+    update(ch => rename(ch, virtual, item.path, to, item.type === 'dir'))
+    const follow = p => p && (p === item.path || p.startsWith(item.path + '/')) ? to + p.slice(item.path.length) : p
+    setFolder(follow)
+    setSelectedFile(follow)
+  }
 
   function handleRename(item, name) {
     const to = renameTarget(item, name)
     const error = nameError(name) || renameError(changes, virtual, item, to)
     if (error) return error
-    update(ch => rename(ch, virtual, item.path, to, item.type === 'dir'))
-    // Stay in the renamed folder / note
-    const follow = p => p && (p === item.path || p.startsWith(item.path + '/')) ? to + p.slice(item.path.length) : p
-    setFolder(follow)
-    setSelectedFile(follow)
+    relocate(item, to)
     return null
   }
 
@@ -70,11 +75,7 @@ export default function App() {
     const to = targetFolder ? `${targetFolder}/${item.name}` : item.name
     const error = renameError(changes, virtual, item, to)
     if (error) return error
-    update(ch => rename(ch, virtual, item.path, to, item.type === 'dir'))
-    const follow = p => p && (p === item.path || p.startsWith(item.path + '/'))
-      ? to + p.slice(item.path.length) : p
-    setFolder(follow)
-    setSelectedFile(follow)
+    relocate(item, to)
     return null
   }
 
@@ -139,7 +140,6 @@ export default function App() {
 
   const entry = selectedFile && virtual[selectedFile]
   const repoName = auth.repo.split('/')[1]
-  const allFolders = getAllFolders(virtual)
   const syncButton = (
     <SyncButton
       syncState={repo.syncState}

@@ -1,18 +1,19 @@
 import { useState, useRef } from 'react'
 import { Input } from './ui/input.jsx'
+import { Button } from './ui/button.jsx'
 import BottomSheet from './BottomSheet.jsx'
 import { splitName } from '../lib/changes.js'
 import FileIcon from './FileIcon.jsx'
 
 // Command-palette style search. Shows recently opened files when no query is typed,
-// then filters all .md files in the repo by path/name as the user types.
-// Reusable for file-moving and other contexts via the `filter` prop.
+// then filters every visible file in the repo (notes, images, PDFs, …) by path.
 export default function SearchSheet({ onClose, onSelect, virtual, changes, recent }) {
   const [query, setQuery] = useState('')
   const inputRef = useRef()
 
   const q = query.trim().toLowerCase()
-  const allFiles = Object.keys(virtual || {}).filter(p => p.endsWith('.md') && !p.endsWith('/.gitkeep'))
+  // Same visibility as the file list: nothing inside or named with a leading "."
+  const allFiles = Object.keys(virtual || {}).filter(p => !p.split('/').some(seg => seg.startsWith('.')))
   const recentFiles = (recent || []).filter(p => p in (virtual || {}))
 
   const results = q
@@ -40,7 +41,7 @@ export default function SearchSheet({ onClose, onSelect, virtual, changes, recen
           autoCapitalize="off"
           className="bg-background border-border"
         />
-        <div className="overflow-y-auto max-h-64 -mx-6 data-no-pull">
+        <div className="overflow-y-auto max-h-64 -mx-6" data-no-pull>
           {!q && recentFiles.length === 0 ? (
             <p className="text-muted-foreground text-sm text-center py-6 px-6">No recent files</p>
           ) : results.length === 0 ? (
@@ -52,11 +53,13 @@ export default function SearchSheet({ onClose, onSelect, virtual, changes, recen
                 const fileName = parts.pop()
                 const [base] = splitName(fileName)
                 const folder = parts.join('/')
-                const hasEdit = changes?.edits && path in changes.edits
+                // Edits are keyed by the file's original path, which differs after a rename
+                const hasEdit = changes?.edits && virtual[path]?.orig in changes.edits
                 return (
                   <li key={path}>
-                    <button
-                      className="w-full flex items-center gap-3 px-6 py-2.5 hover:bg-secondary text-left min-h-10"
+                    <Button
+                      variant="ghost"
+                      className="w-full h-auto min-h-10 justify-start gap-3 rounded-none px-6 py-2 font-normal text-left"
                       onClick={() => select(path)}
                     >
                       <FileIcon path={path} />
@@ -67,7 +70,7 @@ export default function SearchSheet({ onClose, onSelect, virtual, changes, recen
                         </span>
                         {folder && <span className="block text-xs text-muted-foreground truncate">{folder}</span>}
                       </span>
-                    </button>
+                    </Button>
                   </li>
                 )
               })}

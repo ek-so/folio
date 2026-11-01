@@ -51,7 +51,7 @@ export const storage = {
   // Everything tied to the signed-in account; theme stays
   clearSession: () => {
     for (const key of [TOKEN_KEY, REPO_KEY, USER_KEY]) write(localStorage, key, null)
-    for (const key of [FOLDER_KEY, FILE_KEY, SETTINGS_KEY]) write(sessionStorage, key, null)
+    for (const key of [FOLDER_KEY, FILE_KEY, SETTINGS_KEY, RECENT_KEY]) write(sessionStorage, key, null)
   },
 }
 
