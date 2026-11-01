@@ -14,6 +14,7 @@ import SignOutModal from './components/SignOutModal.jsx'
 import DiscardModal from './components/DiscardModal.jsx'
 import SyncErrorModal from './components/SyncErrorModal.jsx'
 import BrokenLinks from './components/BrokenLinks.jsx'
+import SyncCheckModal from './components/SyncCheckModal.jsx'
 import { useLinkIndex, LinksContext } from './hooks/useLinkIndex.js'
 import { rewriteLinks, retargetLink, extractLinks } from './lib/links.js'
 import AccountMenu from './components/AccountMenu.jsx'
@@ -44,6 +45,7 @@ export default function App() {
   const [confirmDiscard, setConfirmDiscard] = useState(false)
   const [discards, setDiscards] = useState(0) // remounts the open note after a discard
   const [searchOpen, setSearchOpen] = useState(false)
+  const [syncCheck, setSyncCheck] = useState(false) // broken-links sheet before syncing
 
   useEffect(() => { storage.setFolder(folder) }, [folder])
   useEffect(() => { storage.setFile(selectedFile) }, [selectedFile])
@@ -147,6 +149,21 @@ export default function App() {
     setDiscards(n => n + 1)
   }
 
+  // Sync, unless the repo has broken links: then offer to fix them first
+  function requestSync() {
+    window.dispatchEvent(new Event('folio:flush'))
+    if (links.index.broken.length) setSyncCheck(true)
+    else repo.sync()
+  }
+
+  // Everything fixed from the sheet: carry on with the sync
+  useEffect(() => {
+    if (syncCheck && links.index.broken.length === 0) {
+      setSyncCheck(false)
+      repo.sync()
+    }
+  }, [syncCheck, links.index.broken.length])
+
   // Point a broken link at the file it most likely meant
   function fixBrokenLink(broken, targetPath) {
     const entry = virtual[broken.from]
@@ -192,7 +209,7 @@ export default function App() {
       syncing={repo.syncing}
       changeCount={repo.changeCount}
       remoteAhead={repo.remoteAhead}
-      onSync={repo.sync}
+      onSync={requestSync}
       onPull={repo.pullChanges}
       onDiscard={() => setConfirmDiscard(true)}
     />
@@ -288,7 +305,19 @@ export default function App() {
           )}
         </PullToRefresh>
 
-        {repo.syncError && (
+        {syncCheck && (
+        <SyncCheckModal
+          broken={links.index.broken}
+          files={virtual}
+          onFix={fixBrokenLink}
+          onOpenNote={path => { setSyncCheck(false); setPage(null); setSelectedFile(path) }}
+          onOpenPage={() => { setSyncCheck(false); setSelectedFile(null); setPage('links') }}
+          onSyncAnyway={() => { setSyncCheck(false); repo.sync() }}
+          onClose={() => setSyncCheck(false)}
+        />
+      )}
+
+      {repo.syncError && (
           <SyncErrorModal error={repo.syncError} onRetry={repo.syncError.retry} onClose={repo.dismissSyncError} />
         )}
 
