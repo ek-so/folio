@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
-import { getTree, getBlobBase64, commitTree, isNetworkError, getLatestCommitSha, blobSha, encodeText } from '../lib/github.js'
+import { getTree, getBlobBase64, commitTree, isNetworkError, getLatestCommitSha, blobSha, encodeText, uploadBlob } from '../lib/github.js'
 import { cache } from '../lib/cache.js'
 import { localChanges } from '../lib/storage.js'
 import { describeSyncError } from '../lib/syncErrors.js'
 import {
-  empty, count, virtualFiles, changedPaths, conflicts, discard, settle, treeEntries, commitMessage, filesAfter,
+  empty, normalize, count, virtualFiles, changedPaths, conflicts, discard, settle, treeEntries, commitMessage, filesAfter,
 } from '../lib/changes.js'
 
 const PREFETCH_WORKERS = 4
@@ -69,7 +69,7 @@ export function useRepo(repo) {
 
   useEffect(() => {
     if (!repo) return
-    changesRef.current = localChanges.get(repo) || empty()
+    changesRef.current = normalize(localChanges.get(repo))
     setChanges(changesRef.current)
     setRemoteTree(null)
     setError('')
@@ -174,6 +174,7 @@ export function useRepo(repo) {
   async function push(latest) {
     const committed = changesRef.current
     if (!count(committed)) return
+    for (const sha of new Set(Object.values(committed.uploads))) await uploadBlob(sha)
     const { commitSha, treeSha } = await commitTree(latest, treeEntries(committed, latest.files), commitMessage(committed))
     const editShas = {}
     for (const [orig, text] of Object.entries(committed.edits)) {

@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   empty, count, virtualFiles, add, setEdit, rename, remove, conflicts, settle, treeEntries, filesAfter,
+  upload, replaceUpload, normalize, freePath,
   renameTarget, renameError, createError, getAllFolders,
 } from './changes.js'
 
@@ -65,6 +66,33 @@ describe('changes', () => {
     expect(conflicts(settle(ch, ch, after), after)).toEqual([])
   })
 
+  it('adds and replaces files from the device until they are synced', () => {
+    let ch = upload(empty(), files, 'dir/photo.png', 'p1')
+    ch = replaceUpload(ch, view(ch)['a.md'], 'a9')
+    expect(view(ch)['dir/photo.png']).toMatchObject({ sha: 'p1' })
+    expect(view(ch)['a.md']).toMatchObject({ sha: 'a9' })
+    expect(count(ch)).toBe(2)
+    expect(treeEntries(ch, files)).toEqual([
+      { path: 'dir/photo.png', mode: '100644', type: 'blob', sha: 'p1' },
+      { path: 'a.md', mode: '100644', type: 'blob', sha: 'a9' },
+    ])
+    const after = filesAfter(files, ch, {})
+    expect(after['dir/photo.png'].sha).toBe('p1')
+    expect(count(settle(ch, ch, after))).toBe(0)
+    expect(count(remove(ch, view(ch), 'dir/photo.png', false))).toBe(1)
+  })
+
+  it('numbers a name that is taken', () => {
+    let ch = upload(empty(), files, 'dir/x 2.md', 'n1')
+    expect(freePath(ch, view(ch), 'dir/x.md')).toBe('dir/x 3.md')
+    expect(freePath(ch, view(ch), 'new.png')).toBe('new.png')
+  })
+
+  it('reads changes saved before uploads existed', () => {
+    expect(normalize({ edits: {}, moves: {}, base: {} })).toEqual(empty())
+    expect(normalize(null)).toEqual(empty())
+  })
+
   it('settle keeps edits made while a commit was in flight', () => {
     const committed = setEdit(empty(), view(empty())['a.md'], 'v1', 'old')
     const current = setEdit(committed, virtualFiles(files, committed)['a.md'], 'v2', 'old')
@@ -80,7 +108,7 @@ describe('changes', () => {
     const current = setEdit(committed, virtualFiles(files, committed)['b.md'], 'edited', 'old')
     const after = { 'b.md': { sha: 'b1' }, 'dir/x.md': files['dir/x.md'] }
     const next = settle(current, committed, after)
-    expect(next).toEqual({ edits: { 'b.md': 'edited' }, moves: {}, base: { 'b.md': 'b1' } })
+    expect(next).toEqual({ edits: { 'b.md': 'edited' }, uploads: {}, moves: {}, base: { 'b.md': 'b1' } })
   })
 })
 

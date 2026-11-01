@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { Plus, FileText, Folder, MagnifyingGlass } from '@phosphor-icons/react'
+import { Plus, FileText, Folder, MagnifyingGlass, UploadSimple } from '@phosphor-icons/react'
 import { Button } from './ui/button.jsx'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from './ui/dropdown-menu.jsx'
 import Header from './Header.jsx'
@@ -13,11 +13,24 @@ import Spinner from './Spinner.jsx'
 import PageLayout from './PageLayout.jsx'
 import { cn } from '@/lib/utils.js'
 
-export default function FileBrowser({ path, onNavigate, listDir, loading, error, notice, onSelect, onNewFile, repoName, onRename, onDelete, onMove, folders, menu, syncButton, onSearch, notes }) {
+export default function FileBrowser({ path, onNavigate, listDir, loading, error, notice, onSelect, onNewFile, repoName, onRename, onDelete, onMove, folders, menu, syncButton, onSearch, notes, onUpload }) {
   const items = loading ? [] : listDir(path)
   const draggingRef = useRef(null) // always current for event handlers
   const [dragging, setDragging] = useState(null) // for rendering only
   const [dragOverPath, setDragOverPath] = useState(null)
+  const [filesOver, setFilesOver] = useState(false) // files from the device dragged over the list
+  const pickerRef = useRef()
+
+  // Dragging files from the device (not a row being moved)
+  const isFileDrag = e => !draggingRef.current && e.dataTransfer.types.includes('Files')
+
+  function dropFiles(e, folder) {
+    e.preventDefault()
+    e.stopPropagation()
+    setFilesOver(false)
+    setDragOverPath(null)
+    onUpload([...e.dataTransfer.files], folder)
+  }
 
   function navigate(item) {
     if (item.type === 'dir') onNavigate(item.path)
@@ -45,7 +58,19 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
         )}
       </Header>
 
-      <div className="flex-1 min-h-0 overflow-y-auto overscroll-y-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
+      {/* Files dropped here go into this folder, or into a folder row they're dropped on */}
+      <div
+        className={cn('flex-1 min-h-0 overflow-y-auto overscroll-y-contain transition-colors', filesOver && !dragOverPath && 'bg-primary/5 ring-2 ring-inset ring-primary/40')}
+        style={{ WebkitOverflowScrolling: 'touch' }}
+        onDragOver={e => {
+          if (!isFileDrag(e)) return
+          e.preventDefault()
+          e.dataTransfer.dropEffect = 'copy'
+          setFilesOver(true)
+        }}
+        onDragLeave={e => { if (!e.currentTarget.contains(e.relatedTarget)) { setFilesOver(false); setDragOverPath(null) } }}
+        onDrop={e => { if (isFileDrag(e)) dropFiles(e, path) }}
+      >
         <div className="max-w-[1000px] mx-auto">
         {loading && (
           <div className="flex justify-center py-12">
@@ -85,8 +110,17 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
                       dragOverPath === item.path && item.type === 'dir' && 'bg-primary/10 ring-1 ring-primary/40'
                     )}
                     onDragOver={e => {
+                      if (item.type !== 'dir') return
+                      if (isFileDrag(e)) {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        e.dataTransfer.dropEffect = 'copy'
+                        setFilesOver(true)
+                        setDragOverPath(item.path)
+                        return
+                      }
                       const d = draggingRef.current
-                      if (item.type !== 'dir' || !d || d.path === item.path) return
+                      if (!d || d.path === item.path) return
                       e.preventDefault()
                       e.dataTransfer.dropEffect = 'move'
                       setDragOverPath(item.path)
@@ -96,6 +130,7 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
                       if (!e.currentTarget.contains(e.relatedTarget)) setDragOverPath(null)
                     }}
                     onDrop={e => {
+                      if (item.type === 'dir' && isFileDrag(e)) return dropFiles(e, item.path)
                       const d = draggingRef.current
                       if (item.type !== 'dir' || !d || d.path === item.path) return
                       e.preventDefault()
@@ -138,8 +173,19 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
           <DropdownMenuContent align="end" onCloseAutoFocus={e => e.preventDefault()}>
             <DropdownMenuItem onSelect={() => onNewFile(path, 'note')}><FileText /> New note</DropdownMenuItem>
             <DropdownMenuItem onSelect={() => onNewFile(path, 'folder')}><Folder /> New folder</DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => pickerRef.current?.click()}><UploadSimple /> Upload files…</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+        <input
+          ref={pickerRef}
+          type="file"
+          multiple
+          hidden
+          onChange={e => {
+            onUpload([...e.target.files], path)
+            e.target.value = '' // picking the same file again still fires
+          }}
+        />
         {syncButton}
       </Footer>
     </PageLayout>

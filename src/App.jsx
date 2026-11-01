@@ -12,6 +12,9 @@ import SyncButton from './components/SyncButton.jsx'
 import SearchSheet from './components/SearchSheet.jsx'
 import SignOutModal from './components/SignOutModal.jsx'
 import DiscardModal from './components/DiscardModal.jsx'
+import UploadClashModal from './components/UploadClashModal.jsx'
+import UploadErrorsModal from './components/UploadErrorsModal.jsx'
+import { blobShaOf, toBase64 } from './lib/github.js'
 import SyncErrorModal from './components/SyncErrorModal.jsx'
 import BrokenLinks from './components/BrokenLinks.jsx'
 import SyncCheckModal from './components/SyncCheckModal.jsx'
@@ -27,6 +30,7 @@ import { storage } from './lib/storage.js'
 import { cache } from './lib/cache.js'
 import {
   listDir, nameError, renameTarget, renameError, createError, add, setEdit, rename, remove, getAllFolders,
+  upload, replaceUpload, freePath, virtualFiles, MAX_UPLOAD_BYTES,
 } from './lib/changes.js'
 
 export default function App() {
@@ -46,6 +50,8 @@ export default function App() {
   const [discards, setDiscards] = useState(0) // remounts the open note after a discard
   const [searchOpen, setSearchOpen] = useState(false)
   const [syncCheck, setSyncCheck] = useState(false) // broken-links sheet before syncing
+  const [uploadClash, setUploadClash] = useState(null) // { name, folder, resolve } while asking
+  const [uploadErrors, setUploadErrors] = useState([]) // [name, reason] after adding files
 
   useEffect(() => { storage.setFolder(folder) }, [folder])
   useEffect(() => { storage.setFile(selectedFile) }, [selectedFile])
@@ -138,6 +144,54 @@ export default function App() {
     setNewFile(null)
     return null
   }
+
+  // Files dropped or picked on this device, added to `folder` as local
+  // changes (synced with everything else). Each file's bytes are stored in
+  // the offline cache first; only then is the change recorded.
+  async function handleUpload(fileList, folder) {
+    if (!repo.remote) return
+    const remoteFiles = repo.remote.files
+    const errors = []
+    let ch = changes
+    for (const file of fileList) {
+      const reason = nameError(file.name)
+        || (file.size > MAX_UPLOAD_BYTES ? 'Larger than 100 MB, GitHub\'s limit for one file.' : null)
+      if (reason) { errors.push([file.name, reason]); continue }
+      const view = virtualFiles(remoteFiles, ch)
+      let path = folder ? `${folder}/${file.name}` : file.name
+      let replace = null
+      if (view[path]) {
+        const choice = await new Promise(resolve => setUploadClash({ name: file.name, folder, resolve }))
+        setUploadClash(null)
+        if (choice === 'skip') continue
+        if (choice === 'replace') replace = view[path]
+      }
+      if (!replace) path = freePath(ch, view, path)
+      try {
+        const bytes = new Uint8Array(await file.arrayBuffer())
+        const sha = await blobShaOf(bytes)
+        await cache.setBlob(sha, toBase64(bytes))
+        if (await cache.getBlob(sha) === undefined) throw new Error()
+        const apply = c => replace ? replaceUpload(c, replace, sha) : upload(c, remoteFiles, path, sha)
+        ch = apply(ch)
+        update(apply)
+      } catch {
+        errors.push([file.name, 'Couldn\'t store it on this device (storage full or unavailable).'])
+      }
+    }
+    setUploadErrors(errors)
+  }
+
+  // Dropping a file outside the drop area would open it in place of the app
+  useEffect(() => {
+    const block = e => { if (e.dataTransfer?.types.includes('Files')) e.preventDefault() }
+    window.addEventListener('dragover', block)
+    window.addEventListener('drop', block)
+    return () => {
+      window.removeEventListener('dragover', block)
+      window.removeEventListener('drop', block)
+    }
+  }, [])
 
   // Drop all local changes; leave a note or folder that only existed locally
   function discardChanges() {
@@ -296,6 +350,7 @@ export default function App() {
               }
               onSelect={setSelectedFile}
               onNewFile={(f, kind) => setNewFile({ folder: f, kind })}
+              onUpload={handleUpload}
               repoName={repoName}
               syncButton={syncButton}
               onSearch={() => setSearchOpen(true)}
@@ -318,6 +373,14 @@ export default function App() {
 
       {repo.syncError && (
           <SyncErrorModal error={repo.syncError} onRetry={repo.syncError.retry} onClose={repo.dismissSyncError} />
+        )}
+
+        {uploadClash && (
+          <UploadClashModal name={uploadClash.name} folder={uploadClash.folder} onChoose={uploadClash.resolve} />
+        )}
+
+        {uploadErrors.length > 0 && (
+          <UploadErrorsModal errors={uploadErrors} onClose={() => setUploadErrors([])} />
         )}
 
         {confirmDiscard && (

@@ -108,20 +108,35 @@ export async function commitTree(remote, entries, message) {
   return { commitSha: commit.sha, treeSha: tree.sha }
 }
 
-// Git's sha for a blob holding `text` (UTF-8), the same GitHub gives it
-export async function blobSha(text) {
-  const body = new TextEncoder().encode(text)
-  const head = new TextEncoder().encode(`blob ${body.length}\0`)
-  const bytes = new Uint8Array(head.length + body.length)
-  bytes.set(head)
-  bytes.set(body, head.length)
-  const hash = await crypto.subtle.digest('SHA-1', bytes)
+// Git's sha for a blob with these bytes, the same GitHub gives it
+export async function blobShaOf(bytes) {
+  const head = new TextEncoder().encode(`blob ${bytes.length}\0`)
+  const all = new Uint8Array(head.length + bytes.length)
+  all.set(head)
+  all.set(bytes, head.length)
+  const hash = await crypto.subtle.digest('SHA-1', all)
   return [...new Uint8Array(hash)].map(b => b.toString(16).padStart(2, '0')).join('')
 }
 
-// base64 of `text` as UTF-8, the form blobs are cached in
-export function encodeText(text) {
+// Git's sha for a blob holding `text` (UTF-8)
+export const blobSha = text => blobShaOf(new TextEncoder().encode(text))
+
+// base64 of raw bytes, the form blobs are cached in
+export function toBase64(bytes) {
   let bin = ''
-  for (const b of new TextEncoder().encode(text)) bin += String.fromCharCode(b)
+  for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000))
   return btoa(bin)
+}
+
+// base64 of `text` as UTF-8
+export const encodeText = text => toBase64(new TextEncoder().encode(text))
+
+// Uploads a file added on this device (cached under its sha) so a commit can
+// use it. A missing copy means the device's storage was cleared.
+export async function uploadBlob(sha) {
+  const base64 = await cache.getBlob(sha)
+  if (base64 === undefined) {
+    throw Object.assign(new Error('A file added on this device is no longer stored here. Discard it and add it again.'), { step: 'upload' })
+  }
+  await step('upload', octokit.rest.git.createBlob({ owner, repo, content: base64, encoding: 'base64' }))
 }
