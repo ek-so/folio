@@ -11,7 +11,11 @@ import {
 // `current` overrides the last crumb's name (used in Editor for the display name).
 // `changed` shows an unsaved-changes dot on the last crumb.
 // On narrow screens, with 2+ levels below home, the levels collapse into one dropdown
-// (current name ▾) listing every level, the current one checked.
+// (current name ▾) listing every level as an indented tree, the current one checked.
+// Collapsed dropdown tree: item padding and the indent per level (rem)
+const TREE_PAD = 0.75
+const TREE_STEP = 1.125
+
 export default function PathBreadcrumbs({ root, path, current, changed, onNavigate }) {
   const parts = path.split('/').filter(Boolean)
   const crumbs = [
@@ -42,10 +46,22 @@ export default function PathBreadcrumbs({ root, path, current, changed, onNaviga
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="max-w-[calc(100vw-2rem)]" onCloseAutoFocus={e => e.preventDefault()}>
-              {crumbs.slice(1).map(crumb => (
-                <DropdownMenuItem key={crumb.path} onSelect={() => crumb !== last && onNavigate(crumb.path)}>
-                  <Check className={crumb === last ? '' : 'invisible'} />
-                  <span className="truncate">{crumb.name}</span>
+              {crumbs.slice(1).map((crumb, depth) => (
+                <DropdownMenuItem
+                  key={crumb.path}
+                  onSelect={() => crumb !== last && onNavigate(crumb.path)}
+                  style={{ paddingLeft: `calc(${TREE_PAD}rem + ${depth * TREE_STEP}rem)` }}
+                >
+                  {/* └ hanging from the parent's first letter down to this row */}
+                  {depth > 0 && (
+                    <span
+                      aria-hidden="true"
+                      className="absolute -top-2 h-[calc(50%+0.5rem)] rounded-bl-sm border-b border-l border-muted-foreground/60"
+                      style={{ left: `${TREE_PAD + (depth - 1) * TREE_STEP}rem`, width: `${TREE_STEP - 0.375}rem` }}
+                    />
+                  )}
+                  <span className={cn('truncate', crumb === last && 'font-medium')}>{crumb.name}</span>
+                  {crumb === last && <Check className="ml-auto" />}
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>

@@ -31,6 +31,7 @@
 .editor-preview a.link-internal .link-icon {
   display: inline-block; width: 1em; height: 1em; margin-right: 3px; vertical-align: -0.15em; color: var(--primary);
 }
+.editor-preview a.link-broken { text-decoration-color: var(--muted-foreground); }
 .editor-preview a.link-broken .link-icon { color: var(--muted-foreground); }
 .editor-preview hr { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
 .editor-preview strong { font-weight: 600; }
