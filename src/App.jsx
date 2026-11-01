@@ -12,6 +12,7 @@ import SyncButton from './components/SyncButton.jsx'
 import SearchSheet from './components/SearchSheet.jsx'
 import SignOutModal from './components/SignOutModal.jsx'
 import DiscardModal from './components/DiscardModal.jsx'
+import SyncErrorModal from './components/SyncErrorModal.jsx'
 import AccountMenu from './components/AccountMenu.jsx'
 import Settings from './components/Settings.jsx'
 import Spinner from './components/Spinner.jsx'
@@ -219,6 +220,10 @@ export default function App() {
           />
         )}
       </PullToRefresh>
+
+      {repo.syncError && (
+        <SyncErrorModal error={repo.syncError} onRetry={repo.syncError.retry} onClose={repo.dismissSyncError} />
+      )}
 
       {confirmDiscard && (
         <DiscardModal changeCount={repo.changeCount} onDiscard={discardChanges} onClose={() => setConfirmDiscard(false)} />

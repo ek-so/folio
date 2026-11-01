@@ -60,13 +60,19 @@ export async function getLatestCommitSha() {
   return data.commit.sha
 }
 
+// Tags errors with the sync step they happened in, for the error details sheet
+const step = (name, promise) => promise.catch(e => {
+  if (e && typeof e === 'object' && !e.step) e.step = name
+  throw e
+})
+
 // Latest commit on the default branch with every file in its tree.
 // `truncated` is set when GitHub couldn't list the whole tree.
 export async function getTree() {
-  const branchName = await getDefaultBranch()
-  const { data } = await octokit.rest.repos.getBranch({ owner, repo, branch: branchName, request: { fetch: fetchFresh } })
+  const branchName = await step('read', getDefaultBranch())
+  const { data } = await step('read', octokit.rest.repos.getBranch({ owner, repo, branch: branchName, request: { fetch: fetchFresh } }))
   const treeSha = data.commit.commit.tree.sha
-  const { data: tree } = await octokit.rest.git.getTree({ owner, repo, tree_sha: treeSha, recursive: 'true' })
+  const { data: tree } = await step('read', octokit.rest.git.getTree({ owner, repo, tree_sha: treeSha, recursive: 'true' }))
   const files = {}
   for (const item of tree.tree) {
     if (item.type === 'blob') files[item.path] = { sha: item.sha, mode: item.mode }
@@ -90,11 +96,11 @@ export async function getBlob(sha) {
 
 // Creates one commit on top of `remote` with the given tree entries.
 export async function commitTree(remote, entries, message) {
-  const { data: tree } = await octokit.rest.git.createTree({
+  const { data: tree } = await step('upload', octokit.rest.git.createTree({
     owner, repo, base_tree: remote.treeSha, tree: entries,
-  })
-  const { data: commit } = await octokit.rest.git.createCommit({
+  }))
+  const { data: commit } = await step('upload', octokit.rest.git.createCommit({
     owner, repo, message, tree: tree.sha, parents: [remote.commitSha],
-  })
-  await octokit.rest.git.updateRef({ owner, repo, ref: `heads/${remote.branch}`, sha: commit.sha })
+  }))
+  await step('save', octokit.rest.git.updateRef({ owner, repo, ref: `heads/${remote.branch}`, sha: commit.sha }))
 }

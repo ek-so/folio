@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useMemo } from 'react'
 import { getTree, getBlobBase64, commitTree, isNetworkError, getLatestCommitSha } from '../lib/github.js'
 import { cache } from '../lib/cache.js'
 import { localChanges } from '../lib/storage.js'
+import { describeSyncError } from '../lib/syncErrors.js'
 import {
   empty, count, virtualFiles, changedPaths, conflicts, discard, settle, treeEntries, commitMessage,
 } from '../lib/changes.js'
@@ -62,6 +63,7 @@ export function useRepo(repo) {
   const [syncing, setSyncing] = useState(false)
   const [syncState, setSyncState] = useState('idle') // idle | done | error | offline
   const [remoteAhead, setRemoteAhead] = useState(false)
+  const [syncError, setSyncError] = useState(null) // { ...describeSyncError(), retry } after a failed action
   const knownCommitSha = useRef(null)
   const flashTimer = useRef()
 
@@ -177,13 +179,21 @@ export function useRepo(repo) {
 
   // Runs a sync step, showing its outcome on the Sync button. A task
   // returning false ends without a "done" flash (e.g. stopped for conflicts).
-  async function run(task) {
+  // Offline isn't an error (the button says Offline); anything else opens the
+  // error sheet, whose Try again repeats `retry`.
+  async function run(task, retry) {
     setSyncing(true)
+    setSyncError(null)
     try {
       if (await task() !== false) flash('done')
     } catch (e) {
-      if (isNetworkError(e)) setOnline(false)
-      flash(isNetworkError(e) ? 'offline' : 'error')
+      if (isNetworkError(e)) {
+        setOnline(false)
+        flash('offline')
+      } else {
+        flash('error')
+        setSyncError({ ...describeSyncError(e), retry })
+      }
     }
     setSyncing(false)
   }
@@ -200,20 +210,20 @@ export function useRepo(repo) {
         return false
       }
       await push(latest)
-    })
+    }, sync)
   }
 
   // Pull only, from the Sync menu; local changes stay
   function pullChanges() {
     if (syncing) return
-    return run(fetchLatest)
+    return run(fetchLatest, pullChanges)
   }
 
   function pushLocal() {
     return run(async () => {
       await push(await pull())
       setConflictPaths([])
-    })
+    }, pushLocal)
   }
 
   function takeRemote() {
@@ -233,6 +243,6 @@ export function useRepo(repo) {
   return {
     remote, error, online, virtual, changes, changed, changeCount: count(changes),
     conflictPaths, dismissConflicts: () => setConflictPaths([]),
-    syncing, syncState, remoteAhead, update, sync, pullChanges, pushLocal, takeRemote, discardAll,
+    syncing, syncState, remoteAhead, syncError, dismissSyncError: () => setSyncError(null), update, sync, pullChanges, pushLocal, takeRemote, discardAll,
   }
 }
