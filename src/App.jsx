@@ -3,6 +3,8 @@ import Auth from './components/Auth.jsx'
 import RepoSetup from './components/RepoSetup.jsx'
 import FileBrowser from './components/FileBrowser.jsx'
 import Editor from './components/Editor.jsx'
+import FileViewer from './components/FileViewer.jsx'
+import { fileKind } from './lib/files.js'
 import PullToRefresh from './components/PullToRefresh.jsx'
 import NewFileModal from './components/NewFileModal.jsx'
 import ConflictModal from './components/ConflictModal.jsx'
@@ -155,6 +157,20 @@ export default function App() {
       <PullToRefresh onRefresh={() => window.location.reload()}>
         {showSettings ? (
           <Settings login={auth.user.login} repo={auth.repo} onBack={() => setShowSettings(false)} />
+        ) : entry && ['image', 'pdf'].includes(fileKind(selectedFile)) ? (
+          <FileViewer
+            key={selectedFile}
+            path={selectedFile}
+            entry={entry}
+            root={repoName}
+            onNavigate={p => { setFolder(p); setSelectedFile(null) }}
+            onRename={handleRename}
+            onDelete={handleDelete}
+            onMove={handleMove}
+            folders={allFolders}
+            syncButton={syncButton}
+            onSearch={() => setSearchOpen(true)}
+          />
         ) : entry ? (
           <Editor
             key={`${selectedFile}:${discards}`}

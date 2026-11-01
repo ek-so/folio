@@ -2,7 +2,7 @@ import { useState, useRef } from 'react'
 import { Input } from './ui/input.jsx'
 import BottomSheet from './BottomSheet.jsx'
 import { splitName } from '../lib/changes.js'
-import { isImage } from '../lib/files.js'
+import FileIcon from './FileIcon.jsx'
 
 // Command-palette style search. Shows recently opened files when no query is typed,
 // then filters all .md files in the repo by path/name as the user types.
@@ -53,14 +53,13 @@ export default function SearchSheet({ onClose, onSelect, virtual, changes, recen
                 const [base] = splitName(fileName)
                 const folder = parts.join('/')
                 const hasEdit = changes?.edits && path in changes.edits
-                const icon = isImage(fileName) ? '🖼️' : '📄'
                 return (
                   <li key={path}>
                     <button
                       className="w-full flex items-center gap-3 px-6 py-2.5 hover:bg-secondary text-left min-h-10"
                       onClick={() => select(path)}
                     >
-                      <span className="text-lg shrink-0">{icon}</span>
+                      <FileIcon path={path} />
                       <span className="flex-1 min-w-0">
                         <span className="flex items-center gap-1.5 text-sm truncate">
                           {base}

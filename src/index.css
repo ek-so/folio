@@ -58,6 +58,8 @@
     --callout-warning: oklch(0.72 0.15 75);
     --callout-caution: oklch(0.6 0.2 27);
     --callout-tint: 14%;
+    /* Image file icons in lists (folders use primary, PDFs destructive) */
+    --file-image: oklch(0.62 0.15 150);
 
     --radius: 0.75rem;
 
@@ -170,6 +172,7 @@
   --color-destructive: var(--destructive);
   --color-success: var(--success);
   --color-success-foreground: var(--success-foreground);
+  --color-file-image: var(--file-image);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);

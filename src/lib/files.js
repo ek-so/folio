@@ -14,6 +14,15 @@ export function imageMime(path) {
 
 export const isImage = path => imageMime(path) !== undefined
 
+// What a file is, for its icon and how it opens: 'note' (markdown, edited),
+// 'image' and 'pdf' (viewed), or 'file' (can't be opened)
+export function fileKind(path) {
+  const ext = extension(path)
+  if (ext === 'md') return 'note'
+  if (ext === 'pdf') return 'pdf'
+  return IMAGE_MIME[ext] ? 'image' : 'file'
+}
+
 // A note's name as shown in the app: last path segment without ".md"
 export function displayName(path) {
   return path.split('/').pop().replace(/\.md$/, '')

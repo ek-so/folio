@@ -24,7 +24,7 @@ React + Vite PWA. Reads/writes markdown files from any GitHub repo via the GitHu
 
 ## Design system — shadcn/ui + Tailwind v4
 
-**Stack:** shadcn/ui (new-york style) · Tailwind CSS v4 · Radix UI primitives · Phosphor icons (`@phosphor-icons/react`, regular weight — except ⋯ `DotsThree`, bold for visibility; emoji for file/folder icons)
+**Stack:** shadcn/ui (new-york style) · Tailwind CSS v4 · Radix UI primitives · Phosphor icons (`@phosphor-icons/react`, regular weight — except ⋯ `DotsThree`, bold for visibility)
 
 ### Rules
 - Use shadcn components from `src/components/ui/` for all interactive elements. Add new ones with `npx shadcn@latest add <component>`.
@@ -32,6 +32,7 @@ React + Vite PWA. Reads/writes markdown files from any GitHub repo via the GitHu
 - Use `cn()` from `@/lib/utils` to merge classes conditionally.
 - **One control size.** Every tappable or input element is 40px tall: `Button` (default), `size="icon"` (40×40), `Input`, menu items, list rows, sheet close. Breadcrumb links sit on 24px lines with an invisible 40px tap area. Segmented toggles: a 40px track (`rounded-lg`, `p-1`) with 32px segments (`rounded-sm`) inside. Build controls from `Button`/`Input` instead of raw elements; don't override heights or add size variants.
 - **Icons are 16px** (`size-4`). `Button` and menu items size icons by default — don't pass size classes.
+- **File icons** come from `FileIcon` (20px Phosphor): folder blue (`text-primary`), note and other files grey, PDF red (`text-destructive`), image green (`text-file-image`). A note whose `# heading` starts with an emoji shows that emoji instead.
 - **Every screen uses `Header`.** Inner screens (folders, notes) show `← title`, with `PathBreadcrumbs` at the top of the scrolling content (not fixed); no separate home button. On mobile, 2+ levels below home collapse into one dropdown (current ▾, current checked).
 - **Actions live in `Footer`**, right-aligned: + (folders only) or ✓ (while editing a note), then Sync. It stays at the bottom of the page (hidden behind the keyboard).
 - Never hardcode colors — use Tailwind semantic tokens (`bg-background`, `text-foreground`, `text-muted-foreground`, `bg-primary`, etc.).
@@ -50,6 +51,7 @@ React + Vite PWA. Reads/writes markdown files from any GitHub repo via the GitHu
 | `bg-destructive` | Errors / danger |
 | `bg-success` / `text-success-foreground` | Success feedback, e.g. "Synced" (light green) |
 | `bg-segment` / `bg-segment-active` | Segmented toggle track / selected segment (lighter in both themes) |
+| `text-file-image` | Image file icons |
 | `--callout-*` / `--callout-tint` | GitHub alert callouts in the preview (note, tip, important, warning, caution); tinted against the background |
 | `--radius` | `0.75rem` base radius |
 
@@ -65,6 +67,7 @@ React + Vite PWA. Reads/writes markdown files from any GitHub repo via the GitHu
 - `src/lib/storage.js` — localStorage/sessionStorage: token, repo, cached user, theme, local changes, open folder/note.
 - `src/hooks/` — `useAuth` (token/user/repo), `useRepo` (remote tree, local changes, sync), `useNote` (one note's text, edit tracking), `useRepoImages`, `useTheme`. `App.jsx` is layout and UI actions.
 - Notes: `Editor` switches between `MarkdownPreview` (tap to edit) and `MarkdownEditor` (highlighted textarea).
+- Images and PDFs open read-only in `FileViewer` (content via `useBlob`); PDFs render every page with pdf.js (`PdfView`, loaded on first use). `Editor` and `FileViewer` share `FilePage` (header, footer).
 - Home header: `AccountMenu` (☰ owner / repo) opens a popover with theme (light/dark/system) and Settings / Sign out. `Settings` is its own page.
 - Rename/Delete for any file or folder go through `ItemMenu` (⋯), on list rows and in the header of the open folder or note.
 - Prompts use `BottomSheet` (shadcn Sheet); loading uses `Spinner`. Pull-to-refresh wraps every screen (`PullToRefresh`); areas marked `data-no-pull` opt out.

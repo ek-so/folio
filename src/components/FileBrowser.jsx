@@ -7,7 +7,8 @@ import Footer from './Footer.jsx'
 import PathBreadcrumbs from './PathBreadcrumbs.jsx'
 import ItemMenu from './ItemMenu.jsx'
 import { splitName } from '../lib/changes.js'
-import { isImage } from '../lib/files.js'
+import { fileKind } from '../lib/files.js'
+import FileIcon from './FileIcon.jsx'
 import { cache } from '../lib/cache.js'
 
 // Returns the leading emoji from a markdown file's first H1, or null.
@@ -96,7 +97,7 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
           <ul className="py-2 px-2">
             {items.map(item => {
               const [base, ext] = item.type === 'dir' ? [item.name, ''] : splitName(item.name)
-              const openable = item.type === 'dir' || ext === '.md'
+              const openable = item.type === 'dir' || fileKind(item.path) !== 'file'
               const isDraggedItem = dragging?.path === item.path
               return (
                 <li
@@ -146,9 +147,7 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
                       onClick={() => navigate(item)}
                       disabled={!openable}
                     >
-                      {item.type === 'dir'
-                        ? <img src={`${import.meta.env.BASE_URL}folio-logo.png`} alt="" className="size-6 shrink-0 object-contain" />
-                        : <span className="text-lg shrink-0">{isImage(item.name) ? '🖼️' : (emojis[item.path] ?? '📄')}</span>}
+                      <FileIcon path={item.path} dir={item.type === 'dir'} emoji={emojis[item.path]} />
                       <span className="flex-1 text-base truncate">
                         {base}
                         {ext && <span className="text-muted-foreground">{ext}</span>}
