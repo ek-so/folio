@@ -89,7 +89,7 @@ export function listDir(virtual, dir, changed = new Set()) {
     }
   }
   return [...dirs.values(), ...items]
-    .filter(i => !i.name.startsWith('.'))
+    .filter(i => i.name !== '.gitkeep')
     .sort((a, b) => {
       if (a.type === b.type) return a.name.localeCompare(b.name)
       return a.type === 'dir' ? -1 : 1
