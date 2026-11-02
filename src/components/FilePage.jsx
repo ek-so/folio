@@ -7,8 +7,8 @@ import PathBreadcrumbs from './PathBreadcrumbs.jsx'
 import PageLayout from './PageLayout.jsx'
 
 // Screen for one open file (note, image or PDF): breadcrumbs, search and ⋯
-// in the header, `actions` in the footer, the file's content in between.
-export default function FilePage({ path, root, name, changed, onNavigate, onRename, onDelete, onMove, folders, onSearch, actions, children }) {
+// in the header, Sync and `actions` in the footer, the file's content in between.
+export default function FilePage({ path, root, name, changed, onNavigate, onRename, onDelete, onMove, folders, onSearch, syncButton, actions, children }) {
   return (
     <PageLayout>
       <Header
@@ -28,7 +28,7 @@ export default function FilePage({ path, root, name, changed, onNavigate, onRena
       <div className="flex flex-col flex-1 min-h-0 max-w-[1000px] mx-auto w-full">
         {children}
       </div>
-      <Footer>{actions}</Footer>
+      <Footer sync={syncButton}>{actions}</Footer>
     </PageLayout>
   )
 }

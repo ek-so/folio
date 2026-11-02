@@ -51,6 +51,7 @@ export default function Editor({ path, root, entry, files, edited, onEdit, onNav
       onMove={onMove}
       folders={folders}
       onSearch={onSearch}
+      syncButton={syncButton}
       actions={<>
         {mode === 'edit' ? (
           <Button size="icon" onClick={finishEditing} aria-label="Done" className="shrink-0">
@@ -61,7 +62,6 @@ export default function Editor({ path, root, entry, files, edited, onEdit, onNav
             <PencilSimple />
           </Button>
         )}
-        {syncButton}
       </>}
     >
       {loading || loadError ? (

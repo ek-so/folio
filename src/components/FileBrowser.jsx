@@ -165,7 +165,7 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
         </div>
       </div>
 
-      <Footer>
+      <Footer sync={syncButton}>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button size="icon" aria-label="New" className="shrink-0">
@@ -188,7 +188,6 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
             e.target.value = '' // picking the same file again still fires
           }}
         />
-        {syncButton}
       </Footer>
     </PageLayout>
   )

@@ -32,7 +32,7 @@ export default function SyncButton({ syncState, syncing, changeCount, remoteAhea
             <CaretDown />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" onCloseAutoFocus={e => e.preventDefault()}>
+        <DropdownMenuContent align="start" onCloseAutoFocus={e => e.preventDefault()}>
           <DropdownMenuItem disabled={!hasPush} onSelect={onSync}>
             <ArrowUp /> Push changes
             {hasPush && <span className="ml-auto pl-4 text-muted-foreground">{changeCount}</span>}

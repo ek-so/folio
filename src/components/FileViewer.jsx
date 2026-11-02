@@ -15,7 +15,7 @@ export default function FileViewer({ path, entry, syncButton, ...page }) {
   const kind = fileKind(path)
 
   return (
-    <FilePage path={path} name={path.split('/').pop()} actions={syncButton} {...page}>
+    <FilePage path={path} name={path.split('/').pop()} syncButton={syncButton} {...page}>
       {error ? (
         <p className="text-muted-foreground text-sm text-center py-12 px-6">{MESSAGES[error]}</p>
       ) : !base64 ? (

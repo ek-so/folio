@@ -37,7 +37,7 @@ React + Vite PWA. Reads/writes markdown files from any GitHub repo via the GitHu
 - **Icons are 16px** (`size-4`). `Button` and menu items size icons by default — don't pass size classes.
 - **File icons** come from `FileIcon` (20px Phosphor): folder blue (`text-primary`), note and other files grey, PDF red (`text-destructive`), image green (`text-file-image`). A note whose `# heading` starts with an emoji shows that emoji instead.
 - **Every screen uses `Header`**, with the same padding everywhere. File screens show ☰ (`AccountMenu`) at the repo root, and ← (one level up: a file to its folder, a folder to its parent) everywhere below it, then `PathBreadcrumbs`: the repo name in bold is always the first level (alone at home), then the folders. On mobile, anywhere below the repo (1+ levels), the crumbs collapse into one dropdown (current ▾) listing every level as an indented tree, repo first in bold, the current one checked. Search and ⋯ sit on the right. App pages (Settings, Broken links) show ← title. All ← buttons are outlined like ☰.
-- **Actions live in `Footer`**, right-aligned: + (folders only), ✏️ Edit (a note in preview) or ✓ (while editing), then Sync. It stays at the bottom of the page (hidden behind the keyboard).
+- **`Footer`** has Sync on the left, always; the screen's actions on the right: + (folders), ✏️ Edit (a note in preview) or ✓ (while editing). It stays at the bottom of the page (hidden behind the keyboard).
 - Never hardcode colors — use Tailwind semantic tokens (`bg-background`, `text-foreground`, `text-muted-foreground`, `bg-primary`, etc.).
 
 ### CSS variables (defined in `src/index.css`, with light and dark values)
