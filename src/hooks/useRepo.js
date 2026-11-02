@@ -74,16 +74,23 @@ export function useRepo(repo) {
     setRemoteTree(null)
     setError('')
     let cancelled = false
+    // Files on this device stay as they are until Sync or Pull: a saved tree
+    // is only checked against GitHub (the Sync badge shows if it's behind).
+    // Only a repo never opened here is downloaded.
     cache.getTree(repo).then(tree => {
       if (cancelled) return
-      if (tree && !remoteRef.current) setRemoteTree(tree)
-      refresh()
+      if (tree?.commitSha && !remoteRef.current) {
+        setRemoteTree(tree)
+        knownCommitSha.current = tree.commitSha
+        prefetchNotes(tree.files)
+        checkRemote()
+      } else refresh()
     })
     return () => { cancelled = true }
   }, [repo])
 
   useEffect(() => {
-    const goOnline = () => { setOnline(true); refresh() }
+    const goOnline = () => { setOnline(true); remoteRef.current ? checkRemote() : refresh() }
     const goOffline = () => setOnline(false)
     window.addEventListener('online', goOnline)
     window.addEventListener('offline', goOffline)
@@ -144,12 +151,16 @@ export function useRepo(repo) {
     return latest
   }
 
+  // Whether GitHub has commits this device hasn't pulled; downloads nothing
   async function checkRemote() {
     if (!navigator.onLine || !knownCommitSha.current) return
     try {
       const sha = await getLatestCommitSha()
-      if (sha !== knownCommitSha.current) setRemoteAhead(true)
-    } catch { /* offline or transient */ }
+      setOnline(true)
+      setRemoteAhead(sha !== knownCommitSha.current)
+    } catch (e) {
+      if (isNetworkError(e)) setOnline(false)
+    }
   }
 
   function handleError(e) {

@@ -3,14 +3,15 @@ import { Button } from './ui/button.jsx'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from './ui/dropdown-menu.jsx'
 
 const LOOK = {
-  idle: { variant: 'default', label: 'Sync' },
+  idle: { variant: 'ghost-outline', label: 'Sync' },
   done: { variant: 'success', label: 'Synced', Icon: Check },
   error: { variant: 'destructive', label: 'Failed', Icon: X },
-  offline: { variant: 'default', label: 'Offline', Icon: CloudSlash },
+  offline: { variant: 'ghost-outline', label: 'Offline', Icon: CloudSlash },
 }
 
-// Split Sync button: the main part syncs; ▾ opens Push (with change count),
-// Pull (marked New when GitHub is ahead) and Discard.
+// Split Sync button, faded like Search and ⋯: the main part syncs; ▾ opens
+// Push (with change count), Pull (marked New when GitHub is ahead) and
+// Discard. An accent dot shows when there's anything to push or pull.
 export default function SyncButton({ syncState, syncing, changeCount, remoteAhead, onSync, onPull, onDiscard }) {
   const { variant, label, Icon } = LOOK[syncState] || LOOK.idle
   const hasPush = changeCount > 0
@@ -18,17 +19,20 @@ export default function SyncButton({ syncState, syncing, changeCount, remoteAhea
 
   return (
     <div className="flex">
-      <Button onClick={onSync} disabled={syncing} variant={variant} className="gap-2 rounded-r-none">
+      <Button onClick={onSync} disabled={syncing} variant={variant} className="relative gap-2 rounded-r-none">
         {syncing ? (
           <span className="size-4 rounded-full border border-current border-t-transparent animate-spin opacity-60" />
         ) : Icon ? (
           <Icon />
         ) : null}
         {label}
+        {syncState === 'idle' && (hasPush || hasPull) && (
+          <span aria-label="Something to sync" className="absolute top-1.5 right-1.5 size-2 rounded-full bg-primary" />
+        )}
       </Button>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant={variant} size="icon" disabled={syncing} aria-label="Sync options" className="rounded-l-none border-l border-primary-foreground/30">
+          <Button variant={variant} size="icon" disabled={syncing} aria-label="Sync options" className="rounded-l-none border-l border-background">
             <CaretDown />
           </Button>
         </DropdownMenuTrigger>
