@@ -42,8 +42,10 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
   return (
     <PageLayout>
       <Header
+        // ☰ at the repo root; inside a folder ← goes one level up
+        onBack={path ? () => onNavigate(path.slice(0, Math.max(path.lastIndexOf('/'), 0))) : undefined}
         start={<>
-          {menu}
+          {!path && menu}
           <div className="flex-1 min-w-0">
             <PathBreadcrumbs root={repoName} path={path} onNavigate={onNavigate} />
           </div>

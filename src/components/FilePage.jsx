@@ -8,12 +8,13 @@ import PageLayout from './PageLayout.jsx'
 
 // Screen for one open file (note, image or PDF): breadcrumbs, search and ⋯
 // in the header, `actions` in the footer, the file's content in between.
-export default function FilePage({ menu, path, root, name, changed, onNavigate, onRename, onDelete, onMove, folders, onSearch, actions, children }) {
+export default function FilePage({ path, root, name, changed, onNavigate, onRename, onDelete, onMove, folders, onSearch, actions, children }) {
   return (
     <PageLayout>
       <Header
+        // ← back to the folder holding the file
+        onBack={() => onNavigate(path.slice(0, Math.max(path.lastIndexOf('/'), 0)))}
         start={<>
-          {menu}
           <div className="flex-1 min-w-0">
             <PathBreadcrumbs root={root} path={path} current={name} changed={changed} onNavigate={onNavigate} />
           </div>
