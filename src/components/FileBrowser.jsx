@@ -102,7 +102,7 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
                     setDragging(null)
                     setDragOverPath(null)
                   }}
-                  className={isDraggedItem ? 'opacity-40' : ''}
+                  className={cn(isDraggedItem ? 'opacity-40' : item.name.startsWith('.') ? 'opacity-50' : '')}
                 >
                   <div
                     className={cn(

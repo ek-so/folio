@@ -69,7 +69,7 @@ export default function Editor({ path, root, entry, files, edited, onEdit, onNav
       ) : (
         <MarkdownPreview
           content={content} path={path} files={files} scrollTo={editedAt}
-          onTap={startEditing} onOpenFile={onOpenFile} onNavigate={onNavigate}
+          onTap={startEditing} onChange={change} onOpenFile={onOpenFile} onNavigate={onNavigate}
           footer={<Backlinks links={backlinks} onOpen={onOpenFile} />}
         />
       )}

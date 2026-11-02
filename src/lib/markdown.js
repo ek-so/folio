@@ -30,10 +30,17 @@ marked.use({ useNewRenderer: true, renderer: {
   },
 } })
 
+// Prevent marked from treating "text\n---" as a setext h2 heading.
+// A bare "---" preceded by content (no blank line) is almost always meant as
+// a divider, not a heading underline — especially in YAML front-matter blocks.
+function breakSetextHr(md) {
+  return md.replace(/(^|\n)([^\n]+)\n(---[ \t]*(?:\n|$))/g, '$1$2\n\n$3')
+}
+
 // HTML (unsanitized) where each top-level block is wrapped in
 // <div data-src="start" data-len="length"> pointing at its markdown source.
 export function renderBlocks(markdown) {
-  const tokens = marked.lexer(markdown)
+  const tokens = marked.lexer(breakSetextHr(markdown))
   let offset = 0
   let html = ''
   for (const token of tokens) {

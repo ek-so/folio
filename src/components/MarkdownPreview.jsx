@@ -59,7 +59,7 @@ const repoImages = (root, notePath) => [...root.querySelectorAll('img')]
 // markdown offset of the tapped word. On mount, scrolls the block holding
 // `scrollTo` (a markdown offset) into view. `children` render above the
 // note and `footer` below it; both scroll with it.
-export default function MarkdownPreview({ content, path, files, scrollTo, onTap, onOpenFile, onNavigate, footer, children }) {
+export default function MarkdownPreview({ content, path, files, scrollTo, onTap, onChange, onOpenFile, onNavigate, footer, children }) {
   const ref = useRef()
   const [brokenTip, setBrokenTip] = useState(null)
   const tipTimer = useRef()
@@ -87,6 +87,22 @@ export default function MarkdownPreview({ content, path, files, scrollTo, onTap,
       }
     }
     breakLongWords(tpl.content)
+    // Task list items: remove bullet, enable checkbox, record markdown offset
+    for (const cb of tpl.content.querySelectorAll('input[type="checkbox"]')) {
+      cb.closest('li')?.classList.add('task-item')
+      cb.removeAttribute('disabled')
+      const block = cb.closest('[data-src]')
+      if (!block) continue
+      const blockStart = Number(block.dataset.src)
+      const blockRaw = content.slice(blockStart, blockStart + Number(block.dataset.len))
+      const allInBlock = [...block.querySelectorAll('input[type="checkbox"]')]
+      const idx = allInBlock.indexOf(cb)
+      const re = /\[[ x]\]/gi
+      let match, n = 0
+      while ((match = re.exec(blockRaw)) !== null) {
+        if (n++ === idx) { cb.dataset.offset = String(blockStart + match.index + 1); break }
+      }
+    }
     // Wrap leading emoji in H1 headings with an outlined icon badge
     for (const h1 of tpl.content.querySelectorAll('h1')) {
       const first = h1.firstChild
@@ -173,6 +189,14 @@ export default function MarkdownPreview({ content, path, files, scrollTo, onTap,
   }
 
   function handleClick(e) {
+    if (e.target.matches('input[type="checkbox"]')) {
+      const offset = Number(e.target.dataset.offset)
+      if (onChange && !isNaN(offset)) {
+        const char = e.target.checked ? 'x' : ' '
+        onChange(content.slice(0, offset) + char + content.slice(offset + 1))
+      }
+      return
+    }
     if (e.target.closest('a, img')) return
     onTap(offsetAt(e.clientX, e.clientY, e.target))
   }
