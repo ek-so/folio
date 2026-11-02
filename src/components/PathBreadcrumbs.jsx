@@ -11,7 +11,7 @@ import {
 // then the folders. Every level but the last is a link.
 // `current` overrides the last crumb's name (used in Editor for the display name).
 // `changed` shows an unsaved-changes dot on the last crumb.
-// On narrow screens, with 2+ levels below the repo, they collapse into one dropdown
+// On narrow screens, anywhere below the repo, they collapse into one dropdown
 // (current name ▾) listing every level, repo first, as an indented tree, the current one checked.
 // Collapsed dropdown tree: item padding and the indent per level (rem)
 const TREE_PAD = 0.75
@@ -25,7 +25,7 @@ export default function PathBreadcrumbs({ root, path, current, changed, onNaviga
   ]
   if (current) crumbs[crumbs.length - 1].name = current
   const last = crumbs[crumbs.length - 1]
-  const collapsible = crumbs.length >= 3
+  const collapsible = crumbs.length >= 2
   const dot = changed && <span className="ml-1.5 inline-block size-1.5 rounded-full bg-primary align-middle" />
   return (
     <Breadcrumb>
