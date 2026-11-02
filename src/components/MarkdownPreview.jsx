@@ -1,9 +1,23 @@
 import { useMemo, useEffect, useRef, useState, forwardRef, useImperativeHandle } from 'react'
 import DOMPurify from 'dompurify'
-import { renderBlocks, resolveImage } from '../lib/markdown.js'
+import { renderBlocks, tapOffset, resolveImage } from '../lib/markdown.js'
 import { useRepoImages } from '../hooks/useRepoImages.js'
 import { linkTarget } from '../lib/links.js'
 import { isEmoji } from '../lib/files.js'
+
+// Text node and offset under a screen point
+function caretAt(x, y) {
+  if (document.caretRangeFromPoint) {
+    const r = document.caretRangeFromPoint(x, y)
+    return r && { node: r.startContainer, offset: r.startOffset }
+  }
+  const p = document.caretPositionFromPoint?.(x, y)
+  return p && { node: p.offsetNode, offset: p.offset }
+}
+
+// Two taps within this time and distance count as a double tap
+const DOUBLE_TAP_MS = 350
+const DOUBLE_TAP_PX = 30
 
 const LONG_WORD = /(\S{16,})/
 const BREAK_EVERY = 8
@@ -45,14 +59,17 @@ const repoImages = (root, notePath) => [...root.querySelectorAll('img')]
   .map(img => [img, resolveImage(notePath, img.getAttribute('src'))])
   .filter(([, repoPath]) => repoPath !== null)
 
-// Rendered note, read-only apart from task checkboxes. On mount, scrolls the
+// Rendered note, read-only apart from task checkboxes. Double-tapping (or
+// double-clicking) text calls onDoubleTap with the markdown offset of the
+// tapped word. On mount, scrolls the
 // block holding `scrollTo` (a markdown offset) into view. The ref's
 // visibleOffset() is the markdown offset of the first block on screen, where
 // editing starts. `children` render above the note and `footer` below it;
 // both scroll with it.
-const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, files, scrollTo, onChange, onOpenFile, onNavigate, footer, children }, handle) {
+const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, files, scrollTo, onDoubleTap, onChange, onOpenFile, onNavigate, footer, children }, handle) {
   const ref = useRef()
   const scrollRef = useRef()
+  const lastTap = useRef(null) // { time, x, y } of the previous tap on text
 
   useImperativeHandle(handle, () => ({
     visibleOffset() {
@@ -173,6 +190,21 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
     return () => el.removeEventListener('click', handler, true)
   }, [])
 
+  // Markdown offset for a tap: the tapped block, at the tapped word
+  function offsetAt(x, y, target) {
+    const block = target.closest('[data-src]')
+    if (!block) return content.length
+    const start = Number(block.dataset.src)
+    const raw = content.slice(start, start + Number(block.dataset.len))
+    const caret = caretAt(x, y)
+    if (!caret || !block.contains(caret.node)) return start
+    const before = document.createRange()
+    before.setStart(block, 0)
+    before.setEnd(caret.node, caret.offset)
+    const textAfter = caret.node.nodeType === Node.TEXT_NODE ? caret.node.textContent.slice(caret.offset) : ''
+    return start + tapOffset(raw, before.toString(), textAfter)
+  }
+
   function handleClick(e) {
     if (e.target.matches('input[type="checkbox"]')) {
       const offset = Number(e.target.dataset.offset)
@@ -182,6 +214,15 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
       }
       return
     }
+    if (e.target.closest('a, img')) return
+    // Counted here rather than with dblclick, which iPhones don't send on a
+    // double tap; it must run inside the tap so the keyboard opens
+    const prev = lastTap.current
+    const now = { time: e.timeStamp, x: e.clientX, y: e.clientY }
+    const double = prev && now.time - prev.time < DOUBLE_TAP_MS
+      && Math.hypot(now.x - prev.x, now.y - prev.y) < DOUBLE_TAP_PX
+    lastTap.current = double ? null : now
+    if (double) onDoubleTap?.(offsetAt(e.clientX, e.clientY, e.target))
   }
 
   return (

@@ -11,7 +11,7 @@ import { useNote } from '../hooks/useNote.js'
 import { displayName } from '../lib/files.js'
 
 // A note: shown as preview; ✏️ in the footer edits its markdown, starting
-// where you were reading. Edits save on their own; ✓ (same spot) only
+// where you were reading, and a double tap starts at the tapped word. Edits save on their own; ✓ (same spot) only
 // switches back to preview.
 export default function Editor({ path, root, entry, files, edited, onEdit, onNavigate, onOpenFile, onRename, onDelete, onMove, folders, syncButton, onSearch, backlinks }) {
   const { content, change, loading, loadError } = useNote(entry, edited, onEdit)
@@ -21,8 +21,8 @@ export default function Editor({ path, root, entry, files, edited, onEdit, onNav
   const previewRef = useRef()
 
   // Inside the tap, so the textarea gets focus and mobile keyboards open
-  function startEditing() {
-    const pos = previewRef.current?.visibleOffset() ?? 0
+  function startEditing(at) {
+    const pos = typeof at === 'number' ? at : previewRef.current?.visibleOffset() ?? 0
     flushSync(() => setMode('edit'))
     const textarea = textareaRef.current
     if (!textarea) return
@@ -77,7 +77,7 @@ export default function Editor({ path, root, entry, files, edited, onEdit, onNav
         <MarkdownPreview
           ref={previewRef}
           content={content} path={path} files={files} scrollTo={editedAt}
-          onChange={change} onOpenFile={onOpenFile} onNavigate={onNavigate}
+          onDoubleTap={startEditing} onChange={change} onOpenFile={onOpenFile} onNavigate={onNavigate}
           footer={<Backlinks links={backlinks} onOpen={onOpenFile} />}
         />
       )}

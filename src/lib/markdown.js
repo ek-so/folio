@@ -54,6 +54,25 @@ export function renderBlocks(markdown) {
   return html
 }
 
+const WORD_END = /[\p{L}\p{N}_'-]*$/u
+const WORD_START = /^[\p{L}\p{N}_'-]*/u
+
+// Offset in a block's markdown `raw` for a tap between rendered
+// `textBefore` and `textAfter`: the same occurrence of the tapped word, at
+// the same letter. 0 (block start) when the word can't be found.
+export function tapOffset(raw, textBefore, textAfter) {
+  const prefix = textBefore.match(WORD_END)[0]
+  const word = prefix + textAfter.match(WORD_START)[0]
+  if (!word) return 0
+  const earlier = textBefore.slice(0, textBefore.length - prefix.length).split(word).length - 1
+  let at = -1
+  for (let i = 0; i <= earlier; i++) {
+    at = raw.indexOf(word, at + 1)
+    if (at === -1) return 0
+  }
+  return at + prefix.length
+}
+
 // Repo path for a relative image src in the note at `notePath`, or null for
 // external URLs.
 export function resolveImage(notePath, src) {
