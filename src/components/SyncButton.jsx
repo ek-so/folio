@@ -9,6 +9,15 @@ const LOOK = {
   offline: { variant: 'ghost-outline', label: 'Offline', Icon: CloudSlash },
 }
 
+// Accent pill at the end of a menu item: what there is to push or pull
+function MenuBadge({ children }) {
+  return (
+    <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-xs font-semibold text-primary-foreground">
+      {children}
+    </span>
+  )
+}
+
 // Split Sync button, faded like Search and ⋯: the main part syncs; ▾ opens
 // Push (with change count), Pull (marked New when GitHub is ahead) and
 // Discard. An accent dot shows when there's anything to push or pull.
@@ -39,11 +48,11 @@ export default function SyncButton({ syncState, syncing, changeCount, remoteAhea
         <DropdownMenuContent align="start" onCloseAutoFocus={e => e.preventDefault()}>
           <DropdownMenuItem disabled={!hasPush} onSelect={onSync}>
             <ArrowUp /> Push changes
-            {hasPush && <span className="ml-auto pl-4 text-muted-foreground">{changeCount}</span>}
+            {hasPush && <MenuBadge>{changeCount}</MenuBadge>}
           </DropdownMenuItem>
           <DropdownMenuItem disabled={!hasPull} onSelect={onPull}>
             <ArrowDown /> Pull changes
-            {hasPull && <span className="ml-auto pl-4 text-muted-foreground">New</span>}
+            {hasPull && <MenuBadge>New</MenuBadge>}
           </DropdownMenuItem>
           <DropdownMenuItem variant="destructive" disabled={!hasPush} onSelect={onDiscard}>
             <Trash /> Discard changes
