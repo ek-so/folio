@@ -19,12 +19,12 @@ function MenuBadge({ children }) {
 }
 
 // Split Sync button, faded like Search and ⋯: the main part syncs; ▾ opens
-// Push (with change count), Pull (marked New when GitHub is ahead) and
-// Discard. An accent dot shows when there's anything to push or pull.
-export default function SyncButton({ syncState, syncing, changeCount, remoteAhead, onSync, onPull, onDiscard }) {
+// Push (with change count), Pull (how many files changed on GitHub, or New
+// when unknown) and Discard. An accent dot shows when there's anything to push or pull.
+export default function SyncButton({ syncState, syncing, changeCount, incoming, onSync, onPull, onDiscard }) {
   const { variant, label, Icon } = LOOK[syncState] || LOOK.idle
   const hasPush = changeCount > 0
-  const hasPull = remoteAhead
+  const hasPull = incoming !== null
 
   return (
     <div className="flex">
@@ -52,7 +52,7 @@ export default function SyncButton({ syncState, syncing, changeCount, remoteAhea
           </DropdownMenuItem>
           <DropdownMenuItem disabled={!hasPull} onSelect={onPull}>
             <ArrowDown /> Pull changes
-            {hasPull && <MenuBadge>New</MenuBadge>}
+            {hasPull && <MenuBadge>{incoming.files ? (incoming.files >= 300 ? '300+' : incoming.files) : 'New'}</MenuBadge>}
           </DropdownMenuItem>
           <DropdownMenuItem variant="destructive" disabled={!hasPush} onSelect={onDiscard}>
             <Trash /> Discard changes

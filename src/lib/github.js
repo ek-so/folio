@@ -61,6 +61,18 @@ export async function getLatestCommitSha() {
   return data.commit.sha
 }
 
+// How many files differ between two commits (base older), or null if GitHub
+// can't compare them (e.g. history was rewritten). GitHub lists at most 300.
+export async function changedFileCount(base, head) {
+  try {
+    const { data } = await octokit.rest.repos.compareCommitsWithBasehead({ owner, repo, basehead: `${base}...${head}` })
+    return data.files?.length ?? null
+  } catch (e) {
+    if (isNetworkError(e)) throw e
+    return null
+  }
+}
+
 // Tags errors with the sync step they happened in, for the error details sheet
 const step = (name, promise) => promise.catch(e => {
   if (e && typeof e === 'object' && !e.step) e.step = name

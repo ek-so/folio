@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
-import { getTree, getBlobBase64, commitTree, isNetworkError, getLatestCommitSha, blobSha, encodeText, uploadBlob } from '../lib/github.js'
+import { getTree, getBlobBase64, commitTree, isNetworkError, getLatestCommitSha, changedFileCount, blobSha, encodeText, uploadBlob } from '../lib/github.js'
 import { cache } from '../lib/cache.js'
 import { localChanges } from '../lib/storage.js'
 import { describeSyncError } from '../lib/syncErrors.js'
@@ -62,7 +62,9 @@ export function useRepo(repo) {
   const [conflictPaths, setConflictPaths] = useState([])
   const [syncing, setSyncing] = useState(false)
   const [syncState, setSyncState] = useState('idle') // idle | done | error | offline
-  const [remoteAhead, setRemoteAhead] = useState(false)
+  // GitHub has commits this device hasn't pulled: { files } (changed-file
+  // count, null when unknown), or null when up to date
+  const [incoming, setIncoming] = useState(null)
   const [syncError, setSyncError] = useState(null) // { ...describeSyncError(), retry } after a failed action
   const knownCommitSha = useRef(null)
   const flashTimer = useRef()
@@ -147,7 +149,7 @@ export function useRepo(repo) {
     cache.setTree(repo, latest)
     prefetchNotes(latest.files)
     knownCommitSha.current = latest.commitSha
-    setRemoteAhead(false)
+    setIncoming(null)
     return latest
   }
 
@@ -157,7 +159,10 @@ export function useRepo(repo) {
     try {
       const sha = await getLatestCommitSha()
       setOnline(true)
-      setRemoteAhead(sha !== knownCommitSha.current)
+      const known = knownCommitSha.current
+      if (sha === known) return setIncoming(null)
+      const files = await changedFileCount(known, sha)
+      if (knownCommitSha.current === known) setIncoming({ files }) // not pulled meanwhile
     } catch (e) {
       if (isNetworkError(e)) setOnline(false)
     }
@@ -280,6 +285,6 @@ export function useRepo(repo) {
   return {
     remote, error, online, virtual, changes, changed, changeCount: count(changes),
     conflictPaths, dismissConflicts: () => setConflictPaths([]),
-    syncing, syncState, remoteAhead, syncError, dismissSyncError: () => setSyncError(null), update, sync, pullChanges, pushLocal, takeRemote, discardAll,
+    syncing, syncState, incoming, syncError, dismissSyncError: () => setSyncError(null), update, sync, pullChanges, pushLocal, takeRemote, discardAll,
   }
 }

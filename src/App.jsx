@@ -274,7 +274,7 @@ export default function App() {
       syncState={repo.syncState}
       syncing={repo.syncing}
       changeCount={repo.changeCount}
-      remoteAhead={repo.remoteAhead}
+      incoming={repo.incoming}
       onSync={requestSync}
       onPull={repo.pullChanges}
       onDiscard={() => setConfirmDiscard(true)}
