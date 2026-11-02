@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { renderBlocks, tapOffset, highlightMarkdown } from './markdown.js'
+import { renderBlocks, highlightMarkdown } from './markdown.js'
 
 describe('markdown', () => {
   it('tags each block with its source range', () => {
@@ -25,13 +25,6 @@ describe('markdown', () => {
     expect(renderBlocks('> plain quote')).not.toContain('callout')
   })
 
-  it('maps a tap to the same occurrence and letter of the word', () => {
-    const raw = 'a cat and a **cat** here'
-    // rendered "a cat and a cat here", tap inside the second "cat" after "c"
-    expect(tapOffset(raw, 'a cat and a c', 'at here')).toBe(raw.indexOf('**cat**') + 3)
-    expect(tapOffset(raw, 'a c', 'at and a cat here')).toBe(3)
-    expect(tapOffset(raw, 'a cat and ', ' ')).toBe(0)
-  })
 })
 
 describe('highlightMarkdown', () => {

@@ -1,19 +1,9 @@
-import { useMemo, useEffect, useRef, useState } from 'react'
+import { useMemo, useEffect, useRef, useState, forwardRef, useImperativeHandle } from 'react'
 import DOMPurify from 'dompurify'
-import { renderBlocks, tapOffset, resolveImage } from '../lib/markdown.js'
+import { renderBlocks, resolveImage } from '../lib/markdown.js'
 import { useRepoImages } from '../hooks/useRepoImages.js'
 import { linkTarget } from '../lib/links.js'
 import { isEmoji } from '../lib/files.js'
-
-// Text node and offset under a screen point
-function caretAt(x, y) {
-  if (document.caretRangeFromPoint) {
-    const r = document.caretRangeFromPoint(x, y)
-    return r && { node: r.startContainer, offset: r.startOffset }
-  }
-  const p = document.caretPositionFromPoint?.(x, y)
-  return p && { node: p.offsetNode, offset: p.offset }
-}
 
 const LONG_WORD = /(\S{16,})/
 const BREAK_EVERY = 8
@@ -55,12 +45,22 @@ const repoImages = (root, notePath) => [...root.querySelectorAll('img')]
   .map(img => [img, resolveImage(notePath, img.getAttribute('src'))])
   .filter(([, repoPath]) => repoPath !== null)
 
-// Rendered note. Tapping text (not links or images) calls onTap with the
-// markdown offset of the tapped word. On mount, scrolls the block holding
-// `scrollTo` (a markdown offset) into view. `children` render above the
-// note and `footer` below it; both scroll with it.
-export default function MarkdownPreview({ content, path, files, scrollTo, onTap, onChange, onOpenFile, onNavigate, footer, children }) {
+// Rendered note, read-only apart from task checkboxes. On mount, scrolls the
+// block holding `scrollTo` (a markdown offset) into view. The ref's
+// visibleOffset() is the markdown offset of the first block on screen, where
+// editing starts. `children` render above the note and `footer` below it;
+// both scroll with it.
+const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, files, scrollTo, onChange, onOpenFile, onNavigate, footer, children }, handle) {
   const ref = useRef()
+  const scrollRef = useRef()
+
+  useImperativeHandle(handle, () => ({
+    visibleOffset() {
+      const top = scrollRef.current.getBoundingClientRect().top
+      const block = [...ref.current.querySelectorAll('[data-src]')].find(el => el.getBoundingClientRect().bottom > top)
+      return block ? Number(block.dataset.src) : 0
+    },
+  }))
   const [brokenTip, setBrokenTip] = useState(null)
   const tipTimer = useRef()
   const linkHandlerRef = useRef()
@@ -173,21 +173,6 @@ export default function MarkdownPreview({ content, path, files, scrollTo, onTap,
     return () => el.removeEventListener('click', handler, true)
   }, [])
 
-  // Markdown offset for a tap: the tapped block, at the tapped word
-  function offsetAt(x, y, target) {
-    const block = target.closest('[data-src]')
-    if (!block) return content.length
-    const start = Number(block.dataset.src)
-    const raw = content.slice(start, start + Number(block.dataset.len))
-    const caret = caretAt(x, y)
-    if (!caret || !block.contains(caret.node)) return start
-    const before = document.createRange()
-    before.setStart(block, 0)
-    before.setEnd(caret.node, caret.offset)
-    const textAfter = caret.node.nodeType === Node.TEXT_NODE ? caret.node.textContent.slice(caret.offset) : ''
-    return start + tapOffset(raw, before.toString(), textAfter)
-  }
-
   function handleClick(e) {
     if (e.target.matches('input[type="checkbox"]')) {
       const offset = Number(e.target.dataset.offset)
@@ -197,12 +182,10 @@ export default function MarkdownPreview({ content, path, files, scrollTo, onTap,
       }
       return
     }
-    if (e.target.closest('a, img')) return
-    onTap(offsetAt(e.clientX, e.clientY, e.target))
   }
 
   return (
-    <div className="flex-1 min-h-0 overflow-y-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
+    <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
       {children}
       <div
         ref={ref}
@@ -221,4 +204,6 @@ export default function MarkdownPreview({ content, path, files, scrollTo, onTap,
       )}
     </div>
   )
-}
+})
+
+export default MarkdownPreview

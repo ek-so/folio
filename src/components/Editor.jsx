@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react'
 import { flushSync } from 'react-dom'
-import { Check } from '@phosphor-icons/react'
+import { Check, PencilSimple } from '@phosphor-icons/react'
 import { Button } from './ui/button.jsx'
 import Spinner from './Spinner.jsx'
 import FilePage from './FilePage.jsx'
@@ -10,16 +10,19 @@ import MarkdownEditor from './MarkdownEditor.jsx'
 import { useNote } from '../hooks/useNote.js'
 import { displayName } from '../lib/files.js'
 
-// A note: shown as preview; tapping text edits its markdown there. Edits
-// save on their own; ✓ in the footer only switches back to preview.
+// A note: shown as preview; ✏️ in the footer edits its markdown, starting
+// where you were reading. Edits save on their own; ✓ (same spot) only
+// switches back to preview.
 export default function Editor({ path, root, entry, files, edited, onEdit, onNavigate, onOpenFile, onRename, onDelete, onMove, folders, syncButton, onSearch, backlinks }) {
   const { content, change, loading, loadError } = useNote(entry, edited, onEdit)
   const [mode, setMode] = useState('preview')
   const [editedAt, setEditedAt] = useState(null) // offset to show when back in preview
   const textareaRef = useRef()
+  const previewRef = useRef()
 
   // Inside the tap, so the textarea gets focus and mobile keyboards open
-  function startEditing(pos) {
+  function startEditing() {
+    const pos = previewRef.current?.visibleOffset() ?? 0
     flushSync(() => setMode('edit'))
     const textarea = textareaRef.current
     if (!textarea) return
@@ -48,9 +51,13 @@ export default function Editor({ path, root, entry, files, edited, onEdit, onNav
       folders={folders}
       onSearch={onSearch}
       actions={<>
-        {mode === 'edit' && (
+        {mode === 'edit' ? (
           <Button size="icon" onClick={finishEditing} aria-label="Done" className="shrink-0">
             <Check />
+          </Button>
+        ) : ready && (
+          <Button size="icon" onClick={startEditing} aria-label="Edit" className="shrink-0">
+            <PencilSimple />
           </Button>
         )}
         {syncButton}
@@ -68,8 +75,9 @@ export default function Editor({ path, root, entry, files, edited, onEdit, onNav
         <MarkdownEditor ref={textareaRef} content={content} onChange={change} onDone={finishEditing} />
       ) : (
         <MarkdownPreview
+          ref={previewRef}
           content={content} path={path} files={files} scrollTo={editedAt}
-          onTap={startEditing} onChange={change} onOpenFile={onOpenFile} onNavigate={onNavigate}
+          onChange={change} onOpenFile={onOpenFile} onNavigate={onNavigate}
           footer={<Backlinks links={backlinks} onOpen={onOpenFile} />}
         />
       )}

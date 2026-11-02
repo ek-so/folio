@@ -37,7 +37,7 @@ React + Vite PWA. Reads/writes markdown files from any GitHub repo via the GitHu
 - **Icons are 16px** (`size-4`). `Button` and menu items size icons by default — don't pass size classes.
 - **File icons** come from `FileIcon` (20px Phosphor): folder blue (`text-primary`), note and other files grey, PDF red (`text-destructive`), image green (`text-file-image`). A note whose `# heading` starts with an emoji shows that emoji instead.
 - **Every screen uses `Header`**, with the same padding everywhere. File screens show ☰ (`AccountMenu`) at the repo root, and ← (one level up: a file to its folder, a folder to its parent) everywhere below it, then `PathBreadcrumbs`: the repo name in bold is always the first level (alone at home), then the folders. On mobile, anywhere below the repo (1+ levels), the crumbs collapse into one dropdown (current ▾) listing every level as an indented tree, repo first in bold, the current one checked. Search and ⋯ sit on the right. App pages (Settings, Broken links) show ← title. All ← buttons are outlined like ☰.
-- **Actions live in `Footer`**, right-aligned: + (folders only) or ✓ (while editing a note), then Sync. It stays at the bottom of the page (hidden behind the keyboard).
+- **Actions live in `Footer`**, right-aligned: + (folders only), ✏️ Edit (a note in preview) or ✓ (while editing), then Sync. It stays at the bottom of the page (hidden behind the keyboard).
 - Never hardcode colors — use Tailwind semantic tokens (`bg-background`, `text-foreground`, `text-muted-foreground`, `bg-primary`, etc.).
 
 ### CSS variables (defined in `src/index.css`, with light and dark values)
@@ -64,13 +64,13 @@ React + Vite PWA. Reads/writes markdown files from any GitHub repo via the GitHu
 
 - `src/lib/github.js` — all GitHub API calls. `init(token)` sets up Octokit; `setRepo(owner, repo)` sets target repo. Blob reads go through the offline cache.
 - `src/lib/changes.js` — pure model of local changes (edits, uploads, renames, deletes, new files) layered over the remote tree. Covered by `changes.test.js` (`npm test`).
-- `src/lib/markdown.js` — preview rendering (blocks tagged with their source range), tap-to-source mapping, markdown highlighting for the editor, image paths.
+- `src/lib/markdown.js` — preview rendering (blocks tagged with their source range), markdown highlighting for the editor, image paths.
 - `src/lib/links.js` — internal links (regular markdown only, no wiki links): extracting them (code ignored), the backlink / broken-link index, rewriting them when files move (same style: relative, `.md` or not, encoding, anchors; link text equal to the old name follows), and Fix suggestions for broken links. Tested in `links.test.js`.
 - `src/lib/files.js` — file-type and name helpers (`fileKind`, `imageMime`, `isImage`, `displayName`, `headingEmoji`).
 - `src/lib/cache.js` — IndexedDB copies of the last tree and of blobs (by sha) for offline use.
 - `src/lib/storage.js` — localStorage/sessionStorage: token, repo, cached user, theme, local changes, open folder/note/page, recent files.
 - `src/hooks/` — `useAuth` (token/user/repo), `useRepo` (remote tree, local changes, sync), `useNote` (one note's text, edit tracking), `useLinkIndex` (link index), `useRepoImages`, `useTheme`. `App.jsx` is layout and UI actions.
-- Notes: `Editor` switches between `MarkdownPreview` (tap to edit) and `MarkdownEditor` (highlighted textarea). Scrolling while editing stays in markdown; closing the keyboard (iOS Done, tapping elsewhere, Escape) or ✓ returns to preview.
+- Notes: `Editor` switches between `MarkdownPreview` (read-only apart from task checkboxes) and `MarkdownEditor` (highlighted textarea). ✏️ opens the editor at the first block on screen (`visibleOffset`). Scrolling while editing stays in markdown; closing the keyboard (iOS Done, tapping elsewhere, Escape) or ✓ returns to preview.
 - Images and PDFs open read-only in `FileViewer` (content via `useBlob`); PDFs show every page with pdf.js (`PdfView`, loaded on first use); only pages near the screen are drawn, to stay within iOS memory limits. `Editor` and `FileViewer` share `FilePage` (header, footer).
 - `AccountMenu` (☰, at the repo root) opens a popover with Broken links (count), Settings and Sign out. `Settings` (theme light/dark/system, account, repo) and `BrokenLinks` are app pages (`page` in App, remembered across reloads).
 - Links: `useLinkIndex` reads every note (local edit, else the offline copy) and indexes links on the device — nothing is stored in the repo. Notes show `Backlinks` ("Linked from") under the preview. Sync (and Push) first checks for broken links anywhere in the repo: if any, `SyncCheckModal` lists them (`BrokenLinkList`, shared with the Broken links page) with Fix, Open Broken links and Sync anyway; fixing the last one syncs. Rename and Move rewrite every affected link in the same local changes (one commit on Sync); the sheets say how many notes are affected (`LinksContext`).
