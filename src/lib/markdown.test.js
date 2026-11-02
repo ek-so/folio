@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { renderBlocks, tapOffset, highlightMarkdown } from './markdown.js'
+import { renderBlocks, tapOffset, taskOffsets, highlightMarkdown } from './markdown.js'
 
 describe('markdown', () => {
   it('tags each block with its source range', () => {
@@ -7,6 +7,22 @@ describe('markdown', () => {
     const html = renderBlocks(md)
     const starts = [...html.matchAll(/data-src="(\d+)" data-len="(\d+)"/g)].map(m => md.slice(+m[1], +m[1] + +m[2]))
     expect(starts).toEqual(['# Title\n\n', 'Some **bold** text.\n'])
+  })
+
+  it('renders --- under text as a divider, with offsets matching the note', () => {
+    const md = 'a\nb\n---\n- [ ] one\n'
+    const html = renderBlocks(md)
+    expect(html).toContain('<p>a<br>b</p>')
+    expect(html).toContain('<hr>')
+    const blocks = [...html.matchAll(/data-src="(\d+)" data-len="(\d+)"/g)].map(m => md.slice(+m[1], +m[1] + +m[2]))
+    expect(blocks).toEqual(['a\nb\n', '---\n', '- [ ] one\n'])
+    expect(renderBlocks('Title\n===\n')).toContain('<h1>Title</h1>')
+  })
+
+  it('finds only the checkbox opening each task item', () => {
+    const raw = '- [ ] see [x] here\n  1. [X] b\n> - [ ] c\n'
+    expect(taskOffsets(raw).map(i => raw[i])).toEqual([' ', 'X', ' '])
+    expect(taskOffsets(raw)[0]).toBe(3)
   })
 
   it('renders smart-punctuated dashes as a divider', () => {

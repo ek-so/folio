@@ -12,8 +12,8 @@ export default function SearchSheet({ onClose, onSelect, virtual, changes, recen
   const inputRef = useRef()
 
   const q = query.trim().toLowerCase()
-  // Same visibility as the file list: nothing inside or named with a leading "."
-  const allFiles = Object.keys(virtual || {}).filter(p => !p.split('/').some(seg => seg.startsWith('.')))
+  // Same visibility as the file list: everything but folder placeholders
+  const allFiles = Object.keys(virtual || {}).filter(p => !p.endsWith('/.gitkeep') && p !== '.gitkeep')
   const recentFiles = (recent || []).filter(p => p in (virtual || {}))
 
   const results = q

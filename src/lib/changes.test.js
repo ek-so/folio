@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import {
   empty, count, virtualFiles, add, setEdit, rename, remove, conflicts, settle, treeEntries, filesAfter,
   upload, replaceUpload, normalize, freePath,
-  renameTarget, renameError, createError, getAllFolders,
+  renameTarget, renameError, createError, getAllFolders, nameError,
 } from './changes.js'
 
 const files = {
@@ -113,6 +113,12 @@ describe('changes', () => {
 })
 
 describe('name checks', () => {
+  it('allows names starting with a dot, like GitHub', () => {
+    expect(nameError('.assets')).toBe(null)
+    expect(nameError('..')).not.toBe(null)
+    expect(nameError('.gitkeep')).not.toBe(null)
+  })
+
   const item = (path, type = 'file') => ({ name: path.split('/').pop(), path, type })
 
   it('keeps the extension and refuses taken names', () => {

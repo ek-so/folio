@@ -149,13 +149,16 @@ export default function App() {
   // changes (synced with everything else). Each file's bytes are stored in
   // the offline cache first; only then is the change recorded.
   async function handleUpload(fileList, folder) {
-    if (!repo.remote) return
+    if (!repo.remote) {
+      setUploadErrors([...fileList].map(f => [f.name, 'Files are still loading. Try again in a moment.']))
+      return
+    }
     const remoteFiles = repo.remote.files
     const errors = []
     let ch = changes
     for (const file of fileList) {
       const reason = nameError(file.name)
-        || (file.size > MAX_UPLOAD_BYTES ? 'Larger than 100 MB, GitHub\'s limit for one file.' : null)
+        || (file.size > MAX_UPLOAD_BYTES ? 'Larger than 25 MB, the most a phone can reliably handle.' : null)
       if (reason) { errors.push([file.name, reason]); continue }
       const view = virtualFiles(remoteFiles, ch)
       let path = folder ? `${folder}/${file.name}` : file.name

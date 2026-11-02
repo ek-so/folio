@@ -111,7 +111,8 @@ function affected(virtual, path, isDir) {
 export function nameError(name) {
   if (!name) return 'Enter a name.'
   if (name.includes('/')) return 'Name can\'t contain "/".'
-  if (name.startsWith('.')) return 'Name can\'t start with ".".'
+  if (name === '.' || name === '..') return 'That name is reserved.'
+  if (name === '.gitkeep') return 'That name is used to keep empty folders.'
   return null
 }
 
@@ -130,8 +131,10 @@ function placeError(ch, virtual, path, orig) {
   return null
 }
 
-// GitHub's limit for one file
-export const MAX_UPLOAD_BYTES = 100 * 1024 * 1024
+// Largest file added from the device. GitHub takes up to 100 MB, but the
+// whole file is held in memory (as base64) while it's stored and uploaded,
+// and phones run out well before that.
+export const MAX_UPLOAD_BYTES = 25 * 1024 * 1024
 
 // First free path like `path` for a new file: "photo.png", "photo 2.png", …
 export function freePath(ch, virtual, path) {

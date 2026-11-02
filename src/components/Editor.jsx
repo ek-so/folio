@@ -21,8 +21,9 @@ export default function Editor({ path, root, entry, files, edited, onEdit, onNav
   const previewRef = useRef()
 
   // Inside the tap, so the textarea gets focus and mobile keyboards open
-  function startEditing(at) {
-    const pos = typeof at === 'number' ? at : previewRef.current?.visibleOffset() ?? 0
+  // `pos`: markdown offset to put the cursor at (a double tap); ✏️ starts at
+  // the first block on screen
+  function startEditing(pos = previewRef.current?.visibleOffset() ?? 0) {
     flushSync(() => setMode('edit'))
     const textarea = textareaRef.current
     if (!textarea) return
@@ -56,7 +57,7 @@ export default function Editor({ path, root, entry, files, edited, onEdit, onNav
             <Check />
           </Button>
         ) : ready && (
-          <Button size="icon" onClick={startEditing} aria-label="Edit" className="shrink-0">
+          <Button size="icon" onClick={() => startEditing()} aria-label="Edit" className="shrink-0">
             <PencilSimple />
           </Button>
         )}

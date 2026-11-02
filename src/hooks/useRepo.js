@@ -115,10 +115,22 @@ export function useRepo(repo) {
   }
 
   function update(fn) {
-    const next = fn(changesRef.current)
+    const prev = changesRef.current
+    const next = fn(prev)
     changesRef.current = next
     localChanges.set(repo, next)
     setChanges(next)
+    dropUnusedUploads(prev, next)
+  }
+
+  // Bytes of files added on this device that no change uses any more
+  // (discarded, deleted, replaced again) and GitHub doesn't have
+  function dropUnusedUploads(prev, next) {
+    const kept = new Set(Object.values(next.uploads))
+    const remoteShas = new Set(Object.values(remoteRef.current?.files ?? {}).map(f => f.sha))
+    for (const sha of new Set(Object.values(prev.uploads))) {
+      if (!kept.has(sha) && !remoteShas.has(sha)) cache.deleteBlob(sha)
+    }
   }
 
   async function pull() {
@@ -248,8 +260,10 @@ export function useRepo(repo) {
     window.dispatchEvent(new Event('folio:flush'))
     setConflictPaths([])
     localChanges.clear(repo)
+    const prev = changesRef.current
     changesRef.current = empty()
     setChanges(changesRef.current)
+    dropUnusedUploads(prev, changesRef.current)
   }
 
   return {

@@ -1,6 +1,6 @@
 import { useMemo, useEffect, useRef, useState, forwardRef, useImperativeHandle } from 'react'
 import DOMPurify from 'dompurify'
-import { renderBlocks, tapOffset, resolveImage } from '../lib/markdown.js'
+import { renderBlocks, tapOffset, taskOffsets, resolveImage } from '../lib/markdown.js'
 import { useRepoImages } from '../hooks/useRepoImages.js'
 import { linkTarget } from '../lib/links.js'
 import { isEmoji } from '../lib/files.js'
@@ -61,8 +61,8 @@ const repoImages = (root, notePath) => [...root.querySelectorAll('img')]
 
 // Rendered note, read-only apart from task checkboxes. Double-tapping (or
 // double-clicking) text calls onDoubleTap with the markdown offset of the
-// tapped word. On mount, scrolls the
-// block holding `scrollTo` (a markdown offset) into view. The ref's
+// tapped word. On mount, scrolls the block holding `scrollTo` (a markdown
+// offset) into view. The ref's
 // visibleOffset() is the markdown offset of the first block on screen, where
 // editing starts. `children` render above the note and `footer` below it;
 // both scroll with it.
@@ -112,13 +112,9 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
       if (!block) continue
       const blockStart = Number(block.dataset.src)
       const blockRaw = content.slice(blockStart, blockStart + Number(block.dataset.len))
-      const allInBlock = [...block.querySelectorAll('input[type="checkbox"]')]
-      const idx = allInBlock.indexOf(cb)
-      const re = /\[[ x]\]/gi
-      let match, n = 0
-      while ((match = re.exec(blockRaw)) !== null) {
-        if (n++ === idx) { cb.dataset.offset = String(blockStart + match.index + 1); break }
-      }
+      const idx = [...block.querySelectorAll('input[type="checkbox"]')].indexOf(cb)
+      const at = taskOffsets(blockRaw)[idx]
+      if (at !== undefined) cb.dataset.offset = String(blockStart + at)
     }
     // Wrap leading emoji in H1 headings with an outlined icon badge
     for (const h1 of tpl.content.querySelectorAll('h1')) {

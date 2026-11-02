@@ -16,6 +16,19 @@ marked.use({ extensions: [{
   },
 }] })
 
+// "text" followed by "---" is a divider, not a setext h2 heading ("===" still
+// makes an h1). Done in the lexer, so block offsets keep matching the note.
+const SETEXT = /^((?:[^\n]+\n)+?) {0,3}(=+|-+)[ \t]*(?:\n|$)/
+marked.use({ tokenizer: {
+  lheading(src) {
+    const m = src.match(SETEXT)
+    if (m?.[2][0] !== '-') return false
+    // The lines above stay one paragraph; the "---" is lexed next, as <hr>
+    const text = m[1].replace(/\n$/, '')
+    return { type: 'paragraph', raw: m[1], text, tokens: this.lexer.inline(text) }
+  },
+} })
+
 // GitHub alerts: "> [!NOTE]" (TIP, IMPORTANT, WARNING, CAUTION) on its own
 // line becomes a colored callout, titled "Note", "Tip"…
 const ALERT = /^\[!(note|tip|important|warning|caution)\][ \t]*(?:\n|$)/i
@@ -30,17 +43,10 @@ marked.use({ useNewRenderer: true, renderer: {
   },
 } })
 
-// Prevent marked from treating "text\n---" as a setext h2 heading.
-// A bare "---" preceded by content (no blank line) is almost always meant as
-// a divider, not a heading underline — especially in YAML front-matter blocks.
-function breakSetextHr(md) {
-  return md.replace(/(^|\n)([^\n]+)\n(---[ \t]*(?:\n|$))/g, '$1$2\n\n$3')
-}
-
 // HTML (unsanitized) where each top-level block is wrapped in
 // <div data-src="start" data-len="length"> pointing at its markdown source.
 export function renderBlocks(markdown) {
-  const tokens = marked.lexer(breakSetextHr(markdown))
+  const tokens = marked.lexer(markdown)
   let offset = 0
   let html = ''
   for (const token of tokens) {
@@ -53,6 +59,12 @@ export function renderBlocks(markdown) {
   }
   return html
 }
+
+// Offsets of each task checkbox's mark (the " " or "x" in "- [ ]") in a
+// block's markdown, in order. Only a box opening a list item counts, not
+// "[x]" further along in its text.
+const TASK = /^[ \t>]*(?:[-*+]|\d+[.)])[ \t]+\[[ xX]\]/gm
+export const taskOffsets = raw => [...raw.matchAll(TASK)].map(m => m.index + m[0].length - 2)
 
 const WORD_END = /[\p{L}\p{N}_'-]*$/u
 const WORD_START = /^[\p{L}\p{N}_'-]*/u
