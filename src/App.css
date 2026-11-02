@@ -8,9 +8,9 @@
 .editor-preview ol { list-style-type: decimal; padding-left: 20px; margin: 0 0 14px; }
 .editor-preview li { margin: 4px 0; }
 .editor-preview ul:has(.task-item) { padding-left: 4px; }
-/* Checkbox level with the first line of text, a couple of pixels below its centre */
+/* Checkbox level with the first line of text, 1px below its centre */
 .editor-preview li.task-item { list-style: none; display: flex; align-items: flex-start; gap: 8px; }
-.editor-preview input[type="checkbox"] { appearance: none; -webkit-appearance: none; flex-shrink: 0; width: 16px; height: 16px; font: inherit; margin: calc((1lh - 16px) / 2 + 2px) 0 0; border: 1.5px solid var(--border); border-radius: 4px; background-color: var(--background); cursor: pointer; transition: background-color 0.1s, border-color 0.1s; }
+.editor-preview input[type="checkbox"] { appearance: none; -webkit-appearance: none; flex-shrink: 0; width: 16px; height: 16px; font: inherit; margin: calc((1lh - 16px) / 2 + 1px) 0 0; border: 1.5px solid var(--border); border-radius: 4px; background-color: var(--background); cursor: pointer; transition: background-color 0.1s, border-color 0.1s; }
 .editor-preview input[type="checkbox"]:hover { border-color: var(--primary); }
 .editor-preview input[type="checkbox"]:checked { background-color: var(--primary); border-color: var(--primary); background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='white' d='M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-size: 100%; }
 .editor-preview code { background: var(--code-bg); padding: 2px 6px; border-radius: 4px; font-family: 'SF Mono', monospace; font-size: 13px; }
