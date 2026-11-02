@@ -257,6 +257,15 @@ export default function App() {
 
   const entry = selectedFile && virtual[selectedFile]
   const repoName = auth.repo.split('/')[1]
+  // ☰ on the left of every file screen's header
+  const accountMenu = (
+    <AccountMenu
+      onSettings={() => setPage('settings')}
+      brokenCount={links.index.broken.length}
+      onBrokenLinks={() => setPage('links')}
+      onSignOut={() => repo.changeCount ? setConfirmSignOut(true) : signOut()}
+    />
+  )
   const syncButton = (
     <SyncButton
       syncState={repo.syncState}
@@ -296,6 +305,7 @@ export default function App() {
           ) : entry && ['image', 'pdf'].includes(fileKind(selectedFile)) ? (
             <FileViewer
               key={selectedFile}
+              menu={accountMenu}
               path={selectedFile}
               entry={entry}
               root={repoName}
@@ -310,6 +320,7 @@ export default function App() {
           ) : entry ? (
             <Editor
               key={`${selectedFile}:${discards}`}
+              menu={accountMenu}
               path={selectedFile}
               entry={entry}
               files={virtual}
@@ -339,15 +350,7 @@ export default function App() {
               onDelete={handleDelete}
               onMove={handleMove}
               folders={allFolders}
-              menu={
-                <AccountMenu
-                  repo={auth.repo}
-                  onSettings={() => setPage('settings')}
-                  brokenCount={links.index.broken.length}
-                  onBrokenLinks={() => setPage('links')}
-                  onSignOut={() => repo.changeCount ? setConfirmSignOut(true) : signOut()}
-                />
-              }
+              menu={accountMenu}
               onSelect={setSelectedFile}
               onNewFile={(f, kind) => setNewFile({ folder: f, kind })}
               onUpload={handleUpload}

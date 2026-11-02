@@ -1,9 +1,9 @@
 import { ArrowLeft } from '@phosphor-icons/react'
 import { Button } from './ui/button.jsx'
 
-// Top bar shared by every screen. With onBack it's an app page (← title,
-// e.g. Settings). Otherwise `start` fills the left: the account menu at home,
-// PathBreadcrumbs in folders and files.
+// Top bar shared by every screen, with the same padding everywhere. With
+// onBack it's an app page (← title, e.g. Settings). Otherwise `start` fills
+// the left: ☰ (AccountMenu) and PathBreadcrumbs, repo first.
 export default function Header({ title, changed, onBack, start, children }) {
   return (
     <div className="flex items-center gap-2 px-4 py-2 border-b border-border shrink-0 mb-2">

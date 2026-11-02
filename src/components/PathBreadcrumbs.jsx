@@ -1,5 +1,5 @@
 import { Fragment } from 'react'
-import { House, CaretDown, Check } from '@phosphor-icons/react'
+import { CaretDown, Check } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
 import { Button } from './ui/button.jsx'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from './ui/dropdown-menu.jsx'
@@ -7,11 +7,12 @@ import {
   Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbPage, BreadcrumbSeparator,
 } from './ui/breadcrumb.jsx'
 
-// Breadcrumbs in the fixed header. Every level but the last is a link.
+// Breadcrumbs in the fixed header: the repo (bold) is always the first level,
+// then the folders. Every level but the last is a link.
 // `current` overrides the last crumb's name (used in Editor for the display name).
 // `changed` shows an unsaved-changes dot on the last crumb.
-// On narrow screens, with 2+ levels below home, the levels collapse into one dropdown
-// (current name ▾) listing every level as an indented tree, the current one checked.
+// On narrow screens, with 2+ levels below the repo, they collapse into one dropdown
+// (current name ▾) listing every level, repo first, as an indented tree, the current one checked.
 // Collapsed dropdown tree: item padding and the indent per level (rem)
 const TREE_PAD = 0.75
 const TREE_STEP = 1.125
@@ -26,17 +27,10 @@ export default function PathBreadcrumbs({ root, path, current, changed, onNaviga
   const last = crumbs[crumbs.length - 1]
   const collapsible = crumbs.length >= 3
   const dot = changed && <span className="ml-1.5 inline-block size-1.5 rounded-full bg-primary align-middle" />
-  const home = (
-    <Button variant="ghost-outline" size="icon" className="shrink-0 border-muted-foreground/50" onClick={() => onNavigate('')}>
-      <House />
-    </Button>
-  )
-
   return (
     <Breadcrumb>
       {collapsible && (
-        <div className="flex items-center gap-1.5 sm:hidden">
-          {home}
+        <div className="flex items-center sm:hidden">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="min-w-0 gap-1.5 px-2 font-normal">
@@ -46,7 +40,7 @@ export default function PathBreadcrumbs({ root, path, current, changed, onNaviga
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="max-w-[calc(100vw-2rem)]" onCloseAutoFocus={e => e.preventDefault()}>
-              {crumbs.slice(1).map((crumb, depth) => (
+              {crumbs.map((crumb, depth) => (
                 <DropdownMenuItem
                   key={crumb.path}
                   onSelect={() => crumb !== last && onNavigate(crumb.path)}
@@ -60,7 +54,7 @@ export default function PathBreadcrumbs({ root, path, current, changed, onNaviga
                       style={{ left: `${TREE_PAD + (depth - 1) * TREE_STEP}rem`, width: `${TREE_STEP - 0.375}rem` }}
                     />
                   )}
-                  <span className={cn('truncate', crumb === last && 'font-medium')}>{crumb.name}</span>
+                  <span className={cn('truncate', depth === 0 ? 'font-bold' : crumb === last && 'font-medium')}>{crumb.name}</span>
                   {crumb === last && <Check className="ml-auto" />}
                 </DropdownMenuItem>
               ))}
@@ -71,17 +65,17 @@ export default function PathBreadcrumbs({ root, path, current, changed, onNaviga
         <BreadcrumbList className={cn('flex-nowrap text-base', collapsible && 'max-sm:hidden')}>
           {crumbs.map((crumb, i) => (
             <Fragment key={crumb.path}>
-              {i > 1 && <BreadcrumbSeparator />}
+              {i > 0 && <BreadcrumbSeparator />}
               <BreadcrumbItem>
                 {i === crumbs.length - 1 ? (
-                  <BreadcrumbPage>
-                    {i === 0 ? <House className="size-4" /> : crumb.name}
+                  <BreadcrumbPage className={cn(i === 0 && 'font-bold')}>
+                    {crumb.name}
                     {dot}
                   </BreadcrumbPage>
-                ) : i === 0 ? home : (
+                ) : (
                   <BreadcrumbLink asChild>
                     <button onClick={() => onNavigate(crumb.path)}>
-                      <span className="truncate max-w-40">{crumb.name}</span>
+                      <span className={cn('truncate max-w-40', i === 0 && 'font-bold')}>{crumb.name}</span>
                     </button>
                   </BreadcrumbLink>
                 )}

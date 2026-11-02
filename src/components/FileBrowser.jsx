@@ -42,13 +42,12 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
   return (
     <PageLayout>
       <Header
-        start={
-          path ? (
-            <div className="flex-1 min-w-0">
-              <PathBreadcrumbs root={repoName} path={path} onNavigate={onNavigate} />
-            </div>
-          ) : menu
-        }
+        start={<>
+          {menu}
+          <div className="flex-1 min-w-0">
+            <PathBreadcrumbs root={repoName} path={path} onNavigate={onNavigate} />
+          </div>
+        </>}
       >
         <Button variant="ghost-outline" size="icon" aria-label="Search" className="shrink-0 border-muted-foreground/50" onClick={onSearch}>
           <MagnifyingGlass />

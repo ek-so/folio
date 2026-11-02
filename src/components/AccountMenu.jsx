@@ -4,23 +4,16 @@ import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem,
 } from './ui/dropdown-menu.jsx'
 
-// Home header's left side: ☰ owner / repo, opening the account popover.
-// The account is shown in Settings; the header already names the owner.
-export default function AccountMenu({ repo, onSettings, brokenCount, onBrokenLinks, onSignOut }) {
-  const [owner, name] = repo.split('/')
+// ☰ at the left of every file screen's header, opening the account popover.
+// The account and repo are shown in Settings.
+export default function AccountMenu({ onSettings, brokenCount, onBrokenLinks, onSignOut }) {
   return (
     <DropdownMenu>
-      <div className="flex items-center gap-2 flex-1 min-w-0">
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost-outline" size="icon" aria-label="Account and settings" className="shrink-0 -ml-2 border-muted-foreground/50">
-            <List />
-          </Button>
-        </DropdownMenuTrigger>
-        <span className="truncate text-base select-none">
-          <span className="text-muted-foreground">{owner} / </span>
-          <span className="font-bold">{name}</span>
-        </span>
-      </div>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost-outline" size="icon" aria-label="Account and settings" className="shrink-0 border-muted-foreground/50">
+          <List />
+        </Button>
+      </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-64" onCloseAutoFocus={e => e.preventDefault()}>
         <DropdownMenuItem onSelect={onBrokenLinks}>
           <LinkBreak /> Broken links
