@@ -13,7 +13,7 @@ import { displayName } from '../lib/files.js'
 // A note: shown as preview; ✏️ in the footer edits its markdown, starting
 // where you were reading, and a double tap starts at the tapped word. Edits save on their own; ✓ (same spot) only
 // switches back to preview.
-export default function Editor({ path, root, entry, files, edited, onEdit, onNavigate, onOpenFile, onRename, onDelete, onMove, folders, syncButton, onSearch, backlinks }) {
+export default function Editor({ menu, path, root, entry, files, edited, onEdit, onNavigate, onOpenFile, onRename, onDelete, onMove, folders, syncButton, onSearch, backlinks }) {
   const { content, change, loading, loadError } = useNote(entry, edited, onEdit)
   const [mode, setMode] = useState('preview')
   const [editedAt, setEditedAt] = useState(null) // offset to show when back in preview
@@ -41,6 +41,7 @@ export default function Editor({ path, root, entry, files, edited, onEdit, onNav
 
   return (
     <FilePage
+      menu={menu}
       path={path}
       root={root}
       name={fileName}

@@ -260,7 +260,7 @@ export default function App() {
 
   const entry = selectedFile && virtual[selectedFile]
   const repoName = auth.repo.split('/')[1]
-  // ☰ on the left of the header at the repo root
+  // ☰ on the left of the header: at the repo root, and everywhere on wider screens
   const accountMenu = (
     <AccountMenu
       onSettings={() => setPage('settings')}
@@ -308,6 +308,7 @@ export default function App() {
           ) : entry && ['image', 'pdf'].includes(fileKind(selectedFile)) ? (
             <FileViewer
               key={selectedFile}
+              menu={accountMenu}
               path={selectedFile}
               entry={entry}
               root={repoName}
@@ -322,6 +323,7 @@ export default function App() {
           ) : entry ? (
             <Editor
               key={`${selectedFile}:${discards}`}
+              menu={accountMenu}
               path={selectedFile}
               entry={entry}
               files={virtual}

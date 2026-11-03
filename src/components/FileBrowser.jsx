@@ -42,11 +42,13 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
   return (
     <PageLayout>
       <Header
-        // ☰ at the repo root; inside a folder ← goes one level up
+        // ☰ at the repo root and on wider screens; inside a folder on phones
+        // ← goes one level up (the breadcrumbs are collapsed there)
         onBack={path ? () => onNavigate(path.slice(0, Math.max(path.lastIndexOf('/'), 0))) : undefined}
+        backMobileOnly
         start={<>
-          {!path && menu}
-          <div className="flex-1 min-w-0">
+          {path ? <div className="hidden sm:flex">{menu}</div> : menu}
+          <div className="ml-1 flex-1 min-w-0">
             <PathBreadcrumbs root={repoName} path={path} onNavigate={onNavigate} />
           </div>
         </>}
