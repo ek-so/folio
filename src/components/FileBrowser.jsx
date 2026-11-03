@@ -177,7 +177,7 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
                   <div
                     className={cn(
                       // One row: hovering anywhere on it (⋯ included) or an open ⋯ menu highlights it
-                      'flex items-center pr-1 rounded-sm transition-colors hover:bg-secondary has-[[data-state=open]]:bg-secondary',
+                      'flex items-center pr-1 rounded-sm transition-colors hover:bg-secondary/60 has-[[data-state=open]]:bg-secondary/60',
                       dragOverPath === item.path && item.type === 'dir' && 'bg-primary/10 ring-1 ring-primary/40'
                     )}
                     onDragOver={e => {
