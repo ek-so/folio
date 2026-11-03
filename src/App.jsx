@@ -4,7 +4,6 @@ import RepoSetup from './components/RepoSetup.jsx'
 import FileBrowser from './components/FileBrowser.jsx'
 import Editor from './components/Editor.jsx'
 import FileViewer from './components/FileViewer.jsx'
-import SymlinkPage from './components/SymlinkPage.jsx'
 import { fileKind } from './lib/files.js'
 import PullToRefresh from './components/PullToRefresh.jsx'
 import NewFileModal from './components/NewFileModal.jsx'
@@ -40,12 +39,13 @@ export default function App() {
   const repo = useRepo(auth.user ? auth.repo : null)
   const { theme, setTheme } = useTheme()
   const [selectedFile, setSelectedFileState] = useState(storage.getFile)
-  // Opening a symlinked folder (from the list, search or a note's link) opens
-  // the source folder; a symlinked file opens its link page
+  // Opening a symlink (from the list, search or a note's link) opens its
+  // source: the folder, or the file
   function setSelectedFile(path) {
     const link = path && symlinks[path]
     if (link?.kind === 'folder') { setFolder(link.path); setSelectedFileState(null); return }
-    if (path && path in symlinks && !link?.path) return // broken or still loading: nothing to open
+    if (link?.path) path = link.path
+    else if (path && path in symlinks) return // broken or still loading: nothing to open
     if (path) storage.addRecentFile(path)
     setSelectedFileState(path)
   }
@@ -266,11 +266,8 @@ export default function App() {
   if (!auth.user) return <Auth onAuth={auth.authenticate} />
   if (!auth.repo) return <RepoSetup user={auth.user} onRepo={auth.selectRepo} onLogout={auth.signOut} />
 
-  // A symlinked file opens its link page, never the editor (also while its
-  // target is still loading)
-  const isLink = !!selectedFile && selectedFile in symlinks
-  const linkSource = isLink ? symlinks[selectedFile]?.path : null
-  const entry = selectedFile && (!isLink || linkSource) && virtual[selectedFile]
+  // A symlink never opens itself (opening one opens its source instead)
+  const entry = selectedFile && !(selectedFile in symlinks) && virtual[selectedFile]
   const repoName = auth.repo.split('/')[1]
   // ☰ on the left of the header: at the repo root, and everywhere on wider screens
   const accountMenu = (
@@ -316,22 +313,6 @@ export default function App() {
               onOpen={path => { setPage(null); setSelectedFile(path) }}
               onFix={fixBrokenLink}
               onBack={() => setPage(null)}
-            />
-          ) : entry && linkSource ? (
-            <SymlinkPage
-              key={selectedFile}
-              menu={accountMenu}
-              path={selectedFile}
-              source={linkSource}
-              onOpenFile={setSelectedFile}
-              root={repoName}
-              onNavigate={p => { setFolder(p); setSelectedFile(null) }}
-              onRename={handleRename}
-              onDelete={handleDelete}
-              onMove={handleMove}
-              folders={allFolders}
-              syncButton={syncButton}
-              onSearch={() => setSearchOpen(true)}
             />
           ) : entry && ['image', 'pdf'].includes(fileKind(selectedFile)) ? (
             <FileViewer
