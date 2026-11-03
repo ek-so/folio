@@ -56,6 +56,31 @@ export function linkTarget(repoPath, files) {
   return null
 }
 
+// Git stores a symlink as a blob with this mode; its content is the target path
+export const SYMLINK_MODE = '120000'
+
+// Where the symlink at `linkPath` (content `target`) points in `files`:
+// { kind: 'note' | 'file' | 'folder', path }, or { error: 'outside' } (absolute,
+// or above the repo root) or { error: 'missing' }. A link to a link is followed.
+export function resolveSymlink(linkPath, target, files, texts = {}, hops = 0) {
+  const raw = target.trim()
+  if (!raw || raw.startsWith('/') || hops > 5) return { error: hops > 5 ? 'missing' : 'outside' }
+  const parts = linkPath.split('/').slice(0, -1)
+  for (const seg of raw.split('/')) {
+    if (!seg || seg === '.') continue
+    if (seg === '..') { if (!parts.length) return { error: 'outside' }; parts.pop() }
+    else parts.push(seg)
+  }
+  const path = parts.join('/')
+  const entry = files[path]
+  if (entry?.mode === SYMLINK_MODE) {
+    return texts[path] === undefined ? { error: 'missing' } : resolveSymlink(path, texts[path], files, texts, hops + 1)
+  }
+  if (entry) return { kind: path.endsWith('.md') ? 'note' : 'file', path }
+  if (Object.keys(files).some(p => p.startsWith(path + '/'))) return { kind: 'folder', path }
+  return { error: 'missing' }
+}
+
 const lineAt = (md, offset) => {
   const start = md.lastIndexOf('\n', offset - 1) + 1
   const end = md.indexOf('\n', offset)

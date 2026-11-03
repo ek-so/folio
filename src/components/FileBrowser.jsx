@@ -13,8 +13,18 @@ import Spinner from './Spinner.jsx'
 import PageLayout from './PageLayout.jsx'
 import { cn } from '@/lib/utils.js'
 
-export default function FileBrowser({ path, onNavigate, listDir, loading, error, notice, onSelect, onNewFile, repoName, onRename, onDelete, onMove, folders, menu, syncButton, onSearch, notes, onUpload }) {
-  const items = loading ? [] : listDir(path)
+// Why a symlink can't be opened
+export const LINK_ERRORS = {
+  outside: 'points outside the repo',
+  missing: 'source is missing',
+  unavailable: 'not on this device yet',
+}
+
+export default function FileBrowser({ path, onNavigate, listDir, loading, error, notice, onSelect, onNewFile, repoName, onRename, onDelete, onMove, folders, menu, syncButton, onSearch, notes, onUpload, symlinks = {} }) {
+  // Symlinked folders sort with the folders
+  const isFolder = i => i.type === 'dir' || symlinks[i.path]?.kind === 'folder'
+  const listed = loading ? [] : listDir(path)
+  const items = [...listed.filter(isFolder), ...listed.filter(i => !isFolder(i))]
   const draggingRef = useRef(null) // always current for event handlers
   const [dragging, setDragging] = useState(null) // for rendering only
   const [dragOverPath, setDragOverPath] = useState(null)
@@ -32,8 +42,11 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
     onUpload([...e.dataTransfer.files], folder)
   }
 
+  // A symlinked folder goes to its source; a symlinked file opens at the link
   function navigate(item) {
+    const link = symlinks[item.path]
     if (item.type === 'dir') onNavigate(item.path)
+    else if (link?.kind === 'folder') onNavigate(link.path)
     else onSelect(item.path)
   }
 
@@ -89,7 +102,9 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
           <ul className="py-2 px-2">
             {items.map(item => {
               const [base, ext] = item.type === 'dir' ? [item.name, ''] : splitName(item.name)
-              const openable = item.type === 'dir' || fileKind(item.path) !== 'file'
+              const isLink = item.path in symlinks
+              const link = symlinks[item.path] // undefined while loading
+              const openable = isLink ? !!link?.kind : item.type === 'dir' || fileKind(item.path) !== 'file'
               const isDraggedItem = dragging?.path === item.path
               return (
                 <li
@@ -105,7 +120,7 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
                     setDragging(null)
                     setDragOverPath(null)
                   }}
-                  className={cn(isDraggedItem ? 'opacity-40' : item.name.startsWith('.') ? 'opacity-50' : '')}
+                  className={cn(isDraggedItem ? 'opacity-40' : (item.name.startsWith('.') || link?.error) ? 'opacity-50' : '')}
                 >
                   <div
                     className={cn(
@@ -150,11 +165,14 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
                       onClick={() => navigate(item)}
                       disabled={!openable}
                     >
-                      <FileIcon path={item.path} dir={item.type === 'dir'} emoji={headingEmoji(notes[item.path])} />
+                      {isLink
+                        ? <FileIcon path={link?.path ?? item.path} dir={link?.kind === 'folder'} link />
+                        : <FileIcon path={item.path} dir={item.type === 'dir'} emoji={headingEmoji(notes[item.path])} />}
                       <span className="flex-1 text-base truncate">
                         {base}
                         {ext && <span className="text-muted-foreground">{ext}</span>}
                         {item.changed && <span className="ml-1.5 inline-block size-1.5 rounded-full bg-primary align-middle" />}
+                        {link?.error && <span className="ml-2 text-sm text-muted-foreground">{LINK_ERRORS[link.error]}</span>}
                       </span>
                     </Button>
                     <ItemMenu item={item} onRename={onRename} onDelete={onDelete} onMove={onMove} folders={folders} inList />

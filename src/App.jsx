@@ -19,6 +19,7 @@ import SyncErrorModal from './components/SyncErrorModal.jsx'
 import BrokenLinks from './components/BrokenLinks.jsx'
 import SyncCheckModal from './components/SyncCheckModal.jsx'
 import { useLinkIndex, LinksContext } from './hooks/useLinkIndex.js'
+import { useSymlinks } from './hooks/useSymlinks.js'
 import { rewriteLinks, retargetLink, extractLinks } from './lib/links.js'
 import AccountMenu from './components/AccountMenu.jsx'
 import Settings from './components/Settings.jsx'
@@ -67,6 +68,7 @@ export default function App() {
   const { virtual, changes, update } = repo
   const allFolders = useMemo(() => getAllFolders(virtual), [virtual])
   const links = useLinkIndex(virtual, changes)
+  const symlinks = useSymlinks(virtual)
 
   // Notes whose links change if `item` moves to `to` (their path -> new text),
   // from `edits` (the latest local changes). The moved notes' own links are
@@ -258,7 +260,10 @@ export default function App() {
   if (!auth.user) return <Auth onAuth={auth.authenticate} />
   if (!auth.repo) return <RepoSetup user={auth.user} onRepo={auth.selectRepo} onLogout={auth.signOut} />
 
-  const entry = selectedFile && virtual[selectedFile]
+  // A symlinked file opens at the link's path, showing its source read-only
+  const link = selectedFile && selectedFile in symlinks ? symlinks[selectedFile] : null
+  const source = link?.kind && link.kind !== 'folder' ? link.path : null
+  const entry = selectedFile && (selectedFile in symlinks ? source && virtual[source] : virtual[selectedFile])
   const repoName = auth.repo.split('/')[1]
   // ☰ on the left of the header: at the repo root, and everywhere on wider screens
   const accountMenu = (
@@ -305,12 +310,14 @@ export default function App() {
               onFix={fixBrokenLink}
               onBack={() => setPage(null)}
             />
-          ) : entry && ['image', 'pdf'].includes(fileKind(selectedFile)) ? (
+          ) : entry && ['image', 'pdf'].includes(fileKind(source ?? selectedFile)) ? (
             <FileViewer
               key={selectedFile}
               menu={accountMenu}
               path={selectedFile}
+              source={source}
               entry={entry}
+              onOpenFile={setSelectedFile}
               root={repoName}
               onNavigate={p => { setFolder(p); setSelectedFile(null) }}
               onRename={handleRename}
@@ -325,6 +332,7 @@ export default function App() {
               key={`${selectedFile}:${discards}`}
               menu={accountMenu}
               path={selectedFile}
+              source={source}
               entry={entry}
               files={virtual}
               edited={changes.edits[entry.orig]}
@@ -361,6 +369,7 @@ export default function App() {
               syncButton={syncButton}
               onSearch={() => setSearchOpen(true)}
               notes={links.notes}
+              symlinks={symlinks}
             />
           )}
         </PullToRefresh>

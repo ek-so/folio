@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { extractLinks, buildIndex, rewriteLinks, suggestFix, retargetLink } from './links.js'
+import { extractLinks, buildIndex, rewriteLinks, suggestFix, retargetLink, resolveSymlink, SYMLINK_MODE } from './links.js'
 
 const files = {
   'Life/Packing.md': {}, 'Life/Trip.md': {}, 'Travel/Italy.md': {}, 'img/My Pic.png': {},
@@ -39,5 +39,22 @@ describe('links', () => {
     const [l] = extractLinks('[x](Italy.md)')
     expect(suggestFix(l, files)).toBe('Travel/Italy.md')
     expect(retargetLink('[x](Italy.md)', 'Life/Trip.md', l, 'Travel/Italy.md')).toBe('[x](../Travel/Italy.md)')
+  })
+})
+
+describe('symlinks', () => {
+  const tree = {
+    'notes/a.md': {}, 'docs/guide/x.md': {},
+    'link.md': { mode: SYMLINK_MODE }, 'notes/hop.md': { mode: SYMLINK_MODE },
+  }
+  it('resolves a link to a file, a folder, or another link', () => {
+    expect(resolveSymlink('notes/l.md', 'a.md', tree)).toEqual({ kind: 'note', path: 'notes/a.md' })
+    expect(resolveSymlink('notes/g', '../docs/guide', tree)).toEqual({ kind: 'folder', path: 'docs/guide' })
+    expect(resolveSymlink('link.md', 'notes/hop.md', tree, { 'notes/hop.md': 'a.md' })).toEqual({ kind: 'note', path: 'notes/a.md' })
+  })
+  it('flags links outside the repo or to nothing', () => {
+    expect(resolveSymlink('a', '/etc/hosts', tree)).toEqual({ error: 'outside' })
+    expect(resolveSymlink('notes/a', '../../x', tree)).toEqual({ error: 'outside' })
+    expect(resolveSymlink('a', 'gone.md', tree)).toEqual({ error: 'missing' })
   })
 })
