@@ -27,7 +27,7 @@ export default function TitleBar({ path, dir, value, onCommit, children }) {
         </span>
         {onCommit ? (
           <input
-            className="min-w-0 flex-1 bg-transparent text-2xl font-bold text-foreground outline-none"
+            className="min-w-0 flex-1 bg-transparent text-base font-bold text-foreground outline-none"
             value={draft}
             aria-label="Title"
             autoCorrect="on"
@@ -39,7 +39,7 @@ export default function TitleBar({ path, dir, value, onCommit, children }) {
             }}
           />
         ) : (
-          <h1 className="min-w-0 flex-1 truncate text-2xl font-bold">{value}</h1>
+          <h1 className="min-w-0 flex-1 truncate text-base font-bold">{value}</h1>
         )}
         {children && <div className="flex shrink-0 items-center gap-2">{children}</div>}
       </div>
