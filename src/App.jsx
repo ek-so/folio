@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import Auth from './components/Auth.jsx'
 import RepoSetup from './components/RepoSetup.jsx'
 import FileBrowser from './components/FileBrowser.jsx'
@@ -59,17 +59,38 @@ export default function App() {
   const [syncCheck, setSyncCheck] = useState(false) // broken-links sheet before syncing
   const [uploadClash, setUploadClash] = useState(null) // { name, folder, resolve } while asking
   const [uploadErrors, setUploadErrors] = useState([]) // [name, reason] after adding files
+  const started = useRef(false) // false until the first URL is set (replaced, not pushed)
 
   useEffect(() => { storage.setFolder(folder) }, [folder])
   useEffect(() => { storage.setFile(selectedFile) }, [selectedFile])
   useEffect(() => { storage.setPage(page) }, [page])
 
-  // Keep browser URL in sync with the current view
+  // Keep the browser URL in sync with the current view: each new folder or
+  // file is a history entry, so Back and Forward move between them
   useEffect(() => {
     const base = import.meta.env.BASE_URL
-    const url = selectedFile ? base + selectedFile : folder ? base + folder + '/' : base
-    if (window.location.pathname !== url) history.replaceState(null, '', url)
+    const enc = p => p.split('/').map(encodeURIComponent).join('/')
+    const url = selectedFile ? base + enc(selectedFile) : folder ? base + enc(folder) + '/' : base
+    if (window.location.pathname !== url) {
+      if (started.current) history.pushState(null, '', url)
+      else history.replaceState(null, '', url)
+    }
+    started.current = true
   }, [selectedFile, folder])
+
+  // Back / Forward: show the folder or file the URL names
+  useEffect(() => {
+    const onPop = () => {
+      const base = import.meta.env.BASE_URL
+      const rest = window.location.pathname.slice(base.length)
+      let path
+      try { path = rest.split('/').map(decodeURIComponent).join('/') } catch { return }
+      if (path === '' || path.endsWith('/')) { setFolder(path.replace(/\/$/, '')); setSelectedFileState(null) }
+      else setSelectedFileState(path)
+    }
+    window.addEventListener('popstate', onPop)
+    return () => window.removeEventListener('popstate', onPop)
+  }, [])
 
   const { virtual, changes, update } = repo
   const allFolders = useMemo(() => getAllFolders(virtual), [virtual])
