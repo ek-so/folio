@@ -21,11 +21,9 @@ export default function FilePage({ menu, linkedBy, onOpenLink, path, root, name,
         start={<>
           <div className="hidden sm:flex">{menu}</div>
           <div className="ml-1 flex flex-1 min-w-0 items-center gap-1">
-            {/* The breadcrumbs keep their room; the symlink names shrink first */}
             <div className="min-w-0 shrink-0 max-w-[70%]">
               <PathBreadcrumbs root={root} path={path} current={name} changed={changed} onNavigate={onNavigate} />
             </div>
-            <SymlinkedBy links={linkedBy} onOpen={onOpenLink} />
           </div>
         </>}
       >
@@ -36,6 +34,7 @@ export default function FilePage({ menu, linkedBy, onOpenLink, path, root, name,
       </Header>
       <Surface title={
         <TitleBar path={path} {...title}>
+          <SymlinkedBy links={linkedBy} onOpen={onOpenLink} />
           <ItemMenu item={{ name: path.split('/').pop(), path, type: 'file' }} onRename={onRename} onDelete={onDelete} onMove={onMove} folders={folders} />
           {actions}
         </TitleBar>

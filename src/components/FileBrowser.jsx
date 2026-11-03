@@ -61,11 +61,9 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
         start={<>
           {path ? <div className="hidden sm:flex">{menu}</div> : menu}
           <div className="ml-1 flex flex-1 min-w-0 items-center gap-1">
-            {/* The breadcrumbs keep their room; the symlink names shrink first */}
             <div className="min-w-0 shrink-0 max-w-[70%]">
               <PathBreadcrumbs root={repoName} path={path} onNavigate={onNavigate} />
             </div>
-            <SymlinkedBy links={linkedBy} onOpen={onOpenLink} />
           </div>
         </>}
       >
@@ -81,6 +79,7 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
           // The repo itself can't be renamed here
           onCommit={path ? text => onRename({ name: currentFolder, path, type: 'dir' }, text) : undefined}
         >
+          <SymlinkedBy links={linkedBy} onOpen={onOpenLink} />
           {path && <ItemMenu item={{ name: currentFolder, path, type: 'dir' }} onRename={onRename} onDelete={onDelete} onMove={onMove} folders={folders} />}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
