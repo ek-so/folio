@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
+import { toast } from 'sonner'
 import { getTree, getBlobBase64, commitTree, isNetworkError, getLatestCommitSha, changedFileCount, blobSha, encodeText, uploadBlob } from '../lib/github.js'
 import { cache } from '../lib/cache.js'
 import { localChanges } from '../lib/storage.js'
@@ -61,7 +62,7 @@ export function useRepo(repo) {
   const changesRef = useRef(changes)
   const [conflictPaths, setConflictPaths] = useState([])
   const [syncing, setSyncing] = useState(false)
-  const [syncState, setSyncState] = useState('idle') // idle | done | error | offline
+  const [syncState, setSyncState] = useState('idle') // idle | error | offline
   // GitHub has commits this device hasn't pulled: { files } (changed-file
   // count, null when unknown), or null when up to date
   const [incoming, setIncoming] = useState(null)
@@ -217,15 +218,15 @@ export function useRepo(repo) {
     pull().catch(() => {}) // anything else that changed; offline is fine
   }
 
-  // Runs a sync step, showing its outcome on the Sync button. A task
-  // returning false ends without a "done" flash (e.g. stopped for conflicts).
-  // Offline isn't an error (the button says Offline); anything else opens the
-  // error sheet, whose Try again repeats `retry`.
-  async function run(task, retry) {
+  // Runs a sync step: success shows a toast, failure flashes on the Sync
+  // button. A task returning false ends without a toast (e.g. stopped for
+  // conflicts). Offline isn't an error (the button says Offline); anything
+  // else opens the error sheet, whose Try again repeats `retry`.
+  async function run(task, retry, doneMessage = 'Synced') {
     setSyncing(true)
     setSyncError(null)
     try {
-      if (await task() !== false) flash('done')
+      if (await task() !== false) toast.success(doneMessage)
     } catch (e) {
       if (isNetworkError(e)) {
         setOnline(false)
@@ -256,7 +257,7 @@ export function useRepo(repo) {
   // Pull only, from the Sync menu; local changes stay
   function pullChanges() {
     if (syncing) return
-    return run(fetchLatest, pullChanges)
+    return run(fetchLatest, pullChanges, 'Pulled')
   }
 
   function pushLocal() {

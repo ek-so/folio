@@ -1,10 +1,9 @@
-import { ArrowUp, ArrowDown, Check, X, CloudSlash, CaretDown, Trash } from '@phosphor-icons/react'
+import { ArrowUp, ArrowDown, X, CloudSlash, CaretDown, Trash } from '@phosphor-icons/react'
 import { Button } from './ui/button.jsx'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from './ui/dropdown-menu.jsx'
 
 const LOOK = {
   idle: { variant: 'ghost-outline', label: 'Sync' },
-  done: { variant: 'success', label: 'Synced', Icon: Check },
   error: { variant: 'destructive', label: 'Failed', Icon: X },
   offline: { variant: 'ghost-outline', label: 'Offline', Icon: CloudSlash },
 }

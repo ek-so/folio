@@ -29,6 +29,7 @@ import { useRepo } from './hooks/useRepo.js'
 import { useTheme } from './hooks/useTheme.js'
 import { storage } from './lib/storage.js'
 import { urlForView, viewForUrl, existingView } from './lib/url.js'
+import { Toaster } from './components/ui/sonner.jsx'
 import { cache } from './lib/cache.js'
 import {
   listDir, nameError, renameTarget, renameError, createError, add, setEdit, rename, remove, getAllFolders,
@@ -348,6 +349,7 @@ export default function App() {
   return (
     <LinksContext.Provider value={linkInfo}>
       <div className="flex flex-col h-full bg-background">
+        <Toaster theme={theme} position="top-center" />
         <PullToRefresh onRefresh={() => window.location.reload()}>
           {page === 'settings' ? (
             <Settings login={auth.user.login} repo={auth.repo} theme={theme} onTheme={setTheme} onBack={() => setPage(null)} />
