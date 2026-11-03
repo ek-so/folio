@@ -19,9 +19,9 @@ const buttonVariants = cva(
         link: 'text-primary underline-offset-4 hover:underline',
       },
       size: {
-        // One size for every button: 40px, the minimum comfortable tap target
-        default: 'h-10 px-4',
-        icon: 'size-10',
+        // One size for every button: 32px
+        default: 'h-8 px-3',
+        icon: 'size-8',
       },
     },
     defaultVariants: {

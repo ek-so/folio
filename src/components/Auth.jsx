@@ -49,7 +49,7 @@ export default function Auth({ onAuth }) {
           href="https://github.com/settings/personal-access-tokens/new"
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex min-h-10 items-center text-primary text-sm hover:opacity-80 transition-opacity"
+          className="inline-flex min-h-8 items-center text-primary text-sm hover:opacity-80 transition-opacity"
         >
           Create a token on GitHub ↗
         </a>
