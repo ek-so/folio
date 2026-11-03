@@ -3,7 +3,7 @@ import { Button } from './ui/button.jsx'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from './ui/dropdown-menu.jsx'
 
 // In the title bar of a file or folder that symlinks point to: a ↗ button styled
-// like ⋯. One link opens it directly; several open a list of their paths.
+// like ⋯. One link opens it directly; several show a count and open a list of their paths.
 // Choosing one calls onOpen with the link's path.
 const buttonClass = 'shrink-0 border-muted-foreground/50'
 
@@ -19,8 +19,9 @@ export default function SymlinkedBy({ links, onOpen }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost-outline" size="icon" title={`${links.length} symlinks point here`} aria-label={`${links.length} symlinks point here`} className={buttonClass}>
+        <Button variant="ghost-outline" title={`${links.length} symlinks point here`} aria-label={`${links.length} symlinks point here`} className={`${buttonClass} gap-1 px-3`}>
           <ArrowUpRight />
+          {links.length}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="max-w-[calc(100vw-2rem)]" onCloseAutoFocus={e => e.preventDefault()}>
