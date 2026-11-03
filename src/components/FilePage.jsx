@@ -22,7 +22,6 @@ export default function FilePage({ menu, linkedBy, onOpenLink, path, root, name,
       </Header>
       <Surface title={
         <TitleBar
-          path={path}
           crumbs={<PathBreadcrumbs root={root} path={path} current={name} changed={changed} onNavigate={onNavigate} />}
           badge={<SymlinkedBy links={linkedBy} onOpen={onOpenLink} />}
         >

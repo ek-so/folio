@@ -62,8 +62,7 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
 
       <Surface title={
         <TitleBar
-          dir path={path}
-          crumbs={<PathBreadcrumbs root={repoName} path={path} onNavigate={onNavigate} />}
+          crumbs={<PathBreadcrumbs root={repoName} path={path} dir onNavigate={onNavigate} />}
           badge={<SymlinkedBy links={linkedBy} onOpen={onOpenLink} />}
         >
           {path && <ItemMenu item={{ name: currentFolder, path, type: 'dir' }} onRename={onRename} onDelete={onDelete} onMove={onMove} folders={folders} />}

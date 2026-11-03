@@ -9,16 +9,13 @@ const ICONS = {
   file: [File, 'text-primary'],
 }
 
-// Color class of an item's icon (the title bar tints its tile with it).
-export const iconColor = (path, dir) => (dir ? 'text-folder' : ICONS[fileKind(path)][1])
-
 // Icon for a list row: yellowish folder, or the file's type (blue note or file,
 // red PDF, green image).
 // `link`: a symlink — the icon of what it points to (`path` / `dir`), with a
 // small ↗ in the corner, like an alias on a Mac.
 export default function FileIcon({ path, dir, link }) {
   const Icon = dir ? Folder : ICONS[fileKind(path)][0]
-  const color = iconColor(path, dir)
+  const color = dir ? 'text-folder' : ICONS[fileKind(path)][1]
   if (!link) return <Icon className={cn('size-5 shrink-0', color)} />
   return (
     <span className="relative flex size-5 shrink-0">

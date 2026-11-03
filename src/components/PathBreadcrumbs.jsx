@@ -2,11 +2,13 @@ import { Fragment } from 'react'
 import { CaretDown, Check } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
 import { Button } from './ui/button.jsx'
+import FileIcon from './FileIcon.jsx'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from './ui/dropdown-menu.jsx'
 import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbSeparator } from './ui/breadcrumb.jsx'
 
 // Breadcrumbs in the title bar: the repo is always the first level, then the
-// folders. Every level is a small button, the current one (last) just text.
+// folders. Every level has its own icon (`dir`: the last one is a folder, not a
+// file) and is a button, the current one (last) just text.
 // `current` overrides the last crumb's name (used in Editor for the display name).
 // `changed` shows an unsaved-changes dot on the last crumb.
 // On narrow screens, anywhere below the repo, they collapse into one dropdown
@@ -15,12 +17,13 @@ import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbSeparator } from 
 const TREE_PAD = 0.75
 const TREE_STEP = 1.125
 
-export default function PathBreadcrumbs({ root, path, current, changed, onNavigate }) {
+export default function PathBreadcrumbs({ root, path, dir, current, changed, onNavigate }) {
   const parts = path.split('/').filter(Boolean)
   const crumbs = [
     { name: root, path: '' },
     ...parts.map((name, i) => ({ name, path: parts.slice(0, i + 1).join('/') })),
   ]
+  crumbs.forEach((crumb, i) => { crumb.dir = i < crumbs.length - 1 || dir })
   if (current) crumbs[crumbs.length - 1].name = current
   const last = crumbs[crumbs.length - 1]
   const collapsible = crumbs.length >= 2
@@ -32,6 +35,7 @@ export default function PathBreadcrumbs({ root, path, current, changed, onNaviga
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="md" className="min-w-0 font-normal">
+                <FileIcon path={last.path} dir={last.dir} />
                 <span className="truncate">{last.name}</span>
                 {dot}
                 <CaretDown className="text-muted-foreground" />
@@ -66,12 +70,14 @@ export default function PathBreadcrumbs({ root, path, current, changed, onNaviga
               {i > 0 && <BreadcrumbSeparator />}
               <BreadcrumbItem>
                 {i === crumbs.length - 1 ? (
-                  <span aria-current="page" className="flex h-control-md items-center px-2 text-foreground">
+                  <span aria-current="page" className="flex h-control-md items-center gap-2 px-2 text-foreground">
+                    <FileIcon path={crumb.path} dir={crumb.dir} />
                     <span className="truncate max-w-40">{crumb.name}</span>
                     {dot}
                   </span>
                 ) : (
                   <Button variant="ghost" size="md" className="font-normal" onClick={() => onNavigate(crumb.path)}>
+                    <FileIcon path={crumb.path} dir />
                     <span className="truncate max-w-40">{crumb.name}</span>
                   </Button>
                 )}
