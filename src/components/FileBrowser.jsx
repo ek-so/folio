@@ -64,13 +64,10 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
           </div>
         </>}
       >
-        {syncButton}
         <Button variant="ghost-outline" size="icon" aria-label="Search" className="shrink-0 border-muted-foreground/50" onClick={onSearch}>
           <MagnifyingGlass />
         </Button>
-        {path && (
-          <ItemMenu item={{ name: currentFolder, path, type: 'dir' }} onRename={onRename} onDelete={onDelete} onMove={onMove} folders={folders} />
-        )}
+        {syncButton}
       </Header>
 
       <Surface>
@@ -186,7 +183,7 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
       </div>
       </Surface>
 
-      <Footer>
+      <Footer start={path && <ItemMenu item={{ name: currentFolder, path, type: 'dir' }} onRename={onRename} onDelete={onDelete} onMove={onMove} folders={folders} />}>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button size="icon" aria-label="New" className="shrink-0">

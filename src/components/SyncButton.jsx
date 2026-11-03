@@ -18,7 +18,7 @@ function MenuBadge({ children }) {
   )
 }
 
-// Split Sync button in the header, next to Search and ⋯, faded like them: the main part syncs; ▾ opens
+// Split Sync button at the right end of the header, after Search, faded like it: the main part syncs; ▾ opens
 // Push (with change count), Pull (how many files changed on GitHub, or New
 // when unknown) and Discard. An accent badge on Sync shows the directions
 // there's something to sync in (↑ push, ↓ pull, or both), without counts.

@@ -7,8 +7,8 @@ import PathBreadcrumbs from './PathBreadcrumbs.jsx'
 import PageLayout from './PageLayout.jsx'
 import Surface from './Surface.jsx'
 
-// Screen for one open file (note, image or PDF): breadcrumbs, search and ⋯
-// in the header, Sync and `actions` in the footer, the file's content in between.
+// Screen for one open file (note, image or PDF): breadcrumbs, Search and Sync
+// in the header, ⋯ and `actions` in the footer, the file's content in between.
 export default function FilePage({ menu, path, root, name, changed, onNavigate, onRename, onDelete, onMove, folders, onSearch, syncButton, actions, children }) {
   return (
     <PageLayout>
@@ -23,14 +23,15 @@ export default function FilePage({ menu, path, root, name, changed, onNavigate, 
           </div>
         </>}
       >
-        {syncButton}
         <Button variant="ghost-outline" size="icon" aria-label="Search" className="shrink-0 border-muted-foreground/50" onClick={onSearch}>
           <MagnifyingGlass />
         </Button>
-        <ItemMenu item={{ name: path.split('/').pop(), path, type: 'file' }} onRename={onRename} onDelete={onDelete} onMove={onMove} folders={folders} />
+        {syncButton}
       </Header>
       <Surface>{children}</Surface>
-      {actions && <Footer>{actions}</Footer>}
+      <Footer start={<ItemMenu item={{ name: path.split('/').pop(), path, type: 'file' }} onRename={onRename} onDelete={onDelete} onMove={onMove} folders={folders} />}>
+        {actions}
+      </Footer>
     </PageLayout>
   )
 }
