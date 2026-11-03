@@ -1,9 +1,11 @@
 # Folio — Agent Instructions
 
+React + Vite PWA. Reads/writes markdown files from any GitHub repo via the GitHub REST API.
+
 ## How to work with me
 - **Ask before building.** Clarify scope before writing code. You may suggest, but never implement more than what was explicitly confirmed.
 - **Be concise.** Short sentences. No filler. No summaries of what you just did.
-- **Push to `main` directly.** No pull requests.
+- **Always work on `main` and push every commit to it.** No branches, no pull requests. If a push is refused, say so; don't leave commits unpushed.
 
 ## Principles
 1. **One way to do each thing.** Before adding a component, pattern or helper, look for an existing one and reuse or extend it. Two solutions to one problem drift apart and double the bugs.
@@ -23,8 +25,6 @@ This file is only useful while it matches the code. Before relying on a rule or 
 ## Code reviews
 Suggest a full code review from time to time: after a larger feature, or after roughly 10 changes since the last review. Review against the principles above, list findings by priority, and fix only what's confirmed.
 
-React + Vite PWA. Reads/writes markdown files from any GitHub repo via the GitHub REST API.
-
 ## Design system — shadcn/ui + Tailwind v4
 
 **Stack:** shadcn/ui (new-york style) · Tailwind CSS v4 · Radix UI primitives · Phosphor icons (`@phosphor-icons/react`, regular weight — except ⋯ `DotsThree`, bold for visibility)
@@ -33,7 +33,7 @@ React + Vite PWA. Reads/writes markdown files from any GitHub repo via the GitHu
 - Use shadcn components from `src/components/ui/` for all interactive elements. Add new ones with `npx shadcn@latest add <component>`.
 - Use Tailwind utility classes for layout and spacing. Never write custom CSS for things Tailwind covers.
 - Use `cn()` from `@/lib/utils` to merge classes conditionally.
-- **One control size.** Every tappable or input element is 40px tall: `Button` (default), `size="icon"` (40×40), `Input`, menu items, list rows, sheet and dialog close. Breadcrumb links sit on 24px lines with an invisible 40px tap area. Segmented toggles (`ui/segmented.jsx`): a 40px track (`rounded-sm`, `p-1`) with 32px segments (`rounded`) inside. All controls share one radius, `rounded-sm` (8px); don't use a larger one. Build controls from `Button`/`Input` instead of raw elements; don't override heights or add size variants. The only 32px tappable things are those exceptions: segments, the list-row ⋯ and the 24px breadcrumb lines (audited in code: every other control gets 40px from `Button`, `Input`, menu items, rows and the dialog/sheet close). Exceptions: two-line result rows (search) grow from a 40px minimum; the ⋯ inside file-list rows is 32px, inside the row's 40px highlight (hovering it highlights the whole row).
+- **One control size.** Every tappable or input element is 40px tall: `Button` (default), `size="icon"` (40×40), `Input`, menu items, list rows, sheet and dialog close. Build controls from `Button`/`Input` instead of raw elements; don't override heights or add size variants. All controls share one radius, `rounded-sm` (8px). Exceptions: breadcrumb links (24px lines with an invisible 40px tap area); segmented toggles (`ui/segmented.jsx`: a 40px `rounded-sm` track, `p-1`, with 32px `rounded` segments); the ⋯ inside file-list rows (32px, inside the row's 40px highlight, which hovering it highlights); two-line result rows (search), which grow from a 40px minimum.
 - **Icons are 16px** (`size-4`). `Button` and menu items size icons by default — don't pass size classes.
 - **File icons** come from `FileIcon` (20px Phosphor): folder blue (`text-primary`), note and other files grey, PDF red (`text-destructive`), image green (`text-file-image`). A symlink shows the icon of what it points to with a small ↗ in the corner (`link`).
 - **Every screen uses `Header`**, with the same padding everywhere. File screens show ☰ (`AccountMenu`) at the repo root and on wider screens (≥640px, where the breadcrumbs aren't collapsed); on phones below the root ← instead (one level up: a file to its folder, a folder to its parent). Then, a little further apart, `PathBreadcrumbs`: the repo name in bold is always the first level (alone at home), then the folders. On mobile, anywhere below the repo (1+ levels), the crumbs collapse into one dropdown (current ▾) listing every level as an indented tree, repo first in bold, the current one checked. Search, then Sync (`SyncButton`), sit on the right. App pages (Settings, Broken links) show ← title. All ← buttons are outlined like ☰.
@@ -46,7 +46,7 @@ React + Vite PWA. Reads/writes markdown files from any GitHub repo via the GitHu
 | Tailwind token | Role |
 |---|---|
 | `bg-background` | Page background |
-| `bg-card` / `bg-popover` | Sheets, popovers |
+| `bg-card` / `bg-popover` | `Surface` (the file/folder box), sheets, popovers |
 | `bg-secondary` | Hover, subtle fills |
 | `border-border` | Dividers, input borders |
 | `text-foreground` | Primary text |
