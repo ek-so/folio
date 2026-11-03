@@ -31,7 +31,7 @@ export default function PathBreadcrumbs({ root, path, current, changed, onNaviga
         <div className="flex items-center sm:hidden">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="min-w-0 font-normal">
+              <Button variant="ghost" size="md" className="min-w-0 font-normal">
                 <span className="truncate">{last.name}</span>
                 {dot}
                 <CaretDown className="text-muted-foreground" />
@@ -66,12 +66,12 @@ export default function PathBreadcrumbs({ root, path, current, changed, onNaviga
               {i > 0 && <BreadcrumbSeparator />}
               <BreadcrumbItem>
                 {i === crumbs.length - 1 ? (
-                  <span aria-current="page" className="flex h-control-sm items-center px-2 text-foreground">
+                  <span aria-current="page" className="flex h-control-md items-center px-2 text-foreground">
                     <span className="truncate max-w-40">{crumb.name}</span>
                     {dot}
                   </span>
                 ) : (
-                  <Button variant="ghost" size="sm" className="font-normal" onClick={() => onNavigate(crumb.path)}>
+                  <Button variant="ghost" size="md" className="font-normal" onClick={() => onNavigate(crumb.path)}>
                     <span className="truncate max-w-40">{crumb.name}</span>
                   </Button>
                 )}
