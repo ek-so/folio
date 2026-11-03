@@ -4,6 +4,8 @@ import { renderBlocks, tapOffset, taskOffsets, resolveImage } from '../lib/markd
 import { useRepoImages } from '../hooks/useRepoImages.js'
 import { linkTarget } from '../lib/links.js'
 import { isEmoji } from '../lib/files.js'
+import { CaretRight } from '@phosphor-icons/react'
+import { createPortal } from 'react-dom'
 
 // Text node and offset under a screen point
 function caretAt(x, y) {
@@ -71,6 +73,7 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
   const scrollRef = useRef()
   const lastTap = useRef(null) // { time, x, y } of the previous tap on text
   const openDetails = useRef(new Set()) // indexes of accordions opened by the reader
+  const [carets, setCarets] = useState([]) // accordion title spots for CaretRight
 
   useImperativeHandle(handle, () => ({
     visibleOffset() {
@@ -116,6 +119,11 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
       const idx = [...block.querySelectorAll('input[type="checkbox"]')].indexOf(cb)
       const at = taskOffsets(blockRaw)[idx]
       if (at !== undefined) cb.dataset.offset = String(blockStart + at)
+    }
+    // Accordion titles start with a spot for Phosphor's caret, rendered into
+    // it below (▸, turned ▾ when open in App.css)
+    for (const summary of tpl.content.querySelectorAll('summary')) {
+      summary.insertAdjacentHTML('afterbegin', '<span class="summary-caret" aria-hidden="true"></span>')
     }
     // Wrap leading emoji in H1 headings with an outlined icon badge
     for (const h1 of tpl.content.querySelectorAll('h1')) {
@@ -167,6 +175,7 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
 
   useLayoutEffect(() => {
     ref.current.querySelectorAll('details').forEach((d, i) => { if (openDetails.current.has(i)) d.open = true })
+    setCarets([...ref.current.querySelectorAll('.summary-caret')])
   }, [withImages])
 
   // Always up-to-date handler without re-attaching the listener
@@ -246,6 +255,7 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
         onClick={handleClick}
         dangerouslySetInnerHTML={{ __html: withImages || '<p class="text-muted-foreground italic">Nothing to preview yet.</p>' }}
       />
+      {carets.map((spot, i) => createPortal(<CaretRight />, spot, i))}
       {footer}
       {brokenTip && (
         <div
