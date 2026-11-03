@@ -1,4 +1,4 @@
-import { ArrowUpRight } from '@phosphor-icons/react'
+import { ArrowDownRight } from '@phosphor-icons/react'
 import { Button } from './ui/button.jsx'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from './ui/dropdown-menu.jsx'
 
@@ -13,7 +13,7 @@ export default function SymlinkedBy({ links, onOpen }) {
   if (links.length === 1) {
     return (
       <Button variant="ghost-outline" size="sm" title={`Symlink: ${links[0]}`} aria-label={`Symlink: ${links[0]}`} onClick={() => onOpen(links[0])} className={`${buttonClass} min-w-0`}>
-        <ArrowUpRight />
+        <ArrowDownRight />
         <span className="truncate">{nameOf(links[0])}</span>
       </Button>
     )
@@ -22,14 +22,14 @@ export default function SymlinkedBy({ links, onOpen }) {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost-outline" size="sm" title={`${links.length} symlinks point here`} aria-label={`${links.length} symlinks point here`} className={buttonClass}>
-          <ArrowUpRight />
+          <ArrowDownRight />
           {links.length}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="max-w-[calc(100vw-2rem)]" onCloseAutoFocus={e => e.preventDefault()}>
         {links.map(link => (
           <DropdownMenuItem key={link} onSelect={() => onOpen(link)}>
-            <ArrowUpRight />
+            <ArrowDownRight />
             <span className="truncate">{link}</span>
           </DropdownMenuItem>
         ))}
