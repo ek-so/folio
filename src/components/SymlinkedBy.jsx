@@ -3,7 +3,7 @@ import { Button } from './ui/button.jsx'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from './ui/dropdown-menu.jsx'
 
 // In the title bar of a file or folder that symlinks point to: a ↗ button styled
-// like ⋯. One link opens it directly; several show a count and open a list of their paths.
+// like ⋯, small (24px). One link opens it directly; several show a count and open a list of their paths.
 // Choosing one calls onOpen with the link's path.
 const buttonClass = 'shrink-0 border-muted-foreground/50'
 
@@ -11,7 +11,7 @@ export default function SymlinkedBy({ links, onOpen }) {
   if (!links?.length) return null
   if (links.length === 1) {
     return (
-      <Button variant="ghost-outline" size="icon" title={`Symlink: ${links[0]}`} aria-label={`Symlink: ${links[0]}`} onClick={() => onOpen(links[0])} className={buttonClass}>
+      <Button variant="ghost-outline" size="sm" title={`Symlink: ${links[0]}`} aria-label={`Symlink: ${links[0]}`} onClick={() => onOpen(links[0])} className={`${buttonClass} px-1`}>
         <ArrowUpRight />
       </Button>
     )
@@ -19,7 +19,7 @@ export default function SymlinkedBy({ links, onOpen }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost-outline" title={`${links.length} symlinks point here`} aria-label={`${links.length} symlinks point here`} className={`${buttonClass} gap-1 px-3`}>
+        <Button variant="ghost-outline" size="sm" title={`${links.length} symlinks point here`} aria-label={`${links.length} symlinks point here`} className={buttonClass}>
           <ArrowUpRight />
           {links.length}
         </Button>

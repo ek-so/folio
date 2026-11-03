@@ -24,7 +24,7 @@ function BreadcrumbItem({ className, ...props }) {
 function BreadcrumbLink({ asChild, className, ...props }) {
   const Comp = asChild ? Slot : 'a'
   return (
-    <Comp data-slot="breadcrumb-link" className={cn("relative block h-6 leading-6 hover:text-foreground transition-colors after:absolute after:inset-x-0 after:-inset-y-2 after:content-['']", className)} {...props} />
+    <Comp data-slot="breadcrumb-link" className={cn("relative block h-control-sm leading-[var(--spacing-control-sm)] hover:text-foreground transition-colors after:absolute after:inset-x-0 after:-inset-y-2 after:content-['']", className)} {...props} />
   )
 }
 
@@ -35,7 +35,7 @@ function BreadcrumbPage({ className, ...props }) {
       role="link"
       aria-disabled="true"
       aria-current="page"
-      className={cn('block h-6 max-w-40 truncate leading-6 text-foreground font-normal', className)}
+      className={cn('block h-control-sm max-w-40 truncate leading-[var(--spacing-control-sm)] text-foreground font-normal', className)}
       {...props}
     />
   )

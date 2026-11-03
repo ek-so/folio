@@ -25,7 +25,7 @@ export default function ItemMenu({ item, onRename, onDelete, onMove, folders, in
             variant={inList ? 'ghost' : 'ghost-outline'}
             size="icon"
             aria-label="More actions"
-            className={inList ? 'size-8 shrink-0 text-muted-foreground hover:bg-muted-foreground/20 data-[state=open]:bg-muted-foreground/20' : 'shrink-0 border-muted-foreground/50'}
+            className={inList ? 'size-[calc(var(--spacing-control)-0.5rem)] shrink-0 text-muted-foreground hover:bg-muted-foreground/20 data-[state=open]:bg-muted-foreground/20' : 'shrink-0 border-muted-foreground/50'}
           >
             <DotsThree weight="bold" size={inList ? 16 : 20} />
           </Button>

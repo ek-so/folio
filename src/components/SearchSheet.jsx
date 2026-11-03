@@ -59,7 +59,7 @@ export default function SearchSheet({ onClose, onSelect, virtual, changes, recen
                   <li key={path}>
                     <Button
                       variant="ghost"
-                      className="w-full h-auto min-h-10 justify-start gap-3 rounded-none px-6 py-2 font-normal text-left"
+                      className="w-full h-auto min-h-control justify-start gap-3 rounded-none px-6 py-2 font-normal text-left"
                       onClick={() => select(path)}
                     >
                       <FileIcon path={path} />
