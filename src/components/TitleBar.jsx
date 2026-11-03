@@ -1,0 +1,48 @@
+import { useState, useEffect } from 'react'
+import FileIcon from './FileIcon.jsx'
+
+// Top of the content box: the item's icon (a note's emoji, else its file or
+// folder icon) in an outlined tile, then its title. With onCommit the title
+// is a text field: Enter or leaving it saves (onCommit(text) returns an error
+// message or null), Escape reverts. An empty title isn't saved.
+export default function TitleBar({ path, dir, emoji, value, placeholder, onCommit }) {
+  const [draft, setDraft] = useState(value)
+  const [error, setError] = useState('')
+  useEffect(() => setDraft(value), [value])
+
+  function commit() {
+    const text = draft.trim()
+    if (!text || text === value) return setDraft(value)
+    const err = onCommit(text)
+    setError(err || '')
+    if (err) setDraft(value)
+  }
+
+  return (
+    <div className="shrink-0 px-5 pt-4 pb-1">
+      <div className="flex items-center gap-3">
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-lg border border-border">
+          <FileIcon path={path} dir={dir} emoji={emoji} />
+        </span>
+        {onCommit ? (
+          <input
+            className="min-w-0 flex-1 bg-transparent text-2xl font-bold text-foreground outline-none placeholder:text-muted-foreground"
+            value={draft}
+            placeholder={placeholder}
+            aria-label="Title"
+            autoCorrect="on"
+            onChange={e => { setDraft(e.target.value); setError('') }}
+            onBlur={commit}
+            onKeyDown={e => {
+              if (e.key === 'Enter') e.currentTarget.blur()
+              if (e.key === 'Escape') { setDraft(value); setError(''); requestAnimationFrame(() => e.target.blur()) }
+            }}
+          />
+        ) : (
+          <h1 className="min-w-0 flex-1 truncate text-2xl font-bold">{value}</h1>
+        )}
+      </div>
+      {error && <p className="mt-1 text-xs text-destructive">{error}</p>}
+    </div>
+  )
+}

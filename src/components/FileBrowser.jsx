@@ -5,6 +5,7 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuIte
 import Header from './Header.jsx'
 import Footer from './Footer.jsx'
 import Surface from './Surface.jsx'
+import TitleBar from './TitleBar.jsx'
 import PathBreadcrumbs from './PathBreadcrumbs.jsx'
 import ItemMenu from './ItemMenu.jsx'
 import { splitName } from '../lib/changes.js'
@@ -70,7 +71,13 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
         {syncButton}
       </Header>
 
-      <Surface>
+      <Surface title={
+        <TitleBar
+          dir path={path} value={currentFolder}
+          // The repo itself can't be renamed here
+          onCommit={path ? text => onRename({ name: currentFolder, path, type: 'dir' }, text) : undefined}
+        />
+      }>
       {/* Files dropped here go into this folder, or into a folder row they're dropped on */}
       <div
         className={cn('flex-1 min-h-0 overflow-y-auto overscroll-y-contain transition-colors', filesOver && !dragOverPath && 'bg-primary/5 ring-2 ring-inset ring-primary/40')}

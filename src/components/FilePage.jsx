@@ -8,8 +8,9 @@ import PageLayout from './PageLayout.jsx'
 import Surface from './Surface.jsx'
 
 // Screen for one open file (note, image or PDF): breadcrumbs, Search and Sync
-// in the header, ⋯ and `actions` in the footer, the file's content in between.
-export default function FilePage({ menu, path, root, name, changed, onNavigate, onRename, onDelete, onMove, folders, onSearch, syncButton, actions, children }) {
+// in the header, ⋯ and `actions` in the footer, `title` (TitleBar) and the
+// file's content in between.
+export default function FilePage({ menu, path, root, name, changed, onNavigate, onRename, onDelete, onMove, folders, onSearch, syncButton, actions, title, children }) {
   return (
     <PageLayout>
       <Header
@@ -28,7 +29,7 @@ export default function FilePage({ menu, path, root, name, changed, onNavigate, 
         </Button>
         {syncButton}
       </Header>
-      <Surface>{children}</Surface>
+      <Surface title={title}>{children}</Surface>
       <Footer start={<ItemMenu item={{ name: path.split('/').pop(), path, type: 'file' }} onRename={onRename} onDelete={onDelete} onMove={onMove} folders={folders} />}>
         {actions}
       </Footer>
