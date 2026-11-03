@@ -21,7 +21,7 @@
 This file is only useful while it matches the code. Before relying on a rule or description here, check it against the code; whenever a change makes any line here wrong or incomplete, fix that line in the same commit. If the code and this file disagree and it's unclear which is intended, ask.
 
 ## Code reviews
-Suggest a full code review from time to time: after a larger feature, or after roughly 10 changes since the last review. Review against the principles above, list findings by priority, and fix only what's confirmed.
+Suggest a full code review from time to time: after a larger feature, or after roughly 10 changes since the last review. Review against the principles above, list findings by priority, and fix only what's confirmed. Run it with `/code-review` (skill in `.claude/skills/code-review/`).
 
 React + Vite PWA. Reads/writes markdown files from any GitHub repo via the GitHub REST API.
 
