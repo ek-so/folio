@@ -3,6 +3,7 @@ import { Plus, FileText, Folder, UploadSimple } from '@phosphor-icons/react'
 import { Button } from './ui/button.jsx'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from './ui/dropdown-menu.jsx'
 import Header from './Header.jsx'
+import { PAGE, pageTitle } from '../lib/pages.js'
 import Surface from './Surface.jsx'
 import TitleBar from './TitleBar.jsx'
 import PathBreadcrumbs from './PathBreadcrumbs.jsx'
@@ -53,7 +54,7 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
 
   return (
     <PageLayout>
-      <Header title="File manager" lead={menu} onSearch={onSearch} syncButton={syncButton} />
+      <Header title={pageTitle(PAGE.FILES)} lead={menu} onSearch={onSearch} syncButton={syncButton} />
 
       <Surface title={
         <TitleBar
@@ -88,7 +89,6 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
       {/* Files dropped here go into this folder, or into a folder row they're dropped on */}
       <div
         className={cn('flex-1 min-h-0 overflow-y-auto overscroll-y-contain transition-colors', filesOver && !dragOverPath && 'bg-primary/5 ring-2 ring-inset ring-primary/40')}
-        style={{ WebkitOverflowScrolling: 'touch' }}
         onDragOver={e => {
           if (!isFileDrag(e)) return
           e.preventDefault()

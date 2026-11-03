@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
-import { toast } from 'sonner'
 import { getTree, getBlobBase64, commitTree, isNetworkError, getLatestCommitSha, changedFileCount, blobSha, encodeText, uploadBlob } from '../lib/github.js'
 import { cache } from '../lib/cache.js'
 import { localChanges } from '../lib/storage.js'
@@ -53,7 +52,8 @@ async function prefetchNotes(files) {
 
 // Remote tree + local changes for one repo, and syncing between them.
 // Works offline from the last tree and notes saved on this device.
-export function useRepo(repo) {
+// `onDone(message)` is called after a sync step succeeds (App shows a toast).
+export function useRepo(repo, onDone) {
   const [remote, setRemote] = useState(null)
   const remoteRef = useRef(null)
   const [error, setError] = useState('')
@@ -218,7 +218,7 @@ export function useRepo(repo) {
     pull().catch(() => {}) // anything else that changed; offline is fine
   }
 
-  // Runs a sync step: success shows a toast, failure flashes on the Sync
+  // Runs a sync step: success reports through onDone, failure flashes on the Sync
   // button. A task returning false ends without a toast (e.g. stopped for
   // conflicts). Offline isn't an error (the button says Offline); anything
   // else opens the error sheet, whose Try again repeats `retry`.
@@ -226,7 +226,7 @@ export function useRepo(repo) {
     setSyncing(true)
     setSyncError(null)
     try {
-      if (await task() !== false) toast.success(doneMessage)
+      if (await task() !== false) onDone?.(doneMessage)
     } catch (e) {
       if (isNetworkError(e)) {
         setOnline(false)

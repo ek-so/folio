@@ -1,8 +1,11 @@
 import { List, House, FolderOpen, Graph, Gear, SignOut, LinkBreak } from '@phosphor-icons/react'
+import { PAGE, MAIN_PAGES } from '../lib/pages.js'
 import { Button } from './ui/button.jsx'
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator,
 } from './ui/dropdown-menu.jsx'
+
+const ICONS = { [PAGE.HOME]: House, [PAGE.FILES]: FolderOpen, [PAGE.GRAPH]: Graph }
 
 // ☰ at the left of every main screen's header (Home, File manager, Graph), opening the popover: those pages, then the account items.
 // The account and repo are shown in Settings.
@@ -15,9 +18,10 @@ export default function AccountMenu({ onNavigate, onSettings, brokenCount, onBro
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-64" onCloseAutoFocus={e => e.preventDefault()}>
-        <DropdownMenuItem onSelect={() => onNavigate('home')}><House /> Home</DropdownMenuItem>
-        <DropdownMenuItem onSelect={() => onNavigate('files')}><FolderOpen /> File manager</DropdownMenuItem>
-        <DropdownMenuItem onSelect={() => onNavigate('graph')}><Graph /> Graph</DropdownMenuItem>
+        {MAIN_PAGES.map(({ id, title }) => {
+          const Icon = ICONS[id]
+          return <DropdownMenuItem key={id} onSelect={() => onNavigate(id)}><Icon /> {title}</DropdownMenuItem>
+        })}
         <DropdownMenuSeparator />
         <DropdownMenuItem onSelect={onBrokenLinks}>
           <LinkBreak /> Broken links

@@ -26,7 +26,6 @@ const MarkdownEditor = forwardRef(function MarkdownEditor({ content, onChange, o
       <textarea
         ref={textareaRef}
         className={cn(TEXT_LAYOUT, 'absolute inset-0 overflow-y-auto bg-transparent text-transparent caret-foreground selection:bg-primary/30 resize-none outline-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden')}
-        style={{ WebkitOverflowScrolling: 'touch' }}
         value={content}
         onChange={e => onChange(e.target.value)}
         onScroll={e => { highlightRef.current.scrollTop = e.currentTarget.scrollTop }}

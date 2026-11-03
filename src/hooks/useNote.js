@@ -59,7 +59,7 @@ export function useNote(entry, edited, onEdit) {
     fetchOriginal(entry.sha).then(original => {
       originalRef.current = original
       if (!hasEdit && pendingRef.current === null) setContent(original)
-    }).catch(() => {})
+    }).catch(() => setLoadError(true)) // same as the first load: no editing without GitHub's version
   }, [entry.sha])
 
   function change(value) {

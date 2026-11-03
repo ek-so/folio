@@ -29,7 +29,9 @@ import { useAuth } from './hooks/useAuth.js'
 import { useRepo } from './hooks/useRepo.js'
 import { useTheme } from './hooks/useTheme.js'
 import { storage } from './lib/storage.js'
+import { PAGE, MAIN_PAGES, pageTitle } from './lib/pages.js'
 import { urlForView, viewForUrl, existingView } from './lib/url.js'
+import { toast } from 'sonner'
 import { Toaster } from './components/ui/sonner.jsx'
 import { cache } from './lib/cache.js'
 import {
@@ -46,7 +48,7 @@ const deepLink = (() => {
 
 export default function App() {
   const auth = useAuth()
-  const repo = useRepo(auth.user ? auth.repo : null)
+  const repo = useRepo(auth.user ? auth.repo : null, toast.success)
   const { theme, setTheme } = useTheme()
   const [selectedFile, setSelectedFileState] = useState(() => deepLink ? deepLink.file : storage.getFile())
   // Opening a symlink (from the list, search or a note's link) opens its
@@ -61,7 +63,13 @@ export default function App() {
   }
   const [folder, setFolder] = useState(() => deepLink ? deepLink.folder : storage.getFolder())
   const [newFile, setNewFile] = useState(null) // { folder, kind } while the sheet is open
-  const [page, setPage] = useState(() => deepLink ? 'files' : storage.getPage() || 'home') // 'home' | 'files' | 'graph' | 'settings' | 'links'
+  const [page, setPage] = useState(() => deepLink ? PAGE.FILES : storage.getPage() || PAGE.HOME)
+  const [returnTo, setReturnTo] = useState(PAGE.HOME) // the main page ← on Settings / Broken links goes back to
+  // Settings and Broken links remember the main page they were opened from
+  function openAppPage(next) {
+    if (MAIN_PAGES.some(p => p.id === page)) setReturnTo(page)
+    setPage(next)
+  }
   const [confirmSignOut, setConfirmSignOut] = useState(false)
   const [confirmDiscard, setConfirmDiscard] = useState(false)
   const [discards, setDiscards] = useState(0) // remounts the open note after a discard
@@ -99,7 +107,7 @@ export default function App() {
       const { files, folders } = known.current
       if (files.size) view = existingView(view, files, folders)
       if (urlForView(BASE, view) !== window.location.pathname) replaceNext.current = true
-      setPage('files')
+      setPage(PAGE.FILES)
       setFolder(view.folder)
       setSelectedFileState(view.file)
     }
@@ -295,7 +303,7 @@ export default function App() {
 
   async function signOut() {
     setConfirmSignOut(false)
-    setPage('home')
+    setPage(PAGE.HOME)
     repo.discardAll()
     await cache.clearAll()
     auth.signOut()
@@ -321,9 +329,9 @@ export default function App() {
   const accountMenu = (
     <AccountMenu
       onNavigate={setPage}
-      onSettings={() => setPage('settings')}
+      onSettings={() => openAppPage(PAGE.SETTINGS)}
       brokenCount={links.index.broken.length}
-      onBrokenLinks={() => setPage('links')}
+      onBrokenLinks={() => openAppPage(PAGE.LINKS)}
       onSignOut={() => repo.changeCount ? setConfirmSignOut(true) : signOut()}
     />
   )
@@ -353,23 +361,23 @@ export default function App() {
       <div className="flex flex-col h-full bg-background">
         <Toaster theme={theme} position="top-center" />
         <PullToRefresh onRefresh={() => window.location.reload()}>
-          {page === 'settings' ? (
-            <Settings login={auth.user.login} repo={auth.repo} theme={theme} onTheme={setTheme} onBack={() => setPage('files')} />
-          ) : page === 'home' || page === 'graph' ? (
+          {page === PAGE.SETTINGS ? (
+            <Settings login={auth.user.login} repo={auth.repo} theme={theme} onTheme={setTheme} onBack={() => setPage(returnTo)} />
+          ) : page === PAGE.HOME || page === PAGE.GRAPH ? (
             <EmptyPage
-              title={page === 'home' ? 'Home' : 'Graph'}
+              title={pageTitle(page)}
               menu={accountMenu}
               onSearch={() => setSearchOpen(true)}
               syncButton={syncButton}
             />
-          ) : page === 'links' ? (
+          ) : page === PAGE.LINKS ? (
             <BrokenLinks
               broken={links.index.broken}
               files={virtual}
               missing={links.missing}
-              onOpen={path => { setPage('files'); setSelectedFile(path) }}
+              onOpen={path => { setPage(PAGE.FILES); setSelectedFile(path) }}
               onFix={fixBrokenLink}
-              onBack={() => setPage('files')}
+              onBack={() => setPage(returnTo)}
             />
           ) : entry && ['image', 'pdf'].includes(fileKind(selectedFile)) ? (
             <FileViewer
@@ -442,8 +450,8 @@ export default function App() {
           broken={links.index.broken}
           files={virtual}
           onFix={fixBrokenLink}
-          onOpenNote={path => { setSyncCheck(false); setPage('files'); setSelectedFile(path) }}
-          onOpenPage={() => { setSyncCheck(false); setSelectedFile(null); setPage('links') }}
+          onOpenNote={path => { setSyncCheck(false); setPage(PAGE.FILES); setSelectedFile(path) }}
+          onOpenPage={() => { setSyncCheck(false); setSelectedFile(null); openAppPage(PAGE.LINKS) }}
           onSyncAnyway={() => { setSyncCheck(false); repo.sync() }}
           onClose={() => setSyncCheck(false)}
         />
@@ -491,7 +499,7 @@ export default function App() {
         {searchOpen && (
           <SearchSheet
             onClose={() => setSearchOpen(false)}
-            onSelect={path => { setPage('files'); setSelectedFile(path); setFolder('') }}
+            onSelect={path => { setPage(PAGE.FILES); setSelectedFile(path); setFolder('') }}
             virtual={virtual}
             changes={changes}
             recent={storage.getRecentFiles()}

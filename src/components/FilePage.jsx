@@ -1,4 +1,5 @@
 import Header from './Header.jsx'
+import { PAGE, pageTitle } from '../lib/pages.js'
 import ItemMenu from './ItemMenu.jsx'
 import PathBreadcrumbs from './PathBreadcrumbs.jsx'
 import PageLayout from './PageLayout.jsx'
@@ -12,7 +13,7 @@ import TitleBar from './TitleBar.jsx'
 export default function FilePage({ menu, linkedBy, onOpenLink, path, root, name, changed, onNavigate, onRename, onDelete, onMove, folders, onSearch, syncButton, actions, children }) {
   return (
     <PageLayout>
-      <Header title="File manager" lead={menu} onSearch={onSearch} syncButton={syncButton} />
+      <Header title={pageTitle(PAGE.FILES)} lead={menu} onSearch={onSearch} syncButton={syncButton} />
       <Surface title={
         <TitleBar
           crumbs={<PathBreadcrumbs root={root} path={path} current={name} changed={changed} onNavigate={onNavigate} />}
