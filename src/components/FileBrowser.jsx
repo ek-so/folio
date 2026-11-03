@@ -53,13 +53,7 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
 
   return (
     <PageLayout>
-      <Header
-        // ☰ at the repo root and on wider screens; inside a folder on phones ← goes one level up
-        onBack={path ? () => onNavigate(path.slice(0, Math.max(path.lastIndexOf('/'), 0))) : undefined}
-        backMobileOnly
-        title="Home"
-        lead={path ? <div className="hidden sm:flex">{menu}</div> : menu}
-      >
+      <Header title="Home" lead={menu}>
         <Button variant="ghost-outline" size="icon" aria-label="Search" className="shrink-0 border-muted-foreground/50" onClick={onSearch}>
           <MagnifyingGlass />
         </Button>

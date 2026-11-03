@@ -14,13 +14,7 @@ import TitleBar from './TitleBar.jsx'
 export default function FilePage({ menu, linkedBy, onOpenLink, path, root, name, changed, onNavigate, onRename, onDelete, onMove, folders, onSearch, syncButton, actions, children }) {
   return (
     <PageLayout>
-      <Header
-        // Phones: ← back to the folder holding the file; wider screens: ☰
-        onBack={() => onNavigate(path.slice(0, Math.max(path.lastIndexOf('/'), 0)))}
-        backMobileOnly
-        title="Home"
-        lead={<div className="hidden sm:flex">{menu}</div>}
-      >
+      <Header title="Home" lead={menu}>
         <Button variant="ghost-outline" size="icon" aria-label="Search" className="shrink-0 border-muted-foreground/50" onClick={onSearch}>
           <MagnifyingGlass />
         </Button>

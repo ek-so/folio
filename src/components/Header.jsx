@@ -3,15 +3,13 @@ import { Button } from './ui/button.jsx'
 import { cn } from '@/lib/utils.js'
 
 // Top bar shared by every screen, with the same padding everywhere. With
-// onBack the left starts with ← (one level up in folders and files; out of
-// app pages like Settings); `backMobileOnly` hides it on wider screens,
-// where folders and files show ☰ instead. Then the `title` ("Home" on file
-// screens), after `lead` (☰ on file screens).
-export default function Header({ title, changed, onBack, backMobileOnly, lead, children }) {
+// onBack the left starts with ← (out of app pages like Settings). File and
+// folder screens show ☰ (`lead`) and the title "Home", wherever you are.
+export default function Header({ title, changed, onBack, lead, children }) {
   return (
     <div className="flex items-center gap-2 px-4 py-2 shrink-0">
       {onBack && (
-        <Button variant="ghost-outline" size="icon" onClick={onBack} aria-label="Back" className={cn('shrink-0 border-muted-foreground/50', backMobileOnly && 'sm:hidden')}>
+        <Button variant="ghost-outline" size="icon" onClick={onBack} aria-label="Back" className="shrink-0 border-muted-foreground/50">
           <ArrowLeft />
         </Button>
       )}
