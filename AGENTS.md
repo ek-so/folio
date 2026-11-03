@@ -64,7 +64,7 @@ React + Vite PWA. Reads/writes markdown files from any GitHub repo via the GitHu
 
 - `src/lib/github.js` — all GitHub API calls. `init(token)` sets up Octokit; `setRepo(owner, repo)` sets target repo. Blob reads go through the offline cache.
 - `src/lib/changes.js` — pure model of local changes (edits, uploads, renames, deletes, new files) layered over the remote tree. Covered by `changes.test.js` (`npm test`).
-- `src/lib/markdown.js` — preview rendering (blocks tagged with their source range; a `<details>` accordion is one block, so its markdown renders inside it as on GitHub), tap-to-source mapping (`tapOffset`), task checkbox positions (`taskOffsets`), markdown highlighting for the editor (syntax characters faded with `opacity-50`), image paths.
+- `src/lib/markdown.js` — preview rendering (blocks tagged with their source range; a `<details>` accordion is one block, so its markdown renders inside it as on GitHub), tap-to-source mapping (`tapOffset`), task checkbox positions (`taskOffsets`), markdown highlighting for the editor, image paths.
 - `src/lib/links.js` — internal links (regular markdown only, no wiki links): extracting them (code ignored), the backlink / broken-link index, rewriting them when files move (same style: relative, `.md` or not, encoding, anchors; link text equal to the old name follows), Fix suggestions for broken links, and where symlinks point (`resolveSymlink`). Tested in `links.test.js`.
 - `src/lib/files.js` — file-type and name helpers (`fileKind`, `imageMime`, `isImage`, `displayName`, `headingEmoji`).
 - `src/lib/cache.js` — IndexedDB copies of the last tree and of blobs (by sha) for offline use.

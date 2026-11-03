@@ -64,20 +64,10 @@ describe('highlightMarkdown', () => {
     const html = highlightMarkdown(md)
     const text = html.replace(/<[^>]+>/g, '').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&')
     expect(text).toBe(md + ' ')
-    const m = s => `<span class="opacity-50">${s}</span>`
-    expect(html).toContain(`<span class="font-bold">${m('# ')}Title</span>`)
-    expect(html).toContain(`<span class="text-primary">${m('[')}docs${m('](a.md)')}</span>`)
-    expect(html).toContain(`<span class="font-bold">${m('**')}bold${m('**')}</span>`)
-    expect(html).toContain(`<span class="italic">${m('*')}it${m('*')}</span>`)
-    expect(html).toContain(`<span class="underline">${m('&lt;u&gt;')}u${m('&lt;/u&gt;')}</span>`)
+    expect(html).toContain('<span class="text-primary">[docs](a.md)</span>')
+    expect(html).toContain('<span class="font-bold">**bold**</span>')
+    expect(html).toContain('<span class="italic">*it*</span>')
     expect(html).not.toContain('<span class="italic">_case_</span>')
     expect(highlightMarkdown('[docs(a.md)')).not.toContain('text-primary')
-  })
-
-  it('fades line markers', () => {
-    const m = s => `<span class="opacity-50">${s}</span>`
-    expect(highlightMarkdown('- [ ] task')).toBe(`${m('- [ ]')} task `)
-    expect(highlightMarkdown('> quote')).toBe(`${m('&gt; ')}quote `)
-    expect(highlightMarkdown('---')).toBe(`${m('---')} `)
   })
 })
