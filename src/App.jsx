@@ -39,7 +39,13 @@ export default function App() {
   const repo = useRepo(auth.user ? auth.repo : null)
   const { theme, setTheme } = useTheme()
   const [selectedFile, setSelectedFileState] = useState(storage.getFile)
+  // Opening a symlink (from the list, search or a note's link) opens its
+  // source: the file, or the folder
   function setSelectedFile(path) {
+    const link = path && symlinks[path]
+    if (link?.kind === 'folder') { setFolder(link.path); setSelectedFileState(null); return }
+    if (link?.path) path = link.path
+    else if (link || (path && path in symlinks)) return // broken or still loading: nothing to open
     if (path) storage.addRecentFile(path)
     setSelectedFileState(path)
   }
@@ -260,10 +266,8 @@ export default function App() {
   if (!auth.user) return <Auth onAuth={auth.authenticate} />
   if (!auth.repo) return <RepoSetup user={auth.user} onRepo={auth.selectRepo} onLogout={auth.signOut} />
 
-  // A symlinked file opens at the link's path, showing its source read-only
-  const link = selectedFile && selectedFile in symlinks ? symlinks[selectedFile] : null
-  const source = link?.kind && link.kind !== 'folder' ? link.path : null
-  const entry = selectedFile && (selectedFile in symlinks ? source && virtual[source] : virtual[selectedFile])
+  // A symlink never opens itself (the list opens its source instead)
+  const entry = selectedFile && !(selectedFile in symlinks) && virtual[selectedFile]
   const repoName = auth.repo.split('/')[1]
   // ☰ on the left of the header: at the repo root, and everywhere on wider screens
   const accountMenu = (
@@ -310,14 +314,12 @@ export default function App() {
               onFix={fixBrokenLink}
               onBack={() => setPage(null)}
             />
-          ) : entry && ['image', 'pdf'].includes(fileKind(source ?? selectedFile)) ? (
+          ) : entry && ['image', 'pdf'].includes(fileKind(selectedFile)) ? (
             <FileViewer
               key={selectedFile}
               menu={accountMenu}
               path={selectedFile}
-              source={source}
               entry={entry}
-              onOpenFile={setSelectedFile}
               root={repoName}
               onNavigate={p => { setFolder(p); setSelectedFile(null) }}
               onRename={handleRename}
@@ -332,7 +334,6 @@ export default function App() {
               key={`${selectedFile}:${discards}`}
               menu={accountMenu}
               path={selectedFile}
-              source={source}
               entry={entry}
               files={virtual}
               edited={changes.edits[entry.orig]}

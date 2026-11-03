@@ -43,12 +43,9 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
     onUpload([...e.dataTransfer.files], folder)
   }
 
-  // A symlinked folder goes to its source; a symlinked file opens at the link
   function navigate(item) {
-    const link = symlinks[item.path]
     if (item.type === 'dir') onNavigate(item.path)
-    else if (link?.kind === 'folder') onNavigate(link.path)
-    else onSelect(item.path)
+    else onSelect(item.path) // a symlink opens its source (App)
   }
 
   const currentFolder = path ? path.split('/').pop() : repoName
@@ -165,6 +162,7 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
                       // Hidden files and broken links fade their icon and name only, not the row's hover or ⋯
                       className={cn('flex-1 min-w-0 justify-start gap-3 pl-3 pr-0 rounded-lg font-normal text-left hover:bg-transparent disabled:opacity-100 disabled:cursor-default', !isDraggedItem && (item.name.startsWith('.') || link?.error) && 'opacity-50 disabled:opacity-50')}
                       onClick={() => navigate(item)}
+                      title={link?.path ? `Symlinked to ${link.path}` : undefined}
                       disabled={!openable}
                     >
                       {isLink

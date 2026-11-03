@@ -228,7 +228,6 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
 
   function handleClick(e) {
     if (e.target.matches('input[type="checkbox"]')) {
-      if (!onChange) return e.preventDefault() // read-only (a symlink): don't tick
       const offset = Number(e.target.dataset.offset)
       if (onChange && !isNaN(offset)) {
         const char = e.target.checked ? 'x' : ' '
