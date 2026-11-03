@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils.js'
 // folder screens show ☰ (`lead`) and the title "Home", wherever you are.
 export default function Header({ title, changed, onBack, lead, children }) {
   return (
-    <div className="flex items-center gap-2 px-4 py-2 shrink-0 w-full max-w-[1032px] mx-auto">
+    <div className="flex items-center gap-2 p-2 shrink-0">
       {onBack && (
         <Button variant="ghost-outline" size="icon" onClick={onBack} aria-label="Back" className="shrink-0 border-muted-foreground/50">
           <ArrowLeft />
