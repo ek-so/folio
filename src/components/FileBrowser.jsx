@@ -76,10 +76,10 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
       <Surface title={
         <TitleBar
           dir path={path} value={currentFolder}
+          badge={<SymlinkedBy links={linkedBy} onOpen={onOpenLink} />}
           // The repo itself can't be renamed here
           onCommit={path ? text => onRename({ name: currentFolder, path, type: 'dir' }, text) : undefined}
         >
-          <SymlinkedBy links={linkedBy} onOpen={onOpenLink} />
           {path && <ItemMenu item={{ name: currentFolder, path, type: 'dir' }} onRename={onRename} onDelete={onDelete} onMove={onMove} folders={folders} />}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

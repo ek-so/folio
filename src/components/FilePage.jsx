@@ -33,8 +33,7 @@ export default function FilePage({ menu, linkedBy, onOpenLink, path, root, name,
         {syncButton}
       </Header>
       <Surface title={
-        <TitleBar path={path} {...title}>
-          <SymlinkedBy links={linkedBy} onOpen={onOpenLink} />
+        <TitleBar path={path} badge={<SymlinkedBy links={linkedBy} onOpen={onOpenLink} />} {...title}>
           <ItemMenu item={{ name: path.split('/').pop(), path, type: 'file' }} onRename={onRename} onDelete={onDelete} onMove={onMove} folders={folders} />
           {actions}
         </TitleBar>
