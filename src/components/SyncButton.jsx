@@ -18,7 +18,7 @@ function MenuBadge({ children }) {
   )
 }
 
-// Split Sync button, faded like Search and ⋯: the main part syncs; ▾ opens
+// Split Sync button in the header, next to Search and ⋯, faded like them: the main part syncs; ▾ opens
 // Push (with change count), Pull (how many files changed on GitHub, or New
 // when unknown) and Discard. An accent badge on Sync shows the directions
 // there's something to sync in (↑ push, ↓ pull, or both), without counts.
@@ -28,7 +28,7 @@ export default function SyncButton({ syncState, syncing, changeCount, incoming, 
   const hasPull = incoming !== null
 
   return (
-    <div className="flex">
+    <div className="flex shrink-0">
       <Button onClick={onSync} disabled={syncing} variant={variant} className="gap-2 rounded-r-none">
         {syncing ? (
           <span className="size-4 rounded-full border border-current border-t-transparent animate-spin opacity-60" />
@@ -52,7 +52,7 @@ export default function SyncButton({ syncState, syncing, changeCount, incoming, 
             <CaretDown />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" onCloseAutoFocus={e => e.preventDefault()}>
+        <DropdownMenuContent align="end" onCloseAutoFocus={e => e.preventDefault()}>
           <DropdownMenuItem disabled={!hasPush} onSelect={onSync}>
             <ArrowUp /> Push changes
             {hasPush && <MenuBadge>{changeCount}</MenuBadge>}

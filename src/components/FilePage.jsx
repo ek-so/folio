@@ -23,13 +23,14 @@ export default function FilePage({ menu, path, root, name, changed, onNavigate, 
           </div>
         </>}
       >
+        {syncButton}
         <Button variant="ghost-outline" size="icon" aria-label="Search" className="shrink-0 border-muted-foreground/50" onClick={onSearch}>
           <MagnifyingGlass />
         </Button>
         <ItemMenu item={{ name: path.split('/').pop(), path, type: 'file' }} onRename={onRename} onDelete={onDelete} onMove={onMove} folders={folders} />
       </Header>
       <Surface>{children}</Surface>
-      <Footer sync={syncButton}>{actions}</Footer>
+      {actions && <Footer>{actions}</Footer>}
     </PageLayout>
   )
 }
