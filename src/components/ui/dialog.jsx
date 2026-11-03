@@ -48,7 +48,7 @@ function DialogContent({ className, children, showCloseButton = true, ...props }
       >
         {children}
         {showCloseButton && (
-          <DialogPrimitive.Close className="absolute top-3 right-3 flex size-8 items-center justify-center rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring">
+          <DialogPrimitive.Close className="absolute top-3 right-3 flex size-8 items-center justify-center rounded-md opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring">
             <X size={16} />
             <span className="sr-only">Close</span>
           </DialogPrimitive.Close>
