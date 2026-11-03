@@ -66,7 +66,7 @@ describe('highlightMarkdown', () => {
     expect(text).toBe(md + ' ')
     const m = s => `<span class="opacity-50">${s}</span>`
     expect(html).toContain(`<span class="font-bold">${m('# ')}Title</span>`)
-    expect(html).toContain(`<span class="text-primary">${m('[')}docs${m('](')}a.md${m(')')}</span>`)
+    expect(html).toContain(`<span class="text-primary">${m('[')}docs${m('](a.md)')}</span>`)
     expect(html).toContain(`<span class="font-bold">${m('**')}bold${m('**')}</span>`)
     expect(html).toContain(`<span class="italic">${m('*')}it${m('*')}</span>`)
     expect(html).toContain(`<span class="underline">${m('&lt;u&gt;')}u${m('&lt;/u&gt;')}</span>`)
