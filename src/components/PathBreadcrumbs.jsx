@@ -12,7 +12,7 @@ import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbSeparator } from 
 // `current` overrides the last crumb's name (used in Editor for the display name).
 // `changed` shows an unsaved-changes dot on the last crumb.
 // On narrow screens, anywhere below the repo, they collapse into one dropdown
-// (current name ▾) listing every level, repo first, as an indented tree, the current one checked.
+// (current name ▾) listing every level, repo first, as an indented tree with each level's icon, the current one checked.
 // Collapsed dropdown tree: item padding and the indent per level (rem)
 const TREE_PAD = 0.75
 const TREE_STEP = 1.125
@@ -56,6 +56,7 @@ export default function PathBreadcrumbs({ root, path, dir, current, changed, onN
                       style={{ left: `${TREE_PAD + (depth - 1) * TREE_STEP}rem`, width: `${TREE_STEP - 0.375}rem` }}
                     />
                   )}
+                  <FileIcon path={crumb.path} dir={crumb.dir} />
                   <span className="truncate">{crumb.name}</span>
                   {crumb === last && <Check className="ml-auto" />}
                 </DropdownMenuItem>
