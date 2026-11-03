@@ -75,6 +75,14 @@ export default function App() {
   const allFolders = useMemo(() => getAllFolders(virtual), [virtual])
   const links = useLinkIndex(virtual, changes)
   const symlinks = useSymlinks(virtual)
+  // The other way round: source path -> paths of the links pointing to it
+  const linkedBy = useMemo(() => {
+    const out = {}
+    for (const [link, target] of Object.entries(symlinks)) if (target?.path) (out[target.path] ||= []).push(link)
+    return out
+  }, [symlinks])
+  // A link's name in a source's header: go to the folder holding the link
+  const openLink = link => { setFolder(link.slice(0, Math.max(link.lastIndexOf('/'), 0))); setSelectedFileState(null) }
 
   // Notes whose links change if `item` moves to `to` (their path -> new text),
   // from `edits` (the latest local changes). The moved notes' own links are
@@ -317,6 +325,8 @@ export default function App() {
           ) : entry && ['image', 'pdf'].includes(fileKind(selectedFile)) ? (
             <FileViewer
               key={selectedFile}
+              linkedBy={linkedBy[selectedFile]}
+              onOpenLink={openLink}
               menu={accountMenu}
               path={selectedFile}
               entry={entry}
@@ -332,6 +342,8 @@ export default function App() {
           ) : entry ? (
             <Editor
               key={`${selectedFile}:${discards}`}
+              linkedBy={linkedBy[selectedFile]}
+              onOpenLink={openLink}
               menu={accountMenu}
               path={selectedFile}
               entry={entry}
@@ -371,6 +383,8 @@ export default function App() {
               onSearch={() => setSearchOpen(true)}
               notes={links.notes}
               symlinks={symlinks}
+              linkedBy={folder ? linkedBy[folder] : undefined}
+              onOpenLink={openLink}
             />
           )}
         </PullToRefresh>

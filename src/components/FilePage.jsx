@@ -6,11 +6,12 @@ import ItemMenu from './ItemMenu.jsx'
 import PathBreadcrumbs from './PathBreadcrumbs.jsx'
 import PageLayout from './PageLayout.jsx'
 import Surface from './Surface.jsx'
+import SymlinkedBy from './SymlinkedBy.jsx'
 
 // Screen for one open file (note, image or PDF): breadcrumbs, Search and Sync
 // in the header, ⋯ and `actions` in the footer, `title` (TitleBar) and the
 // file's content in between.
-export default function FilePage({ menu, path, root, name, changed, onNavigate, onRename, onDelete, onMove, folders, onSearch, syncButton, actions, title, children }) {
+export default function FilePage({ menu, linkedBy, onOpenLink, path, root, name, changed, onNavigate, onRename, onDelete, onMove, folders, onSearch, syncButton, actions, title, children }) {
   return (
     <PageLayout>
       <Header
@@ -19,8 +20,12 @@ export default function FilePage({ menu, path, root, name, changed, onNavigate, 
         backMobileOnly
         start={<>
           <div className="hidden sm:flex">{menu}</div>
-          <div className="ml-1 flex-1 min-w-0">
-            <PathBreadcrumbs root={root} path={path} current={name} changed={changed} onNavigate={onNavigate} />
+          <div className="ml-1 flex flex-1 min-w-0 items-center gap-1">
+            {/* The breadcrumbs keep their room; the symlink names shrink first */}
+            <div className="min-w-0 shrink-0 max-w-[70%]">
+              <PathBreadcrumbs root={root} path={path} current={name} changed={changed} onNavigate={onNavigate} />
+            </div>
+            <SymlinkedBy links={linkedBy} onOpen={onOpenLink} />
           </div>
         </>}
       >

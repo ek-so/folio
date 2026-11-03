@@ -11,6 +11,7 @@ import ItemMenu from './ItemMenu.jsx'
 import { splitName } from '../lib/changes.js'
 import { fileKind, headingEmoji } from '../lib/files.js'
 import FileIcon from './FileIcon.jsx'
+import SymlinkedBy from './SymlinkedBy.jsx'
 import Spinner from './Spinner.jsx'
 import PageLayout from './PageLayout.jsx'
 import { cn } from '@/lib/utils.js'
@@ -22,7 +23,7 @@ export const LINK_ERRORS = {
   unavailable: 'not on this device yet',
 }
 
-export default function FileBrowser({ path, onNavigate, listDir, loading, error, notice, onSelect, onNewFile, repoName, onRename, onDelete, onMove, folders, menu, syncButton, onSearch, notes, onUpload, symlinks = {} }) {
+export default function FileBrowser({ path, onNavigate, listDir, loading, error, notice, onSelect, onNewFile, repoName, onRename, onDelete, onMove, folders, menu, syncButton, onSearch, notes, onUpload, symlinks = {}, linkedBy, onOpenLink }) {
   // Symlinked folders sort with the folders
   const isFolder = i => i.type === 'dir' || symlinks[i.path]?.kind === 'folder'
   const listed = loading ? [] : listDir(path)
@@ -60,8 +61,12 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
         backMobileOnly
         start={<>
           {path ? <div className="hidden sm:flex">{menu}</div> : menu}
-          <div className="ml-1 flex-1 min-w-0">
-            <PathBreadcrumbs root={repoName} path={path} onNavigate={onNavigate} />
+          <div className="ml-1 flex flex-1 min-w-0 items-center gap-1">
+            {/* The breadcrumbs keep their room; the symlink names shrink first */}
+            <div className="min-w-0 shrink-0 max-w-[70%]">
+              <PathBreadcrumbs root={repoName} path={path} onNavigate={onNavigate} />
+            </div>
+            <SymlinkedBy links={linkedBy} onOpen={onOpenLink} />
           </div>
         </>}
       >
