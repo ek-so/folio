@@ -121,7 +121,7 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
                     setDragging(null)
                     setDragOverPath(null)
                   }}
-                  className={cn(isDraggedItem ? 'opacity-40' : (item.name.startsWith('.') || link?.error) ? 'opacity-50' : '')}
+                  className={cn(isDraggedItem && 'opacity-40')}
                 >
                   <div
                     className={cn(
@@ -162,7 +162,8 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
                   >
                     <Button
                       variant="ghost"
-                      className="flex-1 min-w-0 justify-start gap-3 pl-3 pr-0 rounded-lg font-normal text-left hover:bg-transparent disabled:opacity-100 disabled:cursor-default"
+                      // Hidden files and broken links fade their icon and name only, not the row's hover or ⋯
+                      className={cn('flex-1 min-w-0 justify-start gap-3 pl-3 pr-0 rounded-lg font-normal text-left hover:bg-transparent disabled:opacity-100 disabled:cursor-default', !isDraggedItem && (item.name.startsWith('.') || link?.error) && 'opacity-50 disabled:opacity-50')}
                       onClick={() => navigate(item)}
                       disabled={!openable}
                     >
