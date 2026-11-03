@@ -5,6 +5,7 @@ import Footer from './Footer.jsx'
 import ItemMenu from './ItemMenu.jsx'
 import PathBreadcrumbs from './PathBreadcrumbs.jsx'
 import PageLayout from './PageLayout.jsx'
+import Surface from './Surface.jsx'
 
 // Screen for one open file (note, image or PDF): breadcrumbs, search and ⋯
 // in the header, Sync and `actions` in the footer, the file's content in between.
@@ -27,9 +28,7 @@ export default function FilePage({ menu, path, root, name, changed, onNavigate, 
         </Button>
         <ItemMenu item={{ name: path.split('/').pop(), path, type: 'file' }} onRename={onRename} onDelete={onDelete} onMove={onMove} folders={folders} />
       </Header>
-      <div className="flex flex-col flex-1 min-h-0 max-w-[1000px] mx-auto w-full">
-        {children}
-      </div>
+      <Surface>{children}</Surface>
       <Footer sync={syncButton}>{actions}</Footer>
     </PageLayout>
   )

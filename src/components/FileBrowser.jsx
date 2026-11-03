@@ -4,6 +4,7 @@ import { Button } from './ui/button.jsx'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from './ui/dropdown-menu.jsx'
 import Header from './Header.jsx'
 import Footer from './Footer.jsx'
+import Surface from './Surface.jsx'
 import PathBreadcrumbs from './PathBreadcrumbs.jsx'
 import ItemMenu from './ItemMenu.jsx'
 import { splitName } from '../lib/changes.js'
@@ -74,6 +75,7 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
         )}
       </Header>
 
+      <Surface>
       {/* Files dropped here go into this folder, or into a folder row they're dropped on */}
       <div
         className={cn('flex-1 min-h-0 overflow-y-auto overscroll-y-contain transition-colors', filesOver && !dragOverPath && 'bg-primary/5 ring-2 ring-inset ring-primary/40')}
@@ -87,7 +89,6 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
         onDragLeave={e => { if (!e.currentTarget.contains(e.relatedTarget)) { setFilesOver(false); setDragOverPath(null) } }}
         onDrop={e => { if (isFileDrag(e)) dropFiles(e, path) }}
       >
-        <div className="max-w-[1000px] mx-auto">
         {loading && (
           <div className="flex justify-center py-12">
             <Spinner />
@@ -182,8 +183,8 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
             })}
           </ul>
         )}
-        </div>
       </div>
+      </Surface>
 
       <Footer sync={syncButton}>
         <DropdownMenu>

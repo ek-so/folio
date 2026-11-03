@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils.js'
 // PathBreadcrumbs) or, on app pages, the `title`.
 export default function Header({ title, changed, onBack, backMobileOnly, start, children }) {
   return (
-    <div className="flex items-center gap-2 px-4 py-2 border-b border-border shrink-0 mb-2">
+    <div className="flex items-center gap-2 px-4 py-2 shrink-0">
       {onBack && (
         <Button variant="ghost-outline" size="icon" onClick={onBack} aria-label="Back" className={cn('shrink-0 border-muted-foreground/50', backMobileOnly && 'sm:hidden')}>
           <ArrowLeft />
