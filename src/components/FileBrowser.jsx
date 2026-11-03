@@ -10,6 +10,7 @@ import ItemMenu from './ItemMenu.jsx'
 import { splitName } from '../lib/changes.js'
 import { fileKind, headingEmoji } from '../lib/files.js'
 import FileIcon from './FileIcon.jsx'
+import { Tooltip, TooltipTrigger, TooltipContent } from './ui/tooltip.jsx'
 import Spinner from './Spinner.jsx'
 import PageLayout from './PageLayout.jsx'
 import { cn } from '@/lib/utils.js'
@@ -102,6 +103,25 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
               const link = symlinks[item.path] // undefined while loading
               const openable = isLink ? !!link?.kind : item.type === 'dir' || fileKind(item.path) !== 'file'
               const isDraggedItem = dragging?.path === item.path
+              const row = (
+                <Button
+                  variant="ghost"
+                  // Hidden files and broken links fade their icon and name only, not the row's hover or ⋯
+                  className={cn('flex-1 min-w-0 justify-start gap-3 pl-3 pr-0 rounded-lg font-normal text-left hover:bg-transparent disabled:opacity-100 disabled:cursor-default', !isDraggedItem && (item.name.startsWith('.') || isLink) && 'opacity-50 disabled:opacity-50')}
+                  onClick={() => navigate(item)}
+                  disabled={!openable}
+                >
+                  {isLink
+                    ? <FileIcon path={link?.path ?? item.path} dir={link?.kind === 'folder'} link />
+                    : <FileIcon path={item.path} dir={item.type === 'dir'} emoji={headingEmoji(notes[item.path])} />}
+                  <span className="flex-1 text-base truncate">
+                    {base}
+                    {ext && <span className="text-muted-foreground">{ext}</span>}
+                    {item.changed && <span className="ml-1.5 inline-block size-1.5 rounded-full bg-primary align-middle" />}
+                    {link?.error && <span className="ml-2 text-sm text-muted-foreground">{LINK_ERRORS[link.error]}</span>}
+                  </span>
+                </Button>
+              )
               return (
                 <li
                   key={item.path}
@@ -155,24 +175,13 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
                       setDragOverPath(null)
                     }}
                   >
-                    <Button
-                      variant="ghost"
-                      // Hidden files and broken links fade their icon and name only, not the row's hover or ⋯
-                      className={cn('flex-1 min-w-0 justify-start gap-3 pl-3 pr-0 rounded-lg font-normal text-left hover:bg-transparent disabled:opacity-100 disabled:cursor-default', !isDraggedItem && (item.name.startsWith('.') || isLink) && 'opacity-50 disabled:opacity-50')}
-                      onClick={() => navigate(item)}
-                      disabled={!openable}
-                    >
-                      {isLink
-                        ? <FileIcon path={link?.path ?? item.path} dir={link?.kind === 'folder'} link />
-                        : <FileIcon path={item.path} dir={item.type === 'dir'} emoji={headingEmoji(notes[item.path])} />}
-                      <span className="flex-1 text-base truncate">
-                        {base}
-                        {ext && <span className="text-muted-foreground">{ext}</span>}
-                        {item.changed && <span className="ml-1.5 inline-block size-1.5 rounded-full bg-primary align-middle" />}
-                        {link?.error && <span className="ml-2 text-sm text-muted-foreground">{LINK_ERRORS[link.error]}</span>}
-                        {link?.path && <span className="ml-2 text-sm text-muted-foreground">symlinked from {link.path}</span>}
-                      </span>
-                    </Button>
+                    {link?.path ? (
+                      // Where the link points, on hover (phones have no hover)
+                      <Tooltip>
+                        <TooltipTrigger asChild>{row}</TooltipTrigger>
+                        <TooltipContent side="bottom" align="start">Symlinked from {link.path}</TooltipContent>
+                      </Tooltip>
+                    ) : row}
                     <ItemMenu item={item} onRename={onRename} onDelete={onDelete} onMove={onMove} folders={folders} inList />
                   </div>
                 </li>
