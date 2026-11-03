@@ -44,8 +44,8 @@
     --success: oklch(0.88 0.12 152);
     --success-foreground: oklch(0.3 0.08 152);
 
-    --border: oklch(0.85 0 0);
-    --input: oklch(0.85 0 0);
+    --border: oklch(0.91 0 0);
+    --input: oklch(0.88 0 0);
     --ring: oklch(0.62 0.13 240);
 
     /* Code block background: very light accent tint */
