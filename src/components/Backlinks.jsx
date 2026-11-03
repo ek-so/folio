@@ -14,7 +14,7 @@ export default function Backlinks({ links, onOpen }) {
           <li key={`${from}:${i}`}>
             <Button
               variant="ghost"
-              className="h-auto min-h-8 w-full justify-start gap-3 px-3 py-1 font-normal text-left"
+              className="h-auto min-h-10 w-full justify-start gap-3 px-3 py-2 font-normal text-left"
               onClick={() => onOpen(from)}
             >
               <FileIcon path={from} />
