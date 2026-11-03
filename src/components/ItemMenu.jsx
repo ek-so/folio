@@ -11,7 +11,7 @@ import MoveModal from './MoveModal.jsx'
 // onMove(item, targetFolder) returns an error message or null.
 // inList: inside a file-browser row — 32px, ghost (no border), smaller icon, with its own
 // lighter fill on hover over the row's highlight
-// default (footer, for the open folder or file): ghost-outline with a more visible border
+// default (title bar of the open folder or file): ghost-outline with a more visible border
 export default function ItemMenu({ item, onRename, onDelete, onMove, folders, inList }) {
   const [renaming, setRenaming] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -30,7 +30,7 @@ export default function ItemMenu({ item, onRename, onDelete, onMove, folders, in
             <DotsThree weight="bold" size={inList ? 16 : 20} />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align={inList ? 'end' : 'start'} onCloseAutoFocus={e => e.preventDefault()}>
+        <DropdownMenuContent align="end" onCloseAutoFocus={e => e.preventDefault()}>
           <DropdownMenuItem onSelect={() => setRenaming(true)}><PencilSimple /> Rename</DropdownMenuItem>
           {onMove && <DropdownMenuItem onSelect={() => setMoving(true)}><Folder /> Move to…</DropdownMenuItem>}
           <DropdownMenuItem variant="destructive" onSelect={() => setDeleting(true)}><Trash /> Delete</DropdownMenuItem>

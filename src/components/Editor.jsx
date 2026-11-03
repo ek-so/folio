@@ -8,11 +8,10 @@ import MarkdownPreview from './MarkdownPreview.jsx'
 import Backlinks from './Backlinks.jsx'
 import MarkdownEditor from './MarkdownEditor.jsx'
 import { useNote } from '../hooks/useNote.js'
-import TitleBar from './TitleBar.jsx'
 import { displayName, splitTitle, withTitle } from '../lib/files.js'
 
 // A note: its "# title" in the TitleBar, edited there; the rest (the body)
-// shown as preview; ✏️ in the footer edits the body's markdown, starting
+// shown as preview; ✏️ in the title bar edits the body's markdown, starting
 // where you were reading, and a double tap starts at the tapped word. Edits save on their own; ✓ (same spot) only
 // switches back to preview.
 export default function Editor({ menu, linkedBy, onOpenLink, path, root, entry, files, edited, onEdit, onNavigate, onOpenFile, onRename, onDelete, onMove, folders, syncButton, onSearch, backlinks }) {
@@ -59,12 +58,10 @@ export default function Editor({ menu, linkedBy, onOpenLink, path, root, entry, 
       folders={folders}
       onSearch={onSearch}
       syncButton={syncButton}
-      title={
-        <TitleBar
-          path={path} emoji={emoji} value={title ?? ''} placeholder={fileName}
-          onCommit={ready ? text => { change(withTitle(content, text)); return null } : undefined}
-        />
-      }
+      title={{
+        emoji, value: title ?? '', placeholder: fileName,
+        onCommit: ready ? text => { change(withTitle(content, text)); return null } : undefined,
+      }}
       actions={<>
         {mode === 'edit' ? (
           <Button size="icon" onClick={finishEditing} aria-label="Done" className="shrink-0">

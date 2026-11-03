@@ -1,7 +1,6 @@
 import FilePage from './FilePage.jsx'
 import Spinner from './Spinner.jsx'
 import PdfView from './PdfView.jsx'
-import TitleBar from './TitleBar.jsx'
 import { useBlob } from '../hooks/useBlob.js'
 import { fileKind, imageMime } from '../lib/files.js'
 import { splitName } from '../lib/changes.js'
@@ -21,7 +20,7 @@ export default function FileViewer({ path, entry, syncButton, ...page }) {
 
   return (
     <FilePage path={path} name={name} syncButton={syncButton} {...page}
-      title={<TitleBar path={path} value={splitName(name)[0]} onCommit={text => page.onRename(item, text)} />}
+      title={{ value: splitName(name)[0], onCommit: text => page.onRename(item, text) }}
     >
       {error ? (
         <p className="text-muted-foreground text-sm text-center py-12 px-6">{MESSAGES[error]}</p>

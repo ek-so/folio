@@ -3,7 +3,6 @@ import { Plus, FileText, Folder, MagnifyingGlass, UploadSimple } from '@phosphor
 import { Button } from './ui/button.jsx'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from './ui/dropdown-menu.jsx'
 import Header from './Header.jsx'
-import Footer from './Footer.jsx'
 import Surface from './Surface.jsx'
 import TitleBar from './TitleBar.jsx'
 import PathBreadcrumbs from './PathBreadcrumbs.jsx'
@@ -81,7 +80,31 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
           dir path={path} value={currentFolder}
           // The repo itself can't be renamed here
           onCommit={path ? text => onRename({ name: currentFolder, path, type: 'dir' }, text) : undefined}
-        />
+        >
+          {path && <ItemMenu item={{ name: currentFolder, path, type: 'dir' }} onRename={onRename} onDelete={onDelete} onMove={onMove} folders={folders} />}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button size="icon" aria-label="New" className="shrink-0">
+                <Plus />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" onCloseAutoFocus={e => e.preventDefault()}>
+              <DropdownMenuItem onSelect={() => onNewFile(path, 'note')}><FileText /> New note</DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => onNewFile(path, 'folder')}><Folder /> New folder</DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => pickerRef.current?.click()}><UploadSimple /> Upload files…</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <input
+            ref={pickerRef}
+            type="file"
+            multiple
+            hidden
+            onChange={e => {
+              onUpload([...e.target.files], path)
+              e.target.value = '' // picking the same file again still fires
+            }}
+          />
+        </TitleBar>
       }>
       {/* Files dropped here go into this folder, or into a folder row they're dropped on */}
       <div
@@ -200,30 +223,6 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
       </div>
       </Surface>
 
-      <Footer start={path && <ItemMenu item={{ name: currentFolder, path, type: 'dir' }} onRename={onRename} onDelete={onDelete} onMove={onMove} folders={folders} />}>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button size="icon" aria-label="New" className="shrink-0">
-              <Plus />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" onCloseAutoFocus={e => e.preventDefault()}>
-            <DropdownMenuItem onSelect={() => onNewFile(path, 'note')}><FileText /> New note</DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => onNewFile(path, 'folder')}><Folder /> New folder</DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => pickerRef.current?.click()}><UploadSimple /> Upload files…</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-        <input
-          ref={pickerRef}
-          type="file"
-          multiple
-          hidden
-          onChange={e => {
-            onUpload([...e.target.files], path)
-            e.target.value = '' // picking the same file again still fires
-          }}
-        />
-      </Footer>
     </PageLayout>
   )
 }

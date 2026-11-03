@@ -4,8 +4,10 @@ import FileIcon from './FileIcon.jsx'
 // Top of the content box: the item's icon (a note's emoji, else its file or
 // folder icon) in an outlined tile, then its title. With onCommit the title
 // is a text field: Enter or leaving it saves (onCommit(text) returns an error
-// message or null), Escape reverts. An empty title isn't saved.
-export default function TitleBar({ path, dir, emoji, value, placeholder, onCommit }) {
+// message or null), Escape reverts. An empty title isn't saved. `children`:
+// the item's actions on the right (⋯, then +, ✏️ or ✓). A border sets it
+// apart from the content below.
+export default function TitleBar({ path, dir, emoji, value, placeholder, onCommit, children }) {
   const [draft, setDraft] = useState(value)
   const [error, setError] = useState('')
   useEffect(() => setDraft(value), [value])
@@ -19,7 +21,7 @@ export default function TitleBar({ path, dir, emoji, value, placeholder, onCommi
   }
 
   return (
-    <div className="shrink-0 px-5 pt-4 pb-1">
+    <div className="shrink-0 border-b border-border px-5 py-3">
       <div className="flex items-center gap-3">
         <span className="flex size-10 shrink-0 items-center justify-center rounded-lg border border-border">
           <FileIcon path={path} dir={dir} emoji={emoji} />
@@ -41,6 +43,7 @@ export default function TitleBar({ path, dir, emoji, value, placeholder, onCommi
         ) : (
           <h1 className="min-w-0 flex-1 truncate text-2xl font-bold">{value}</h1>
         )}
+        {children && <div className="flex shrink-0 items-center gap-2">{children}</div>}
       </div>
       {error && <p className="mt-1 text-xs text-destructive">{error}</p>}
     </div>

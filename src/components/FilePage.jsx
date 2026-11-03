@@ -1,16 +1,16 @@
 import { MagnifyingGlass } from '@phosphor-icons/react'
 import { Button } from './ui/button.jsx'
 import Header from './Header.jsx'
-import Footer from './Footer.jsx'
 import ItemMenu from './ItemMenu.jsx'
 import PathBreadcrumbs from './PathBreadcrumbs.jsx'
 import PageLayout from './PageLayout.jsx'
 import Surface from './Surface.jsx'
 import SymlinkedBy from './SymlinkedBy.jsx'
+import TitleBar from './TitleBar.jsx'
 
 // Screen for one open file (note, image or PDF): breadcrumbs, Search and Sync
-// in the header, ⋯ and `actions` in the footer, `title` (TitleBar) and the
-// file's content in between.
+// in the header; then the content box: TitleBar (`title`: its props) with ⋯
+// and `actions`, and the file's content.
 export default function FilePage({ menu, linkedBy, onOpenLink, path, root, name, changed, onNavigate, onRename, onDelete, onMove, folders, onSearch, syncButton, actions, title, children }) {
   return (
     <PageLayout>
@@ -34,10 +34,14 @@ export default function FilePage({ menu, linkedBy, onOpenLink, path, root, name,
         </Button>
         {syncButton}
       </Header>
-      <Surface title={title}>{children}</Surface>
-      <Footer start={<ItemMenu item={{ name: path.split('/').pop(), path, type: 'file' }} onRename={onRename} onDelete={onDelete} onMove={onMove} folders={folders} />}>
-        {actions}
-      </Footer>
+      <Surface title={
+        <TitleBar path={path} {...title}>
+          <ItemMenu item={{ name: path.split('/').pop(), path, type: 'file' }} onRename={onRename} onDelete={onDelete} onMove={onMove} folders={folders} />
+          {actions}
+        </TitleBar>
+      }>
+        {children}
+      </Surface>
     </PageLayout>
   )
 }
