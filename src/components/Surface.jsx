@@ -1,10 +1,11 @@
-// The open folder's or file's content: an outlined box under Header, lined
-// up with its buttons, down to the bottom of the screen. Fills the space; `title` (TitleBar)
+// The open folder's or file's content: a card-colored box under Header (a sheet
+// edge to edge on phones, outlined and lined up with its buttons from 640px),
+// down to the bottom of the screen. Fills the space; `title` (TitleBar)
 // stays on top while the content scrolls inside.
 export default function Surface({ title, children }) {
   return (
-    <div className="flex flex-col flex-1 min-h-0 w-full max-w-[1032px] mx-auto px-4" style={{ paddingBottom: 'calc(0.5rem + var(--safe-bottom))' }}>
-      <div className="flex flex-col flex-1 min-h-0 rounded-xl border border-border overflow-hidden">
+    <div className="flex flex-col flex-1 min-h-0 w-full max-w-[1032px] mx-auto sm:px-4 sm:pb-[calc(0.5rem+var(--safe-bottom))]">
+      <div className="flex flex-col flex-1 min-h-0 overflow-hidden bg-card rounded-t-xl border-x-0 border-b-0 border-t border-border pb-[var(--safe-bottom)] sm:rounded-xl sm:border sm:pb-0">
         {title}
         {children}
       </div>
