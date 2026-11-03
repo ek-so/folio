@@ -28,17 +28,25 @@ import { useAuth } from './hooks/useAuth.js'
 import { useRepo } from './hooks/useRepo.js'
 import { useTheme } from './hooks/useTheme.js'
 import { storage } from './lib/storage.js'
+import { urlForView, viewForUrl, existingView } from './lib/url.js'
 import { cache } from './lib/cache.js'
 import {
   listDir, nameError, renameTarget, renameError, createError, add, setEdit, rename, remove, getAllFolders,
   upload, replaceUpload, freePath, virtualFiles, MAX_UPLOAD_BYTES,
 } from './lib/changes.js'
 
+const BASE = import.meta.env.BASE_URL
+// A folder or file named by the address the app was opened at (not the root)
+const deepLink = (() => {
+  const view = viewForUrl(BASE, window.location.pathname)
+  return view && (view.file || view.folder) ? view : null
+})()
+
 export default function App() {
   const auth = useAuth()
   const repo = useRepo(auth.user ? auth.repo : null)
   const { theme, setTheme } = useTheme()
-  const [selectedFile, setSelectedFileState] = useState(storage.getFile)
+  const [selectedFile, setSelectedFileState] = useState(() => deepLink ? deepLink.file : storage.getFile())
   // Opening a symlink (from the list, search or a note's link) opens its
   // source: the folder, or the file
   function setSelectedFile(path) {
@@ -49,9 +57,9 @@ export default function App() {
     if (path) storage.addRecentFile(path)
     setSelectedFileState(path)
   }
-  const [folder, setFolder] = useState(storage.getFolder)
+  const [folder, setFolder] = useState(() => deepLink ? deepLink.folder : storage.getFolder())
   const [newFile, setNewFile] = useState(null) // { folder, kind } while the sheet is open
-  const [page, setPage] = useState(storage.getPage) // 'settings' | 'links' | null
+  const [page, setPage] = useState(() => deepLink ? null : storage.getPage()) // 'settings' | 'links' | null
   const [confirmSignOut, setConfirmSignOut] = useState(false)
   const [confirmDiscard, setConfirmDiscard] = useState(false)
   const [discards, setDiscards] = useState(0) // remounts the open note after a discard
@@ -60,33 +68,38 @@ export default function App() {
   const [uploadClash, setUploadClash] = useState(null) // { name, folder, resolve } while asking
   const [uploadErrors, setUploadErrors] = useState([]) // [name, reason] after adding files
   const started = useRef(false) // false until the first URL is set (replaced, not pushed)
+  const replaceNext = useRef(false) // the next URL change replaces the history entry
+  const known = useRef({ files: new Set(), folders: [] }) // what exists, for Back / Forward
 
   useEffect(() => { storage.setFolder(folder) }, [folder])
   useEffect(() => { storage.setFile(selectedFile) }, [selectedFile])
   useEffect(() => { storage.setPage(page) }, [page])
 
   // Keep the browser URL in sync with the current view: each new folder or
-  // file is a history entry, so Back and Forward move between them
+  // file is a history entry, so Back and Forward move between them. Changes
+  // that only follow a rename or delete replace the entry instead.
   useEffect(() => {
-    const base = import.meta.env.BASE_URL
-    const enc = p => p.split('/').map(encodeURIComponent).join('/')
-    const url = selectedFile ? base + enc(selectedFile) : folder ? base + enc(folder) + '/' : base
+    const url = urlForView(BASE, { file: selectedFile, folder })
     if (window.location.pathname !== url) {
-      if (started.current) history.pushState(null, '', url)
+      if (started.current && !replaceNext.current) history.pushState(null, '', url)
       else history.replaceState(null, '', url)
     }
     started.current = true
+    replaceNext.current = false
   }, [selectedFile, folder])
 
-  // Back / Forward: show the folder or file the URL names
+  // Back / Forward: show the folder or file the URL names (or what's left of it)
   useEffect(() => {
     const onPop = () => {
-      const base = import.meta.env.BASE_URL
-      const rest = window.location.pathname.slice(base.length)
-      let path
-      try { path = rest.split('/').map(decodeURIComponent).join('/') } catch { return }
-      if (path === '' || path.endsWith('/')) { setFolder(path.replace(/\/$/, '')); setSelectedFileState(null) }
-      else setSelectedFileState(path)
+      let view = viewForUrl(BASE, window.location.pathname)
+      if (!view) return
+      window.dispatchEvent(new Event('folio:flush')) // typing in an open note first
+      const { files, folders } = known.current
+      if (files.size) view = existingView(view, files, folders)
+      if (urlForView(BASE, view) !== window.location.pathname) replaceNext.current = true
+      setPage(null)
+      setFolder(view.folder)
+      setSelectedFileState(view.file)
     }
     window.addEventListener('popstate', onPop)
     return () => window.removeEventListener('popstate', onPop)
@@ -94,6 +107,8 @@ export default function App() {
 
   const { virtual, changes, update } = repo
   const allFolders = useMemo(() => getAllFolders(virtual), [virtual])
+  const files = useMemo(() => new Set(Object.keys(virtual)), [virtual])
+  known.current = { files, folders: allFolders }
   const links = useLinkIndex(virtual, changes)
   const symlinks = useSymlinks(virtual)
   // The other way round: source path -> paths of the links pointing to it
@@ -134,6 +149,7 @@ export default function App() {
       return next
     })
     const follow = p => p && (p === item.path || p.startsWith(item.path + '/')) ? to + p.slice(item.path.length) : p
+    replaceNext.current = follow(folder) !== folder || follow(selectedFile) !== selectedFile
     setFolder(follow)
     setSelectedFileState(follow) // the same file, not a newly opened one
   }
@@ -156,6 +172,7 @@ export default function App() {
 
   function handleDelete(item) {
     const inside = p => p === item.path || p?.startsWith(item.path + '/')
+    replaceNext.current = inside(selectedFile) || inside(folder)
     if (inside(selectedFile)) setSelectedFile(null)
     // Deleting the open folder (or one above it): go to its parent
     if (inside(folder)) setFolder(item.path.slice(0, Math.max(item.path.lastIndexOf('/'), 0)))
