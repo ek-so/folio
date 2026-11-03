@@ -381,7 +381,6 @@ export default function App() {
               repoName={repoName}
               syncButton={syncButton}
               onSearch={() => setSearchOpen(true)}
-              notes={links.notes}
               symlinks={symlinks}
               linkedBy={folder ? linkedBy[folder] : undefined}
               onOpenLink={openLink}

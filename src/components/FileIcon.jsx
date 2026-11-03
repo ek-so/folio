@@ -10,11 +10,10 @@ const ICONS = {
 }
 
 // Icon for a list row: blue folder, or the file's type (grey note or file,
-// red PDF, green image). A note whose heading starts with an emoji shows it.
+// red PDF, green image).
 // `link`: a symlink — the icon of what it points to (`path` / `dir`), with a
 // small ↗ in the corner, like an alias on a Mac.
-export default function FileIcon({ path, dir, emoji, link }) {
-  if (emoji && !link) return <span className="flex size-5 shrink-0 items-center justify-center text-lg">{emoji}</span>
+export default function FileIcon({ path, dir, link }) {
   const [Icon, color] = dir ? [Folder, 'text-primary'] : ICONS[fileKind(path)]
   if (!link) return <Icon className={cn('size-5 shrink-0', color)} />
   return (

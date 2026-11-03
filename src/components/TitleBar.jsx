@@ -1,13 +1,12 @@
 import { useState, useEffect } from 'react'
 import FileIcon from './FileIcon.jsx'
 
-// Top of the content box: the item's icon (a note's emoji, else its file or
-// folder icon) in an outlined tile, then its title. With onCommit the title
+// Top of the content box: the item's file or folder icon in an outlined tile, then its title. With onCommit the title
 // is a text field: Enter or leaving it saves (onCommit(text) returns an error
 // message or null), Escape reverts. An empty title isn't saved. `children`:
 // the item's actions on the right (⋯, then +, ✏️ or ✓). A border sets it
 // apart from the content below.
-export default function TitleBar({ path, dir, emoji, value, placeholder, onCommit, children }) {
+export default function TitleBar({ path, dir, value, onCommit, children }) {
   const [draft, setDraft] = useState(value)
   const [error, setError] = useState('')
   useEffect(() => setDraft(value), [value])
@@ -24,13 +23,12 @@ export default function TitleBar({ path, dir, emoji, value, placeholder, onCommi
     <div className="shrink-0 border-b border-border px-5 py-3">
       <div className="flex items-center gap-3">
         <span className="flex size-10 shrink-0 items-center justify-center rounded-lg border border-border">
-          <FileIcon path={path} dir={dir} emoji={emoji} />
+          <FileIcon path={path} dir={dir} />
         </span>
         {onCommit ? (
           <input
-            className="min-w-0 flex-1 bg-transparent text-2xl font-bold text-foreground outline-none placeholder:text-muted-foreground"
+            className="min-w-0 flex-1 bg-transparent text-2xl font-bold text-foreground outline-none"
             value={draft}
-            placeholder={placeholder}
             aria-label="Title"
             autoCorrect="on"
             onChange={e => { setDraft(e.target.value); setError('') }}

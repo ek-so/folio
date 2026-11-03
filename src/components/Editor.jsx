@@ -8,12 +8,12 @@ import MarkdownPreview from './MarkdownPreview.jsx'
 import Backlinks from './Backlinks.jsx'
 import MarkdownEditor from './MarkdownEditor.jsx'
 import { useNote } from '../hooks/useNote.js'
-import { displayName, splitTitle, withTitle } from '../lib/files.js'
+import { displayName } from '../lib/files.js'
 
-// A note: its "# title" in the TitleBar, edited there; the rest (the body)
-// shown as preview; ✏️ in the title bar edits the body's markdown, starting
-// where you were reading, and a double tap starts at the tapped word. Edits save on their own; ✓ (same spot) only
-// switches back to preview.
+// A note: its file name in the TitleBar (editing it renames the file), the
+// whole markdown shown as preview; ✏️ in the title bar edits the markdown,
+// starting where you were reading, and a double tap starts at the tapped
+// word. Edits save on their own; ✓ (same spot) only switches back to preview.
 export default function Editor({ menu, linkedBy, onOpenLink, path, root, entry, files, edited, onEdit, onNavigate, onOpenFile, onRename, onDelete, onMove, folders, syncButton, onSearch, backlinks }) {
   const { content, change, loading, loadError } = useNote(entry, edited, onEdit)
   const [mode, setMode] = useState('preview')
@@ -39,8 +39,6 @@ export default function Editor({ menu, linkedBy, onOpenLink, path, root, entry, 
 
   const fileName = displayName(path)
   const ready = !loading && !loadError
-  const { emoji, title, head, body } = splitTitle(content)
-  const changeBody = text => change(head + text)
 
   return (
     <FilePage
@@ -58,10 +56,7 @@ export default function Editor({ menu, linkedBy, onOpenLink, path, root, entry, 
       folders={folders}
       onSearch={onSearch}
       syncButton={syncButton}
-      title={{
-        emoji, value: title ?? '', placeholder: fileName,
-        onCommit: ready ? text => { change(withTitle(content, text)); return null } : undefined,
-      }}
+      title={{ value: fileName, onCommit: text => onRename({ name: path.split('/').pop(), path, type: 'file' }, text) }}
       actions={<>
         {mode === 'edit' ? (
           <Button size="icon" onClick={finishEditing} aria-label="Done" className="shrink-0">
@@ -83,12 +78,12 @@ export default function Editor({ menu, linkedBy, onOpenLink, path, root, entry, 
           </p>
         )
       ) : mode === 'edit' ? (
-        <MarkdownEditor ref={textareaRef} content={body} onChange={changeBody} onDone={finishEditing} />
+        <MarkdownEditor ref={textareaRef} content={content} onChange={change} onDone={finishEditing} />
       ) : (
         <MarkdownPreview
           ref={previewRef}
-          content={body} path={path} files={files} scrollTo={editedAt}
-          onDoubleTap={startEditing} onChange={changeBody} onOpenFile={onOpenFile} onNavigate={onNavigate}
+          content={content} path={path} files={files} scrollTo={editedAt}
+          onDoubleTap={startEditing} onChange={change} onOpenFile={onOpenFile} onNavigate={onNavigate}
           footer={<Backlinks links={backlinks} onOpen={onOpenFile} />}
         />
       )}

@@ -8,7 +8,7 @@ import TitleBar from './TitleBar.jsx'
 import PathBreadcrumbs from './PathBreadcrumbs.jsx'
 import ItemMenu from './ItemMenu.jsx'
 import { splitName } from '../lib/changes.js'
-import { fileKind, headingEmoji } from '../lib/files.js'
+import { fileKind } from '../lib/files.js'
 import FileIcon from './FileIcon.jsx'
 import SymlinkedBy from './SymlinkedBy.jsx'
 import Spinner from './Spinner.jsx'
@@ -22,7 +22,7 @@ export const LINK_ERRORS = {
   unavailable: 'not on this device yet',
 }
 
-export default function FileBrowser({ path, onNavigate, listDir, loading, error, notice, onSelect, onNewFile, repoName, onRename, onDelete, onMove, folders, menu, syncButton, onSearch, notes, onUpload, symlinks = {}, linkedBy, onOpenLink }) {
+export default function FileBrowser({ path, onNavigate, listDir, loading, error, notice, onSelect, onNewFile, repoName, onRename, onDelete, onMove, folders, menu, syncButton, onSearch, onUpload, symlinks = {}, linkedBy, onOpenLink }) {
   // Symlinked folders sort with the folders
   const isFolder = i => i.type === 'dir' || symlinks[i.path]?.kind === 'folder'
   const listed = loading ? [] : listDir(path)
@@ -149,7 +149,7 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
                 >
                   {isLink
                     ? <FileIcon path={link?.path ?? item.path} dir={link?.kind === 'folder'} link />
-                    : <FileIcon path={item.path} dir={item.type === 'dir'} emoji={headingEmoji(notes[item.path])} />}
+                    : <FileIcon path={item.path} dir={item.type === 'dir'} />}
                   <span className="flex-1 text-base truncate">
                     {base}
                     {ext && <span className="text-muted-foreground">{ext}</span>}

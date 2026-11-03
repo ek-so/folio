@@ -3,7 +3,6 @@ import DOMPurify from 'dompurify'
 import { renderBlocks, tapOffset, taskOffsets, resolveImage } from '../lib/markdown.js'
 import { useRepoImages } from '../hooks/useRepoImages.js'
 import { linkTarget } from '../lib/links.js'
-import { isEmoji } from '../lib/files.js'
 import { CaretRight } from '@phosphor-icons/react'
 import { createPortal } from 'react-dom'
 
@@ -124,18 +123,6 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
     // it below (▸, turned ▾ when open in App.css)
     for (const summary of tpl.content.querySelectorAll('summary')) {
       summary.insertAdjacentHTML('afterbegin', '<span class="summary-caret" aria-hidden="true"></span>')
-    }
-    // Wrap leading emoji in H1 headings with an outlined icon badge
-    for (const h1 of tpl.content.querySelectorAll('h1')) {
-      const first = h1.firstChild
-      if (!first || first.nodeType !== Node.TEXT_NODE) continue
-      const chars = [...first.textContent]
-      if (!isEmoji(chars[0])) continue
-      const span = document.createElement('span')
-      span.className = 'emoji-icon'
-      span.textContent = chars[0]
-      first.textContent = chars.slice(1).join('').trimStart()
-      h1.insertBefore(span, first)
     }
     return [tpl.innerHTML, repoImages(tpl.content, path).map(([, repoPath]) => repoPath)]
   }, [content, path, files])
