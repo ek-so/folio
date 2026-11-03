@@ -3,16 +3,16 @@ import { fileKind } from '../lib/files.js'
 import { cn } from '@/lib/utils.js'
 
 const ICONS = {
-  note: [FileText, 'text-muted-foreground'],
+  note: [FileText, 'text-primary'],
   pdf: [FilePdf, 'text-destructive'],
   image: [FileImage, 'text-file-image'],
-  file: [File, 'text-muted-foreground'],
+  file: [File, 'text-primary'],
 }
 
 // Color class of an item's icon (the title bar tints its tile with it).
-export const iconColor = (path, dir) => (dir ? 'text-primary' : ICONS[fileKind(path)][1])
+export const iconColor = (path, dir) => (dir ? 'text-folder' : ICONS[fileKind(path)][1])
 
-// Icon for a list row: blue folder, or the file's type (grey note or file,
+// Icon for a list row: yellowish folder, or the file's type (blue note or file,
 // red PDF, green image).
 // `link`: a symlink — the icon of what it points to (`path` / `dir`), with a
 // small ↗ in the corner, like an alias on a Mac.

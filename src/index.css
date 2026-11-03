@@ -60,6 +60,8 @@
     --callout-tint: 14%;
     /* Image file icons in lists (folders use primary, PDFs destructive) */
     --file-image: oklch(0.62 0.15 150);
+    /* Folder icons: yellowish (files are blue, the primary) */
+    --folder: oklch(0.75 0.14 85);
 
     --radius: 0.75rem;
 
@@ -173,6 +175,7 @@
   --color-success: var(--success);
   --color-success-foreground: var(--success-foreground);
   --color-file-image: var(--file-image);
+  --color-folder: var(--folder);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
