@@ -16,7 +16,7 @@ const MarkdownEditor = forwardRef(function MarkdownEditor({ content, onChange, o
 
   return (
     // data-no-pull: drags here scroll, never refresh
-    <div className="relative flex-1 min-h-0 bg-background" data-no-pull>
+    <div className="relative flex-1 min-h-0 bg-card" data-no-pull>
       <pre
         ref={highlightRef}
         aria-hidden="true"
