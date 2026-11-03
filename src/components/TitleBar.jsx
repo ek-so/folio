@@ -22,7 +22,7 @@ export default function TitleBar({ path, dir, value, onCommit, badge, children }
   return (
     <div className="shrink-0 border-b border-border p-2">
       <div className="flex items-center gap-3">
-        <span className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-border">
+        <span className="flex size-8 shrink-0 items-center justify-center rounded-sm border border-border">
           <FileIcon path={path} dir={dir} />
         </span>
         <div className="flex min-w-0 flex-1 items-center gap-2">
