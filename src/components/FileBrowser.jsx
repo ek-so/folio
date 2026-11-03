@@ -119,6 +119,7 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
                     {base}
                     {ext && <span className="text-muted-foreground">{ext}</span>}
                     {item.changed && <span className="ml-1.5 inline-block size-1.5 rounded-full bg-primary align-middle" />}
+                    {isLink && <span className="ml-2 text-sm text-muted-foreground">(symlink)</span>}
                     {link?.error && <span className="ml-2 text-sm text-muted-foreground">{LINK_ERRORS[link.error]}</span>}
                   </span>
                 </Button>
