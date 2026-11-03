@@ -20,7 +20,8 @@ function MenuBadge({ children }) {
 
 // Split Sync button, faded like Search and ⋯: the main part syncs; ▾ opens
 // Push (with change count), Pull (how many files changed on GitHub, or New
-// when unknown) and Discard. An accent dot shows when there's anything to push or pull.
+// when unknown) and Discard. An accent badge on Sync shows the directions
+// there's something to sync in (↑ push, ↓ pull, or both), without counts.
 export default function SyncButton({ syncState, syncing, changeCount, incoming, onSync, onPull, onDiscard }) {
   const { variant, label, Icon } = LOOK[syncState] || LOOK.idle
   const hasPush = changeCount > 0
@@ -28,15 +29,21 @@ export default function SyncButton({ syncState, syncing, changeCount, incoming, 
 
   return (
     <div className="flex">
-      <Button onClick={onSync} disabled={syncing} variant={variant} className="relative gap-2 rounded-r-none">
+      <Button onClick={onSync} disabled={syncing} variant={variant} className="gap-2 rounded-r-none">
         {syncing ? (
           <span className="size-4 rounded-full border border-current border-t-transparent animate-spin opacity-60" />
         ) : Icon ? (
           <Icon />
         ) : null}
         {label}
-        {syncState === 'idle' && (hasPush || hasPull) && (
-          <span aria-label="Something to sync" className="absolute top-1.5 right-1.5 size-2 rounded-full bg-primary" />
+        {syncState === 'idle' && !syncing && (hasPush || hasPull) && (
+          <span
+            aria-label={[hasPush && 'Changes to push', hasPull && 'Changes to pull'].filter(Boolean).join(', ')}
+            className="flex h-5 items-center gap-0.5 rounded-full bg-primary px-1.5 text-primary-foreground [&_svg]:size-3"
+          >
+            {hasPush && <ArrowUp weight="bold" />}
+            {hasPull && <ArrowDown weight="bold" />}
+          </span>
         )}
       </Button>
       <DropdownMenu>
