@@ -417,7 +417,6 @@ export default function App() {
               onNewFile={(f, kind) => setNewFile({ folder: f, kind })}
               onUpload={handleUpload}
               repoName={repoName}
-              repoFullName={auth.repo}
               syncButton={syncButton}
               onSearch={() => setSearchOpen(true)}
               symlinks={symlinks}

@@ -22,7 +22,7 @@ export const LINK_ERRORS = {
   unavailable: 'not on this device yet',
 }
 
-export default function FileBrowser({ path, onNavigate, listDir, loading, error, notice, onSelect, onNewFile, repoName, repoFullName, onRename, onDelete, onMove, folders, menu, syncButton, onSearch, onUpload, symlinks = {}, linkedBy, onOpenLink }) {
+export default function FileBrowser({ path, onNavigate, listDir, loading, error, notice, onSelect, onNewFile, repoName, onRename, onDelete, onMove, folders, menu, syncButton, onSearch, onUpload, symlinks = {}, linkedBy, onOpenLink }) {
   // Symlinked folders sort with the folders
   const isFolder = i => i.type === 'dir' || symlinks[i.path]?.kind === 'folder'
   const listed = loading ? [] : listDir(path)
@@ -49,7 +49,7 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
     else onSelect(item.path) // a symlink opens its source (App)
   }
 
-  const currentFolder = path ? path.split('/').pop() : repoFullName
+  const currentFolder = path ? path.split('/').pop() : repoName
 
   return (
     <PageLayout>
@@ -62,7 +62,7 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
           {path ? <div className="hidden sm:flex">{menu}</div> : menu}
           <div className="ml-1 flex flex-1 min-w-0 items-center gap-1">
             <div className="min-w-0 shrink-0 max-w-[70%]">
-              <PathBreadcrumbs root={path ? repoName : repoFullName} path={path} onNavigate={onNavigate} />
+              <PathBreadcrumbs root={path ? repoName : 'Home'} path={path} onNavigate={onNavigate} />
             </div>
           </div>
         </>}
