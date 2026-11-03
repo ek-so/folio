@@ -122,39 +122,56 @@ export function resolveImage(notePath, src) {
 
 const escapeHtml = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 
+// Syntax characters (**, [](), #, -, <u>…) are faded so the text stands out
+const mark = s => s && `<span class="opacity-50">${s}</span>`
+
+// Wraps a match in `kind`, fading `open` leading and `close` trailing chars
+const wrap = (kind, open, close) => m =>
+  `<span class="${kind}">${mark(m.slice(0, open))}${m.slice(open, m.length - close)}${mark(m.slice(m.length - close))}</span>`
+
 // Inline markdown, matched left to right on escaped text. Each pattern is
 // wrapped as a whole, markers included, so the text keeps its exact length.
 const INLINE = [
-  ['text-muted-foreground', /`[^`\n]+`/],
-  ['text-primary', /!?\[[^\]\n]*\]\([^)\n]*\)/],
-  ['text-primary', /https?:\/\/[^\s<)]+/],
-  ['font-bold', /\*\*(?!\s)[^*\n]+?\*\*|__(?!\s)[^_\n]+?__/],
-  ['italic', /(?<![\w*])\*(?![\s*])[^*\n]+?\*(?!\*)|(?<![\w_])_(?![\s_])[^_\n]+?_(?![\w_])/],
-  ['line-through', /~~[^~\n]+~~/],
-  ['underline', /&lt;u&gt;.+?&lt;\/u&gt;/],
+  [/`[^`\n]+`/, wrap('text-muted-foreground', 1, 1)],
+  [/!?\[[^\]\n]*\]\([^)\n]*\)/, m => wrap('text-primary', m.indexOf('[') + 1, m.length - m.lastIndexOf(']('))(m)],
+  [/https?:\/\/[^\s<)]+/, wrap('text-primary', 0, 0)],
+  [/\*\*(?!\s)[^*\n]+?\*\*|__(?!\s)[^_\n]+?__/, wrap('font-bold', 2, 2)],
+  [/(?<![\w*])\*(?![\s*])[^*\n]+?\*(?!\*)|(?<![\w_])_(?![\s_])[^_\n]+?_(?![\w_])/, wrap('italic', 1, 1)],
+  [/~~[^~\n]+~~/, wrap('line-through', 2, 2)],
+  [/&lt;u&gt;.+?&lt;\/u&gt;/, wrap('underline', 9, 10)],
+  [/&lt;\/?[a-zA-Z][^\n]*?&gt;/, mark],
+  [/\|/, mark],
 ]
-const INLINE_RE = new RegExp(INLINE.map(([, re]) => `(${re.source})`).join('|'), 'g')
+const INLINE_RE = new RegExp(INLINE.map(([re]) => `(${re.source})`).join('|'), 'g')
 
 function highlightInline(line) {
-  return line.replace(INLINE_RE, (match, ...groups) => {
-    const kind = INLINE[groups.findIndex(g => g !== undefined)][0]
-    return `<span class="${kind}">${match}</span>`
-  })
+  return line.replace(INLINE_RE, (match, ...groups) => INLINE[groups.findIndex(g => g !== undefined)][1](match))
+}
+
+// Line start: quote >, heading #, list bullet or number, task box
+const PREFIX = /^\s*(?:&gt;\s*)*(?:#{1,6}(?:\s|$)|(?:[-*+]|\d+[.)])\s+(?:\[[ xX]\](?=\s|$))?)?/
+const RULE = /^\s*([-*_])(?:\s*\1){2,}\s*$|^\s*\|?\s*:?-+:?\s*(?:\|\s*:?-+:?\s*)+\|?\s*$/
+
+function highlightLine(raw) {
+  const line = escapeHtml(raw)
+  if (RULE.test(raw)) return mark(line)
+  const prefix = line.match(PREFIX)[0]
+  const rest = highlightInline(line.slice(prefix.length))
+  return prefix.includes('#') ? `<span class="font-bold">${mark(prefix)}${rest}</span>` : mark(prefix) + rest
 }
 
 // HTML for the styling layer behind the markdown editor: same characters as
-// `text`, with links/images in the accent color and bold/italic/etc. styled.
+// `text`, with links/images in the accent color, bold/italic/etc. styled and
+// the markdown syntax faded.
 export function highlightMarkdown(text) {
   let inFence = false
   const lines = text.split('\n').map(raw => {
-    const line = escapeHtml(raw)
     if (/^\s*(```|~~~)/.test(raw)) {
       inFence = !inFence
-      return `<span class="text-muted-foreground">${line}</span>`
+      return `<span class="text-muted-foreground">${mark(escapeHtml(raw))}</span>`
     }
-    if (inFence) return `<span class="text-muted-foreground">${line}</span>`
-    if (/^#{1,6}\s/.test(raw)) return `<span class="font-bold">${highlightInline(line)}</span>`
-    return highlightInline(line)
+    if (inFence) return `<span class="text-muted-foreground">${escapeHtml(raw)}</span>`
+    return highlightLine(raw)
   })
   // A trailing space keeps a final empty line as tall as in the textarea
   return lines.join('\n') + ' '
