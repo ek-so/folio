@@ -49,23 +49,16 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
     else onSelect(item.path) // a symlink opens its source (App)
   }
 
-  const currentFolder = path ? path.split('/').pop() : repoName
+  const currentFolder = path.split('/').pop()
 
   return (
     <PageLayout>
       <Header
-        // ☰ at the repo root and on wider screens; inside a folder on phones
-        // ← goes one level up (the breadcrumbs are collapsed there)
+        // ☰ at the repo root and on wider screens; inside a folder on phones ← goes one level up
         onBack={path ? () => onNavigate(path.slice(0, Math.max(path.lastIndexOf('/'), 0))) : undefined}
         backMobileOnly
-        start={<>
-          {path ? <div className="hidden sm:flex">{menu}</div> : menu}
-          <div className="ml-1 flex flex-1 min-w-0 items-center gap-1">
-            <div className="min-w-0 shrink-0 max-w-[70%]">
-              <PathBreadcrumbs root={path ? repoName : 'Home'} path={path} onNavigate={onNavigate} />
-            </div>
-          </div>
-        </>}
+        title="Home"
+        lead={path ? <div className="hidden sm:flex">{menu}</div> : menu}
       >
         <Button variant="ghost-outline" size="icon" aria-label="Search" className="shrink-0 border-muted-foreground/50" onClick={onSearch}>
           <MagnifyingGlass />
@@ -75,10 +68,9 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
 
       <Surface title={
         <TitleBar
-          dir path={path} value={currentFolder}
+          dir path={path}
+          crumbs={<PathBreadcrumbs root={repoName} path={path} onNavigate={onNavigate} />}
           badge={<SymlinkedBy links={linkedBy} onOpen={onOpenLink} />}
-          // The repo itself can't be renamed here
-          onCommit={path ? text => onRename({ name: currentFolder, path, type: 'dir' }, text) : undefined}
         >
           {path && <ItemMenu item={{ name: currentFolder, path, type: 'dir' }} onRename={onRename} onDelete={onDelete} onMove={onMove} folders={folders} />}
           <DropdownMenu>

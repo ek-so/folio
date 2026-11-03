@@ -3,12 +3,10 @@ import { CaretDown, Check } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
 import { Button } from './ui/button.jsx'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from './ui/dropdown-menu.jsx'
-import {
-  Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbPage, BreadcrumbSeparator,
-} from './ui/breadcrumb.jsx'
+import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbSeparator } from './ui/breadcrumb.jsx'
 
-// Breadcrumbs in the fixed header: the repo (bold) is always the first level,
-// then the folders. Every level but the last is a link.
+// Breadcrumbs in the title bar: the repo is always the first level, then the
+// folders. Every level is a small button, the current one (last) just text.
 // `current` overrides the last crumb's name (used in Editor for the display name).
 // `changed` shows an unsaved-changes dot on the last crumb.
 // On narrow screens, anywhere below the repo, they collapse into one dropdown
@@ -33,7 +31,7 @@ export default function PathBreadcrumbs({ root, path, current, changed, onNaviga
         <div className="flex items-center sm:hidden">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="min-w-0 gap-1.5 px-2 font-normal">
+              <Button variant="ghost" size="sm" className="min-w-0 font-normal">
                 <span className="truncate">{last.name}</span>
                 {dot}
                 <CaretDown className="text-muted-foreground" />
@@ -54,7 +52,7 @@ export default function PathBreadcrumbs({ root, path, current, changed, onNaviga
                       style={{ left: `${TREE_PAD + (depth - 1) * TREE_STEP}rem`, width: `${TREE_STEP - 0.375}rem` }}
                     />
                   )}
-                  <span className={cn('truncate', depth === 0 ? 'font-bold' : crumb === last && 'font-medium')}>{crumb.name}</span>
+                  <span className="truncate">{crumb.name}</span>
                   {crumb === last && <Check className="ml-auto" />}
                 </DropdownMenuItem>
               ))}
@@ -68,16 +66,14 @@ export default function PathBreadcrumbs({ root, path, current, changed, onNaviga
               {i > 0 && <BreadcrumbSeparator />}
               <BreadcrumbItem>
                 {i === crumbs.length - 1 ? (
-                  <BreadcrumbPage className={cn(i === 0 && 'font-bold')}>
-                    {crumb.name}
+                  <span aria-current="page" className="flex h-control-sm items-center px-2 text-foreground">
+                    <span className="truncate max-w-40">{crumb.name}</span>
                     {dot}
-                  </BreadcrumbPage>
+                  </span>
                 ) : (
-                  <BreadcrumbLink asChild>
-                    <button onClick={() => onNavigate(crumb.path)}>
-                      <span className={cn('truncate max-w-40', i === 0 && 'font-bold')}>{crumb.name}</span>
-                    </button>
-                  </BreadcrumbLink>
+                  <Button variant="ghost" size="sm" className="font-normal" onClick={() => onNavigate(crumb.path)}>
+                    <span className="truncate max-w-40">{crumb.name}</span>
+                  </Button>
                 )}
               </BreadcrumbItem>
             </Fragment>

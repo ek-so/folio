@@ -56,7 +56,6 @@ export default function Editor({ menu, linkedBy, onOpenLink, path, root, entry, 
       folders={folders}
       onSearch={onSearch}
       syncButton={syncButton}
-      title={{ value: fileName, onCommit: text => onRename({ name: path.split('/').pop(), path, type: 'file' }, text) }}
       actions={<>
         {mode === 'edit' ? (
           <Button size="icon" onClick={finishEditing} aria-label="Done" className="shrink-0">
