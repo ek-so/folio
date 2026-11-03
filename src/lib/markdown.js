@@ -133,7 +133,10 @@ const wrap = (kind, open, close) => m =>
 // wrapped as a whole, markers included, so the text keeps its exact length.
 const INLINE = [
   [/`[^`\n]+`/, wrap('text-muted-foreground', 1, 1)],
-  [/!?\[[^\]\n]*\]\([^)\n]*\)/, m => wrap('text-primary', m.indexOf('[') + 1, m.length - m.lastIndexOf(']('))(m)],
+  [/!?\[[^\]\n]*\]\([^)\n]*\)/, m => {
+    const mid = m.lastIndexOf('](')
+    return `<span class="text-primary">${mark(m.slice(0, m.indexOf('[') + 1))}${m.slice(m.indexOf('[') + 1, mid)}${mark('](')}${m.slice(mid + 2, -1)}${mark(')')}</span>`
+  }],
   [/https?:\/\/[^\s<)]+/, wrap('text-primary', 0, 0)],
   [/\*\*(?!\s)[^*\n]+?\*\*|__(?!\s)[^_\n]+?__/, wrap('font-bold', 2, 2)],
   [/(?<![\w*])\*(?![\s*])[^*\n]+?\*(?!\*)|(?<![\w_])_(?![\s_])[^_\n]+?_(?![\w_])/, wrap('italic', 1, 1)],
