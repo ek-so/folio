@@ -10,7 +10,6 @@ import ItemMenu from './ItemMenu.jsx'
 import { splitName } from '../lib/changes.js'
 import { fileKind, headingEmoji } from '../lib/files.js'
 import FileIcon from './FileIcon.jsx'
-import { Tooltip, TooltipTrigger, TooltipContent } from './ui/tooltip.jsx'
 import Spinner from './Spinner.jsx'
 import PageLayout from './PageLayout.jsx'
 import { cn } from '@/lib/utils.js'
@@ -110,6 +109,8 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
                   className={cn('flex-1 min-w-0 justify-start gap-3 pl-3 pr-0 rounded-lg font-normal text-left hover:bg-transparent disabled:opacity-100 disabled:cursor-default', !isDraggedItem && (item.name.startsWith('.') || isLink) && 'opacity-50 disabled:opacity-50')}
                   onClick={() => navigate(item)}
                   disabled={!openable}
+                  // Where a link points: the browser's own tooltip on hover
+                  title={link?.path ? `Symlinked from ${link.path}` : undefined}
                 >
                   {isLink
                     ? <FileIcon path={link?.path ?? item.path} dir={link?.kind === 'folder'} link />
@@ -175,13 +176,7 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
                       setDragOverPath(null)
                     }}
                   >
-                    {link?.path ? (
-                      // Where the link points, on hover (phones have no hover)
-                      <Tooltip>
-                        <TooltipTrigger asChild>{row}</TooltipTrigger>
-                        <TooltipContent side="bottom" align="start">Symlinked from {link.path}</TooltipContent>
-                      </Tooltip>
-                    ) : row}
+                    {row}
                     <ItemMenu item={item} onRename={onRename} onDelete={onDelete} onMove={onMove} folders={folders} inList />
                   </div>
                 </li>
