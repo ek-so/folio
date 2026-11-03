@@ -43,20 +43,40 @@ marked.use({ useNewRenderer: true, renderer: {
   },
 } })
 
+// How many <details> a raw HTML token opens, minus how many it closes
+const detailsDepth = raw => (raw.match(/<details[\s>]/gi) || []).length - (raw.match(/<\/details>/gi) || []).length
+
 // HTML (unsanitized) where each top-level block is wrapped in
 // <div data-src="start" data-len="length"> pointing at its markdown source.
+// A <details> accordion (as on GitHub: <summary>, then markdown after a blank
+// line, then </details>) is one block from its opening to its closing tag, so
+// the browser doesn't close it early.
 export function renderBlocks(markdown) {
   const tokens = marked.lexer(markdown)
   let offset = 0
   let html = ''
+  let group = null // { start, end, tokens, depth } while inside <details>
+  const emit = (start, end, parts) => {
+    const part = marked.parser(Object.assign(parts, { links: tokens.links }))
+    if (part) html += `<div data-src="${start}" data-len="${end - start}">${part}</div>`
+  }
   for (const token of tokens) {
     const found = markdown.indexOf(token.raw, offset)
     const start = found === -1 ? offset : found
     offset = start + token.raw.length
+    const depth = token.type === 'html' ? detailsDepth(token.raw) : 0
+    if (group) {
+      group.tokens.push(token)
+      group.end = offset
+      group.depth += depth
+      if (group.depth <= 0) { emit(group.start, group.end, group.tokens); group = null }
+      continue
+    }
+    if (depth > 0) { group = { start, end: offset, tokens: [token], depth }; continue }
     if (token.type === 'space') continue
-    const part = marked.parser(Object.assign([token], { links: tokens.links }))
-    if (part) html += `<div data-src="${start}" data-len="${token.raw.length}">${part}</div>`
+    emit(start, offset, [token])
   }
+  if (group) emit(group.start, group.end, group.tokens) // never closed: still one block
   return html
 }
 

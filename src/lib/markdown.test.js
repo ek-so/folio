@@ -19,6 +19,14 @@ describe('markdown', () => {
     expect(renderBlocks('Title\n===\n')).toContain('<h1>Title</h1>')
   })
 
+  it('keeps a <details> accordion in one block', () => {
+    const md = '<details>\n<summary>More</summary>\n\n- [ ] **one**\n\n</details>\n\nAfter\n'
+    const html = renderBlocks(md)
+    const blocks = [...html.matchAll(/data-src="(\d+)" data-len="(\d+)"/g)].map(m => md.slice(+m[1], +m[1] + +m[2]))
+    expect(blocks).toEqual(['<details>\n<summary>More</summary>\n\n- [ ] **one**\n\n</details>\n\n', 'After\n'])
+    expect(html).toMatch(/<details>[\s\S]*<strong>one<\/strong>[\s\S]*<\/details>/)
+  })
+
   it('finds only the checkbox opening each task item', () => {
     const raw = '- [ ] see [x] here\n  1. [X] b\n> - [ ] c\n'
     expect(taskOffsets(raw).map(i => raw[i])).toEqual([' ', 'X', ' '])

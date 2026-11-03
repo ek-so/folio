@@ -1,4 +1,4 @@
-import { useMemo, useEffect, useRef, useState, forwardRef, useImperativeHandle } from 'react'
+import { useMemo, useEffect, useLayoutEffect, useRef, useState, forwardRef, useImperativeHandle } from 'react'
 import DOMPurify from 'dompurify'
 import { renderBlocks, tapOffset, taskOffsets, resolveImage } from '../lib/markdown.js'
 import { useRepoImages } from '../hooks/useRepoImages.js'
@@ -70,6 +70,7 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
   const ref = useRef()
   const scrollRef = useRef()
   const lastTap = useRef(null) // { time, x, y } of the previous tap on text
+  const openDetails = useRef(new Set()) // indexes of accordions opened by the reader
 
   useImperativeHandle(handle, () => ({
     visibleOffset() {
@@ -153,6 +154,21 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
 
   useEffect(() => () => clearTimeout(tipTimer.current), [])
 
+  // Accordions stay open when the note re-renders (e.g. ticking a checkbox
+  // inside one), so remember which ones the reader opened
+  useEffect(() => {
+    const el = ref.current
+    const onToggle = () => {
+      openDetails.current = new Set([...el.querySelectorAll('details')].flatMap((d, i) => d.open ? [i] : []))
+    }
+    el.addEventListener('toggle', onToggle, true)
+    return () => el.removeEventListener('toggle', onToggle, true)
+  }, [])
+
+  useLayoutEffect(() => {
+    ref.current.querySelectorAll('details').forEach((d, i) => { if (openDetails.current.has(i)) d.open = true })
+  }, [withImages])
+
   // Always up-to-date handler without re-attaching the listener
   linkHandlerRef.current = (e) => {
     const link = e.target.closest('a')
@@ -210,7 +226,7 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
       }
       return
     }
-    if (e.target.closest('a, img')) return
+    if (e.target.closest('a, img, summary')) return // summary opens/closes its accordion
     // Counted here rather than with dblclick, which iPhones don't send on a
     // double tap; it must run inside the tap so the keyboard opens
     const prev = lastTap.current
