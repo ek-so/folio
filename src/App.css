@@ -16,8 +16,9 @@
 .editor-preview input[type="checkbox"]:hover { border-color: var(--primary); }
 .editor-preview input[type="checkbox"]:checked { background-color: var(--primary); border-color: var(--primary); background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='white' d='M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-size: 100%; }
 /* <details> accordions, as on GitHub: closed by default, the Phosphor caret ▸ turning ▾ when open */
-.editor-preview details { margin: 0 0 14px; }
-.editor-preview summary { display: flex; align-items: center; gap: 8px; cursor: pointer; list-style: none; font-weight: 500; }
+/* Content indented to line up with the title text (caret 16px + gap 8px) */
+.editor-preview details { margin: 0 0 14px; padding-left: 24px; }
+.editor-preview summary { margin-left: -24px; display: flex; align-items: center; gap: 8px; cursor: pointer; list-style: none; font-weight: 500; }
 .editor-preview summary::-webkit-details-marker { display: none; }
 .editor-preview .summary-caret { display: flex; flex-shrink: 0; transition: transform 0.15s; }
 .editor-preview .summary-caret svg { width: 16px; height: 16px; }
