@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
-import FileIcon from './FileIcon.jsx'
+import FileIcon, { iconColor } from './FileIcon.jsx'
+import { cn } from '@/lib/utils.js'
 
-// Top of the content box: the item's file or folder icon in an outlined tile, then its title. With onCommit the title
+// Top of the content box: the item's file or folder icon in a tile tinted with the icon's color, then its title. With onCommit the title
 // is a text field: Enter or leaving it saves (onCommit(text) returns an error
 // message or null), Escape reverts. An empty title isn't saved. `badge` sits right after the title;
 // `children`: the item's actions on the right (⋯, then +, ✏️ or ✓). A border sets it
@@ -22,7 +23,7 @@ export default function TitleBar({ path, dir, value, onCommit, badge, children }
   return (
     <div className="shrink-0 border-b border-border p-2">
       <div className="flex items-center gap-3">
-        <span className="flex size-control shrink-0 items-center justify-center rounded-sm border border-border">
+        <span className={cn('flex size-control shrink-0 items-center justify-center rounded-sm bg-current/15', iconColor(path, dir))}>
           <FileIcon path={path} dir={dir} />
         </span>
         <div className="flex min-w-0 flex-1 items-center gap-2">
