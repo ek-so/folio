@@ -36,7 +36,7 @@ export const storage = {
   setFolder: (folder) => write(sessionStorage, FOLDER_KEY, folder),
   getFile: () => read(sessionStorage, FILE_KEY),
   setFile: (path) => write(sessionStorage, FILE_KEY, path),
-  // Open app page ('settings' | 'links'), or null for files
+  // Open page ('home' | 'files' | 'graph' | 'settings' | 'links'), null when unset
   getPage: () => read(sessionStorage, PAGE_KEY),
   setPage: (page) => write(sessionStorage, PAGE_KEY, page),
   getRecentFiles: () => {

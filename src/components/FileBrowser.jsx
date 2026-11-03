@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { Plus, FileText, Folder, MagnifyingGlass, UploadSimple } from '@phosphor-icons/react'
+import { Plus, FileText, Folder, UploadSimple } from '@phosphor-icons/react'
 import { Button } from './ui/button.jsx'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from './ui/dropdown-menu.jsx'
 import Header from './Header.jsx'
@@ -53,12 +53,7 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
 
   return (
     <PageLayout>
-      <Header title="Home" lead={menu}>
-        <Button variant="ghost-outline" size="icon" aria-label="Search" className="shrink-0 border-muted-foreground/50" onClick={onSearch}>
-          <MagnifyingGlass />
-        </Button>
-        {syncButton}
-      </Header>
+      <Header title="File manager" lead={menu} onSearch={onSearch} syncButton={syncButton} />
 
       <Surface title={
         <TitleBar

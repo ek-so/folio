@@ -22,6 +22,7 @@ import { useLinkIndex, LinksContext } from './hooks/useLinkIndex.js'
 import { useSymlinks } from './hooks/useSymlinks.js'
 import { rewriteLinks, retargetLink, extractLinks } from './lib/links.js'
 import AccountMenu from './components/AccountMenu.jsx'
+import EmptyPage from './components/EmptyPage.jsx'
 import Settings from './components/Settings.jsx'
 import Spinner from './components/Spinner.jsx'
 import { useAuth } from './hooks/useAuth.js'
@@ -60,7 +61,7 @@ export default function App() {
   }
   const [folder, setFolder] = useState(() => deepLink ? deepLink.folder : storage.getFolder())
   const [newFile, setNewFile] = useState(null) // { folder, kind } while the sheet is open
-  const [page, setPage] = useState(() => deepLink ? null : storage.getPage()) // 'settings' | 'links' | null
+  const [page, setPage] = useState(() => deepLink ? 'files' : storage.getPage() || 'home') // 'home' | 'files' | 'graph' | 'settings' | 'links'
   const [confirmSignOut, setConfirmSignOut] = useState(false)
   const [confirmDiscard, setConfirmDiscard] = useState(false)
   const [discards, setDiscards] = useState(0) // remounts the open note after a discard
@@ -98,7 +99,7 @@ export default function App() {
       const { files, folders } = known.current
       if (files.size) view = existingView(view, files, folders)
       if (urlForView(BASE, view) !== window.location.pathname) replaceNext.current = true
-      setPage(null)
+      setPage('files')
       setFolder(view.folder)
       setSelectedFileState(view.file)
     }
@@ -294,7 +295,7 @@ export default function App() {
 
   async function signOut() {
     setConfirmSignOut(false)
-    setPage(null)
+    setPage('home')
     repo.discardAll()
     await cache.clearAll()
     auth.signOut()
@@ -319,6 +320,7 @@ export default function App() {
   // ☰ on the left of the header: at the repo root, and everywhere on wider screens
   const accountMenu = (
     <AccountMenu
+      onNavigate={setPage}
       onSettings={() => setPage('settings')}
       brokenCount={links.index.broken.length}
       onBrokenLinks={() => setPage('links')}
@@ -352,15 +354,22 @@ export default function App() {
         <Toaster theme={theme} position="top-center" />
         <PullToRefresh onRefresh={() => window.location.reload()}>
           {page === 'settings' ? (
-            <Settings login={auth.user.login} repo={auth.repo} theme={theme} onTheme={setTheme} onBack={() => setPage(null)} />
+            <Settings login={auth.user.login} repo={auth.repo} theme={theme} onTheme={setTheme} onBack={() => setPage('files')} />
+          ) : page === 'home' || page === 'graph' ? (
+            <EmptyPage
+              title={page === 'home' ? 'Home' : 'Graph'}
+              menu={accountMenu}
+              onSearch={() => setSearchOpen(true)}
+              syncButton={syncButton}
+            />
           ) : page === 'links' ? (
             <BrokenLinks
               broken={links.index.broken}
               files={virtual}
               missing={links.missing}
-              onOpen={path => { setPage(null); setSelectedFile(path) }}
+              onOpen={path => { setPage('files'); setSelectedFile(path) }}
               onFix={fixBrokenLink}
-              onBack={() => setPage(null)}
+              onBack={() => setPage('files')}
             />
           ) : entry && ['image', 'pdf'].includes(fileKind(selectedFile)) ? (
             <FileViewer
@@ -433,7 +442,7 @@ export default function App() {
           broken={links.index.broken}
           files={virtual}
           onFix={fixBrokenLink}
-          onOpenNote={path => { setSyncCheck(false); setPage(null); setSelectedFile(path) }}
+          onOpenNote={path => { setSyncCheck(false); setPage('files'); setSelectedFile(path) }}
           onOpenPage={() => { setSyncCheck(false); setSelectedFile(null); setPage('links') }}
           onSyncAnyway={() => { setSyncCheck(false); repo.sync() }}
           onClose={() => setSyncCheck(false)}
@@ -482,7 +491,7 @@ export default function App() {
         {searchOpen && (
           <SearchSheet
             onClose={() => setSearchOpen(false)}
-            onSelect={path => { setSelectedFile(path); setFolder('') }}
+            onSelect={path => { setPage('files'); setSelectedFile(path); setFolder('') }}
             virtual={virtual}
             changes={changes}
             recent={storage.getRecentFiles()}
