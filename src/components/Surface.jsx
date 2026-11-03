@@ -1,6 +1,6 @@
 // The open folder's or file's content: a card-colored box under Header (a sheet
 // edge to edge on phones, lined up with its buttons from 640px; outlined on both),
-// down to the bottom of the screen. Fills the space; `title` (TitleBar)
+// down to the bottom of the screen. Fills the space; `title` (TitleBar, optional)
 // stays on top while the content scrolls inside.
 export default function Surface({ title, children }) {
   return (
