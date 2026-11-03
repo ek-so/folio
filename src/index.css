@@ -179,8 +179,9 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  /* Control sizes: base and small. Use h-control / size-control / min-h-control (and -sm); change them here only */
+  /* Control sizes: base, medium and small. Use h-control / size-control / min-h-control (and -md, -sm); change them here only */
   --spacing-control: 2.5rem;
+  --spacing-control-md: 2rem;
   --spacing-control-sm: 1.5rem;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
