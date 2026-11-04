@@ -10,6 +10,7 @@ const EXPANDED_KEY = 'folio_expanded'
 const TREE_WIDTH_KEY = 'folio_tree_width'
 const RAIL_WIDTH_KEY = 'folio_rail_width'
 const RAIL_KEY = 'folio_rail_collapsed'
+const TREE_KEY = 'folio_tree_collapsed'
 const CHANGES_KEY = 'folio_changes_'
 
 function read(store, key) {
@@ -39,6 +40,8 @@ export const storage = {
   setRailWidth: (width) => write(localStorage, RAIL_WIDTH_KEY, String(width)),
   getRailCollapsed: () => read(localStorage, RAIL_KEY) === '1',
   setRailCollapsed: (collapsed) => write(localStorage, RAIL_KEY, collapsed ? '1' : null),
+  getTreeCollapsed: () => read(localStorage, TREE_KEY) === '1',
+  setTreeCollapsed: (collapsed) => write(localStorage, TREE_KEY, collapsed ? '1' : null),
   getTheme: () => read(localStorage, THEME_KEY),
   setTheme: (theme) => write(localStorage, THEME_KEY, theme),
   // Session-only, so a reload keeps the current folder, open note and page

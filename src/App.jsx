@@ -114,6 +114,10 @@ export default function App() {
     const open = foldersToOpen(treeCurrent, !selectedFile)
     setExpanded(prev => open.every(f => prev.has(f)) ? prev : new Set([...prev, ...open]))
   }, [treeCurrent, selectedFile])
+  // The desktop file tree panel, hidden with its « and shown again from the rail
+  const [treeCollapsed, setTreeCollapsed] = useState(storage.getTreeCollapsed)
+  useEffect(() => { storage.setTreeCollapsed(treeCollapsed) }, [treeCollapsed])
+  const toggleTree = () => setTreeCollapsed(c => !c)
   const toggleFolder = path => setExpanded(prev => {
     const next = new Set(prev)
     if (!next.delete(path)) next.add(path)
@@ -419,6 +423,8 @@ export default function App() {
         itemActions: { onRename: handleRename, onDelete: handleDelete, onMove: handleMove, folders: allFolders },
         onOpenFolder: openFolder,
         onOpenFile: setSelectedFile,
+        treeCollapsed,
+        onToggleTree: toggleTree,
         onBack: page === mainPage && trails[mainPage].length ? goBack : null,
         onDropMove: handleDropMove,
         onUpload: handleUpload,
@@ -432,7 +438,7 @@ export default function App() {
         <Toaster theme={theme} />
         <PullToRefresh onRefresh={() => window.location.reload()}>
           <div className="flex flex-1 min-h-0">
-          <NavRail page={page} onPage={choosePage} onSearch={() => setSearchOpen(true)} renderSync={renderSync} menu={menu} />
+          <NavRail page={page} onPage={choosePage} onSearch={() => setSearchOpen(true)} renderSync={renderSync} menu={menu} onShowTree={treeCollapsed && page === mainPage ? toggleTree : null} />
           <main className="flex flex-col flex-1 min-w-0 min-h-0">
           {page === PAGE.SETTINGS ? (
             <Settings login={auth.user.login} repo={auth.repo} theme={theme} onTheme={setTheme} />

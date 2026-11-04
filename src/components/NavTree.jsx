@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useRef, useState } from 'react'
-import { ArrowsInLineVertical, CaretRight, SidebarSimple } from '@phosphor-icons/react'
+import { ArrowsInLineVertical, CaretDoubleLeft, CaretRight, TreeView } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils.js'
 import { Button } from './ui/button.jsx'
 import { Sheet, SheetContent, SheetTitle, SheetDescription } from './ui/sheet.jsx'
@@ -165,7 +165,8 @@ function FileTree() {
 }
 
 // The tree titled with the repo's name, over the box it's in (desktop panel
-// or phone drawer), with Collapse all on the right (disabled while no top-level folder is open).
+// or phone drawer), with Collapse all on the right (disabled while no top-level folder is open),
+// then on desktop « that hides the panel (`onToggleTree`; the rail then shows a tree button to bring it back).
 // `Title`: the heading element (the drawer's is its dialog title); `closable`: leaves room for the drawer's ✕, after a separator (not on desktop).
 // `dnd`: drag and drop (desktop only; unreliable with touch).
 function TreePanel({ Title = 'h2', closable, dnd }) {
@@ -179,7 +180,13 @@ function TreePanel({ Title = 'h2', closable, dnd }) {
         <Button variant="ghost" size="icon" className="shrink-0" aria-label="Collapse all folders" title="Collapse all folders" disabled={!anyOpen} onClick={nav.onCollapseAll}>
           <ArrowsInLineVertical />
         </Button>
-        {closable && <div aria-hidden="true" className="h-6 w-px shrink-0 bg-border" />}
+        {closable
+          ? <div aria-hidden="true" className="h-6 w-px shrink-0 bg-border" />
+          : (
+            <Button variant="ghost" size="icon" className="shrink-0" aria-label="Hide file tree" title="Hide file tree" onClick={nav.onToggleTree}>
+              <CaretDoubleLeft />
+            </Button>
+          )}
       </div>
       <div
         className={cn('min-h-0 flex-1 overflow-y-auto overscroll-y-contain p-space-sm transition-colors rounded-b-xl', dnd && drag.target === '' && 'bg-primary/5 ring-2 ring-inset ring-primary/40')}
@@ -199,10 +206,11 @@ function TreePanel({ Title = 'h2', closable, dnd }) {
 
 // Desktop: the tree in its own box next to the content. The 16px gap to the
 // content is a drag handle (also ←/→ keys) that resizes it; the width is remembered.
+// Hidden while `treeCollapsed` (remembered too).
 export function NavPanel() {
   const nav = useContext(NavContext)
   const [width, resize] = useResizableWidth(TREE_WIDTH, storage.getTreeWidth, storage.setTreeWidth)
-  if (!nav) return null
+  if (!nav || nav.treeCollapsed) return null
   return (
     <div style={{ width }} className="relative hidden md:block shrink-0 max-w-[35vw]">
       <aside aria-label="Files and folders" className="flex h-full flex-col overflow-hidden rounded-xl border border-border bg-card">
@@ -223,7 +231,7 @@ export function NavDrawerButton() {
   return (
     <>
       <Button variant="ghost-outline" size="icon" aria-label="Files and folders" className="shrink-0 border-muted-foreground/50 md:hidden" onClick={() => setOpen(true)}>
-        <SidebarSimple />
+        <TreeView />
       </Button>
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent side="left" className="top-[calc(var(--space-sm)+var(--safe-top))] bottom-[calc(var(--space-sm)+var(--safe-bottom))] left-space-sm h-auto w-[calc(100vw-2*var(--space-sm))] gap-0 min-[500px]:w-[85vw] sm:max-w-none overflow-hidden rounded-xl border bg-card">
