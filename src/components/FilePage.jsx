@@ -1,19 +1,18 @@
-import Header from './Header.jsx'
 import ItemMenu from './ItemMenu.jsx'
 import PageLayout from './PageLayout.jsx'
 import Surface from './Surface.jsx'
 import SymlinkedBy from './SymlinkedBy.jsx'
 import TitleBar from './TitleBar.jsx'
 
-// Screen for one open file (note, image or PDF): "File manager", Search and Sync in
-// the header; then the content box: TitleBar (icon and name) with ⋯ and
+// Screen for one open file (note, image or PDF):
+// the content box: TitleBar (icon and name) with ⋯ and
 // `actions`, and the file's content.
-export default function FilePage({ menu, title, linkedBy, onOpenLink, path, name, changed, onRename, onDelete, onMove, folders, onSearch, syncButton, actions, children }) {
+export default function FilePage({ linkedBy, onOpenLink, path, name, changed, onRename, onDelete, onMove, folders, actions, children }) {
   return (
     <PageLayout>
-      <Header title={title} lead={menu} onSearch={onSearch} syncButton={syncButton} />
       <Surface tree title={
         <TitleBar
+          tree
           path={path}
           name={name}
           changed={changed}

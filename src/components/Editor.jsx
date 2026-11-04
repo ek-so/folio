@@ -14,7 +14,7 @@ import { displayName } from '../lib/files.js'
 // whole markdown shown as preview; ✏️ in the title bar edits the markdown,
 // starting where you were reading, and a double tap starts at the tapped
 // word. Edits save on their own; ✓ (same spot) only switches back to preview.
-export default function Editor({ menu, title, linkedBy, onOpenLink, path, entry, files, edited, onEdit, onNavigate, onOpenFile, onRename, onDelete, onMove, folders, syncButton, onSearch, backlinks }) {
+export default function Editor({ linkedBy, onOpenLink, path, entry, files, edited, onEdit, onNavigate, onOpenFile, onRename, onDelete, onMove, folders, backlinks }) {
   const { content, change, loading, loadError } = useNote(entry, edited, onEdit)
   const [mode, setMode] = useState('preview')
   const [editedAt, setEditedAt] = useState(null) // offset to show when back in preview
@@ -42,8 +42,6 @@ export default function Editor({ menu, title, linkedBy, onOpenLink, path, entry,
 
   return (
     <FilePage
-      menu={menu}
-      title={title}
       linkedBy={linkedBy}
       onOpenLink={onOpenLink}
       path={path}
@@ -53,8 +51,6 @@ export default function Editor({ menu, title, linkedBy, onOpenLink, path, entry,
       onDelete={onDelete}
       onMove={onMove}
       folders={folders}
-      onSearch={onSearch}
-      syncButton={syncButton}
       actions={<>
         {mode === 'edit' ? (
           <Button size="icon" onClick={finishEditing} aria-label="Done" className="shrink-0">

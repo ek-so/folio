@@ -1,14 +1,12 @@
 import PageLayout from './PageLayout.jsx'
-import Header from './Header.jsx'
 import Surface from './Surface.jsx'
+import TitleBar from './TitleBar.jsx'
 
-// Home and Graph: header like the file screens (☰, title, Search, Sync) over
-// an empty content box, until they get content.
-export default function EmptyPage({ title, menu, onSearch, syncButton }) {
+// Home and Graph: their title bar over an empty content box, until they get content.
+export default function EmptyPage({ page }) {
   return (
     <PageLayout>
-      <Header title={title} lead={menu} onSearch={onSearch} syncButton={syncButton} />
-      <Surface tree />
+      <Surface tree title={<TitleBar tree page={page} />} />
     </PageLayout>
   )
 }

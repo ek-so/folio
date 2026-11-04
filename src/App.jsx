@@ -23,7 +23,7 @@ import { useSymlinks } from './hooks/useSymlinks.js'
 import { rewriteLinks, retargetLink, extractLinks } from './lib/links.js'
 import { NavContext } from './components/NavTree.jsx'
 import { foldersToOpen } from './lib/tree.js'
-import AccountMenu from './components/AccountMenu.jsx'
+import { NavRail, FloatingNav } from './components/AppNav.jsx'
 import EmptyPage from './components/EmptyPage.jsx'
 import Settings from './components/Settings.jsx'
 import Spinner from './components/Spinner.jsx'
@@ -31,7 +31,7 @@ import { useAuth } from './hooks/useAuth.js'
 import { useRepo } from './hooks/useRepo.js'
 import { useTheme } from './hooks/useTheme.js'
 import { storage } from './lib/storage.js'
-import { PAGE, MAIN_PAGES, pageTitle, mapOpenFiles } from './lib/pages.js'
+import { PAGE, MAIN_PAGES, mapOpenFiles } from './lib/pages.js'
 import { urlForView, viewForUrl, existingView } from './lib/url.js'
 import { toast } from 'sonner'
 import { Toaster } from './components/ui/sonner.jsx'
@@ -53,9 +53,8 @@ export default function App() {
   const repo = useRepo(auth.user ? auth.repo : null, toast.success)
   const { theme, setTheme } = useTheme()
   const [page, setPage] = useState(() => deepLink ? PAGE.FILES : storage.getPage() || PAGE.HOME)
-  const [returnTo, setReturnTo] = useState(PAGE.HOME) // the main page ← on Settings / Broken links goes back to
-  // The main page on screen (behind Settings / Broken links: the one they were opened from)
-  const mainPage = MAIN_PAGES.some(p => p.id === page) ? page : returnTo
+  // The main page files open in (File manager when Settings / Broken links is open)
+  const mainPage = MAIN_PAGES.some(p => p.id === page) ? page : PAGE.FILES
   // Each main page has its own open file; a file opens in the page you're on
   const [openFiles, setOpenFiles] = useState(() => ({ ...storage.getOpenFiles(), ...(deepLink && { files: deepLink.file }) }))
   const selectedFile = openFiles[mainPage] ?? null
@@ -68,7 +67,7 @@ export default function App() {
     if (link?.kind === 'folder') { openFolder(link.path); return }
     if (link?.path) path = link.path
     else if (path && path in symlinks) return // broken or still loading: nothing to open
-    if (path) storage.addRecentFile(path)
+    if (path) { storage.addRecentFile(path); setPage(mainPage) }
     setSelectedFileState(path)
   }
   const [folder, setFolder] = useState(() => deepLink ? deepLink.folder : storage.getFolder())
@@ -78,11 +77,6 @@ export default function App() {
     setPage(PAGE.FILES)
     setFolder(path)
     setFileOn(PAGE.FILES, null)
-  }
-  // Settings and Broken links remember the main page they were opened from
-  function openAppPage(next) {
-    if (MAIN_PAGES.some(p => p.id === page)) setReturnTo(page)
-    setPage(next)
   }
   const [confirmSignOut, setConfirmSignOut] = useState(false)
   const [confirmDiscard, setConfirmDiscard] = useState(false)
@@ -354,16 +348,10 @@ export default function App() {
   // A symlink never opens itself (opening one opens its source instead)
   const entry = selectedFile && !(selectedFile in symlinks) && virtual[selectedFile]
   const repoName = auth.repo.split('/')[1]
-  // ☰ on the left of the header: at the repo root, and everywhere on wider screens
-  const accountMenu = (
-    <AccountMenu
-      onNavigate={setPage}
-      onSettings={() => openAppPage(PAGE.SETTINGS)}
-      brokenCount={links.index.broken.length}
-      onBrokenLinks={() => openAppPage(PAGE.LINKS)}
-      onSignOut={() => repo.changeCount ? setConfirmSignOut(true) : signOut()}
-    />
-  )
+  const menu = {
+    brokenCount: links.index.broken.length,
+    onSignOut: () => repo.changeCount ? setConfirmSignOut(true) : signOut(),
+  }
   const syncButton = (
     <SyncButton
       syncState={repo.syncState}
@@ -401,47 +389,38 @@ export default function App() {
       <div className="flex flex-col h-full bg-background">
         <Toaster theme={theme} position="top-center" />
         <PullToRefresh onRefresh={() => window.location.reload()}>
+          <div className="flex flex-1 min-h-0">
+          <NavRail page={page} onPage={setPage} onSearch={() => setSearchOpen(true)} syncButton={syncButton} menu={menu} />
+          <main className="flex flex-col flex-1 min-w-0 min-h-0 max-md:pb-[calc(4.5rem+var(--safe-bottom))]">
           {page === PAGE.SETTINGS ? (
-            <Settings login={auth.user.login} repo={auth.repo} theme={theme} onTheme={setTheme} onBack={() => setPage(returnTo)} />
+            <Settings login={auth.user.login} repo={auth.repo} theme={theme} onTheme={setTheme} />
           ) : (page === PAGE.HOME || page === PAGE.GRAPH) && !entry ? (
-            <EmptyPage
-              title={pageTitle(page)}
-              menu={accountMenu}
-              onSearch={() => setSearchOpen(true)}
-              syncButton={syncButton}
-            />
+            <EmptyPage page={page} />
           ) : page === PAGE.LINKS ? (
             <BrokenLinks
               broken={links.index.broken}
               files={virtual}
               missing={links.missing}
-              onOpen={path => { setPage(returnTo); setSelectedFile(path) }}
+              onOpen={setSelectedFile}
               onFix={fixBrokenLink}
-              onBack={() => setPage(returnTo)}
             />
           ) : entry && ['image', 'pdf'].includes(fileKind(selectedFile)) ? (
             <FileViewer
               key={selectedFile}
               linkedBy={linkedBy[selectedFile]}
               onOpenLink={openLink}
-              menu={accountMenu}
-              title={pageTitle(mainPage)}
               path={selectedFile}
               entry={entry}
               onRename={handleRename}
               onDelete={handleDelete}
               onMove={handleMove}
               folders={allFolders}
-              syncButton={syncButton}
-              onSearch={() => setSearchOpen(true)}
             />
           ) : entry ? (
             <Editor
               key={`${selectedFile}:${discards}`}
               linkedBy={linkedBy[selectedFile]}
               onOpenLink={openLink}
-              menu={accountMenu}
-              title={pageTitle(mainPage)}
               path={selectedFile}
               entry={entry}
               files={virtual}
@@ -454,8 +433,6 @@ export default function App() {
               onDelete={handleDelete}
               onMove={handleMove}
               folders={allFolders}
-              syncButton={syncButton}
-              onSearch={() => setSearchOpen(true)}
               backlinks={links.index.backlinks[selectedFile]}
             />
           ) : (
@@ -470,19 +447,19 @@ export default function App() {
               onDelete={handleDelete}
               onMove={handleMove}
               folders={allFolders}
-              menu={accountMenu}
               onSelect={setSelectedFile}
               onNewFile={(f, kind) => setNewFile({ folder: f, kind })}
               onUpload={handleUpload}
               repoName={repoName}
-              syncButton={syncButton}
-              onSearch={() => setSearchOpen(true)}
               symlinks={symlinks}
               linkedBy={folder ? linkedBy[folder] : undefined}
               onOpenLink={openLink}
             />
           )}
+          </main>
+          </div>
         </PullToRefresh>
+        <FloatingNav page={page} onPage={setPage} onSearch={() => setSearchOpen(true)} syncButton={syncButton} menu={menu} />
 
         {syncCheck && (
         <SyncCheckModal
@@ -490,7 +467,7 @@ export default function App() {
           files={virtual}
           onFix={fixBrokenLink}
           onOpenNote={path => { setSyncCheck(false); setSelectedFile(path) }}
-          onOpenPage={() => { setSyncCheck(false); setSelectedFile(null); openAppPage(PAGE.LINKS) }}
+          onOpenPage={() => { setSyncCheck(false); setPage(PAGE.LINKS) }}
           onSyncAnyway={() => { setSyncCheck(false); repo.sync() }}
           onClose={() => setSyncCheck(false)}
         />

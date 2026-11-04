@@ -1,4 +1,5 @@
 import { ArrowUp, ArrowDown, X, CloudSlash, CaretDown, Trash } from '@phosphor-icons/react'
+import { cn } from '@/lib/utils.js'
 import { Button } from './ui/button.jsx'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from './ui/dropdown-menu.jsx'
 
@@ -17,18 +18,18 @@ function MenuBadge({ children }) {
   )
 }
 
-// Split Sync button at the right end of the header, after Search, faded like it: the main part syncs; ▾ opens
+// Split Sync button in the navigation (the rail, or the phone's floating panel): the main part syncs; ▾ opens
 // Push (with change count), Pull (how many files changed on GitHub, or New
 // when unknown) and Discard. An accent badge on Sync shows the directions
 // there's something to sync in (↑ push, ↓ pull, or both), without counts.
-export default function SyncButton({ syncState, syncing, changeCount, incoming, onSync, onPull, onDiscard }) {
+export default function SyncButton({ className, syncState, syncing, changeCount, incoming, onSync, onPull, onDiscard }) {
   const { variant, label, Icon } = LOOK[syncState] || LOOK.idle
   const hasPush = changeCount > 0
   const hasPull = incoming !== null
 
   return (
-    <div className="flex shrink-0">
-      <Button onClick={onSync} disabled={syncing} variant={variant} className="gap-2 rounded-r-none">
+    <div className={cn('flex shrink-0', className)}>
+      <Button onClick={onSync} disabled={syncing} variant={variant} className="flex-1 gap-2 rounded-r-none">
         {syncing ? (
           <span className="size-4 rounded-full border border-current border-t-transparent animate-spin opacity-60" />
         ) : Icon ? (

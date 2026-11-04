@@ -2,8 +2,6 @@ import { useState, useRef } from 'react'
 import { Plus, FileText, Folder, UploadSimple } from '@phosphor-icons/react'
 import { Button } from './ui/button.jsx'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from './ui/dropdown-menu.jsx'
-import Header from './Header.jsx'
-import { PAGE, pageTitle } from '../lib/pages.js'
 import Surface from './Surface.jsx'
 import TitleBar from './TitleBar.jsx'
 import ItemMenu from './ItemMenu.jsx'
@@ -15,7 +13,7 @@ import Spinner from './Spinner.jsx'
 import PageLayout from './PageLayout.jsx'
 import { cn } from '@/lib/utils.js'
 
-export default function FileBrowser({ path, onNavigate, listDir, loading, error, notice, onSelect, onNewFile, repoName, onRename, onDelete, onMove, folders, menu, syncButton, onSearch, onUpload, symlinks = {}, linkedBy, onOpenLink }) {
+export default function FileBrowser({ path, onNavigate, listDir, loading, error, notice, onSelect, onNewFile, repoName, onRename, onDelete, onMove, folders, onUpload, symlinks = {}, linkedBy, onOpenLink }) {
   // Symlinked folders sort with the folders
   const isFolder = i => i.type === 'dir' || symlinks[i.path]?.kind === 'folder'
   const listed = loading ? [] : listDir(path)
@@ -46,10 +44,9 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
 
   return (
     <PageLayout>
-      <Header title={pageTitle(PAGE.FILES)} lead={menu} onSearch={onSearch} syncButton={syncButton} />
-
       <Surface tree title={
         <TitleBar
+          tree
           path={path}
           dir
           name={path ? currentFolder : repoName}

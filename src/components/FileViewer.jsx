@@ -10,13 +10,13 @@ const MESSAGES = {
 }
 
 // An image or PDF, read-only. Rename it from ⋯.
-export default function FileViewer({ path, entry, syncButton, ...page }) {
+export default function FileViewer({ path, entry, ...page }) {
   const { base64, error } = useBlob(entry.sha)
   const kind = fileKind(path)
   const name = path.split('/').pop()
 
   return (
-    <FilePage path={path} name={name} syncButton={syncButton} {...page}>
+    <FilePage path={path} name={name} {...page}>
       {error ? (
         <p className="text-muted-foreground text-sm text-center py-12 px-6">{MESSAGES[error]}</p>
       ) : !base64 ? (

@@ -1,5 +1,6 @@
 import { Sun, Moon, Monitor } from '@phosphor-icons/react'
-import Header from './Header.jsx'
+import TitleBar from './TitleBar.jsx'
+import { PAGE } from '../lib/pages.js'
 import Surface from './Surface.jsx'
 import { Segmented } from './ui/segmented.jsx'
 
@@ -15,11 +16,10 @@ function Row({ label, children }) {
 }
 
 // Settings page: theme, plus the account and repository in use.
-export default function Settings({ login, repo, theme, onTheme, onBack }) {
+export default function Settings({ login, repo, theme, onTheme }) {
   return (
     <div className="flex flex-col flex-1 min-h-0">
-      <Header title="Settings" onBack={onBack} />
-      <Surface>
+      <Surface title={<TitleBar page={PAGE.SETTINGS} />}>
         <div className="flex-1 min-h-0 overflow-y-auto">
           <div className="flex flex-col gap-2 px-4 py-3 border-b border-border">
             <span className="text-sm text-muted-foreground">Theme</span>
