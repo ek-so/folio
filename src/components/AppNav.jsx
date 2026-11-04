@@ -15,10 +15,12 @@ export function NavRail({ page, onPage, onSearch, syncButton, menu }) {
   const item = id => cn('justify-start gap-3 font-normal', page === id && 'bg-secondary')
   return (
     <nav aria-label="Main" className="hidden md:flex w-56 shrink-0 flex-col gap-1 py-space pl-space">
-      <Button variant="outline" className="justify-start gap-3 px-3 font-normal text-muted-foreground shadow-sm hover:bg-transparent hover:text-foreground" onClick={onSearch}>
-        <MagnifyingGlass /> Search
-      </Button>
-      {syncButton}
+      <div className="flex flex-col gap-space">
+        <Button variant="outline" className="justify-start gap-3 px-3 font-normal text-muted-foreground shadow-sm hover:bg-transparent hover:text-foreground" onClick={onSearch}>
+          <MagnifyingGlass /> Search
+        </Button>
+        {syncButton}
+      </div>
       <div className="h-2" />
       {MAIN_PAGES.map(({ id, title, icon: Icon }) => (
         <Button key={id} variant="ghost" aria-current={page === id ? 'page' : undefined} className={item(id)} onClick={() => onPage(id)}>
