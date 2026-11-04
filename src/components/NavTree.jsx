@@ -112,7 +112,7 @@ function Rows({ dir, depth }) {
         <div
           {...dragProps}
           className={cn(
-            'flex h-control items-center rounded-sm px-1 transition-colors hover:bg-secondary/60',
+            'group flex h-control items-center rounded-sm px-1 transition-colors hover:bg-secondary/60',
             nav.current === item.path && 'bg-secondary',
             drag?.draggingPath === item.path && 'opacity-40',
             folder && drag?.target === item.path && 'bg-primary/10 ring-1 ring-inset ring-primary/40',
@@ -146,7 +146,7 @@ function Rows({ dir, depth }) {
             <span className="flex-1 truncate">{item.name}</span>
             {item.changed && <span className="size-1.5 shrink-0 rounded-full bg-primary" />}
           </Button>
-          <ItemMenu item={item} {...nav.itemActions} inList />
+          <ItemMenu item={item} {...nav.itemActions} inList hoverReveal />
         </div>
         {open && <ul><Rows dir={item.path} depth={depth + 1} /></ul>}
       </li>

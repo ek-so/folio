@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { DotsThree, PencilSimple, Trash, Folder } from '@phosphor-icons/react'
+import { cn } from '@/lib/utils.js'
 import { Button } from './ui/button.jsx'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from './ui/dropdown-menu.jsx'
 import RenameModal from './RenameModal.jsx'
@@ -12,7 +13,8 @@ import MoveModal from './MoveModal.jsx'
 // inList: inside a file-browser row — medium (32px), ghost (no border), smaller icon, with its own
 // lighter fill on hover over the row's highlight
 // default (title bar of the open folder or file): ghost-outline with a more visible border
-export default function ItemMenu({ item, onRename, onDelete, onMove, folders, inList }) {
+// hoverReveal (with inList): with a mouse, hidden until its row (`group`) is hovered, it's focused or its menu is open; always shown on touch
+export default function ItemMenu({ item, onRename, onDelete, onMove, folders, inList, hoverReveal }) {
   const [renaming, setRenaming] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [moving, setMoving] = useState(false)
@@ -25,7 +27,10 @@ export default function ItemMenu({ item, onRename, onDelete, onMove, folders, in
             variant={inList ? 'ghost' : 'ghost-outline'}
             size="icon"
             aria-label="More actions"
-            className={inList ? 'size-control-md shrink-0 text-muted-foreground hover:bg-muted-foreground/10 data-[state=open]:bg-muted-foreground/10' : 'shrink-0 border-muted-foreground/50'}
+            className={cn(
+              inList ? 'size-control-md shrink-0 text-muted-foreground hover:bg-muted-foreground/10 data-[state=open]:bg-muted-foreground/10' : 'shrink-0 border-muted-foreground/50',
+              hoverReveal && 'pointer-fine:opacity-0 pointer-fine:group-hover:opacity-100 pointer-fine:focus-visible:opacity-100 pointer-fine:data-[state=open]:opacity-100',
+            )}
           >
             <DotsThree weight="bold" size={inList ? 16 : 20} />
           </Button>
