@@ -352,8 +352,9 @@ export default function App() {
     brokenCount: links.index.broken.length,
     onSignOut: () => setConfirmSignOut(true),
   }
-  const syncButton = (
+  const renderSync = compact => (
     <SyncButton
+      compact={compact}
       syncState={repo.syncState}
       syncing={repo.syncing}
       changeCount={repo.changeCount}
@@ -390,7 +391,7 @@ export default function App() {
         <Toaster theme={theme} position="top-center" />
         <PullToRefresh onRefresh={() => window.location.reload()}>
           <div className="flex flex-1 min-h-0">
-          <NavRail page={page} onPage={setPage} onSearch={() => setSearchOpen(true)} syncButton={syncButton} menu={menu} />
+          <NavRail page={page} onPage={setPage} onSearch={() => setSearchOpen(true)} renderSync={renderSync} menu={menu} />
           <main className="flex flex-col flex-1 min-w-0 min-h-0">
           {page === PAGE.SETTINGS ? (
             <Settings login={auth.user.login} repo={auth.repo} theme={theme} onTheme={setTheme} />
@@ -459,7 +460,7 @@ export default function App() {
           </main>
           </div>
         </PullToRefresh>
-        <FloatingNav page={page} onPage={setPage} onSearch={() => setSearchOpen(true)} syncButton={syncButton} menu={menu} />
+        <FloatingNav page={page} onPage={setPage} onSearch={() => setSearchOpen(true)} renderSync={renderSync} menu={menu} />
 
         {syncCheck && (
         <SyncCheckModal

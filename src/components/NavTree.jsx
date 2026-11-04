@@ -93,7 +93,7 @@ export function NavPanel() {
   const [width, resize] = useResizableWidth(TREE_WIDTH, storage.getTreeWidth, storage.setTreeWidth)
   if (!nav) return null
   return (
-    <div style={{ width }} className="relative hidden md:block shrink-0">
+    <div style={{ width }} className="relative hidden md:block shrink-0 max-w-[35vw]">
       <aside aria-label="Files and folders" className="flex h-full flex-col overflow-hidden rounded-xl border border-border bg-card">
         <TreePanel />
       </aside>

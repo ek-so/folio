@@ -1,4 +1,4 @@
-import { cloneElement, useState } from 'react'
+import { useState } from 'react'
 import { List, SidebarSimple, MagnifyingGlass, LinkBreak, Gear, SignOut } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils.js'
 import { Button } from './ui/button.jsx'
@@ -14,13 +14,13 @@ import { useKeyboardInset } from '../hooks/useKeyboardInset.js'
 const ACTIVE = 'bg-primary/15 text-primary hover:bg-primary/20 hover:text-primary'
 
 // The app's primary navigation, in place of a header. `menu`: brokenCount and
-// onSignOut; `page` the open page; `syncButton` the SyncButton.
+// onSignOut; `page` the open page; `renderSync(compact)` makes the SyncButton.
 // Desktop (768px+): a left rail (the content's own 16px gutter is the gap to
 // the tree). On top the app's name (Folio, bold) and a button that collapses
-// the rail to icons only (remembered on this device; expanded, its right edge is a drag handle like the tree's, 160–320px); then Search and Sync,
+// the rail to icons only (remembered on this device; expanded, its edge is a drag handle); then Search and Sync,
 // Home, File manager, Graph, and at the bottom Broken links (count),
 // Settings and Sign out.
-export function NavRail({ page, onPage, onSearch, syncButton, menu }) {
+export function NavRail({ page, onPage, onSearch, renderSync, menu }) {
   const [collapsed, setCollapsed] = useState(storage.getRailCollapsed)
   const [width, resize] = useResizableWidth(RAIL_WIDTH, storage.getRailWidth, storage.setRailWidth)
   const toggle = () => { setCollapsed(!collapsed); storage.setRailCollapsed(!collapsed) }
@@ -29,7 +29,7 @@ export function NavRail({ page, onPage, onSearch, syncButton, menu }) {
   const label = text => collapsed ? <span className="sr-only">{text}</span> : text
   const hint = text => collapsed ? text : undefined
   return (
-    <nav aria-label="Main" style={collapsed ? undefined : { width }} className={cn('relative hidden md:flex shrink-0 flex-col gap-1 py-space pl-space', collapsed && 'w-24 items-center')}>
+    <nav aria-label="Main" style={collapsed ? undefined : { width }} className={cn('relative hidden md:flex shrink-0 flex-col gap-1 py-space pl-space', collapsed ? 'w-24 items-center' : 'max-w-[25vw]')}>
       <div className={cn('flex h-control items-center justify-between pl-3', collapsed && 'justify-center pl-0')}>
         {!collapsed && <span className="text-base font-bold">Folio</span>}
         <Button variant="ghost-outline" size="icon" aria-label={collapsed ? 'Expand menu' : 'Collapse menu'} title={collapsed ? 'Expand menu' : 'Collapse menu'} aria-expanded={!collapsed} className="shrink-0 border-muted-foreground/50" onClick={toggle}>
@@ -41,7 +41,7 @@ export function NavRail({ page, onPage, onSearch, syncButton, menu }) {
         <Button variant="outline" title={hint('Search')} className={cn('justify-start gap-3 px-3 font-normal text-muted-foreground shadow-sm hover:bg-transparent hover:text-foreground', collapsed && 'size-control justify-center px-0')} onClick={onSearch}>
           <MagnifyingGlass /> {label('Search')}
         </Button>
-        {collapsed ? cloneElement(syncButton, { compact: true }) : syncButton}
+        {renderSync(collapsed)}
       </div>
       <div className="h-2" />
       {MAIN_PAGES.map(({ id, title, icon: Icon }) => (
@@ -70,7 +70,7 @@ export function NavRail({ page, onPage, onSearch, syncButton, menu }) {
 
 // Phones: a floating panel at the bottom with ☰ (every page, then the rest),
 // Search and Sync. Hidden while the keyboard is up.
-export function FloatingNav({ page, onPage, onSearch, syncButton, menu }) {
+export function FloatingNav({ page, onPage, onSearch, renderSync, menu }) {
   const keyboard = useKeyboardInset()
   if (keyboard > 0) return null
   return (
@@ -90,7 +90,7 @@ export function FloatingNav({ page, onPage, onSearch, syncButton, menu }) {
         <MagnifyingGlass />
       </Button>
       <div className="flex-1" />
-      {syncButton}
+      {renderSync(false)}
     </nav>
   )
 }
