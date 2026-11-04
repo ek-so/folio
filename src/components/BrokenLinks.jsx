@@ -9,7 +9,7 @@ export default function BrokenLinks({ broken, files, missing, onOpen, onFix }) {
   return (
     <div className="flex flex-col flex-1 min-h-0">
       <Surface title={<TitleBar page={PAGE.LINKS} />}>
-      <div className="flex-1 min-h-0 overflow-y-auto max-md:pb-nav">
+      <div className="flex-1 min-h-0 overflow-y-auto">
         {missing > 0 && (
           <p className="px-4 pt-3 text-xs text-muted-foreground">
             {missing} note{missing === 1 ? ' isn\'t' : 's aren\'t'} on this device yet, so {missing === 1 ? 'it isn\'t' : 'they aren\'t'} checked. Connect to the internet to include them.

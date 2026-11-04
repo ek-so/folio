@@ -8,7 +8,6 @@ import { storage } from '../lib/storage.js'
 import { RAIL_WIDTH } from '../lib/resize.js'
 import { useResizableWidth } from '../hooks/useResizableWidth.js'
 import ResizeHandle from './ResizeHandle.jsx'
-import { useKeyboardInset } from '../hooks/useKeyboardInset.js'
 import AppLogo from './AppLogo.jsx'
 
 // The open page's button: light accent fill, accent text
@@ -81,16 +80,10 @@ export function NavRail({ page, onPage, onSearch, renderSync, menu, onShowTree }
   )
 }
 
-// Phones: a floating panel at the bottom with ☰ (every page, then the rest),
-// Search and Sync. Hidden while the keyboard is up.
-export function FloatingNav({ page, onPage, onSearch, renderSync, menu }) {
-  const keyboard = useKeyboardInset()
-  if (keyboard > 0) return null
+// Phones: a bar at the top with ☰ (every page, then the rest), Search and Sync.
+export function TopBar({ page, onPage, onSearch, renderSync, menu }) {
   return (
-    <nav
-      aria-label="Main"
-      className="fixed inset-x-space bottom-[calc(var(--space)+var(--safe-bottom))] z-40 flex items-center gap-2 rounded-xl border border-border bg-card p-1.5 shadow-lg md:hidden"
-    >
+    <nav aria-label="Main" className="flex shrink-0 items-center gap-2 p-space-sm md:hidden">
       <AccountMenu
         {...menu} current={page} onNavigate={onPage}
         trigger={

@@ -73,14 +73,8 @@
 
     --safe-top: env(safe-area-inset-top, 0px);
     --safe-bottom: env(safe-area-inset-bottom, 0px);
-    /* Room at the bottom for the phone's floating navigation (pb-nav, toasts) */
-    --nav-room: calc(5.5rem + var(--safe-bottom));
-    /* Toasts sit this far from the bottom: above the floating navigation on phones */
-    --toast-bottom: var(--nav-room);
-  }
-
-  @media (min-width: 48rem) {
-    :root { --toast-bottom: calc(2 * var(--space) + var(--safe-bottom)); }
+    /* Toasts sit this far from the bottom */
+    --toast-bottom: calc(2 * var(--space) + var(--safe-bottom));
   }
 
   /* Dark theme — system preference */
@@ -207,7 +201,3 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
-/* Room under scrolling content for the phone's floating navigation: use as max-md:pb-nav */
-@utility pb-nav {
-  padding-bottom: var(--nav-room);
-}

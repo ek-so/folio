@@ -24,7 +24,7 @@ export default function FileViewer({ path, entry, ...page }) {
       ) : kind === 'pdf' ? (
         <PdfView base64={base64} />
       ) : (
-        <div className="flex-1 min-h-0 overflow-y-auto p-space max-md:pb-nav">
+        <div className="flex-1 min-h-0 overflow-y-auto p-space">
           <img src={`data:${imageMime(path)};base64,${base64}`} alt="" className="max-w-full h-auto mx-auto rounded-md" />
         </div>
       )}

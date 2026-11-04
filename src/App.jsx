@@ -23,7 +23,7 @@ import { useSymlinks } from './hooks/useSymlinks.js'
 import { rewriteLinks, retargetLink, extractLinks } from './lib/links.js'
 import { NavContext } from './components/NavTree.jsx'
 import { foldersToOpen } from './lib/tree.js'
-import { NavRail, FloatingNav } from './components/AppNav.jsx'
+import { NavRail, TopBar } from './components/AppNav.jsx'
 import EmptyPage from './components/EmptyPage.jsx'
 import Settings from './components/Settings.jsx'
 import Spinner from './components/Spinner.jsx'
@@ -440,6 +440,7 @@ export default function App() {
           <div className="flex flex-1 min-h-0">
           <NavRail page={page} onPage={choosePage} onSearch={() => setSearchOpen(true)} renderSync={renderSync} menu={menu} onShowTree={treeCollapsed && page === mainPage ? toggleTree : null} />
           <main className="flex flex-col flex-1 min-w-0 min-h-0">
+          <TopBar page={page} onPage={choosePage} onSearch={() => setSearchOpen(true)} renderSync={renderSync} menu={menu} />
           {page === PAGE.SETTINGS ? (
             <Settings login={auth.user.login} repo={auth.repo} theme={theme} onTheme={setTheme} />
           ) : !view ? (
@@ -508,7 +509,6 @@ export default function App() {
           </main>
           </div>
         </PullToRefresh>
-        <FloatingNav page={page} onPage={choosePage} onSearch={() => setSearchOpen(true)} renderSync={renderSync} menu={menu} />
 
         {syncCheck && (
         <SyncCheckModal
