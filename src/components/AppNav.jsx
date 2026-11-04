@@ -31,6 +31,7 @@ export function NavRail({ page, onPage, onSearch, syncButton, menu }) {
         </Button>
       ))}
       <div className="flex-1" />
+      <div role="separator" className="my-1 h-px shrink-0 bg-border" />
       <Button variant="ghost" aria-current={page === PAGE.LINKS ? 'page' : undefined} className={item(PAGE.LINKS)} onClick={() => onPage(PAGE.LINKS)}>
         <LinkBreak /> Broken links
         {menu.brokenCount > 0 && <span className="ml-auto text-muted-foreground">{menu.brokenCount}</span>}
