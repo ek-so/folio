@@ -27,3 +27,10 @@ export function fileKind(path) {
 export function displayName(path) {
   return path.split('/').pop().replace(/\.md$/, '')
 }
+
+// Why a symlink can't be opened
+export const LINK_ERRORS = {
+  outside: 'points outside the repo',
+  missing: 'source is missing',
+  unavailable: 'not on this device yet',
+}

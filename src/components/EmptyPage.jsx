@@ -8,7 +8,7 @@ export default function EmptyPage({ title, menu, onSearch, syncButton }) {
   return (
     <PageLayout>
       <Header title={title} lead={menu} onSearch={onSearch} syncButton={syncButton} />
-      <Surface />
+      <Surface tree />
     </PageLayout>
   )
 }

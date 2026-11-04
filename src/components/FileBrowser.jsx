@@ -6,22 +6,14 @@ import Header from './Header.jsx'
 import { PAGE, pageTitle } from '../lib/pages.js'
 import Surface from './Surface.jsx'
 import TitleBar from './TitleBar.jsx'
-import PathBreadcrumbs from './PathBreadcrumbs.jsx'
 import ItemMenu from './ItemMenu.jsx'
 import { splitName } from '../lib/changes.js'
-import { fileKind } from '../lib/files.js'
+import { fileKind, LINK_ERRORS } from '../lib/files.js'
 import FileIcon from './FileIcon.jsx'
 import SymlinkedBy from './SymlinkedBy.jsx'
 import Spinner from './Spinner.jsx'
 import PageLayout from './PageLayout.jsx'
 import { cn } from '@/lib/utils.js'
-
-// Why a symlink can't be opened
-export const LINK_ERRORS = {
-  outside: 'points outside the repo',
-  missing: 'source is missing',
-  unavailable: 'not on this device yet',
-}
 
 export default function FileBrowser({ path, onNavigate, listDir, loading, error, notice, onSelect, onNewFile, repoName, onRename, onDelete, onMove, folders, menu, syncButton, onSearch, onUpload, symlinks = {}, linkedBy, onOpenLink }) {
   // Symlinked folders sort with the folders
@@ -56,9 +48,11 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
     <PageLayout>
       <Header title={pageTitle(PAGE.FILES)} lead={menu} onSearch={onSearch} syncButton={syncButton} />
 
-      <Surface title={
+      <Surface tree title={
         <TitleBar
-          crumbs={<PathBreadcrumbs root={repoName} path={path} dir onNavigate={onNavigate} />}
+          path={path}
+          dir
+          name={path ? currentFolder : repoName}
           badge={<SymlinkedBy links={linkedBy} onOpen={onOpenLink} />}
         >
           {path && <ItemMenu item={{ name: currentFolder, path, type: 'dir' }} onRename={onRename} onDelete={onDelete} onMove={onMove} folders={folders} />}

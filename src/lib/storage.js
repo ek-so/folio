@@ -6,6 +6,7 @@ const THEME_KEY = 'folio_theme'
 const FOLDER_KEY = 'folio_folder'
 const FILES_KEY = 'folio_files'
 const PAGE_KEY = 'folio_page'
+const EXPANDED_KEY = 'folio_expanded'
 const CHANGES_KEY = 'folio_changes_'
 
 function read(store, key) {
@@ -42,6 +43,11 @@ export const storage = {
   // Open page ('home' | 'files' | 'graph' | 'settings' | 'links'), null when unset
   getPage: () => read(sessionStorage, PAGE_KEY),
   setPage: (page) => write(sessionStorage, PAGE_KEY, page),
+  // Folders open in the file tree
+  getExpanded: () => {
+    try { return JSON.parse(read(sessionStorage, EXPANDED_KEY)) || [] } catch { return [] }
+  },
+  setExpanded: (paths) => write(sessionStorage, EXPANDED_KEY, JSON.stringify(paths)),
   getRecentFiles: () => {
     try { return JSON.parse(read(sessionStorage, RECENT_KEY)) || [] } catch { return [] }
   },
@@ -55,7 +61,7 @@ export const storage = {
   // Everything tied to the signed-in account; theme stays
   clearSession: () => {
     for (const key of [TOKEN_KEY, REPO_KEY, USER_KEY]) write(localStorage, key, null)
-    for (const key of [FOLDER_KEY, FILES_KEY, PAGE_KEY, RECENT_KEY]) write(sessionStorage, key, null)
+    for (const key of [FOLDER_KEY, FILES_KEY, PAGE_KEY, EXPANDED_KEY, RECENT_KEY]) write(sessionStorage, key, null)
   },
 }
 

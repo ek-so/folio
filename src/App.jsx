@@ -21,6 +21,8 @@ import SyncCheckModal from './components/SyncCheckModal.jsx'
 import { useLinkIndex, LinksContext } from './hooks/useLinkIndex.js'
 import { useSymlinks } from './hooks/useSymlinks.js'
 import { rewriteLinks, retargetLink, extractLinks } from './lib/links.js'
+import { NavContext } from './components/NavTree.jsx'
+import { foldersToOpen } from './lib/tree.js'
 import AccountMenu from './components/AccountMenu.jsx'
 import EmptyPage from './components/EmptyPage.jsx'
 import Settings from './components/Settings.jsx'
@@ -96,6 +98,21 @@ export default function App() {
   useEffect(() => { storage.setFolder(folder) }, [folder])
   useEffect(() => { storage.setOpenFiles(openFiles) }, [openFiles])
   useEffect(() => { storage.setPage(page) }, [page])
+
+  // File tree: the open folders; the open file or folder is always revealed
+  const [expanded, setExpanded] = useState(() => new Set(storage.getExpanded()))
+  const treeCurrent = selectedFile ?? (mainPage === PAGE.FILES && folder ? folder : null)
+  useEffect(() => { storage.setExpanded([...expanded]) }, [expanded])
+  useEffect(() => {
+    if (!treeCurrent) return
+    const open = foldersToOpen(treeCurrent, !selectedFile)
+    setExpanded(prev => open.every(f => prev.has(f)) ? prev : new Set([...prev, ...open]))
+  }, [treeCurrent, selectedFile])
+  const toggleFolder = path => setExpanded(prev => {
+    const next = new Set(prev)
+    if (!next.delete(path)) next.add(path)
+    return next
+  })
 
   // Keep the browser URL in sync with the current view: each new folder or
   // file is a history entry, so Back and Forward move between them. Changes
@@ -335,8 +352,6 @@ export default function App() {
   if (!auth.repo) return <RepoSetup user={auth.user} onRepo={auth.selectRepo} onLogout={auth.signOut} />
 
   // A symlink never opens itself (opening one opens its source instead)
-  // ↑ on an open file's crumbs: File manager goes to that folder; other pages close the file
-  const navigateUp = p => { if (mainPage === PAGE.FILES) setFolder(p); setSelectedFile(null) }
   const entry = selectedFile && !(selectedFile in symlinks) && virtual[selectedFile]
   const repoName = auth.repo.split('/')[1]
   // ☰ on the left of the header: at the repo root, and everywhere on wider screens
@@ -372,6 +387,17 @@ export default function App() {
 
   return (
     <LinksContext.Provider value={linkInfo}>
+      <NavContext.Provider value={{
+        listDir: dir => listDir(virtual, dir, repo.changed),
+        symlinks,
+        current: treeCurrent,
+        expanded,
+        onToggle: toggleFolder,
+        onOpenFolder: openFolder,
+        onOpenFile: setSelectedFile,
+        loading: !repo.remote && !repo.error,
+        repoName,
+      }}>
       <div className="flex flex-col h-full bg-background">
         <Toaster theme={theme} position="top-center" />
         <PullToRefresh onRefresh={() => window.location.reload()}>
@@ -402,8 +428,6 @@ export default function App() {
               title={pageTitle(mainPage)}
               path={selectedFile}
               entry={entry}
-              root={repoName}
-              onNavigate={navigateUp}
               onRename={handleRename}
               onDelete={handleDelete}
               onMove={handleMove}
@@ -424,8 +448,7 @@ export default function App() {
               edited={changes.edits[entry.orig]}
               onEdit={(content, original) =>
                 update(ch => setEdit(ch, virtual[selectedFile], content, original))}
-              root={repoName}
-              onNavigate={navigateUp}
+              onNavigate={openFolder}
               onOpenFile={setSelectedFile}
               onRename={handleRename}
               onDelete={handleDelete}
@@ -522,6 +545,7 @@ export default function App() {
           />
         )}
       </div>
+      </NavContext.Provider>
     </LinksContext.Provider>
   )
 }
