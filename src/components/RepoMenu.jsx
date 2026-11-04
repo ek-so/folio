@@ -18,7 +18,7 @@ export default function RepoMenu() {
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="h-control min-w-0 max-w-full gap-1 px-space-xs text-base font-bold">
+          <Button variant="ghost" className="min-w-0 max-w-full text-base font-bold">
             <span className="truncate">{name}</span>
             <CaretDown className="text-muted-foreground" />
           </Button>

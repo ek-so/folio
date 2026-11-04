@@ -27,7 +27,7 @@ Suggest a full code review from time to time: after a larger feature, or after r
 
 ## Design system — shadcn/ui + Tailwind v4
 
-**Spacing tokens** (`--space` 16px, `--space-sm` 8px, `--space-xs` 4px in `src/index.css`; classes `p-space`, `gap-space-sm`, `px-space-xs`, `inset-x-space`…, or `var(--space)`): 16px is the base, for the gutters around the rail, tree and content box, the gaps between them, and the floating panel's distance from the screen's edges. 8px is the small step: inside a piece (title bar, list and tree padding, gaps between buttons) and the phone tree drawer's distance from the edges. 4px is the extra small step: a title's own side padding (title bars, the tree panel's title).
+**Spacing tokens** (`--space` 16px, `--space-sm` 8px, `--space-xs` 4px in `src/index.css`; classes `p-space`, `gap-space-sm`, `px-space-xs`, `inset-x-space`…, or `var(--space)`): 16px is the base, for the gutters around the rail, tree and content box, the gaps between them, and the floating panel's distance from the screen's edges. 8px is the small step: inside a piece (title bar, list and tree padding, gaps between buttons) and the phone tree drawer's distance from the edges. 4px is the extra small step: a title's own side padding in title bars (the tree panel's title is a regular button, `RepoMenu`).
 
 **Stack:** shadcn/ui (new-york style) · Tailwind CSS v4 · Radix UI primitives · Phosphor icons (`@phosphor-icons/react`, regular weight — except ⋯ `DotsThree`, bold for visibility)
 
