@@ -57,3 +57,5 @@
 /* Tables fit the screen: cells wrap at words; long words get <wbr> break points (MarkdownPreview) */
 .editor-preview th, .editor-preview td { padding: 6px 8px; border: 1px solid var(--border); text-align: left; vertical-align: top; }
 .editor-preview th { background: var(--secondary); font-weight: 600; }
+/* Smart tables: an ISO date in a cell (lib/markdown.js) */
+.editor-preview .date-chip { display: inline-block; padding: 0 6px; border-radius: 6px; background: var(--secondary); white-space: nowrap; }

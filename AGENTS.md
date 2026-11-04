@@ -71,7 +71,7 @@ App flow: **Auth → RepoSetup → FileBrowser / Editor / FileViewer** (`App.jsx
 ### Code map
 - `lib/github.js` — all GitHub API calls (`init(token)`, `setRepo(owner, repo)`); blob reads go through the offline cache; failures are tagged with the step they happened at.
 - `lib/changes.js` — pure model of local changes (edits, uploads, renames, deletes, new files) layered over the remote tree. Tested in `changes.test.js` (`npm test`).
-- `lib/markdown.js` — preview rendering (blocks tagged with their source range; a `<details>` accordion is one block), tap-to-source (`tapOffset`), task checkboxes (`taskOffsets`), editor highlighting, image paths.
+- `lib/markdown.js` — preview rendering (blocks tagged with their source range; a `<details>` accordion is one block; smart tables: a real ISO date `2025-03-18` in a table cell, outside code and links, shows as a date chip, `.date-chip` in `App.css`), tap-to-source (`tapOffset`), task checkboxes (`taskOffsets`), editor highlighting, image paths.
 - `lib/links.js` — internal links (regular markdown only, no wiki links; code ignored): the backlink / broken-link index, rewriting links when files move (same style: relative, `.md` or not, encoding, anchors; link text equal to the old name follows), Fix suggestions, and `resolveSymlink`. Tested in `links.test.js`.
 - `lib/tree.js` — which folders the file tree opens for a path (`tree.test.js`).
 - `lib/pages.js` — the page ids (`PAGE`) and the title and icon of every page (`pageInfo`), and the main ones (`MAIN_PAGES`), used by the navigation, title bars and App.

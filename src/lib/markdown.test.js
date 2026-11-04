@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { renderBlocks, tapOffset, taskOffsets, highlightMarkdown } from './markdown.js'
+import { renderBlocks, tapOffset, taskOffsets, highlightMarkdown, parseIsoDate } from './markdown.js'
 
 describe('markdown', () => {
   it('tags each block with its source range', () => {
@@ -69,5 +69,15 @@ describe('highlightMarkdown', () => {
     expect(html).toContain('<span class="italic">*it*</span>')
     expect(html).not.toContain('<span class="italic">_case_</span>')
     expect(highlightMarkdown('[docs(a.md)')).not.toContain('text-primary')
+  })
+
+  it('shows real ISO dates in table cells as date chips, nowhere else', () => {
+    expect(parseIsoDate('2024-02-29')).not.toBeNull()
+    expect(parseIsoDate('2025-02-29')).toBeNull()
+    expect(parseIsoDate('2025-13-01')).toBeNull()
+    const html = renderBlocks('| When | What |\n|---|---|\n| 2025-03-18 | due **2025-04-01**, not `2025-05-01` or 2025-02-30 or [2025-06-01](a.md) |\n\n2025-03-18\n')
+    const chips = [...html.matchAll(/<time class="date-chip" datetime="([\d-]+)"/g)].map(m => m[1])
+    expect(chips).toEqual(['2025-03-18', '2025-04-01'])
+    expect(html).toContain('<p>2025-03-18</p>')
   })
 })
