@@ -41,13 +41,13 @@ export default function SearchSheet({ onClose, onSelect, virtual, changes, recen
           autoCapitalize="off"
           className="bg-background border-border"
         />
-        <div className="overflow-y-auto max-h-64 -mx-6" data-no-pull>
+        <div className="overflow-y-auto max-h-64 -mx-1" data-no-pull>
           {!q && recentFiles.length === 0 ? (
-            <p className="text-muted-foreground text-sm text-center py-6 px-6">No recent files</p>
+            <p className="text-muted-foreground text-sm text-center py-4">No recent files</p>
           ) : results.length === 0 ? (
-            <p className="text-muted-foreground text-sm text-center py-6 px-6">No files found</p>
+            <p className="text-muted-foreground text-sm text-center py-4">No files found</p>
           ) : (
-            <ul>
+            <ul className="flex flex-col gap-0.5">
               {results.map(path => {
                 const parts = path.split('/')
                 const fileName = parts.pop()
@@ -59,7 +59,7 @@ export default function SearchSheet({ onClose, onSelect, virtual, changes, recen
                   <li key={path}>
                     <Button
                       variant="ghost"
-                      className="w-full h-auto min-h-control justify-start gap-3 rounded-none px-6 py-2 font-normal text-left"
+                      className="w-full h-auto min-h-control justify-start gap-3 py-2 font-normal text-left"
                       onClick={() => select(path)}
                     >
                       <FileIcon path={path} />
