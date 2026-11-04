@@ -18,7 +18,7 @@ const ACTIVE = 'bg-primary/15 text-primary hover:bg-primary/20 hover:text-primar
 // onSignOut; `page` the open page; `renderSync(compact)` makes the SyncButton.
 // Desktop (768px+): a left rail (the content's own 16px gutter is the gap to
 // the tree). On top the app's name (Folio, bold) and a button that collapses
-// the rail to icons only (remembered on this device; expanded, its edge is a drag handle); then Search and Sync,
+// the rail to icons only (remembered on this device; expanded, its edge is a drag handle); then Sync and Search,
 // Home, File manager, Graph, and at the bottom Broken links (count),
 // Settings and Sign out.
 export function NavRail({ page, onPage, onSearch, renderSync, menu }) {
@@ -41,10 +41,10 @@ export function NavRail({ page, onPage, onSearch, renderSync, menu }) {
       </div>
       <div className="h-2" />
       <div className={cn('flex flex-col gap-space', collapsed && 'items-center')}>
+        {renderSync(collapsed)}
         <Button variant="outline" title={hint('Search')} className={cn('justify-start gap-3 px-3 font-normal text-muted-foreground shadow-sm hover:bg-transparent hover:text-foreground', collapsed && 'size-control justify-center px-0')} onClick={onSearch}>
           <MagnifyingGlass /> {label('Search')}
         </Button>
-        {renderSync(collapsed)}
       </div>
       <div className="h-2" />
       {MAIN_PAGES.map(({ id, title, icon: Icon }) => (
