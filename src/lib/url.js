@@ -1,3 +1,5 @@
+import { PAGE, MAIN_PAGES } from './pages.js'
+
 // Address bar <-> open view. A view is { file, folder }: a file path, or a
 // folder path ('' is the repo root). The URL is `base` + the path, with a
 // trailing slash for folders.
@@ -26,4 +28,24 @@ export function existingView({ file, folder }, files, folders) {
   const known = new Set(folders)
   while (folder && !known.has(folder)) folder = folder.includes('/') ? folder.slice(0, folder.lastIndexOf('/')) : ''
   return { file: null, folder }
+}
+
+// Address bar <-> a main page and its view (lib/views.js). File manager's is
+// the plain view URL; Home and Graph add `?page=home`, and a page's own
+// content (view null) has no path. Their root folder adds `&root`.
+export function urlForPage(base, page, view) {
+  const url = view ? urlForView(base, view) : base
+  if (page === PAGE.FILES) return url
+  return `${url}?page=${page}${view && !view.file && !view.folder ? '&root' : ''}`
+}
+
+// { page, view } a location names, or null if it can't be read
+export function pageForUrl(base, pathname, search) {
+  const params = new URLSearchParams(search)
+  const page = params.get('page') ?? PAGE.FILES
+  if (!MAIN_PAGES.some(p => p.id === page)) return null
+  const view = viewForUrl(base, pathname)
+  if (!view) return null
+  const own = page !== PAGE.FILES && !view.file && !view.folder && !params.has('root')
+  return { page, view: own ? null : view }
 }

@@ -17,5 +17,3 @@ export const pageInfo = id => PAGES.find(p => p.id === id)
 // The main pages: Home, File manager, Graph
 export const MAIN_PAGES = PAGES.filter(p => p.main)
 
-// Apply `fn` to the open file of every main page ({ page: path | null })
-export const mapOpenFiles = (openFiles, fn) => Object.fromEntries(Object.entries(openFiles).map(([id, path]) => [id, fn(path)]))

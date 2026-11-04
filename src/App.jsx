@@ -31,8 +31,9 @@ import { useAuth } from './hooks/useAuth.js'
 import { useRepo } from './hooks/useRepo.js'
 import { useTheme } from './hooks/useTheme.js'
 import { storage } from './lib/storage.js'
-import { PAGE, MAIN_PAGES, mapOpenFiles } from './lib/pages.js'
-import { urlForView, viewForUrl, existingView } from './lib/url.js'
+import { PAGE, MAIN_PAGES } from './lib/pages.js'
+import { urlForPage, pageForUrl, existingView } from './lib/url.js'
+import { fileView, folderView, defaultViews, mapViews, movedView, removedView } from './lib/views.js'
 import { toast } from 'sonner'
 import { Toaster } from './components/ui/sonner.jsx'
 import { cache } from './lib/cache.js'
@@ -42,44 +43,44 @@ import {
 } from './lib/changes.js'
 
 const BASE = import.meta.env.BASE_URL
-// A folder or file named by the address the app was opened at (not the root)
+// The page and view the address the app was opened at names (not the bare root)
 const deepLink = (() => {
-  const view = viewForUrl(BASE, window.location.pathname)
-  return view && (view.file || view.folder) ? view : null
+  const found = pageForUrl(BASE, window.location.pathname, window.location.search)
+  return found && (found.page !== PAGE.FILES || found.view.file || found.view.folder) ? found : null
 })()
-// A reload keeps the page you were on; the address always names File manager's folder, so it only picks the page for a fresh visit
+// A reload keeps the page you were on (Settings and Broken links aren't in the address); otherwise the address picks it
 const reloaded = performance.getEntriesByType('navigation')[0]?.type === 'reload'
 
 export default function App() {
   const auth = useAuth()
   const repo = useRepo(auth.user ? auth.repo : null, toast.success)
   const { theme, setTheme } = useTheme()
-  const [page, setPage] = useState(() => (reloaded && storage.getPage()) || (deepLink ? PAGE.FILES : storage.getPage() || MAIN_PAGES[0].id))
-  // The main page files open in (File manager when Settings / Broken links is open)
+  const [page, setPage] = useState(() => (reloaded && storage.getPage()) || (deepLink ? deepLink.page : storage.getPage() || MAIN_PAGES[0].id))
+  // The main page files and folders open in (File manager when Settings / Broken links is open)
   const mainPage = MAIN_PAGES.some(p => p.id === page) ? page : PAGE.FILES
-  // Each main page has its own open file; a file opens in the page you're on
-  const [openFiles, setOpenFiles] = useState(() => ({ ...storage.getOpenFiles(), ...(deepLink && { files: deepLink.file }) }))
-  const selectedFile = openFiles[mainPage] ?? null
-  const setFileOn = (id, path) => setOpenFiles(o => ({ ...o, [id]: path }))
-  const setSelectedFileState = path => setFileOn(mainPage, path)
+  // Each main page has its own view (lib/views.js); files and folders open in the page you're on
+  const [views, setViews] = useState(() => ({ ...defaultViews(), ...storage.getViews(), ...(deepLink && { [deepLink.page]: deepLink.view }) }))
+  const view = views[mainPage]
+  const selectedFile = view?.file ?? null
+  const folder = view?.folder ?? ''
+  const show = v => { setPage(mainPage); setViews(o => ({ ...o, [mainPage]: v })) }
   // Opening a symlink (from the list, search or a note's link) opens its
   // source: the folder, or the file
   function setSelectedFile(path) {
-    const link = path && symlinks[path]
+    const link = symlinks[path]
     if (link?.kind === 'folder') { openFolder(link.path); return }
     if (link?.path) path = link.path
-    else if (path && path in symlinks) return // broken or still loading: nothing to open
-    if (path) { storage.addRecentFile(path); setPage(mainPage) }
-    setSelectedFileState(path)
+    else if (path in symlinks) return // broken or still loading: nothing to open
+    storage.addRecentFile(path)
+    show(fileView(path))
   }
-  const [folder, setFolder] = useState(() => deepLink ? deepLink.folder : storage.getFolder())
+  const openFolder = path => show(folderView(path))
+  // The navigation: choosing the page you're on again takes Home and Graph back to their own content
+  function choosePage(id) {
+    if (id === page && id !== PAGE.FILES && views[id]) setViews(o => ({ ...o, [id]: null }))
+    setPage(id)
+  }
   const [newFile, setNewFile] = useState(null) // { folder, kind } while the sheet is open
-  // Folders only exist in File manager
-  function openFolder(path) {
-    setPage(PAGE.FILES)
-    setFolder(path)
-    setFileOn(PAGE.FILES, null)
-  }
   const [confirmSignOut, setConfirmSignOut] = useState(false)
   const [confirmDiscard, setConfirmDiscard] = useState(false)
   const [discards, setDiscards] = useState(0) // remounts the open note after a discard
@@ -91,13 +92,12 @@ export default function App() {
   const replaceNext = useRef(false) // the next URL change replaces the history entry
   const known = useRef({ files: new Set(), folders: [] }) // what exists, for Back / Forward
 
-  useEffect(() => { storage.setFolder(folder) }, [folder])
-  useEffect(() => { storage.setOpenFiles(openFiles) }, [openFiles])
+  useEffect(() => { storage.setViews(views) }, [views])
   useEffect(() => { storage.setPage(page) }, [page])
 
   // File tree: the open folders; the open file or folder is always revealed
   const [expanded, setExpanded] = useState(() => new Set(storage.getExpanded()))
-  const treeCurrent = selectedFile ?? (mainPage === PAGE.FILES && folder ? folder : null)
+  const treeCurrent = selectedFile ?? (folder || null)
   useEffect(() => { storage.setExpanded([...expanded]) }, [expanded])
   useEffect(() => {
     if (!treeCurrent) return
@@ -110,31 +110,33 @@ export default function App() {
     return next
   })
 
-  // Keep the browser URL in sync with the current view: each new folder or
-  // file is a history entry, so Back and Forward move between them. Changes
-  // that only follow a rename or delete replace the entry instead.
+  // Keep the browser URL in sync with the main page you're on and its view:
+  // each new page, folder or file is a history entry, so Back and Forward move
+  // between them. Changes that only follow a rename or delete replace the
+  // entry instead. Settings and Broken links leave the address as it is.
+  const url = page === mainPage ? urlForPage(BASE, page, views[page]) : null
   useEffect(() => {
-    const url = urlForView(BASE, { file: openFiles.files ?? null, folder })
-    if (window.location.pathname !== url) {
+    if (!url) return
+    if (window.location.pathname + window.location.search !== url) {
       if (started.current && !replaceNext.current) history.pushState(null, '', url)
       else history.replaceState(null, '', url)
     }
     started.current = true
     replaceNext.current = false
-  }, [openFiles.files, folder])
+  }, [url])
 
   // Back / Forward: show the folder or file the URL names (or what's left of it)
   useEffect(() => {
     const onPop = () => {
-      let view = viewForUrl(BASE, window.location.pathname)
-      if (!view) return
+      const found = pageForUrl(BASE, window.location.pathname, window.location.search)
+      if (!found) return
       window.dispatchEvent(new Event('folio:flush')) // typing in an open note first
+      let { page: to, view } = found
       const { files, folders } = known.current
-      if (files.size) view = existingView(view, files, folders)
-      if (urlForView(BASE, view) !== window.location.pathname) replaceNext.current = true
-      setPage(PAGE.FILES)
-      setFolder(view.folder)
-      setFileOn(PAGE.FILES, view.file)
+      if (view && files.size) view = existingView(view, files, folders)
+      if (urlForPage(BASE, to, view) !== window.location.pathname + window.location.search) replaceNext.current = true
+      setPage(to)
+      setViews(o => ({ ...o, [to]: view }))
     }
     window.addEventListener('popstate', onPop)
     return () => window.removeEventListener('popstate', onPop)
@@ -183,10 +185,7 @@ export default function App() {
       }
       return next
     })
-    const follow = p => p && (p === item.path || p.startsWith(item.path + '/')) ? to + p.slice(item.path.length) : p
-    replaceNext.current = follow(folder) !== folder || follow(openFiles.files) !== openFiles.files
-    setFolder(follow)
-    setOpenFiles(o => mapOpenFiles(o, follow)) // the same files, not newly opened ones
+    followViews(v => movedView(v, item.path, to)) // the same files and folders, not newly opened ones
   }
 
   function handleRename(item, name) {
@@ -211,12 +210,16 @@ export default function App() {
     if (error) toast.error(error)
   }
 
+  // Every page's view after a rename, delete or discard; the address is
+  // replaced, not added to history
+  function followViews(fn) {
+    const next = mapViews(views, fn)
+    if (urlForPage(BASE, mainPage, next[mainPage]) !== urlForPage(BASE, mainPage, views[mainPage])) replaceNext.current = true
+    setViews(next)
+  }
+
   function handleDelete(item) {
-    const inside = p => p === item.path || p?.startsWith(item.path + '/')
-    replaceNext.current = inside(openFiles.files) || inside(folder)
-    setOpenFiles(o => mapOpenFiles(o, p => inside(p) ? null : p))
-    // Deleting the open folder (or one above it): go to its parent
-    if (inside(folder)) setFolder(item.path.slice(0, Math.max(item.path.lastIndexOf('/'), 0)))
+    followViews(v => removedView(v, item.path))
     update(ch => remove(ch, virtual, item.path, item.type === 'dir'))
   }
 
@@ -296,8 +299,7 @@ export default function App() {
     setConfirmDiscard(false)
     repo.discardAll()
     const files = repo.remote?.files ?? {}
-    setOpenFiles(o => mapOpenFiles(o, p => p && !files[p] ? null : p))
-    if (folder && !getAllFolders(files).includes(folder)) setFolder('')
+    followViews(v => existingView(v, new Set(Object.keys(files)), getAllFolders(files)))
     setDiscards(n => n + 1)
   }
 
@@ -338,8 +340,7 @@ export default function App() {
     repo.discardAll()
     await cache.clearAll()
     auth.signOut()
-    setOpenFiles({})
-    setFolder('')
+    setViews(defaultViews())
   }
 
   if (!auth.ready) {
@@ -403,11 +404,11 @@ export default function App() {
         <Toaster theme={theme} />
         <PullToRefresh onRefresh={() => window.location.reload()}>
           <div className="flex flex-1 min-h-0">
-          <NavRail page={page} onPage={setPage} onSearch={() => setSearchOpen(true)} renderSync={renderSync} menu={menu} />
+          <NavRail page={page} onPage={choosePage} onSearch={() => setSearchOpen(true)} renderSync={renderSync} menu={menu} />
           <main className="flex flex-col flex-1 min-w-0 min-h-0">
           {page === PAGE.SETTINGS ? (
             <Settings login={auth.user.login} repo={auth.repo} theme={theme} onTheme={setTheme} />
-          ) : (page === PAGE.HOME || page === PAGE.GRAPH) && !entry ? (
+          ) : !view ? (
             <EmptyPage page={page} />
           ) : page === PAGE.LINKS ? (
             <BrokenLinks
@@ -451,7 +452,7 @@ export default function App() {
           ) : (
             <FileBrowser
               path={folder}
-              onNavigate={setFolder}
+              onNavigate={openFolder}
               listDir={dir => listDir(virtual, dir, repo.changed)}
               loading={!repo.remote && !repo.error}
               error={repo.error}
@@ -473,7 +474,7 @@ export default function App() {
           </main>
           </div>
         </PullToRefresh>
-        <FloatingNav page={page} onPage={setPage} onSearch={() => setSearchOpen(true)} renderSync={renderSync} menu={menu} />
+        <FloatingNav page={page} onPage={choosePage} onSearch={() => setSearchOpen(true)} renderSync={renderSync} menu={menu} />
 
         {syncCheck && (
         <SyncCheckModal
@@ -529,7 +530,7 @@ export default function App() {
         {searchOpen && (
           <SearchSheet
             onClose={() => setSearchOpen(false)}
-            onSelect={path => { setSelectedFile(path); if (mainPage === PAGE.FILES) setFolder('') }}
+            onSelect={setSelectedFile}
             virtual={virtual}
             changes={changes}
             recent={storage.getRecentFiles()}
