@@ -114,7 +114,7 @@ export default function App() {
     const open = foldersToOpen(treeCurrent, !selectedFile)
     setExpanded(prev => open.every(f => prev.has(f)) ? prev : new Set([...prev, ...open]))
   }, [treeCurrent, selectedFile])
-  // The desktop file tree panel, hidden with its « and shown again from the rail
+  // The desktop file tree panel, hidden with the button in its title and shown again from the rail
   const [treeCollapsed, setTreeCollapsed] = useState(storage.getTreeCollapsed)
   useEffect(() => { storage.setTreeCollapsed(treeCollapsed) }, [treeCollapsed])
   const toggleTree = () => setTreeCollapsed(c => !c)
