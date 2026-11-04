@@ -34,7 +34,7 @@ export function NavRail({ page, onPage, onSearch, renderSync, menu, onShowTree }
     <nav aria-label="Main" style={collapsed ? undefined : { width }} className={cn('relative hidden md:flex shrink-0 flex-col gap-1 py-space pl-space', collapsed ? 'w-14 items-center' : 'max-w-[25vw]')}>
       <div className={cn('flex min-h-control items-center gap-space-sm pl-3', collapsed && 'flex-col pl-0')}>
         {!collapsed && <span className="flex flex-1 items-center gap-2 text-base font-bold"><AppLogo className="size-6" />Folio</span>}
-        <Button variant="ghost-outline" size="icon" aria-label={collapsed ? 'Expand menu' : 'Collapse menu'} title={collapsed ? 'Expand menu' : 'Collapse menu'} aria-expanded={!collapsed} className={cn('group shrink-0 border-muted-foreground/50', collapsed && 'bg-transparent hover:bg-secondary focus-visible:bg-secondary')} onClick={toggle}>
+        <Button variant="ghost" size="icon" aria-label={collapsed ? 'Expand menu' : 'Collapse menu'} title={collapsed ? 'Expand menu' : 'Collapse menu'} aria-expanded={!collapsed} className="group shrink-0 focus-visible:bg-secondary" onClick={toggle}>
           {/* Collapsed, the logo stands in for the button until it's hovered or focused */}
           {collapsed && <AppLogo className="size-6 group-hover:hidden group-focus-visible:hidden" />}
           <SidebarSimple className={cn(collapsed && 'hidden group-hover:block group-focus-visible:block')} />
