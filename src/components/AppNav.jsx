@@ -16,11 +16,12 @@ const ACTIVE = 'bg-primary/15 text-primary hover:bg-primary/20 hover:text-primar
 
 // The app's primary navigation, in place of a header. `menu`: brokenCount and
 // onSignOut; `page` the open page; `renderSync(compact)` makes the SyncButton.
-// Desktop (768px+): a left rail, 24px (--space-lg) all around: on the right its
-// own 8px and the content's 16px gutter. On top the app's name (Folio, bold) and a button that collapses
+// Desktop (768px+): a left rail, 16px from the top like the content boxes, 24px (--space-lg) on the left and
+// bottom; on the right its own 8px and the content's 16px gutter. On top a header shaped like a title bar
+// (8px padding and a 1px top edge like the boxes' outline, around a 40px row, then the separator as its bottom
+// border, level with the title bars' borders): the app's name (Folio, bold) and a button that collapses
 // the rail to icons only (remembered on this device; expanded, its edge is a drag handle), and after it,
-// while the file tree is hidden, `onShowTree`'s tree button (collapsed: under the logo); a separator (12px
-// above, 16px below); Sync and Search (16px apart); 16px; Home, File manager, Graph, and at the bottom Broken links (count),
+// while the file tree is hidden, `onShowTree`'s tree button (collapsed: first under the separator); 16px; Sync and Search (16px apart); 16px; Home, File manager, Graph, and at the bottom Broken links (count),
 // Settings and Sign out.
 export function NavRail({ page, onPage, onSearch, renderSync, menu, onShowTree }) {
   const [collapsed, setCollapsed] = useState(storage.getRailCollapsed)
@@ -30,24 +31,25 @@ export function NavRail({ page, onPage, onSearch, renderSync, menu, onShowTree }
   // A rail button: icon, and its label unless collapsed (then the label is the tooltip)
   const label = text => collapsed ? <span className="sr-only">{text}</span> : text
   const hint = text => collapsed ? text : undefined
+  const treeButton = onShowTree && (
+    <Button variant="ghost-outline" size="icon" aria-label="Show file tree" title="Show file tree" className="shrink-0 border-muted-foreground/50" onClick={onShowTree}>
+      <TreeView />
+    </Button>
+  )
   return (
-    <nav aria-label="Main" style={collapsed ? undefined : { width }} className={cn('relative hidden md:flex shrink-0 flex-col gap-1 py-space-lg pl-space-lg pr-space-sm', collapsed ? 'items-center' : 'max-w-[25vw]')}>
-      <div className={cn('flex min-h-control items-center', collapsed ? 'flex-col gap-space' : 'gap-space-sm pl-3')}>
+    <nav aria-label="Main" style={collapsed ? undefined : { width }} className={cn('relative hidden md:flex shrink-0 flex-col gap-1 pt-space pb-space-lg pl-space-lg pr-space-sm', collapsed ? 'items-center' : 'max-w-[25vw]')}>
+      <div className={cn('flex shrink-0 items-center gap-space-sm self-stretch border-t border-b border-t-transparent border-b-border py-space-sm', collapsed ? 'justify-center' : 'pl-3')}>
         {!collapsed && <span className="flex flex-1 items-center gap-2 text-base font-bold"><AppLogo className="size-6" />Folio</span>}
         <Button variant="ghost" size="icon" aria-label={collapsed ? 'Expand menu' : 'Collapse menu'} title={collapsed ? 'Expand menu' : 'Collapse menu'} aria-expanded={!collapsed} className="group shrink-0 focus-visible:bg-secondary" onClick={toggle}>
           {/* Collapsed, the logo stands in for the button until it's hovered or focused */}
           {collapsed && <AppLogo className="size-6 group-hover:hidden group-focus-visible:hidden" />}
           <SidebarSimple className={cn(collapsed && 'hidden group-hover:block group-focus-visible:block')} />
         </Button>
-        {onShowTree && (
-          <Button variant="ghost-outline" size="icon" aria-label="Show file tree" title="Show file tree" className="shrink-0 border-muted-foreground/50" onClick={onShowTree}>
-            <TreeView />
-          </Button>
-        )}
+        {!collapsed && treeButton}
       </div>
-      {/* + the 4px gaps: 12px above, 16px below */}
-      <div role="separator" className="mt-2 mb-3 h-px w-full shrink-0 bg-border" />
+      <div className="h-2" /> {/* + the 4px gaps = 16px */}
       <div className={cn('flex flex-col gap-space', collapsed && 'items-center')}>
+        {collapsed && treeButton}
         {renderSync(collapsed)}
         <Button variant="outline" title={hint('Search')} className={cn('justify-start gap-3 px-3 font-normal text-muted-foreground shadow-sm hover:bg-transparent hover:text-foreground', collapsed && 'size-control justify-center px-0')} onClick={onSearch}>
           <MagnifyingGlass /> {label('Search')}
