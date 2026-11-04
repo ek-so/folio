@@ -189,7 +189,7 @@ function TreePanel({ Title = 'h2', closable, dnd }) {
           )}
       </div>
       <div
-        className={cn('min-h-0 flex-1 overflow-y-auto overscroll-y-contain p-space-sm transition-colors rounded-b-xl', dnd && drag.target === '' && 'bg-primary/5 ring-2 ring-inset ring-primary/40')}
+        className={cn('min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-space-sm pt-space pb-space-sm transition-colors rounded-b-xl', dnd && drag.target === '' && 'bg-primary/5 ring-2 ring-inset ring-primary/40')}
         {...dnd && {
           onDragOver: e => drag.over(e, ''),
           onDragLeave: drag.leave,
