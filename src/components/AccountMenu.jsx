@@ -4,6 +4,9 @@ import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator,
 } from './ui/dropdown-menu.jsx'
 
+// Open page's item: light accent fill, accent text
+const ACTIVE = 'bg-primary/10 text-primary focus:bg-primary/15 focus:text-primary'
+
 // The phone navigation's popover, opened by `trigger` (a Button): the main
 // pages, then Broken links (count), Settings and Sign out. `current` is the
 // open page, checked. The account and repo are shown in Settings.
@@ -14,15 +17,15 @@ export default function AccountMenu({ trigger, current, onNavigate, brokenCount,
       <DropdownMenuTrigger asChild>{trigger}</DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-64" onCloseAutoFocus={e => e.preventDefault()}>
         {MAIN_PAGES.map(({ id, title, icon: Icon }) => (
-          <DropdownMenuItem key={id} onSelect={() => onNavigate(id)}><Icon /> {title}{mark(id)}</DropdownMenuItem>
+          <DropdownMenuItem key={id} className={current === id ? ACTIVE : undefined} onSelect={() => onNavigate(id)}><Icon /> {title}{mark(id)}</DropdownMenuItem>
         ))}
         <DropdownMenuSeparator />
-        <DropdownMenuItem onSelect={() => onNavigate(PAGE.LINKS)}>
+        <DropdownMenuItem className={current === PAGE.LINKS ? ACTIVE : undefined} onSelect={() => onNavigate(PAGE.LINKS)}>
           <LinkBreak /> Broken links
           {brokenCount > 0 && <span className="ml-auto pl-4 text-muted-foreground">{brokenCount}</span>}
           {current === PAGE.LINKS && !brokenCount && mark(PAGE.LINKS)}
         </DropdownMenuItem>
-        <DropdownMenuItem onSelect={() => onNavigate(PAGE.SETTINGS)}><Gear /> Settings{mark(PAGE.SETTINGS)}</DropdownMenuItem>
+        <DropdownMenuItem className={current === PAGE.SETTINGS ? ACTIVE : undefined} onSelect={() => onNavigate(PAGE.SETTINGS)}><Gear /> Settings{mark(PAGE.SETTINGS)}</DropdownMenuItem>
         <DropdownMenuItem variant="destructive" onSelect={onSignOut}><SignOut /> Sign out</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

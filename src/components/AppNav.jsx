@@ -5,6 +5,9 @@ import AccountMenu from './AccountMenu.jsx'
 import { PAGE, MAIN_PAGES } from '../lib/pages.js'
 import { useKeyboardInset } from '../hooks/useKeyboardInset.js'
 
+// The open page's button: light accent fill, accent text
+const ACTIVE = 'bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary'
+
 // The app's primary navigation, in place of a header. `menu`: brokenCount and
 // onSignOut; `page` the open page; `syncButton` the SyncButton.
 // Desktop (768px+): a labeled rail on the left (the content's own 16px gutter
@@ -12,7 +15,7 @@ import { useKeyboardInset } from '../hooks/useKeyboardInset.js'
 // Home, File manager, Graph, and at the bottom Broken links (count),
 // Settings and Sign out.
 export function NavRail({ page, onPage, onSearch, syncButton, menu }) {
-  const item = id => cn('justify-start gap-3 font-normal', page === id && 'bg-secondary')
+  const item = id => cn('justify-start gap-3 font-normal', page === id && ACTIVE)
   return (
     <nav aria-label="Main" className="hidden md:flex w-56 shrink-0 flex-col gap-1 py-space pl-space">
       <div className="flex flex-col gap-space">
