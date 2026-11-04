@@ -50,7 +50,8 @@ export function NavRail({ page, onPage, onSearch, renderSync, menu }) {
         </Button>
       ))}
       <div className="flex-1" />
-      <div role="separator" className="my-1 h-px w-full shrink-0 bg-border" />
+      {/* my-3 + the 4px gap = 16px (--space) on both sides */}
+      <div role="separator" className="my-3 h-px w-full shrink-0 bg-border" />
       <Button variant="ghost" title={hint('Broken links')} aria-current={page === PAGE.LINKS ? 'page' : undefined} className={cn(item(PAGE.LINKS), 'relative')} onClick={() => onPage(PAGE.LINKS)}>
         <LinkBreak /> {label('Broken links')}
         {menu.brokenCount > 0 && (collapsed
