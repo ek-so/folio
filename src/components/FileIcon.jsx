@@ -9,7 +9,7 @@ const ICONS = {
   file: [File, 'text-primary'],
 }
 
-// Text color of an item's icon (also tints the title bar's tile)
+// Text color of an item's icon (the title bar uses it too)
 export const iconColor = (path, dir) => dir ? 'text-folder' : ICONS[fileKind(path)][1]
 
 // Icon for a list row: yellowish folder, or the file's type (blue note or file,
