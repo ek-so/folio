@@ -1,5 +1,5 @@
 import { createContext, useContext, useState } from 'react'
-import { CaretRight, SidebarSimple } from '@phosphor-icons/react'
+import { ArrowsInLineVertical, CaretRight, SidebarSimple } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils.js'
 import { Button } from './ui/button.jsx'
 import { Sheet, SheetContent, SheetTitle, SheetDescription } from './ui/sheet.jsx'
@@ -12,7 +12,7 @@ import { TREE_WIDTH } from '../lib/resize.js'
 import { storage } from '../lib/storage.js'
 
 // What the file tree needs from App: `listDir(dir)`, `symlinks`, the `current`
-// path, the open folders (`expanded`, `onToggle`) and `onOpenFolder` /
+// path, the open folders (`expanded`, `onToggle`, `onCollapseAll`) and `onOpenFolder` /
 // `onOpenFile`.
 export const NavContext = createContext(null)
 
@@ -71,13 +71,19 @@ function FileTree() {
 }
 
 // The tree titled with the repo's name, over the box it's in (desktop panel
-// or phone drawer). `Title`: the heading element (the drawer's is its dialog title); `closable`: leaves room for the drawer's ✕ (not on desktop).
+// or phone drawer), with Collapse all on the right (disabled while no top-level folder is open).
+// `Title`: the heading element (the drawer's is its dialog title); `closable`: leaves room for the drawer's ✕, after a separator (not on desktop).
 function TreePanel({ Title = 'h2', closable }) {
   const nav = useContext(NavContext)
+  const anyOpen = nav.listDir('').some(item => item.type === 'dir' && nav.expanded.has(item.path))
   return (
     <>
-      <div className={cn('shrink-0 border-b border-border p-space-sm', closable && 'pr-14')}>
-        <Title className="flex h-control items-center truncate px-2 text-base font-bold">{nav.repoName}</Title>
+      <div className={cn('flex shrink-0 items-center gap-space-sm border-b border-border p-space-sm', closable && 'pr-14')}>
+        <Title className="flex h-control min-w-0 flex-1 items-center truncate px-2 text-base font-bold">{nav.repoName}</Title>
+        <Button variant="ghost" size="icon" className="shrink-0" aria-label="Collapse all folders" title="Collapse all folders" disabled={!anyOpen} onClick={nav.onCollapseAll}>
+          <ArrowsInLineVertical />
+        </Button>
+        {closable && <div aria-hidden="true" className="h-6 w-px shrink-0 bg-border" />}
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain p-space-sm">
         <FileTree />

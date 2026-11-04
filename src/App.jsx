@@ -384,6 +384,7 @@ export default function App() {
         current: treeCurrent,
         expanded,
         onToggle: toggleFolder,
+        onCollapseAll: () => setExpanded(new Set()),
         onOpenFolder: openFolder,
         onOpenFile: setSelectedFile,
         loading: !repo.remote && !repo.error,
