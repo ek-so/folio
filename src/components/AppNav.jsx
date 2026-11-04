@@ -1,40 +1,40 @@
-import { List, MagnifyingGlass } from '@phosphor-icons/react'
+import { List, MagnifyingGlass, LinkBreak, Gear, SignOut } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils.js'
 import { Button } from './ui/button.jsx'
 import AccountMenu from './AccountMenu.jsx'
 import { PAGE, MAIN_PAGES } from '../lib/pages.js'
 import { useKeyboardInset } from '../hooks/useKeyboardInset.js'
 
-// The app's primary navigation, in place of a header. `menu`: AccountMenu's
-// props; `page` the open page; `syncButton` the SyncButton.
-// Desktop (768px+): a labeled rail on the left: Home, File manager, Graph,
-// then at the bottom Search, Sync and Menu (Broken links, Settings, Sign out).
+// The app's primary navigation, in place of a header. `menu`: brokenCount and
+// onSignOut; `page` the open page; `syncButton` the SyncButton.
+// Desktop (768px+): a labeled rail on the left: Search and Sync on top, then
+// Home, File manager, Graph, and at the bottom Broken links (count),
+// Settings and Sign out.
 export function NavRail({ page, onPage, onSearch, syncButton, menu }) {
-  const inMenu = page === PAGE.SETTINGS || page === PAGE.LINKS
+  const item = id => cn('justify-start gap-3 font-normal', page === id && 'bg-secondary')
   return (
     <nav aria-label="Main" className="hidden md:flex w-56 shrink-0 flex-col gap-1 p-2">
-      {MAIN_PAGES.map(({ id, title, icon: Icon }) => (
-        <Button
-          key={id} variant="ghost" aria-current={page === id ? 'page' : undefined}
-          className={cn('justify-start gap-3 font-normal', page === id && 'bg-secondary')}
-          onClick={() => onPage(id)}
-        >
-          <Icon /> {title}
-        </Button>
-      ))}
-      <div className="flex-1" />
       <Button variant="ghost" className="justify-start gap-3 font-normal" onClick={onSearch}>
         <MagnifyingGlass /> Search
       </Button>
       {syncButton}
-      <AccountMenu
-        {...menu} current={page} onNavigate={onPage}
-        trigger={
-          <Button variant="ghost" className={cn('justify-start gap-3 font-normal', inMenu && 'bg-secondary')}>
-            <List /> Menu
-          </Button>
-        }
-      />
+      <div className="h-2" />
+      {MAIN_PAGES.map(({ id, title, icon: Icon }) => (
+        <Button key={id} variant="ghost" aria-current={page === id ? 'page' : undefined} className={item(id)} onClick={() => onPage(id)}>
+          <Icon /> {title}
+        </Button>
+      ))}
+      <div className="flex-1" />
+      <Button variant="ghost" aria-current={page === PAGE.LINKS ? 'page' : undefined} className={item(PAGE.LINKS)} onClick={() => onPage(PAGE.LINKS)}>
+        <LinkBreak /> Broken links
+        {menu.brokenCount > 0 && <span className="ml-auto text-muted-foreground">{menu.brokenCount}</span>}
+      </Button>
+      <Button variant="ghost" aria-current={page === PAGE.SETTINGS ? 'page' : undefined} className={item(PAGE.SETTINGS)} onClick={() => onPage(PAGE.SETTINGS)}>
+        <Gear /> Settings
+      </Button>
+      <Button variant="ghost" className="justify-start gap-3 font-normal text-destructive" onClick={menu.onSignOut}>
+        <SignOut /> Sign out
+      </Button>
     </nav>
   )
 }
@@ -50,7 +50,7 @@ export function FloatingNav({ page, onPage, onSearch, syncButton, menu }) {
       className="fixed inset-x-2 bottom-[calc(0.5rem+var(--safe-bottom))] z-40 flex items-center gap-2 rounded-xl border border-border bg-card p-1.5 shadow-lg md:hidden"
     >
       <AccountMenu
-        {...menu} pages current={page} onNavigate={onPage}
+        {...menu} current={page} onNavigate={onPage}
         trigger={
           <Button variant="ghost-outline" size="icon" aria-label="Menu" className="shrink-0 border-muted-foreground/50">
             <List />
