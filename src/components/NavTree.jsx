@@ -26,13 +26,13 @@ function Rows({ dir, depth }) {
           <span aria-hidden="true" className="shrink-0" style={{ width: `${depth}rem` }} />
           {folder ? (
             <Button
-              variant="ghost" size="md" className="shrink-0 px-1.5 text-muted-foreground hover:bg-transparent"
+              variant="ghost" size="icon" className="size-control-md shrink-0 text-muted-foreground hover:bg-muted-foreground/10"
               aria-label={open ? 'Collapse' : 'Expand'} aria-expanded={open}
               onClick={() => nav.onToggle(item.path)}
             >
               <CaretRight className={cn('transition-transform', open && 'rotate-90')} />
             </Button>
-          ) : <span aria-hidden="true" className="w-7 shrink-0" />}
+          ) : <span aria-hidden="true" className="w-control-md shrink-0" />}
           <Button
             variant="ghost"
             className={cn('h-full flex-1 min-w-0 justify-start gap-2 px-1 rounded-sm font-normal text-left hover:bg-transparent disabled:opacity-100', (item.name.startsWith('.') || isLink) && 'opacity-50 disabled:opacity-50')}
