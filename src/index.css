@@ -65,6 +65,10 @@
 
     --radius: 0.75rem;
 
+    /* Layout spacing: base (gutters, gaps between the big pieces) and small (inside them). Use p-space / gap-space-sm … or var(--space) */
+    --space: 1rem;
+    --space-sm: 0.5rem;
+
     --safe-top: env(safe-area-inset-top, 0px);
     --safe-bottom: env(safe-area-inset-bottom, 0px);
   }
@@ -183,6 +187,8 @@
   --spacing-control: 2.5rem;
   --spacing-control-md: 2rem;
   --spacing-control-sm: 1.5rem;
+  --spacing-space: var(--space);
+  --spacing-space-sm: var(--space-sm);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);

@@ -72,10 +72,10 @@ export function NavPanel() {
   if (!nav) return null
   return (
     <aside aria-label="Files and folders" className="hidden md:flex w-64 shrink-0 flex-col overflow-hidden rounded-xl border border-border bg-card">
-      <div className="shrink-0 border-b border-border p-2">
+      <div className="shrink-0 border-b border-border p-space-sm">
         <h2 className="flex h-control items-center truncate px-2 text-base font-bold">{nav.repoName}</h2>
       </div>
-      <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain p-2">
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain p-space-sm">
         <FileTree />
       </div>
     </aside>
@@ -83,7 +83,7 @@ export function NavPanel() {
 }
 
 // Phones: a button in the title bar that opens the tree in a floating drawer
-// (card-colored, rounded, 16px from the screen's edges)
+// (card-colored, rounded, 8px from the screen's edges)
 export function NavDrawerButton() {
   const nav = useContext(NavContext)
   const [open, setOpen] = useState(false)
@@ -95,12 +95,12 @@ export function NavDrawerButton() {
         <SidebarSimple />
       </Button>
       <Sheet open={open} onOpenChange={setOpen}>
-        <SheetContent side="left" className="top-[calc(1rem+var(--safe-top))] bottom-[calc(1rem+var(--safe-bottom))] left-4 h-auto gap-0 overflow-hidden rounded-xl border bg-card">
+        <SheetContent side="left" className="top-[calc(var(--space-sm)+var(--safe-top))] bottom-[calc(var(--space-sm)+var(--safe-bottom))] left-space-sm h-auto gap-0 overflow-hidden rounded-xl border bg-card">
           <SheetHeader className="p-2 pl-4">
             <SheetTitle className="flex h-control items-center truncate pr-12">{nav.repoName}</SheetTitle>
             <SheetDescription className="sr-only">Files and folders</SheetDescription>
           </SheetHeader>
-          <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain p-2">
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain p-space-sm">
             <NavContext.Provider value={{ ...nav, onOpenFolder: close(nav.onOpenFolder), onOpenFile: close(nav.onOpenFile) }}>
               <FileTree />
             </NavContext.Provider>

@@ -14,7 +14,7 @@ import { useKeyboardInset } from '../hooks/useKeyboardInset.js'
 export function NavRail({ page, onPage, onSearch, syncButton, menu }) {
   const item = id => cn('justify-start gap-3 font-normal', page === id && 'bg-secondary')
   return (
-    <nav aria-label="Main" className="hidden md:flex w-56 shrink-0 flex-col gap-1 py-4 pl-4">
+    <nav aria-label="Main" className="hidden md:flex w-56 shrink-0 flex-col gap-1 py-space pl-space">
       <Button variant="outline" className="justify-start gap-3 px-3 font-normal text-muted-foreground shadow-sm hover:bg-transparent hover:text-foreground" onClick={onSearch}>
         <MagnifyingGlass /> Search
       </Button>
@@ -48,7 +48,7 @@ export function FloatingNav({ page, onPage, onSearch, syncButton, menu }) {
   return (
     <nav
       aria-label="Main"
-      className="fixed inset-x-4 bottom-[calc(1rem+var(--safe-bottom))] z-40 flex items-center gap-2 rounded-xl border border-border bg-card p-1.5 shadow-lg md:hidden"
+      className="fixed inset-x-space bottom-[calc(var(--space)+var(--safe-bottom))] z-40 flex items-center gap-2 rounded-xl border border-border bg-card p-1.5 shadow-lg md:hidden"
     >
       <AccountMenu
         {...menu} current={page} onNavigate={onPage}
