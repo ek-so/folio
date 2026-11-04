@@ -12,7 +12,7 @@ export default function TitleBar({ tree, page, path, dir, name, changed, badge, 
   const info = page && pageInfo(page)
   return (
     <div className="shrink-0 border-b border-border p-space-sm">
-      <div className="flex items-center gap-3">
+      <div className="flex min-h-control items-center gap-3">
         {tree && <NavDrawerButton />}
         <span className={cn('flex shrink-0', info ? 'text-primary' : iconColor(path, dir))}>
           {info ? <info.icon className="size-5" /> : <FileIcon path={path} dir={dir} />}
