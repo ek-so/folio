@@ -65,7 +65,7 @@
 
     --radius: 0.75rem;
 
-    /* Layout spacing: base (gutters, gaps between the big pieces), small (inside them) and extra small (a title's own padding, the gap before it). Use p-space / gap-space-sm / px-space-xs … or var(--space) */
+    /* Layout spacing: base (gutters, gaps between the big pieces), small (inside them) and extra small (a title's own side padding). Use p-space / gap-space-sm / px-space-xs … or var(--space) */
     --space: 1rem;
     --space-sm: 0.5rem;
     --space-xs: 0.25rem;

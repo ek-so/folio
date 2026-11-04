@@ -14,7 +14,7 @@ export default function TitleBar({ tree, page, name, changed, badge, children })
   const onBack = useContext(NavContext)?.onBack
   return (
     <div className="shrink-0 border-b border-border p-space-sm">
-      <div className="flex min-h-control items-center gap-space-xs">
+      <div className="flex min-h-control items-center gap-space-sm">
         {tree && <NavDrawerButton />}
         {!page && onBack && (
           <Button variant="ghost-outline" size="icon" aria-label="Back" title="Back" className="shrink-0 border-muted-foreground/50" onClick={onBack}>
