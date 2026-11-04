@@ -20,7 +20,7 @@ const ACTIVE = 'bg-primary/15 text-primary hover:bg-primary/20 hover:text-primar
 // own 8px and the content's 16px gutter. On top the app's name (Folio, bold) and a button that collapses
 // the rail to icons only (remembered on this device; expanded, its edge is a drag handle), and after it,
 // while the file tree is hidden, `onShowTree`'s tree button (collapsed: under the logo); a separator (12px
-// above, 20px below); Sync and Search (16px apart); 16px; Home, File manager, Graph, and at the bottom Broken links (count),
+// above, 16px below); Sync and Search (16px apart); 16px; Home, File manager, Graph, and at the bottom Broken links (count),
 // Settings and Sign out.
 export function NavRail({ page, onPage, onSearch, renderSync, menu, onShowTree }) {
   const [collapsed, setCollapsed] = useState(storage.getRailCollapsed)
@@ -45,8 +45,8 @@ export function NavRail({ page, onPage, onSearch, renderSync, menu, onShowTree }
           </Button>
         )}
       </div>
-      {/* + the 4px gaps: 12px above, 20px below */}
-      <div role="separator" className="mt-2 mb-4 h-px w-full shrink-0 bg-border" />
+      {/* + the 4px gaps: 12px above, 16px below */}
+      <div role="separator" className="mt-2 mb-3 h-px w-full shrink-0 bg-border" />
       <div className={cn('flex flex-col gap-space', collapsed && 'items-center')}>
         {renderSync(collapsed)}
         <Button variant="outline" title={hint('Search')} className={cn('justify-start gap-3 px-3 font-normal text-muted-foreground shadow-sm hover:bg-transparent hover:text-foreground', collapsed && 'size-control justify-center px-0')} onClick={onSearch}>
