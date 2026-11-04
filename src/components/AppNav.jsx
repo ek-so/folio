@@ -18,7 +18,7 @@ const ACTIVE = 'bg-primary/15 text-primary hover:bg-primary/20 hover:text-primar
 // onSignOut; `page` the open page; `renderSync(compact)` makes the SyncButton.
 // Desktop (768px+): a left rail (the content's own 16px gutter is the gap to
 // the tree). On top the app's name (Folio, bold) and a button that collapses
-// the rail to icons only (remembered on this device; expanded, its edge is a drag handle), and before it,
+// the rail to icons only (remembered on this device; expanded, its edge is a drag handle), and after it,
 // while the file tree is hidden, `onShowTree`'s tree button (collapsed: under the logo); then Sync and Search,
 // Home, File manager, Graph, and at the bottom Broken links (count),
 // Settings and Sign out.
@@ -32,18 +32,18 @@ export function NavRail({ page, onPage, onSearch, renderSync, menu, onShowTree }
   const hint = text => collapsed ? text : undefined
   return (
     <nav aria-label="Main" style={collapsed ? undefined : { width }} className={cn('relative hidden md:flex shrink-0 flex-col gap-1 py-space pl-space', collapsed ? 'w-14 items-center' : 'max-w-[25vw]')}>
-      <div className={cn('flex min-h-control items-center gap-space-sm pl-3', collapsed && 'flex-col-reverse pl-0')}>
+      <div className={cn('flex min-h-control items-center gap-space-sm pl-3', collapsed && 'flex-col pl-0')}>
         {!collapsed && <span className="flex flex-1 items-center gap-2 text-base font-bold"><AppLogo className="size-6" />Folio</span>}
-        {onShowTree && (
-          <Button variant="ghost-outline" size="icon" aria-label="Show file tree" title="Show file tree" className="shrink-0 border-muted-foreground/50" onClick={onShowTree}>
-            <TreeView />
-          </Button>
-        )}
         <Button variant="ghost-outline" size="icon" aria-label={collapsed ? 'Expand menu' : 'Collapse menu'} title={collapsed ? 'Expand menu' : 'Collapse menu'} aria-expanded={!collapsed} className={cn('group shrink-0 border-muted-foreground/50', collapsed && 'bg-transparent hover:bg-secondary focus-visible:bg-secondary')} onClick={toggle}>
           {/* Collapsed, the logo stands in for the button until it's hovered or focused */}
           {collapsed && <AppLogo className="size-6 group-hover:hidden group-focus-visible:hidden" />}
           <SidebarSimple className={cn(collapsed && 'hidden group-hover:block group-focus-visible:block')} />
         </Button>
+        {onShowTree && (
+          <Button variant="ghost-outline" size="icon" aria-label="Show file tree" title="Show file tree" className="shrink-0 border-muted-foreground/50" onClick={onShowTree}>
+            <TreeView />
+          </Button>
+        )}
       </div>
       <div className="h-2" />
       <div className={cn('flex flex-col gap-space', collapsed && 'items-center')}>
