@@ -391,7 +391,7 @@ export default function App() {
         <PullToRefresh onRefresh={() => window.location.reload()}>
           <div className="flex flex-1 min-h-0">
           <NavRail page={page} onPage={setPage} onSearch={() => setSearchOpen(true)} syncButton={syncButton} menu={menu} />
-          <main className="flex flex-col flex-1 min-w-0 min-h-0 max-md:pb-[calc(4.5rem+var(--safe-bottom))]">
+          <main className="flex flex-col flex-1 min-w-0 min-h-0">
           {page === PAGE.SETTINGS ? (
             <Settings login={auth.user.login} repo={auth.repo} theme={theme} onTheme={setTheme} />
           ) : (page === PAGE.HOME || page === PAGE.GRAPH) && !entry ? (

@@ -234,7 +234,7 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
   }
 
   return (
-    <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto">
+    <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto max-md:pb-nav">
       {children}
       <div
         ref={ref}

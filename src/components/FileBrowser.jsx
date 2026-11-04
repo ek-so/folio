@@ -79,7 +79,7 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
       }>
       {/* Files dropped here go into this folder, or into a folder row they're dropped on */}
       <div
-        className={cn('flex-1 min-h-0 overflow-y-auto overscroll-y-contain transition-colors', filesOver && !dragOverPath && 'bg-primary/5 ring-2 ring-inset ring-primary/40')}
+        className={cn('flex-1 min-h-0 overflow-y-auto overscroll-y-contain transition-colors max-md:pb-nav', filesOver && !dragOverPath && 'bg-primary/5 ring-2 ring-inset ring-primary/40')}
         onDragOver={e => {
           if (!isFileDrag(e)) return
           e.preventDefault()
