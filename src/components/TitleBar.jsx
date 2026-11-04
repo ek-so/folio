@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils.js'
 export default function TitleBar({ tree, page, path, dir, name, changed, badge, children }) {
   const info = page && pageInfo(page)
   return (
-    <div className="shrink-0 border-b border-border p-2">
+    <div className="shrink-0 border-b border-border p-4">
       <div className="flex items-center gap-3">
         {tree && <NavDrawerButton />}
         <span className={cn('flex size-control shrink-0 items-center justify-center rounded-sm bg-current/15', info ? 'text-primary' : iconColor(path, dir))}>
