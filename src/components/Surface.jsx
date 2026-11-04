@@ -7,9 +7,9 @@ import { NavPanel } from './NavTree.jsx'
 // Home's dashboard). `tree`: from 768px the file tree sits in its own box to the left (on phones it's the title bar's drawer).
 export default function Surface({ title, tree, wide, children }) {
   return (
-    <div className={cn('flex flex-1 min-h-0 w-full px-space pt-0 md:pt-space pb-[calc(var(--space)+var(--safe-bottom))]', tree && 'md:gap-space')}>
+    <div className={cn('flex flex-1 min-h-0 w-full px-0 pt-0 pb-0 md:px-space md:pt-space md:pb-[calc(var(--space)+var(--safe-bottom))]', tree && 'md:gap-space')}>
       {tree && <NavPanel />}
-      <div className="flex flex-col flex-1 min-h-0 min-w-0 overflow-hidden bg-card rounded-xl border border-border">
+      <div className="flex flex-col flex-1 min-h-0 min-w-0 overflow-hidden bg-card rounded-xl max-md:rounded-b-none border border-border">
         {title}
         <div className={cn('mx-auto flex min-h-0 w-full flex-1 flex-col', !wide && 'max-w-[1000px]')}>{children}</div>
       </div>
