@@ -72,8 +72,8 @@ export function NavPanel() {
   if (!nav) return null
   return (
     <aside aria-label="Files and folders" className="hidden md:flex w-64 shrink-0 flex-col overflow-hidden rounded-xl border border-border bg-card">
-      <div className="shrink-0 border-b border-border p-4">
-        <h2 className="flex h-control items-center truncate px-0 text-base font-bold">{nav.repoName}</h2>
+      <div className="shrink-0 border-b border-border p-2">
+        <h2 className="flex h-control items-center truncate px-2 text-base font-bold">{nav.repoName}</h2>
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain p-2">
         <FileTree />
