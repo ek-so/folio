@@ -2,6 +2,7 @@ import * as React from 'react'
 import * as SheetPrimitive from '@radix-ui/react-dialog'
 import { X } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
+import { Button } from './button.jsx'
 
 function Sheet(props) {
   return <SheetPrimitive.Root data-slot="sheet" {...props} />
@@ -53,9 +54,10 @@ function SheetContent({ className, children, side = 'right', ...props }) {
         {...props}
       >
         {children}
-        <SheetPrimitive.Close className="ring-offset-background focus:ring-ring absolute top-2 right-2 flex size-control items-center justify-center rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none">
-          <X className="size-4" />
-          <span className="sr-only">Close</span>
+        <SheetPrimitive.Close asChild>
+          <Button variant="ghost" size="icon" aria-label="Close" className="absolute top-2 right-2 text-muted-foreground hover:text-foreground">
+            <X />
+          </Button>
         </SheetPrimitive.Close>
       </SheetPrimitive.Content>
     </SheetPortal>

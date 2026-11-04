@@ -2,6 +2,7 @@ import * as React from 'react'
 import * as DialogPrimitive from '@radix-ui/react-dialog'
 import { X } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
+import { Button } from './button.jsx'
 
 function Dialog(props) {
   return <DialogPrimitive.Root data-slot="dialog" {...props} />
@@ -48,9 +49,10 @@ function DialogContent({ className, children, showCloseButton = true, ...props }
       >
         {children}
         {showCloseButton && (
-          <DialogPrimitive.Close className="absolute top-3 right-3 flex size-control items-center justify-center rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring">
-            <X size={16} />
-            <span className="sr-only">Close</span>
+          <DialogPrimitive.Close asChild>
+            <Button variant="ghost" size="icon" aria-label="Close" className="absolute top-3 right-3 text-muted-foreground hover:text-foreground">
+              <X />
+            </Button>
           </DialogPrimitive.Close>
         )}
       </DialogPrimitive.Content>
