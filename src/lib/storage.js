@@ -1,6 +1,7 @@
 const RECENT_KEY = 'folio_recent'
 const TOKEN_KEY = 'brain_gh_token'
 const REPO_KEY = 'brain_gh_repo'
+const REPOS_KEY = 'folio_repos'
 const USER_KEY = 'folio_user'
 const THEME_KEY = 'folio_theme'
 const TRAILS_KEY = 'folio_trails'
@@ -64,9 +65,21 @@ export const storage = {
       write(sessionStorage, RECENT_KEY, JSON.stringify(next))
     } catch {}
   },
+  // Repos used on this device ('owner/repo'), latest first
+  getRepos: () => {
+    try { return JSON.parse(read(localStorage, REPOS_KEY)) || [] } catch { return [] }
+  },
+  addRepo: (repo) => {
+    const next = [repo, ...storage.getRepos().filter(r => r !== repo)].slice(0, 8)
+    write(localStorage, REPOS_KEY, JSON.stringify(next))
+  },
+  // What's open in this repo: the page stays, the trails, open folders and recent files go
+  clearRepoSession: () => {
+    for (const key of [TRAILS_KEY, EXPANDED_KEY, RECENT_KEY]) write(sessionStorage, key, null)
+  },
   // Everything tied to the signed-in account; theme stays
   clearSession: () => {
-    for (const key of [TOKEN_KEY, REPO_KEY, USER_KEY]) write(localStorage, key, null)
+    for (const key of [TOKEN_KEY, REPO_KEY, REPOS_KEY, USER_KEY]) write(localStorage, key, null)
     for (const key of [TRAILS_KEY, PAGE_KEY, EXPANDED_KEY, RECENT_KEY]) write(sessionStorage, key, null)
   },
 }

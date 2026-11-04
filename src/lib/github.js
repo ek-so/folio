@@ -32,9 +32,10 @@ export async function getUser() {
   return data
 }
 
-// Throws if the repo doesn't exist or the token can't see it.
-export async function checkRepo() {
-  await octokit.rest.repos.get({ owner, repo })
+// Throws if the repo `owner`/`name` doesn't exist or the token can't see it
+// (the repo in use stays as it is).
+export async function checkRepo(owner, name) {
+  await octokit.rest.repos.get({ owner, repo: name })
 }
 
 function decode(base64) {

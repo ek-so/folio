@@ -34,3 +34,9 @@ export const LINK_ERRORS = {
   missing: 'source is missing',
   unavailable: 'not on this device yet',
 }
+
+// 'owner/repo' typed by the user as [owner, repo], or null if it isn't one
+export function parseRepo(value) {
+  const parts = value.trim().split('/')
+  return parts.length === 2 && parts[0] && parts[1] ? parts : null
+}

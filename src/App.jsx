@@ -346,6 +346,13 @@ export default function App() {
     })
   }
 
+  // Another repo: typing in the open note is saved first (local changes are
+  // kept per repo), then the app opens there
+  function switchRepo(full) {
+    window.dispatchEvent(new Event('folio:flush'))
+    auth.switchRepo(full)
+  }
+
   async function signOut() {
     setConfirmSignOut(false)
     setPage(PAGE.HOME)
@@ -411,7 +418,9 @@ export default function App() {
         onDropMove: handleDropMove,
         onUpload: handleUpload,
         loading: !repo.remote && !repo.error,
-        repoName,
+        repo: auth.repo,
+        repos: storage.getRepos(),
+        onSwitchRepo: switchRepo,
       }}>
       <div className="flex flex-col h-full bg-background">
         <Toaster theme={theme} />

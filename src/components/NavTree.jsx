@@ -9,6 +9,7 @@ import Spinner from './Spinner.jsx'
 import { LINK_ERRORS } from '../lib/files.js'
 import { canMoveTo } from '../lib/changes.js'
 import ResizeHandle from './ResizeHandle.jsx'
+import RepoMenu from './RepoMenu.jsx'
 import { useResizableWidth } from '../hooks/useResizableWidth.js'
 import { TREE_WIDTH } from '../lib/resize.js'
 import { storage } from '../lib/storage.js'
@@ -16,7 +17,8 @@ import { storage } from '../lib/storage.js'
 // What the file tree needs from App: `listDir(dir)`, `symlinks`, the `current`
 // path, the open folders (`expanded`, `onToggle`, `onCollapseAll`), `onOpenFolder` /
 // `onOpenFile`, `itemActions` for each row's ⋯ (ItemMenu's onRename / onDelete / onMove / folders, as in File manager), and for
-// drag and drop `onDropMove(item, folder)` / `onUpload(files, folder)`.
+// drag and drop `onDropMove(item, folder)` / `onUpload(files, folder)`, and for the
+// title's RepoMenu the open `repo`, the `repos` used on this device and `onSwitchRepo(repo)`.
 export const NavContext = createContext(null)
 
 // Drag and drop in the desktop tree (null in the phone drawer)
@@ -173,7 +175,7 @@ function TreePanel({ Title = 'h2', closable, dnd }) {
   return (
     <>
       <div className={cn('flex shrink-0 items-center gap-space-sm border-b border-border p-space-sm', closable && 'pr-14')}>
-        <Title className="flex h-control min-w-0 flex-1 items-center truncate px-space-xs text-base font-bold">{nav.repoName}</Title>
+        <Title className="flex min-w-0 flex-1 items-center text-base font-bold"><RepoMenu /></Title>
         <Button variant="ghost" size="icon" className="shrink-0" aria-label="Collapse all folders" title="Collapse all folders" disabled={!anyOpen} onClick={nav.onCollapseAll}>
           <ArrowsInLineVertical />
         </Button>

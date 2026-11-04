@@ -19,7 +19,7 @@ export function useAuth() {
     if (!token) return setReady(true)
     init(token)
     const savedRepo = storage.getRepo()
-    if (savedRepo) applyRepo(savedRepo)
+    if (savedRepo) { applyRepo(savedRepo); storage.addRepo(savedRepo) }
 
     const cachedUser = storage.getUser()
     if (cachedUser) {
@@ -51,7 +51,17 @@ export function useAuth() {
   function selectRepo(full) {
     applyRepo(full)
     storage.setRepo(full)
+    storage.addRepo(full)
     setRepoState(full)
+  }
+
+  // Open the app in another repo: a fresh start there, nothing carried over
+  // but the page. Its local changes stay stored under each repo.
+  function switchRepo(full) {
+    storage.setRepo(full)
+    storage.addRepo(full)
+    storage.clearRepoSession()
+    window.location.assign(import.meta.env.BASE_URL)
   }
 
   function signOut() {
@@ -60,5 +70,5 @@ export function useAuth() {
     setRepoState(null)
   }
 
-  return { user, repo, ready, authenticate, selectRepo, signOut }
+  return { user, repo, ready, authenticate, selectRepo, switchRepo, signOut }
 }
