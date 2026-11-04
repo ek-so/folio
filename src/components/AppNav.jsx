@@ -14,7 +14,7 @@ export function NavRail({ page, onPage, onSearch, syncButton, menu }) {
   const item = id => cn('justify-start gap-3 font-normal', page === id && 'bg-secondary')
   return (
     <nav aria-label="Main" className="hidden md:flex w-56 shrink-0 flex-col gap-1 p-2">
-      <Button variant="ghost" className="justify-start gap-3 font-normal" onClick={onSearch}>
+      <Button variant="ghost-outline" className="justify-start gap-3 border-muted-foreground/50 font-normal" onClick={onSearch}>
         <MagnifyingGlass /> Search
       </Button>
       {syncButton}
