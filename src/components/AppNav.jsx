@@ -32,7 +32,7 @@ export function NavRail({ page, onPage, onSearch, renderSync, menu, onShowTree }
   const hint = text => collapsed ? text : undefined
   return (
     <nav aria-label="Main" style={collapsed ? undefined : { width }} className={cn('relative hidden md:flex shrink-0 flex-col gap-1 py-space-lg pl-space-lg pr-space-sm', collapsed ? 'items-center' : 'max-w-[25vw]')}>
-      <div className={cn('flex min-h-control items-center gap-space-sm pl-3', collapsed && 'flex-col pl-0')}>
+      <div className={cn('flex min-h-control items-center', collapsed ? 'flex-col gap-space' : 'gap-space-sm pl-3')}>
         {!collapsed && <span className="flex flex-1 items-center gap-2 text-base font-bold"><AppLogo className="size-6" />Folio</span>}
         <Button variant="ghost" size="icon" aria-label={collapsed ? 'Expand menu' : 'Collapse menu'} title={collapsed ? 'Expand menu' : 'Collapse menu'} aria-expanded={!collapsed} className="group shrink-0 focus-visible:bg-secondary" onClick={toggle}>
           {/* Collapsed, the logo stands in for the button until it's hovered or focused */}
