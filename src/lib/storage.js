@@ -8,6 +8,7 @@ const FILES_KEY = 'folio_files'
 const PAGE_KEY = 'folio_page'
 const EXPANDED_KEY = 'folio_expanded'
 const TREE_WIDTH_KEY = 'folio_tree_width'
+const RAIL_WIDTH_KEY = 'folio_rail_width'
 const RAIL_KEY = 'folio_rail_collapsed'
 const CHANGES_KEY = 'folio_changes_'
 
@@ -34,6 +35,8 @@ export const storage = {
   setUser: (user) => write(localStorage, USER_KEY, user && JSON.stringify({ login: user.login })),
   getTreeWidth: () => read(localStorage, TREE_WIDTH_KEY),
   setTreeWidth: (width) => write(localStorage, TREE_WIDTH_KEY, String(width)),
+  getRailWidth: () => read(localStorage, RAIL_WIDTH_KEY),
+  setRailWidth: (width) => write(localStorage, RAIL_WIDTH_KEY, String(width)),
   getRailCollapsed: () => read(localStorage, RAIL_KEY) === '1',
   setRailCollapsed: (collapsed) => write(localStorage, RAIL_KEY, collapsed ? '1' : null),
   getTheme: () => read(localStorage, THEME_KEY),

@@ -5,6 +5,9 @@ import { Button } from './ui/button.jsx'
 import AccountMenu from './AccountMenu.jsx'
 import { PAGE, MAIN_PAGES } from '../lib/pages.js'
 import { storage } from '../lib/storage.js'
+import { RAIL_WIDTH } from '../lib/resize.js'
+import { useResizableWidth } from '../hooks/useResizableWidth.js'
+import ResizeHandle from './ResizeHandle.jsx'
 import { useKeyboardInset } from '../hooks/useKeyboardInset.js'
 
 // The open page's button: light accent fill, accent text
@@ -14,18 +17,19 @@ const ACTIVE = 'bg-primary/15 text-primary hover:bg-primary/20 hover:text-primar
 // onSignOut; `page` the open page; `syncButton` the SyncButton.
 // Desktop (768px+): a left rail (the content's own 16px gutter is the gap to
 // the tree). On top the app's name (Folio, bold) and a button that collapses
-// the rail to icons only (remembered on this device); then Search and Sync,
+// the rail to icons only (remembered on this device; expanded, its right edge is a drag handle like the tree's, 160–320px); then Search and Sync,
 // Home, File manager, Graph, and at the bottom Broken links (count),
 // Settings and Sign out.
 export function NavRail({ page, onPage, onSearch, syncButton, menu }) {
   const [collapsed, setCollapsed] = useState(storage.getRailCollapsed)
+  const [width, resize] = useResizableWidth(RAIL_WIDTH, storage.getRailWidth, storage.setRailWidth)
   const toggle = () => { setCollapsed(!collapsed); storage.setRailCollapsed(!collapsed) }
   const item = id => cn('justify-start gap-3 font-normal', collapsed && 'justify-center', page === id && ACTIVE)
   // A rail button: icon, and its label unless collapsed (then the label is the tooltip)
   const label = text => collapsed ? <span className="sr-only">{text}</span> : text
   const hint = text => collapsed ? text : undefined
   return (
-    <nav aria-label="Main" className={cn('hidden md:flex shrink-0 flex-col gap-1 py-space pl-space', collapsed ? 'w-24' : 'w-56')}>
+    <nav aria-label="Main" style={collapsed ? undefined : { width }} className={cn('relative hidden md:flex shrink-0 flex-col gap-1 py-space pl-space', collapsed && 'w-24')}>
       <div className={cn('flex h-control items-center justify-between pl-3', collapsed && 'justify-center pl-0')}>
         {!collapsed && <span className="text-base font-bold">Folio</span>}
         <Button variant="ghost-outline" size="icon" aria-label={collapsed ? 'Expand menu' : 'Collapse menu'} title={collapsed ? 'Expand menu' : 'Collapse menu'} aria-expanded={!collapsed} className="shrink-0 border-muted-foreground/50" onClick={toggle}>
@@ -59,6 +63,7 @@ export function NavRail({ page, onPage, onSearch, syncButton, menu }) {
       <Button variant="ghost" title={hint('Sign out')} className={cn('justify-start gap-3 font-normal text-destructive', collapsed && 'justify-center')} onClick={menu.onSignOut}>
         <SignOut /> {label('Sign out')}
       </Button>
+      {!collapsed && <ResizeHandle label="Resize menu" width={width} limits={RAIL_WIDTH} onResize={resize} className="inset-y-space" />}
     </nav>
   )
 }
