@@ -391,6 +391,7 @@ export default function App() {
         expanded,
         onToggle: toggleFolder,
         onCollapseAll: () => setExpanded(new Set()),
+        itemActions: { onRename: handleRename, onDelete: handleDelete, onMove: handleMove, folders: allFolders },
         onOpenFolder: openFolder,
         onOpenFile: setSelectedFile,
         onDropMove: handleDropMove,

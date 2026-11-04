@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils.js'
 import { Button } from './ui/button.jsx'
 import { Sheet, SheetContent, SheetTitle, SheetDescription } from './ui/sheet.jsx'
 import FileIcon from './FileIcon.jsx'
+import ItemMenu from './ItemMenu.jsx'
 import Spinner from './Spinner.jsx'
 import { LINK_ERRORS } from '../lib/files.js'
 import { canMoveTo } from '../lib/changes.js'
@@ -14,7 +15,8 @@ import { storage } from '../lib/storage.js'
 
 // What the file tree needs from App: `listDir(dir)`, `symlinks`, the `current`
 // path, the open folders (`expanded`, `onToggle`, `onCollapseAll`), `onOpenFolder` /
-// `onOpenFile`, and for drag and drop `onDropMove(item, folder)` / `onUpload(files, folder)`.
+// `onOpenFile`, `itemActions` for each row's ⋯ (ItemMenu's onRename / onDelete / onMove / folders, as in File manager), and for
+// drag and drop `onDropMove(item, folder)` / `onUpload(files, folder)`.
 export const NavContext = createContext(null)
 
 // Drag and drop in the desktop tree (null in the phone drawer)
@@ -144,6 +146,7 @@ function Rows({ dir, depth }) {
             <span className="flex-1 truncate">{item.name}</span>
             {item.changed && <span className="size-1.5 shrink-0 rounded-full bg-primary" />}
           </Button>
+          <ItemMenu item={item} {...nav.itemActions} inList />
         </div>
         {open && <ul><Rows dir={item.path} depth={depth + 1} /></ul>}
       </li>
