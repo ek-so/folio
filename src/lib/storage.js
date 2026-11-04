@@ -4,7 +4,7 @@ const REPO_KEY = 'brain_gh_repo'
 const USER_KEY = 'folio_user'
 const THEME_KEY = 'folio_theme'
 const FOLDER_KEY = 'folio_folder'
-const FILE_KEY = 'folio_file'
+const FILES_KEY = 'folio_files'
 const PAGE_KEY = 'folio_page'
 const CHANGES_KEY = 'folio_changes_'
 
@@ -34,8 +34,11 @@ export const storage = {
   // Session-only, so a reload keeps the current folder, open note and page
   getFolder: () => read(sessionStorage, FOLDER_KEY) || '',
   setFolder: (folder) => write(sessionStorage, FOLDER_KEY, folder),
-  getFile: () => read(sessionStorage, FILE_KEY),
-  setFile: (path) => write(sessionStorage, FILE_KEY, path),
+  // The note open on each main page: { home, files, graph } -> path or null
+  getOpenFiles: () => {
+    try { return JSON.parse(read(sessionStorage, FILES_KEY)) || {} } catch { return {} }
+  },
+  setOpenFiles: (files) => write(sessionStorage, FILES_KEY, JSON.stringify(files)),
   // Open page ('home' | 'files' | 'graph' | 'settings' | 'links'), null when unset
   getPage: () => read(sessionStorage, PAGE_KEY),
   setPage: (page) => write(sessionStorage, PAGE_KEY, page),
@@ -52,7 +55,7 @@ export const storage = {
   // Everything tied to the signed-in account; theme stays
   clearSession: () => {
     for (const key of [TOKEN_KEY, REPO_KEY, USER_KEY]) write(localStorage, key, null)
-    for (const key of [FOLDER_KEY, FILE_KEY, PAGE_KEY, RECENT_KEY]) write(sessionStorage, key, null)
+    for (const key of [FOLDER_KEY, FILES_KEY, PAGE_KEY, RECENT_KEY]) write(sessionStorage, key, null)
   },
 }
 

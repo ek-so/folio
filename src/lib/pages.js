@@ -8,4 +8,7 @@ export const MAIN_PAGES = [
   { id: PAGE.GRAPH, title: 'Graph' },
 ]
 
+// Apply `fn` to the open file of every main page ({ page: path | null })
+export const mapOpenFiles = (openFiles, fn) => Object.fromEntries(Object.entries(openFiles).map(([id, path]) => [id, fn(path)]))
+
 export const pageTitle = id => MAIN_PAGES.find(p => p.id === id)?.title
