@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useRef, useState } from 'react'
-import { ArrowsInLineVertical, CaretDoubleLeft, CaretRight, TreeView } from '@phosphor-icons/react'
+import { ArrowsInLineVertical, CaretRight, SidebarSimple, TreeView } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils.js'
 import { Button } from './ui/button.jsx'
 import { Sheet, SheetContent, SheetTitle, SheetDescription } from './ui/sheet.jsx'
@@ -166,7 +166,7 @@ function FileTree() {
 
 // The tree titled with the repo's name, over the box it's in (desktop panel
 // or phone drawer), with Collapse all on the right (disabled while no top-level folder is open),
-// then on desktop « that hides the panel (`onToggleTree`; the rail then shows a tree button to bring it back).
+// then on desktop the rail's collapse icon (SidebarSimple) that hides the panel (`onToggleTree`; the rail then shows a tree button to bring it back).
 // `Title`: the heading element (the drawer's is its dialog title); `closable`: leaves room for the drawer's ✕, after a separator (not on desktop).
 // `dnd`: drag and drop (desktop only; unreliable with touch).
 function TreePanel({ Title = 'h2', closable, dnd }) {
@@ -184,7 +184,7 @@ function TreePanel({ Title = 'h2', closable, dnd }) {
           ? <div aria-hidden="true" className="h-6 w-px shrink-0 bg-border" />
           : (
             <Button variant="ghost" size="icon" className="shrink-0" aria-label="Hide file tree" title="Hide file tree" onClick={nav.onToggleTree}>
-              <CaretDoubleLeft />
+              <SidebarSimple />
             </Button>
           )}
       </div>
