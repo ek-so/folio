@@ -1,4 +1,4 @@
-import { ArrowUp, ArrowDown, X, CloudSlash, CaretDown, Trash } from '@phosphor-icons/react'
+import { ArrowUp, ArrowDown, ArrowsClockwise, X, CloudSlash, CaretDown, Trash } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils.js'
 import { Button } from './ui/button.jsx'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from './ui/dropdown-menu.jsx'
@@ -22,21 +22,25 @@ function MenuBadge({ children }) {
 // Push (with change count), Pull (how many files changed on GitHub, or New
 // when unknown) and Discard. An accent badge on Sync shows the directions
 // there's something to sync in (↑ push, ↓ pull, or both), without counts.
-export default function SyncButton({ className, syncState, syncing, changeCount, incoming, onSync, onPull, onDiscard }) {
+// `compact` (the collapsed rail): the main part is just its icon.
+export default function SyncButton({ className, compact, syncState, syncing, changeCount, incoming, onSync, onPull, onDiscard }) {
   const { variant, label, Icon } = LOOK[syncState] || LOOK.idle
   const hasPush = changeCount > 0
   const hasPull = incoming !== null
 
   return (
     <div className={cn('flex shrink-0', className)}>
-      <Button onClick={onSync} disabled={syncing} variant={variant} className="flex-1 gap-2 rounded-r-none">
+      <Button onClick={onSync} disabled={syncing} variant={variant} aria-label={compact ? label : undefined} title={compact ? label : undefined} className={cn('gap-2 rounded-r-none', compact ? 'relative size-control p-0' : 'flex-1')}>
         {syncing ? (
           <span className="size-4 rounded-full border border-current border-t-transparent animate-spin opacity-60" />
         ) : Icon ? (
           <Icon />
-        ) : null}
-        {label}
-        {syncState === 'idle' && !syncing && (hasPush || hasPull) && (
+        ) : compact ? <ArrowsClockwise /> : null}
+        {!compact && label}
+        {compact && syncState === 'idle' && !syncing && (hasPush || hasPull) && (
+          <span aria-label={[hasPush && 'Changes to push', hasPull && 'Changes to pull'].filter(Boolean).join(', ')} className="absolute right-1.5 top-1.5 size-2 rounded-full bg-primary" />
+        )}
+        {syncState === 'idle' && !syncing && !compact && (hasPush || hasPull) && (
           <span
             aria-label={[hasPush && 'Changes to push', hasPull && 'Changes to pull'].filter(Boolean).join(', ')}
             className="flex h-5 items-center gap-0.5 rounded-full bg-primary px-1.5 text-primary-foreground [&_svg]:size-3"

@@ -1,8 +1,10 @@
-import { List, MagnifyingGlass, LinkBreak, Gear, SignOut } from '@phosphor-icons/react'
+import { cloneElement, useState } from 'react'
+import { List, SidebarSimple, MagnifyingGlass, LinkBreak, Gear, SignOut } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils.js'
 import { Button } from './ui/button.jsx'
 import AccountMenu from './AccountMenu.jsx'
 import { PAGE, MAIN_PAGES } from '../lib/pages.js'
+import { storage } from '../lib/storage.js'
 import { useKeyboardInset } from '../hooks/useKeyboardInset.js'
 
 // The open page's button: light accent fill, accent text
@@ -10,37 +12,52 @@ const ACTIVE = 'bg-primary/15 text-primary hover:bg-primary/20 hover:text-primar
 
 // The app's primary navigation, in place of a header. `menu`: brokenCount and
 // onSignOut; `page` the open page; `syncButton` the SyncButton.
-// Desktop (768px+): a labeled rail on the left (the content's own 16px gutter
-// is the gap to the tree): Search and Sync on top, then
+// Desktop (768px+): a left rail (the content's own 16px gutter is the gap to
+// the tree). On top the app's name (Folio, bold) and a button that collapses
+// the rail to icons only (remembered on this device); then Search and Sync,
 // Home, File manager, Graph, and at the bottom Broken links (count),
 // Settings and Sign out.
 export function NavRail({ page, onPage, onSearch, syncButton, menu }) {
-  const item = id => cn('justify-start gap-3 font-normal', page === id && ACTIVE)
+  const [collapsed, setCollapsed] = useState(storage.getRailCollapsed)
+  const toggle = () => { setCollapsed(!collapsed); storage.setRailCollapsed(!collapsed) }
+  const item = id => cn('justify-start gap-3 font-normal', collapsed && 'justify-center', page === id && ACTIVE)
+  // A rail button: icon, and its label unless collapsed (then the label is the tooltip)
+  const label = text => collapsed ? <span className="sr-only">{text}</span> : text
+  const hint = text => collapsed ? text : undefined
   return (
-    <nav aria-label="Main" className="hidden md:flex w-56 shrink-0 flex-col gap-1 py-space pl-space">
-      <div className="flex flex-col gap-space">
-        <Button variant="outline" className="justify-start gap-3 px-3 font-normal text-muted-foreground shadow-sm hover:bg-transparent hover:text-foreground" onClick={onSearch}>
-          <MagnifyingGlass /> Search
+    <nav aria-label="Main" className={cn('hidden md:flex shrink-0 flex-col gap-1 py-space pl-space', collapsed ? 'w-24' : 'w-56')}>
+      <div className={cn('flex h-control items-center justify-between pl-3', collapsed && 'justify-center pl-0')}>
+        {!collapsed && <span className="text-base font-bold">Folio</span>}
+        <Button variant="ghost-outline" size="icon" aria-label={collapsed ? 'Expand menu' : 'Collapse menu'} title={collapsed ? 'Expand menu' : 'Collapse menu'} aria-expanded={!collapsed} className="shrink-0 border-muted-foreground/50" onClick={toggle}>
+          <SidebarSimple />
         </Button>
-        {syncButton}
+      </div>
+      <div className="h-2" />
+      <div className="flex flex-col gap-space">
+        <Button variant="outline" title={hint('Search')} className={cn('justify-start gap-3 px-3 font-normal text-muted-foreground shadow-sm hover:bg-transparent hover:text-foreground', collapsed && 'justify-center px-0')} onClick={onSearch}>
+          <MagnifyingGlass /> {label('Search')}
+        </Button>
+        {collapsed ? cloneElement(syncButton, { compact: true }) : syncButton}
       </div>
       <div className="h-2" />
       {MAIN_PAGES.map(({ id, title, icon: Icon }) => (
-        <Button key={id} variant="ghost" aria-current={page === id ? 'page' : undefined} className={item(id)} onClick={() => onPage(id)}>
-          <Icon /> {title}
+        <Button key={id} variant="ghost" title={hint(title)} aria-current={page === id ? 'page' : undefined} className={item(id)} onClick={() => onPage(id)}>
+          <Icon /> {label(title)}
         </Button>
       ))}
       <div className="flex-1" />
       <div role="separator" className="my-1 h-px shrink-0 bg-border" />
-      <Button variant="ghost" aria-current={page === PAGE.LINKS ? 'page' : undefined} className={item(PAGE.LINKS)} onClick={() => onPage(PAGE.LINKS)}>
-        <LinkBreak /> Broken links
-        {menu.brokenCount > 0 && <span className="ml-auto text-muted-foreground">{menu.brokenCount}</span>}
+      <Button variant="ghost" title={hint('Broken links')} aria-current={page === PAGE.LINKS ? 'page' : undefined} className={cn(item(PAGE.LINKS), 'relative')} onClick={() => onPage(PAGE.LINKS)}>
+        <LinkBreak /> {label('Broken links')}
+        {menu.brokenCount > 0 && (collapsed
+          ? <span className="absolute right-1.5 top-1.5 size-2 rounded-full bg-muted-foreground" aria-label={`${menu.brokenCount} broken`} />
+          : <span className="ml-auto text-muted-foreground">{menu.brokenCount}</span>)}
       </Button>
-      <Button variant="ghost" aria-current={page === PAGE.SETTINGS ? 'page' : undefined} className={item(PAGE.SETTINGS)} onClick={() => onPage(PAGE.SETTINGS)}>
-        <Gear /> Settings
+      <Button variant="ghost" title={hint('Settings')} aria-current={page === PAGE.SETTINGS ? 'page' : undefined} className={item(PAGE.SETTINGS)} onClick={() => onPage(PAGE.SETTINGS)}>
+        <Gear /> {label('Settings')}
       </Button>
-      <Button variant="ghost" className="justify-start gap-3 font-normal text-destructive" onClick={menu.onSignOut}>
-        <SignOut /> Sign out
+      <Button variant="ghost" title={hint('Sign out')} className={cn('justify-start gap-3 font-normal text-destructive', collapsed && 'justify-center')} onClick={menu.onSignOut}>
+        <SignOut /> {label('Sign out')}
       </Button>
     </nav>
   )
