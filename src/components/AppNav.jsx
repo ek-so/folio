@@ -7,14 +7,15 @@ import { useKeyboardInset } from '../hooks/useKeyboardInset.js'
 
 // The app's primary navigation, in place of a header. `menu`: brokenCount and
 // onSignOut; `page` the open page; `syncButton` the SyncButton.
-// Desktop (768px+): a labeled rail on the left: Search and Sync on top, then
+// Desktop (768px+): a labeled rail on the left (the content's own 8px gutter
+// is the gap to the tree): Search and Sync on top, then
 // Home, File manager, Graph, and at the bottom Broken links (count),
 // Settings and Sign out.
 export function NavRail({ page, onPage, onSearch, syncButton, menu }) {
   const item = id => cn('justify-start gap-3 font-normal', page === id && 'bg-secondary')
   return (
-    <nav aria-label="Main" className="hidden md:flex w-56 shrink-0 flex-col gap-1 p-2">
-      <Button variant="ghost-outline" className="justify-start gap-3 border-muted-foreground/50 font-normal" onClick={onSearch}>
+    <nav aria-label="Main" className="hidden md:flex w-56 shrink-0 flex-col gap-1 py-2 pl-2">
+      <Button variant="outline" className="justify-start gap-3 px-3 font-normal text-muted-foreground shadow-sm hover:bg-transparent hover:text-foreground" onClick={onSearch}>
         <MagnifyingGlass /> Search
       </Button>
       {syncButton}
