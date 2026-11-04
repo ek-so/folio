@@ -47,12 +47,14 @@ const deepLink = (() => {
   const view = viewForUrl(BASE, window.location.pathname)
   return view && (view.file || view.folder) ? view : null
 })()
+// A reload keeps the page you were on; the address always names File manager's folder, so it only picks the page for a fresh visit
+const reloaded = performance.getEntriesByType('navigation')[0]?.type === 'reload'
 
 export default function App() {
   const auth = useAuth()
   const repo = useRepo(auth.user ? auth.repo : null, toast.success)
   const { theme, setTheme } = useTheme()
-  const [page, setPage] = useState(() => deepLink ? PAGE.FILES : storage.getPage() || PAGE.HOME)
+  const [page, setPage] = useState(() => (reloaded && storage.getPage()) || (deepLink ? PAGE.FILES : storage.getPage() || MAIN_PAGES[0].id))
   // The main page files open in (File manager when Settings / Broken links is open)
   const mainPage = MAIN_PAGES.some(p => p.id === page) ? page : PAGE.FILES
   // Each main page has its own open file; a file opens in the page you're on
