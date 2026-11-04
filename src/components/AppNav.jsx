@@ -85,7 +85,7 @@ export function NavRail({ page, onPage, onSearch, renderSync, menu, onShowTree }
 // button (`tree`: on the main pages), Search and Sync.
 export function TopBar({ page, onPage, onSearch, renderSync, menu, tree }) {
   return (
-    <nav aria-label="Main" className="flex shrink-0 items-center gap-2 p-space-sm md:hidden">
+    <nav aria-label="Main" className="flex shrink-0 items-center gap-2 px-space-sm py-space md:hidden">
       <AccountMenu
         {...menu} current={page} onNavigate={onPage}
         trigger={
