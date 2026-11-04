@@ -1,7 +1,7 @@
 import FileIcon, { iconColor } from './FileIcon.jsx'
 import { pageInfo } from '../lib/pages.js'
 import { NavDrawerButton } from './NavTree.jsx'
-import { cn } from '@/lib/utils.js'
+import IconTile from './IconTile.jsx'
 
 // Top of the content box: with `tree`, on phones the file-tree button; then the
 // item's icon in a 40px tile tinted with the icon's color and its name (`changed`:
@@ -14,9 +14,9 @@ export default function TitleBar({ tree, page, path, dir, name, changed, badge, 
     <div className="shrink-0 border-b border-border p-space-sm">
       <div className="flex min-h-control items-center gap-3">
         {tree && <NavDrawerButton />}
-        <span className={cn('flex size-control shrink-0 items-center justify-center rounded-sm bg-current/15', info ? 'text-primary' : iconColor(path, dir))}>
+        <IconTile className={info ? 'text-primary' : iconColor(path, dir)}>
           {info ? <info.icon className="size-5" /> : <FileIcon path={path} dir={dir} />}
-        </span>
+        </IconTile>
         <div className="flex min-w-0 flex-1 items-center gap-2">
           <h1 className="min-w-0 truncate text-base font-bold">{info ? info.title : name}</h1>
           {changed && <span className="size-1.5 shrink-0 rounded-full bg-primary" />}
