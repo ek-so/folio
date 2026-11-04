@@ -6,7 +6,7 @@ import { PAGE, MAIN_PAGES } from '../lib/pages.js'
 import { useKeyboardInset } from '../hooks/useKeyboardInset.js'
 
 // The open page's button: light accent fill, accent text
-const ACTIVE = 'bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary'
+const ACTIVE = 'bg-primary/15 text-primary hover:bg-primary/20 hover:text-primary'
 
 // The app's primary navigation, in place of a header. `menu`: brokenCount and
 // onSignOut; `page` the open page; `syncButton` the SyncButton.

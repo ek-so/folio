@@ -5,7 +5,7 @@ import {
 } from './ui/dropdown-menu.jsx'
 
 // Open page's item: light accent fill, accent text
-const ACTIVE = 'bg-primary/10 text-primary focus:bg-primary/15 focus:text-primary'
+const ACTIVE = 'bg-primary/15 text-primary focus:bg-primary/20 focus:text-primary'
 
 // The phone navigation's popover, opened by `trigger` (a Button): the main
 // pages, then Broken links (count), Settings and Sign out. `current` is the
