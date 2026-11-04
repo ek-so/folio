@@ -33,8 +33,8 @@ function useTreeDrag(nav) {
   const [draggingPath, setDraggingPath] = useState(null) // for rendering only
   const [target, setTarget] = useState(null) // folder under the pointer ('' is the root), or null
   const timer = useRef({}) // { path, id }: a collapsed folder about to open
-  const navRef = useRef(nav)
-  navRef.current = nav
+  const navRef = useRef(nav) // the latest, for the hover timer
+  useEffect(() => { navRef.current = nav })
 
   const clearTimer = () => { clearTimeout(timer.current.id); timer.current = {} }
   useEffect(() => clearTimer, [])

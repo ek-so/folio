@@ -33,7 +33,7 @@ import { useTheme } from './hooks/useTheme.js'
 import { storage } from './lib/storage.js'
 import { PAGE, MAIN_PAGES } from './lib/pages.js'
 import { urlForPage, pageForUrl, existingView } from './lib/url.js'
-import { fileView, folderView, defaultViews, mapViews, movedView, removedView } from './lib/views.js'
+import { fileView, folderView, defaultViews, mapViews, movedView, removedViews } from './lib/views.js'
 import { toast } from 'sonner'
 import { Toaster } from './components/ui/sonner.jsx'
 import { cache } from './lib/cache.js'
@@ -185,7 +185,7 @@ export default function App() {
       }
       return next
     })
-    followViews(v => movedView(v, item.path, to)) // the same files and folders, not newly opened ones
+    followViews(mapViews(views, v => movedView(v, item.path, to))) // the same files and folders, not newly opened ones
   }
 
   function handleRename(item, name) {
@@ -210,16 +210,15 @@ export default function App() {
     if (error) toast.error(error)
   }
 
-  // Every page's view after a rename, delete or discard; the address is
-  // replaced, not added to history
-  function followViews(fn) {
-    const next = mapViews(views, fn)
-    if (urlForPage(BASE, mainPage, next[mainPage]) !== urlForPage(BASE, mainPage, views[mainPage])) replaceNext.current = true
+  // Every page's views after a rename, delete or discard (`next`); the address
+  // is replaced, not added to history (only when it shows: not on Settings / Broken links)
+  function followViews(next) {
+    if (page === mainPage && urlForPage(BASE, page, next[page]) !== urlForPage(BASE, page, views[page])) replaceNext.current = true
     setViews(next)
   }
 
   function handleDelete(item) {
-    followViews(v => removedView(v, item.path))
+    followViews(removedViews(views, item.path))
     update(ch => remove(ch, virtual, item.path, item.type === 'dir'))
   }
 
@@ -299,7 +298,7 @@ export default function App() {
     setConfirmDiscard(false)
     repo.discardAll()
     const files = repo.remote?.files ?? {}
-    followViews(v => existingView(v, new Set(Object.keys(files)), getAllFolders(files)))
+    followViews(mapViews(views, v => existingView(v, new Set(Object.keys(files)), getAllFolders(files))))
     setDiscards(n => n + 1)
   }
 

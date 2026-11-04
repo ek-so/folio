@@ -24,9 +24,16 @@ export function movedView(view, from, to) {
 }
 
 // `view` after the item at `path` was deleted: the open file's folder, or the
-// deleted folder's parent
+// deleted folder's parent (the same view when it wasn't affected)
 export function removedView(view, path) {
   if (inside(path, view.folder)) return folderView(parentOf(path))
   if (inside(path, view.file)) return folderView(view.folder)
   return view
 }
+
+// Every page's view after the item at `path` was deleted: File manager shows
+// what's left (removedView); Home and Graph go back to their own content
+export const removedViews = (views, path) => Object.fromEntries(Object.entries(views).map(([id, view]) => {
+  const next = view && removedView(view, path)
+  return [id, next !== view && id !== PAGE.FILES ? null : next]
+}))

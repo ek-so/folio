@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { fileView, folderView, defaultViews, mapViews, movedView, removedView } from './views.js'
+import { fileView, folderView, defaultViews, mapViews, movedView, removedView, removedViews } from './views.js'
 
 describe('views', () => {
   it('starts File manager at the root and the other pages on their own content', () => {
@@ -18,5 +18,10 @@ describe('views', () => {
     expect(removedView(fileView('a/b/x.md'), 'a/b')).toEqual(folderView('a'))
     expect(removedView(folderView('a/b'), 'a')).toEqual(folderView(''))
     expect(removedView(folderView('ab'), 'a')).toEqual(folderView('ab'))
+  })
+
+  it('takes Home and Graph back to their own content when their item is deleted', () => {
+    const views = { home: fileView('a/x.md'), files: fileView('a/x.md'), graph: folderView('b') }
+    expect(removedViews(views, 'a/x.md')).toEqual({ home: null, files: folderView('a'), graph: folderView('b') })
   })
 })
