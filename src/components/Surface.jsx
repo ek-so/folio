@@ -8,7 +8,7 @@ import { NavPanel } from './NavTree.jsx'
 // tree sits in its own box to the left (on phones it's the title bar's drawer).
 export default function Surface({ title, tree, children }) {
   return (
-    <div className={cn('flex flex-1 min-h-0 w-full sm:px-2 sm:pt-2 sm:pb-[calc(0.5rem+var(--safe-bottom))]', tree && 'md:gap-2')}>
+    <div className={cn('flex flex-1 min-h-0 w-full sm:px-4 sm:pt-4 sm:pb-[calc(1rem+var(--safe-bottom))]', tree && 'md:gap-4')}>
       {tree && <NavPanel />}
       <div className="flex flex-col flex-1 min-h-0 min-w-0 overflow-hidden bg-background rounded-t-xl border border-border sm:bg-card sm:rounded-xl">
         {title}

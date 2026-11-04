@@ -83,7 +83,7 @@ export function NavPanel() {
 }
 
 // Phones: a button in the title bar that opens the tree in a floating drawer
-// (card-colored, rounded, 8px from the screen's edges)
+// (card-colored, rounded, 16px from the screen's edges)
 export function NavDrawerButton() {
   const nav = useContext(NavContext)
   const [open, setOpen] = useState(false)
@@ -95,7 +95,7 @@ export function NavDrawerButton() {
         <SidebarSimple />
       </Button>
       <Sheet open={open} onOpenChange={setOpen}>
-        <SheetContent side="left" className="top-[calc(0.5rem+var(--safe-top))] bottom-[calc(0.5rem+var(--safe-bottom))] left-2 h-auto gap-0 overflow-hidden rounded-xl border bg-card">
+        <SheetContent side="left" className="top-[calc(1rem+var(--safe-top))] bottom-[calc(1rem+var(--safe-bottom))] left-4 h-auto gap-0 overflow-hidden rounded-xl border bg-card">
           <SheetHeader className="p-2 pl-4">
             <SheetTitle className="flex h-control items-center truncate pr-12">{nav.repoName}</SheetTitle>
             <SheetDescription className="sr-only">Files and folders</SheetDescription>

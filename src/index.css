@@ -191,5 +191,5 @@
 
 /* Room under scrolling content for the phone's floating navigation: use as max-md:pb-nav */
 @utility pb-nav {
-  padding-bottom: calc(4.5rem + var(--safe-bottom));
+  padding-bottom: calc(5.5rem + var(--safe-bottom));
 }
