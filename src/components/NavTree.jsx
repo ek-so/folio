@@ -5,6 +5,7 @@ import { Button } from './ui/button.jsx'
 import { Sheet, SheetContent, SheetTitle, SheetDescription } from './ui/sheet.jsx'
 import FileIcon from './FileIcon.jsx'
 import ItemMenu from './ItemMenu.jsx'
+import { ListRow } from './ui/list-row.jsx'
 import Spinner from './Spinner.jsx'
 import { LINK_ERRORS } from '../lib/files.js'
 import { canMoveTo } from '../lib/changes.js'
@@ -111,45 +112,41 @@ function Rows({ dir, depth }) {
     }
     return (
       <li key={item.path}>
-        <div
-          {...dragProps}
+        <ListRow
+          leading={<>
+            <span aria-hidden="true" className="shrink-0" style={{ width: `${depth}rem` }} />
+            {folder ? (
+              <Button
+                variant="ghost" size="icon" className="ml-1 size-control-md shrink-0 text-muted-foreground hover:bg-muted-foreground/10"
+                aria-label={open ? 'Collapse' : 'Expand'} aria-expanded={open}
+                onClick={() => nav.onToggle(item.path)}
+              >
+                <CaretRight className={cn('transition-transform', open && 'rotate-90')} />
+              </Button>
+            ) : <span aria-hidden="true" className="ml-1 w-control-md shrink-0" />}
+          </>}
+          icon={isLink
+            ? <FileIcon path={link?.path ?? item.path} dir={link?.kind === 'folder'} link />
+            : <FileIcon path={item.path} dir={folder} />}
+          title={item.name}
+          changed={item.changed}
+          dimmed={item.name.startsWith('.') || isLink}
+          disabled={!openable}
+          tooltip={link?.error ? `${item.name} ${LINK_ERRORS[link.error]}` : link?.path ? `Symlinked from ${link.path}` : undefined}
+          onClick={() => {
+            if (folder) {
+              nav.onOpenFolder(item.path)
+              if (!open) nav.onToggle(item.path)
+            } else nav.onOpenFile(item.path) // a symlink opens its source (App)
+          }}
+          trailing={<ItemMenu item={item} {...nav.itemActions} inList hoverReveal />}
+          active={nav.current === item.path}
           className={cn(
-            'group flex h-control items-center rounded-sm px-1 transition-colors hover:bg-secondary/60',
-            nav.current === item.path && 'bg-secondary',
             drag?.draggingPath === item.path && 'opacity-40',
             folder && drag?.target === item.path && 'bg-primary/10 ring-1 ring-inset ring-primary/40',
           )}
-        >
-          <span aria-hidden="true" className="shrink-0" style={{ width: `${depth}rem` }} />
-          {folder ? (
-            <Button
-              variant="ghost" size="icon" className="size-control-md shrink-0 text-muted-foreground hover:bg-muted-foreground/10"
-              aria-label={open ? 'Collapse' : 'Expand'} aria-expanded={open}
-              onClick={() => nav.onToggle(item.path)}
-            >
-              <CaretRight className={cn('transition-transform', open && 'rotate-90')} />
-            </Button>
-          ) : <span aria-hidden="true" className="w-control-md shrink-0" />}
-          <Button
-            variant="ghost"
-            className={cn('h-full flex-1 min-w-0 justify-start gap-2 px-1 rounded-sm font-normal text-left hover:bg-transparent disabled:opacity-100', (item.name.startsWith('.') || isLink) && 'opacity-50 disabled:opacity-50')}
-            disabled={!openable}
-            title={link?.error ? `${item.name} ${LINK_ERRORS[link.error]}` : link?.path ? `Symlinked from ${link.path}` : undefined}
-            onClick={() => {
-              if (folder) {
-                nav.onOpenFolder(item.path)
-                if (!open) nav.onToggle(item.path)
-              } else nav.onOpenFile(item.path) // a symlink opens its source (App)
-            }}
-          >
-            {isLink
-              ? <FileIcon path={link?.path ?? item.path} dir={link?.kind === 'folder'} link />
-              : <FileIcon path={item.path} dir={folder} />}
-            <span className="flex-1 truncate">{item.name}</span>
-            {item.changed && <span className="size-1.5 shrink-0 rounded-full bg-primary" />}
-          </Button>
-          <ItemMenu item={item} {...nav.itemActions} inList hoverReveal />
-        </div>
+          rowProps={dragProps}
+        />
         {open && <ul><Rows dir={item.path} depth={depth + 1} /></ul>}
       </li>
     )

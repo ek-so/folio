@@ -1,4 +1,4 @@
-import { Button } from './ui/button.jsx'
+import { ListRow } from './ui/list-row.jsx'
 import FileIcon from './FileIcon.jsx'
 import { displayName } from '../lib/files.js'
 
@@ -12,17 +12,7 @@ export default function Backlinks({ links, onOpen }) {
       <ul className="-mx-3 flex flex-col">
         {links.map(({ from, line }, i) => (
           <li key={`${from}:${i}`}>
-            <Button
-              variant="ghost"
-              className="h-auto min-h-control w-full justify-start gap-3 px-3 py-2 font-normal text-left"
-              onClick={() => onOpen(from)}
-            >
-              <FileIcon path={from} />
-              <span className="min-w-0 flex-1">
-                <span className="block truncate">{displayName(from)}</span>
-                <span className="block truncate text-xs text-muted-foreground">{line}</span>
-              </span>
-            </Button>
+            <ListRow icon={<FileIcon path={from} />} title={displayName(from)} description={line} onClick={() => onOpen(from)} />
           </li>
         ))}
       </ul>

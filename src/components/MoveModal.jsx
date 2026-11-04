@@ -1,8 +1,8 @@
 import { useState, useContext } from 'react'
-import { Folder } from '@phosphor-icons/react'
-import { Button } from './ui/button.jsx'
 import { Input } from './ui/input.jsx'
 import BottomSheet from './BottomSheet.jsx'
+import FileIcon from './FileIcon.jsx'
+import { ListRow } from './ui/list-row.jsx'
 import { LinksContext } from '../hooks/useLinkIndex.js'
 import { canMoveTo } from '../lib/changes.js'
 
@@ -44,14 +44,7 @@ export default function MoveModal({ item, folders, onMove, onClose }) {
         <ul className="flex flex-col gap-0.5 max-h-64 overflow-y-auto -mx-1">
           {filtered.map(folder => (
             <li key={folder || '__root__'}>
-              <Button
-                variant="ghost"
-                className="w-full justify-start gap-3 font-normal"
-                onClick={() => handleMove(folder)}
-              >
-                <Folder />
-                <span className="truncate text-left">{folder || '(root)'}</span>
-              </Button>
+              <ListRow icon={<FileIcon path={folder} dir />} title={folder || '(root)'} onClick={() => handleMove(folder)} />
             </li>
           ))}
           {filtered.length === 0 && (

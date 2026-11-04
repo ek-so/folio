@@ -5,6 +5,7 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuIte
 import Surface from './Surface.jsx'
 import TitleBar from './TitleBar.jsx'
 import ItemMenu from './ItemMenu.jsx'
+import { ListRow } from './ui/list-row.jsx'
 import { splitName } from '../lib/changes.js'
 import { fileKind, LINK_ERRORS } from '../lib/files.js'
 import FileIcon from './FileIcon.jsx'
@@ -105,84 +106,74 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
               const link = symlinks[item.path] // undefined while loading
               const openable = isLink ? !!link?.kind : item.type === 'dir' || fileKind(item.path) !== 'file'
               const isDraggedItem = dragging?.path === item.path
-              const row = (
-                <Button
-                  variant="ghost"
-                  // Hidden files and broken links fade their icon and name only, not the row's hover or ⋯
-                  className={cn('flex-1 min-w-0 justify-start gap-3 pl-3 pr-0 rounded-sm font-normal text-left hover:bg-transparent disabled:opacity-100 disabled:cursor-default', !isDraggedItem && (item.name.startsWith('.') || isLink) && 'opacity-50 disabled:opacity-50')}
-                  onClick={() => navigate(item)}
-                  disabled={!openable}
-                  // Where a link points: the browser's own tooltip on hover
-                  title={link?.path ? `Symlinked from ${link.path}` : undefined}
-                >
-                  {isLink
-                    ? <FileIcon path={link?.path ?? item.path} dir={link?.kind === 'folder'} link />
-                    : <FileIcon path={item.path} dir={item.type === 'dir'} />}
-                  <span className="flex-1 text-base truncate">
-                    {base}
-                    {ext && <span className="text-muted-foreground">{ext}</span>}
-                    {item.changed && <span className="ml-1.5 inline-block size-1.5 rounded-full bg-primary align-middle" />}
-                    {isLink && <span className="text-muted-foreground"> (symlink)</span>}
-                    {link?.error && <span className="ml-2 text-sm text-muted-foreground">{LINK_ERRORS[link.error]}</span>}
-                  </span>
-                </Button>
-              )
               return (
-                <li
-                  key={item.path}
-                  draggable
-                  onDragStart={e => {
-                    draggingRef.current = item
-                    setDragging(item)
-                    e.dataTransfer.effectAllowed = 'move'
-                  }}
-                  onDragEnd={() => {
-                    draggingRef.current = null
-                    setDragging(null)
-                    setDragOverPath(null)
-                  }}
-                  className={cn(isDraggedItem && 'opacity-40')}
-                >
-                  <div
+                <li key={item.path}>
+                  <ListRow
+                    icon={isLink
+                      ? <FileIcon path={link?.path ?? item.path} dir={link?.kind === 'folder'} link />
+                      : <FileIcon path={item.path} dir={item.type === 'dir'} />}
+                    title={<>
+                      {base}
+                      {ext && <span className="text-muted-foreground">{ext}</span>}
+                      {isLink && <span className="text-muted-foreground"> (symlink)</span>}
+                      {link?.error && <span className="ml-2 text-sm text-muted-foreground">{LINK_ERRORS[link.error]}</span>}
+                    </>}
+                    changed={item.changed}
+                    onClick={() => navigate(item)}
+                    disabled={!openable}
+                    // Hidden files and links fade their icon and name only, not the row's hover or ⋯
+                    dimmed={!isDraggedItem && (item.name.startsWith('.') || isLink)}
+                    // Where a link points: the browser's own tooltip on hover
+                    tooltip={link?.path ? `Symlinked from ${link.path}` : undefined}
+                    trailing={<ItemMenu item={item} onRename={onRename} onDelete={onDelete} onMove={onMove} folders={folders} inList />}
                     className={cn(
-                      // One row: hovering anywhere on it (⋯ included) or an open ⋯ menu highlights it
-                      'flex items-center pr-1 rounded-sm transition-colors hover:bg-secondary/60 has-[[data-state=open]]:bg-secondary/60',
-                      dragOverPath === item.path && item.type === 'dir' && 'bg-primary/10 ring-1 ring-primary/40'
+                      isDraggedItem && 'opacity-40',
+                      dragOverPath === item.path && item.type === 'dir' && 'bg-primary/10 ring-1 ring-primary/40',
                     )}
-                    onDragOver={e => {
-                      if (item.type !== 'dir') return
-                      if (isFileDrag(e)) {
+                    rowProps={{
+                      draggable: true,
+                      onDragStart: e => {
+                        draggingRef.current = item
+                        setDragging(item)
+                        e.dataTransfer.effectAllowed = 'move'
+                      },
+                      onDragEnd: () => {
+                        draggingRef.current = null
+                        setDragging(null)
+                        setDragOverPath(null)
+                      },
+                      onDragOver: e => {
+                        if (item.type !== 'dir') return
+                        if (isFileDrag(e)) {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          e.dataTransfer.dropEffect = 'copy'
+                          setFilesOver(true)
+                          setDragOverPath(item.path)
+                          return
+                        }
+                        const d = draggingRef.current
+                        if (!d || d.path === item.path) return
                         e.preventDefault()
-                        e.stopPropagation()
-                        e.dataTransfer.dropEffect = 'copy'
-                        setFilesOver(true)
+                        e.dataTransfer.dropEffect = 'move'
                         setDragOverPath(item.path)
-                        return
-                      }
-                      const d = draggingRef.current
-                      if (!d || d.path === item.path) return
-                      e.preventDefault()
-                      e.dataTransfer.dropEffect = 'move'
-                      setDragOverPath(item.path)
+                      },
+                      onDragLeave: e => {
+                        if (item.type !== 'dir') return
+                        if (!e.currentTarget.contains(e.relatedTarget)) setDragOverPath(null)
+                      },
+                      onDrop: e => {
+                        if (item.type === 'dir' && isFileDrag(e)) return dropFiles(e, item.path)
+                        const d = draggingRef.current
+                        if (item.type !== 'dir' || !d || d.path === item.path) return
+                        e.preventDefault()
+                        onDropMove(d, item.path)
+                        draggingRef.current = null
+                        setDragging(null)
+                        setDragOverPath(null)
+                      },
                     }}
-                    onDragLeave={e => {
-                      if (item.type !== 'dir') return
-                      if (!e.currentTarget.contains(e.relatedTarget)) setDragOverPath(null)
-                    }}
-                    onDrop={e => {
-                      if (item.type === 'dir' && isFileDrag(e)) return dropFiles(e, item.path)
-                      const d = draggingRef.current
-                      if (item.type !== 'dir' || !d || d.path === item.path) return
-                      e.preventDefault()
-                      onDropMove(d, item.path)
-                      draggingRef.current = null
-                      setDragging(null)
-                      setDragOverPath(null)
-                    }}
-                  >
-                    {row}
-                    <ItemMenu item={item} onRename={onRename} onDelete={onDelete} onMove={onMove} folders={folders} inList />
-                  </div>
+                  />
                 </li>
               )
             })}

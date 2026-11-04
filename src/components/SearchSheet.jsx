@@ -1,9 +1,9 @@
 import { useState, useRef } from 'react'
 import { Input } from './ui/input.jsx'
-import { Button } from './ui/button.jsx'
 import BottomSheet from './BottomSheet.jsx'
 import { splitName } from '../lib/changes.js'
 import FileIcon from './FileIcon.jsx'
+import { ListRow } from './ui/list-row.jsx'
 
 // Command-palette style search. Shows recently opened files when no query is typed,
 // then filters every visible file in the repo (notes, images, PDFs, …) by path.
@@ -57,20 +57,7 @@ export default function SearchSheet({ onClose, onSelect, virtual, changes, recen
                 const hasEdit = changes?.edits && virtual[path]?.orig in changes.edits
                 return (
                   <li key={path}>
-                    <Button
-                      variant="ghost"
-                      className="w-full h-auto min-h-control justify-start gap-3 py-2 font-normal text-left"
-                      onClick={() => select(path)}
-                    >
-                      <FileIcon path={path} />
-                      <span className="flex-1 min-w-0">
-                        <span className="flex items-center gap-1.5 text-sm truncate">
-                          {base}
-                          {hasEdit && <span className="inline-block size-1.5 rounded-full bg-primary shrink-0" />}
-                        </span>
-                        {folder && <span className="block text-xs text-muted-foreground truncate">{folder}</span>}
-                      </span>
-                    </Button>
+                    <ListRow icon={<FileIcon path={path} />} title={base} changed={hasEdit} description={folder} onClick={() => select(path)} />
                   </li>
                 )
               })}
