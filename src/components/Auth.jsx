@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Button } from './ui/button.jsx'
 import { Input } from './ui/input.jsx'
+import AppLogo from './AppLogo.jsx'
 
 export default function Auth({ onAuth }) {
   const [token, setToken] = useState('')
@@ -23,7 +24,7 @@ export default function Auth({ onAuth }) {
   return (
     <div className="flex min-h-full items-center justify-center p-6 bg-background">
       <div className="w-full max-w-sm flex flex-col items-center gap-4">
-        <img src={`${import.meta.env.BASE_URL}folio-logo.png`} alt="" className="size-20 object-contain" />
+        <AppLogo className="size-20" />
         <h1 className="text-2xl font-bold tracking-tight">Folio</h1>
         <p className="text-sm text-muted-foreground text-center">
           Paste a GitHub token to access your notes.

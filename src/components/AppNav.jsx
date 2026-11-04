@@ -9,6 +9,7 @@ import { RAIL_WIDTH } from '../lib/resize.js'
 import { useResizableWidth } from '../hooks/useResizableWidth.js'
 import ResizeHandle from './ResizeHandle.jsx'
 import { useKeyboardInset } from '../hooks/useKeyboardInset.js'
+import AppLogo from './AppLogo.jsx'
 
 // The open page's button: light accent fill, accent text
 const ACTIVE = 'bg-primary/15 text-primary hover:bg-primary/20 hover:text-primary'
@@ -31,9 +32,11 @@ export function NavRail({ page, onPage, onSearch, renderSync, menu }) {
   return (
     <nav aria-label="Main" style={collapsed ? undefined : { width }} className={cn('relative hidden md:flex shrink-0 flex-col gap-1 py-space pl-space', collapsed ? 'w-14 items-center' : 'max-w-[25vw]')}>
       <div className={cn('flex h-control items-center justify-between pl-3', collapsed && 'justify-center pl-0')}>
-        {!collapsed && <span className="text-base font-bold">Folio</span>}
-        <Button variant="ghost-outline" size="icon" aria-label={collapsed ? 'Expand menu' : 'Collapse menu'} title={collapsed ? 'Expand menu' : 'Collapse menu'} aria-expanded={!collapsed} className="shrink-0 border-muted-foreground/50" onClick={toggle}>
-          <SidebarSimple />
+        {!collapsed && <span className="flex items-center gap-2 text-base font-bold"><AppLogo className="size-6" />Folio</span>}
+        <Button variant="ghost-outline" size="icon" aria-label={collapsed ? 'Expand menu' : 'Collapse menu'} title={collapsed ? 'Expand menu' : 'Collapse menu'} aria-expanded={!collapsed} className={cn('group shrink-0 border-muted-foreground/50', collapsed && 'bg-transparent hover:bg-secondary focus-visible:bg-secondary')} onClick={toggle}>
+          {/* Collapsed, the logo stands in for the button until it's hovered or focused */}
+          {collapsed && <AppLogo className="size-6 group-hover:hidden group-focus-visible:hidden" />}
+          <SidebarSimple className={cn(collapsed && 'hidden group-hover:block group-focus-visible:block')} />
         </Button>
       </div>
       <div className="h-2" />
