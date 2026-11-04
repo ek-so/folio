@@ -66,13 +66,18 @@ function FileTree() {
   return <ul><Rows dir="" depth={0} /></ul>
 }
 
-// Desktop: the tree in its own box next to the content
+// Desktop: the tree in its own box next to the content, titled with the repo's name
 export function NavPanel() {
   const nav = useContext(NavContext)
   if (!nav) return null
   return (
-    <aside aria-label="Files and folders" className="hidden md:block w-64 shrink-0 overflow-y-auto overscroll-y-contain rounded-xl border border-border bg-card p-2">
-      <FileTree />
+    <aside aria-label="Files and folders" className="hidden md:flex w-64 shrink-0 flex-col overflow-hidden rounded-xl border border-border bg-card">
+      <div className="shrink-0 border-b border-border p-2">
+        <h2 className="flex h-control items-center truncate px-2 text-base font-bold">{nav.repoName}</h2>
+      </div>
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain p-2">
+        <FileTree />
+      </div>
     </aside>
   )
 }
