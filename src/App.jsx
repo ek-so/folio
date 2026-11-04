@@ -400,7 +400,7 @@ export default function App() {
         repoName,
       }}>
       <div className="flex flex-col h-full bg-background">
-        <Toaster theme={theme} position="top-center" />
+        <Toaster theme={theme} />
         <PullToRefresh onRefresh={() => window.location.reload()}>
           <div className="flex flex-1 min-h-0">
           <NavRail page={page} onPage={setPage} onSearch={() => setSearchOpen(true)} renderSync={renderSync} menu={menu} />
