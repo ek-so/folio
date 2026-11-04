@@ -77,10 +77,10 @@ export default function SyncButton({ className, compact, syncState, syncing, cha
         {syncState === 'idle' && !syncing && (hasPush || hasPull) && (
           <span
             aria-label={directions}
-            className="flex h-5 items-center gap-0.5 rounded-full bg-primary px-1.5 text-primary-foreground [&_svg]:size-3"
+            className="flex h-5 min-w-5 items-center justify-center gap-0.5 rounded-full bg-primary px-1 text-primary-foreground"
           >
-            {hasPush && <ArrowUp weight="bold" />}
-            {hasPull && <ArrowDown weight="bold" />}
+            {hasPush && <ArrowUp weight="bold" className="size-3" />}
+            {hasPull && <ArrowDown weight="bold" className="size-3" />}
           </span>
         )}
       </Button>
