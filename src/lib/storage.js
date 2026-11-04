@@ -7,6 +7,7 @@ const FOLDER_KEY = 'folio_folder'
 const FILES_KEY = 'folio_files'
 const PAGE_KEY = 'folio_page'
 const EXPANDED_KEY = 'folio_expanded'
+const TREE_WIDTH_KEY = 'folio_tree_width'
 const CHANGES_KEY = 'folio_changes_'
 
 function read(store, key) {
@@ -30,6 +31,8 @@ export const storage = {
     try { return JSON.parse(read(localStorage, USER_KEY)) } catch { return null }
   },
   setUser: (user) => write(localStorage, USER_KEY, user && JSON.stringify({ login: user.login })),
+  getTreeWidth: () => read(localStorage, TREE_WIDTH_KEY),
+  setTreeWidth: (width) => write(localStorage, TREE_WIDTH_KEY, String(width)),
   getTheme: () => read(localStorage, THEME_KEY),
   setTheme: (theme) => write(localStorage, THEME_KEY, theme),
   // Session-only, so a reload keeps the current folder, open note and page

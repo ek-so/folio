@@ -1,4 +1,4 @@
-import { createContext, useContext, useState } from 'react'
+import { createContext, useContext, useRef, useState } from 'react'
 import { CaretRight, SidebarSimple } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils.js'
 import { Button } from './ui/button.jsx'
@@ -6,6 +6,8 @@ import { Sheet, SheetContent, SheetTitle, SheetDescription } from './ui/sheet.js
 import FileIcon from './FileIcon.jsx'
 import Spinner from './Spinner.jsx'
 import { LINK_ERRORS } from '../lib/files.js'
+import { TREE_WIDTH, clampTreeWidth } from '../lib/tree.js'
+import { storage } from '../lib/storage.js'
 
 // What the file tree needs from App: `listDir(dir)`, `symlinks`, the `current`
 // path, the open folders (`expanded`, `onToggle`) and `onOpenFolder` /
@@ -82,14 +84,40 @@ function TreePanel({ Title = 'h2', closable }) {
   )
 }
 
-// Desktop: the tree in its own box next to the content
+// Desktop: the tree in its own box next to the content. The 16px gap to the
+// content is a drag handle (also ←/→ keys) that resizes it; the width is remembered.
 export function NavPanel() {
   const nav = useContext(NavContext)
+  const [width, setWidth] = useState(() => clampTreeWidth(storage.getTreeWidth()))
+  const box = useRef(null)
   if (!nav) return null
+  const resize = w => { const next = clampTreeWidth(w); setWidth(next); storage.setTreeWidth(next) }
+  const onPointerDown = e => {
+    e.currentTarget.setPointerCapture(e.pointerId)
+    e.preventDefault()
+  }
+  const onPointerMove = e => {
+    if (e.currentTarget.hasPointerCapture(e.pointerId)) resize(e.clientX - box.current.getBoundingClientRect().left)
+  }
+  const onKeyDown = e => {
+    const step = { ArrowLeft: -16, ArrowRight: 16 }[e.key]
+    if (step) { e.preventDefault(); resize(width + step) }
+  }
   return (
-    <aside aria-label="Files and folders" className="hidden md:flex w-64 shrink-0 flex-col overflow-hidden rounded-xl border border-border bg-card">
-      <TreePanel />
-    </aside>
+    <div ref={box} style={{ width }} className="relative hidden md:block shrink-0">
+      <aside aria-label="Files and folders" className="flex h-full flex-col overflow-hidden rounded-xl border border-border bg-card">
+        <TreePanel />
+      </aside>
+      <div
+        role="separator" aria-orientation="vertical" aria-label="Resize file tree" tabIndex={0}
+        aria-valuemin={TREE_WIDTH.min} aria-valuemax={TREE_WIDTH.max} aria-valuenow={width}
+        className="group absolute inset-y-0 -right-space z-10 flex w-space cursor-col-resize touch-none justify-center outline-none"
+        onPointerDown={onPointerDown} onPointerMove={onPointerMove} onKeyDown={onKeyDown}
+        onDoubleClick={() => resize(TREE_WIDTH.default)}
+      >
+        <span className="h-full w-0.5 rounded-full bg-primary opacity-0 transition-opacity group-hover:opacity-60 group-focus-visible:opacity-60 group-active:opacity-100" />
+      </div>
+    </div>
   )
 }
 
@@ -106,7 +134,7 @@ export function NavDrawerButton() {
         <SidebarSimple />
       </Button>
       <Sheet open={open} onOpenChange={setOpen}>
-        <SheetContent side="left" className="top-[calc(var(--space-sm)+var(--safe-top))] bottom-[calc(var(--space-sm)+var(--safe-bottom))] left-space-sm h-auto gap-0 overflow-hidden rounded-xl border bg-card">
+        <SheetContent side="left" className="top-[calc(var(--space-sm)+var(--safe-top))] bottom-[calc(var(--space-sm)+var(--safe-bottom))] left-space-sm h-auto w-[calc(100vw-2*var(--space-sm))] gap-0 sm:w-[85vw] sm:max-w-none overflow-hidden rounded-xl border bg-card">
           <SheetDescription className="sr-only">Files and folders</SheetDescription>
           <NavContext.Provider value={{ ...nav, onOpenFolder: close(nav.onOpenFolder), onOpenFile: close(nav.onOpenFile) }}>
             <TreePanel Title={SheetTitle} closable />
