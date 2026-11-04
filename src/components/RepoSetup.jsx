@@ -15,6 +15,7 @@ export default function RepoSetup({ user, onRepo, onLogout }) {
           initial={`${user.login}/`}
           onConnect={onRepo}
           inputClassName="font-mono bg-card border-border"
+          errorClassName="text-center"
           actions={({ busy, empty }) => (
             <Button type="submit" disabled={busy || empty} className="w-full">
               {busy ? 'Connecting…' : 'Connect'}

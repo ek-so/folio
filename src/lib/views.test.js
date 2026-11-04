@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { fileView, folderView, startTrails, currentView, openView, trailTo, movedTrails, keptTrails, touches } from './views.js'
+import { fileView, folderView, startTrails, currentView, openView, trailTo, movedTrails, keptTrails } from './views.js'
 
 describe('views', () => {
   it('starts every page at its own start', () => {
@@ -27,7 +27,7 @@ describe('views', () => {
     const trails = { home: [folderView('a'), fileView('a/x.md')], files: [folderView('ab')], graph: [] }
     expect(movedTrails(trails, 'a', 'b/a').home).toEqual([folderView('b/a'), fileView('b/a/x.md')])
     expect(movedTrails(trails, 'a', 'b/a').files).toEqual([folderView('ab')])
-    expect(keptTrails(trails, v => !touches(v, 'a/x.md')).home).toEqual([folderView('a')])
-    expect(keptTrails({ files: [folderView('b'), folderView('a'), folderView('b')] }, v => !touches(v, 'a')).files).toEqual([folderView('b')])
+    expect(keptTrails(trails, v => v.file !== 'a/x.md').home).toEqual([folderView('a')])
+    expect(keptTrails({ files: [folderView('b'), folderView('a'), folderView('b')] }, v => v.folder !== 'a').files).toEqual([folderView('b')])
   })
 })

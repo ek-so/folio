@@ -33,7 +33,7 @@ import { useTheme } from './hooks/useTheme.js'
 import { storage } from './lib/storage.js'
 import { PAGE, MAIN_PAGES } from './lib/pages.js'
 import { urlForPage, pageForUrl, existingView } from './lib/url.js'
-import { fileView, folderView, startTrails, currentView, openView, trailTo, movedTrails, keptTrails, touches } from './lib/views.js'
+import { fileView, folderView, startTrails, currentView, openView, trailTo, movedTrails, keptTrails } from './lib/views.js'
 import { toast } from 'sonner'
 import { Toaster } from './components/ui/sonner.jsx'
 import { cache } from './lib/cache.js'
@@ -156,6 +156,14 @@ export default function App() {
 
   const { virtual, changes, update } = repo
   const allFolders = useMemo(() => getAllFolders(virtual), [virtual])
+  // Files and folders that are gone (deleted, discarded, removed by a Pull or
+  // Sync) leave every page's trail: each page shows what it showed before them
+  useEffect(() => {
+    if (!repo.remote) return
+    const folders = new Set(allFolders)
+    const next = keptTrails(trails, v => v.file ? v.file in virtual : !v.folder || folders.has(v.folder))
+    if (MAIN_PAGES.some(p => next[p.id].length !== trails[p.id].length)) followTrails(next)
+  }, [virtual])
   const files = useMemo(() => new Set(Object.keys(virtual)), [virtual])
   known.current = { files, folders: allFolders }
   const links = useLinkIndex(virtual, changes)
@@ -230,7 +238,6 @@ export default function App() {
   }
 
   function handleDelete(item) {
-    followTrails(keptTrails(trails, v => !touches(v, item.path)))
     update(ch => remove(ch, virtual, item.path, item.type === 'dir'))
   }
 
@@ -305,13 +312,10 @@ export default function App() {
     }
   }, [])
 
-  // Drop all local changes; leave a note or folder that only existed locally
+  // Drop all local changes (a note or folder that only existed locally leaves the trails)
   function discardChanges() {
     setConfirmDiscard(false)
     repo.discardAll()
-    const files = repo.remote?.files ?? {}
-    const folders = new Set(getAllFolders(files))
-    followTrails(keptTrails(trails, v => v.file ? v.file in files : !v.folder || folders.has(v.folder)))
     setDiscards(n => n + 1)
   }
 
@@ -349,6 +353,7 @@ export default function App() {
   // Another repo: typing in the open note is saved first (local changes are
   // kept per repo), then the app opens there
   function switchRepo(full) {
+    if (repo.syncing) return // a sync is never cut off (RepoMenu disables switching meanwhile)
     window.dispatchEvent(new Event('folio:flush'))
     auth.switchRepo(full)
   }
@@ -419,8 +424,9 @@ export default function App() {
         onUpload: handleUpload,
         loading: !repo.remote && !repo.error,
         repo: auth.repo,
-        repos: storage.getRepos(),
+        repos: auth.repos,
         onSwitchRepo: switchRepo,
+        syncing: repo.syncing,
       }}>
       <div className="flex flex-col h-full bg-background">
         <Toaster theme={theme} />

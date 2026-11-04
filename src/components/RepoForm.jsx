@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { cn } from '@/lib/utils.js'
 import { Input } from './ui/input.jsx'
 import { checkRepo } from '../lib/github.js'
 import { parseRepo } from '../lib/files.js'
@@ -6,7 +7,7 @@ import { parseRepo } from '../lib/files.js'
 // The owner/repo field, checked with GitHub before `onConnect('owner/repo')`.
 // Used by the setup screen and the Switch repository sheet; `actions({ busy,
 // empty })` renders their buttons (a submit button connects).
-export default function RepoForm({ initial, onConnect, inputRef, inputClassName, actions }) {
+export default function RepoForm({ initial, onConnect, inputRef, inputClassName, errorClassName, actions }) {
   const [value, setValue] = useState(initial)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -41,7 +42,7 @@ export default function RepoForm({ initial, onConnect, inputRef, inputClassName,
         spellCheck="false"
         className={inputClassName}
       />
-      {error && <p className="text-destructive text-xs">{error}</p>}
+      {error && <p className={cn('text-destructive text-xs', errorClassName)}>{error}</p>}
       {actions({ busy, empty: !value.trim() })}
     </form>
   )

@@ -50,6 +50,3 @@ export const movedTrails = (trails, from, to) => {
 // each page goes back to what it showed before them
 export const keptTrails = (trails, keep) =>
   Object.fromEntries(Object.entries(trails).map(([id, trail]) => [id, tidy(trail.filter(keep))]))
-
-// Whether `view` shows the item at `path` or something inside it
-export const touches = (view, path) => inside(path, view.file) || inside(path, view.folder)

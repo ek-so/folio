@@ -9,6 +9,7 @@ import { NavContext } from './NavTree.jsx'
 // The repo's name atop the file tree, as a menu: the repos used on this
 // device (the open one checked; another one opens the app there), Switch
 // repository… (a sheet with the owner/repo field) and Open on GitHub.
+// Switching waits while a sync runs, so it's never cut off.
 export default function RepoMenu() {
   const nav = useContext(NavContext)
   const [switching, setSwitching] = useState(false)
@@ -25,13 +26,13 @@ export default function RepoMenu() {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="max-w-[min(20rem,calc(100vw-2*var(--space)))]" onCloseAutoFocus={e => e.preventDefault()}>
           {nav.repos.map(repo => (
-            <DropdownMenuItem key={repo} onSelect={() => repo !== nav.repo && nav.onSwitchRepo(repo)}>
+            <DropdownMenuItem key={repo} disabled={nav.syncing && repo !== nav.repo} onSelect={() => repo !== nav.repo && nav.onSwitchRepo(repo)}>
               {repo === nav.repo ? <Check /> : <span className="size-4" />}
               <span className="truncate">{repo}</span>
             </DropdownMenuItem>
           ))}
           <DropdownMenuSeparator />
-          <DropdownMenuItem onSelect={() => setSwitching(true)}><GitBranch /> Switch repository…</DropdownMenuItem>
+          <DropdownMenuItem disabled={nav.syncing} onSelect={() => setSwitching(true)}><GitBranch /> Switch repository…</DropdownMenuItem>
           <DropdownMenuItem asChild>
             <a href={`https://github.com/${nav.repo}`} target="_blank" rel="noreferrer"><ArrowSquareOut /> Open on GitHub</a>
           </DropdownMenuItem>
@@ -52,7 +53,7 @@ export default function RepoMenu() {
             actions={({ busy, empty }) => (
               <div className="flex justify-end gap-2">
                 <Button type="button" variant="secondary" onClick={() => setSwitching(false)}>Cancel</Button>
-                <Button type="submit" disabled={busy || empty}>{busy ? 'Checking…' : 'Switch'}</Button>
+                <Button type="submit" disabled={busy || empty || nav.syncing}>{busy ? 'Checking…' : nav.syncing ? 'Syncing…' : 'Switch'}</Button>
               </div>
             )}
           />
