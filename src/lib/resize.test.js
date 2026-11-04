@@ -8,7 +8,7 @@ describe('clampWidth', () => {
     expect(clampWidth('300', TREE_WIDTH)).toBe(300)
   })
   it('falls back to the default when nothing valid is saved', () => {
-    expect(clampWidth(null, TREE_WIDTH)).toBe(256)
-    expect(clampWidth('abc', TREE_WIDTH)).toBe(256)
+    expect(clampWidth(null, TREE_WIDTH)).toBe(300)
+    expect(clampWidth('abc', TREE_WIDTH)).toBe(300)
   })
 })
