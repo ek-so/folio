@@ -5,7 +5,7 @@ import IconTile from '../IconTile.jsx'
 // Toasts in theme tokens, at the bottom center: above the floating
 // navigation on phones, where they take the full width inside the 16px gutters.
 // Success and error toasts are filled (richColors); their icon sits in an
-// `IconTile` like the title bar's, and every padding is 16px.
+// `IconTile` like the title bar's, and every padding is 8px.
 // Sonner's own styles aren't in a layer, so the overrides are !important. `theme` is the app's preference (light | dark | system).
 function Toaster({ theme, ...props }) {
   return (
@@ -20,7 +20,7 @@ function Toaster({ theme, ...props }) {
       }}
       toastOptions={{
         classNames: {
-          toast: '!gap-3 !p-space !shadow-lg',
+          toast: '!gap-3 !p-space-sm !shadow-lg',
           icon: '!m-0 !size-control',
           title: '!text-sm !font-semibold',
         },
