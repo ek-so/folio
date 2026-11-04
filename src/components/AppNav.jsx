@@ -19,8 +19,8 @@ const ACTIVE = 'bg-primary/15 text-primary hover:bg-primary/20 hover:text-primar
 // Desktop (768px+): a left rail, 24px (--space-lg) all around: on the right its
 // own 8px and the content's 16px gutter. On top the app's name (Folio, bold) and a button that collapses
 // the rail to icons only (remembered on this device; expanded, its edge is a drag handle), and after it,
-// while the file tree is hidden, `onShowTree`'s tree button (collapsed: under the logo); then Sync and Search,
-// Home, File manager, Graph, and at the bottom Broken links (count),
+// while the file tree is hidden, `onShowTree`'s tree button (collapsed: under the logo); a separator (16px
+// on both sides); Sync and Search (8px apart); 16px; Home, File manager, Graph, and at the bottom Broken links (count),
 // Settings and Sign out.
 export function NavRail({ page, onPage, onSearch, renderSync, menu, onShowTree }) {
   const [collapsed, setCollapsed] = useState(storage.getRailCollapsed)
@@ -45,14 +45,15 @@ export function NavRail({ page, onPage, onSearch, renderSync, menu, onShowTree }
           </Button>
         )}
       </div>
-      <div className="h-2" />
-      <div className={cn('flex flex-col gap-space', collapsed && 'items-center')}>
+      {/* my-3 + the 4px gap = 16px (--space) on both sides */}
+      <div role="separator" className="my-3 h-px w-full shrink-0 bg-border" />
+      <div className={cn('flex flex-col gap-space-sm', collapsed && 'items-center')}>
         {renderSync(collapsed)}
         <Button variant="outline" title={hint('Search')} className={cn('justify-start gap-3 px-3 font-normal text-muted-foreground shadow-sm hover:bg-transparent hover:text-foreground', collapsed && 'size-control justify-center px-0')} onClick={onSearch}>
           <MagnifyingGlass /> {label('Search')}
         </Button>
       </div>
-      <div className="h-2" />
+      <div className="h-2" /> {/* + the 4px gaps = 16px */}
       {MAIN_PAGES.map(({ id, title, icon: Icon }) => (
         <Button key={id} variant="ghost" title={hint(title)} aria-current={page === id ? 'page' : undefined} className={item(id)} onClick={() => onPage(id)}>
           <Icon /> {label(title)}
