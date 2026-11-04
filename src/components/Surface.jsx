@@ -10,7 +10,7 @@ export default function Surface({ title, tree, children }) {
   return (
     <div className={cn('flex flex-1 min-h-0 w-full sm:px-2 sm:pt-2 sm:pb-[calc(0.5rem+var(--safe-bottom))]', tree && 'md:gap-2')}>
       {tree && <NavPanel />}
-      <div className="flex flex-col flex-1 min-h-0 min-w-0 overflow-hidden bg-card rounded-t-xl border border-border sm:rounded-xl">
+      <div className="flex flex-col flex-1 min-h-0 min-w-0 overflow-hidden bg-background rounded-t-xl border border-border sm:bg-card sm:rounded-xl">
         {title}
         <div className="mx-auto flex min-h-0 w-full max-w-[1000px] flex-1 flex-col">{children}</div>
       </div>
