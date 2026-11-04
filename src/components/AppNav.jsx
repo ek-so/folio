@@ -16,8 +16,8 @@ const ACTIVE = 'bg-primary/15 text-primary hover:bg-primary/20 hover:text-primar
 
 // The app's primary navigation, in place of a header. `menu`: brokenCount and
 // onSignOut; `page` the open page; `renderSync(compact)` makes the SyncButton.
-// Desktop (768px+): a left rail (the content's own 16px gutter is the gap to
-// the tree). On top the app's name (Folio, bold) and a button that collapses
+// Desktop (768px+): a left rail, 24px (--space-lg) all around: on the right its
+// own 8px and the content's 16px gutter. On top the app's name (Folio, bold) and a button that collapses
 // the rail to icons only (remembered on this device; expanded, its edge is a drag handle), and after it,
 // while the file tree is hidden, `onShowTree`'s tree button (collapsed: under the logo); then Sync and Search,
 // Home, File manager, Graph, and at the bottom Broken links (count),
@@ -31,7 +31,7 @@ export function NavRail({ page, onPage, onSearch, renderSync, menu, onShowTree }
   const label = text => collapsed ? <span className="sr-only">{text}</span> : text
   const hint = text => collapsed ? text : undefined
   return (
-    <nav aria-label="Main" style={collapsed ? undefined : { width }} className={cn('relative hidden md:flex shrink-0 flex-col gap-1 py-space pl-space', collapsed ? 'w-14 items-center' : 'max-w-[25vw]')}>
+    <nav aria-label="Main" style={collapsed ? undefined : { width }} className={cn('relative hidden md:flex shrink-0 flex-col gap-1 py-space-lg pl-space-lg pr-space-sm', collapsed ? 'items-center' : 'max-w-[25vw]')}>
       <div className={cn('flex min-h-control items-center gap-space-sm pl-3', collapsed && 'flex-col pl-0')}>
         {!collapsed && <span className="flex flex-1 items-center gap-2 text-base font-bold"><AppLogo className="size-6" />Folio</span>}
         <Button variant="ghost" size="icon" aria-label={collapsed ? 'Expand menu' : 'Collapse menu'} title={collapsed ? 'Expand menu' : 'Collapse menu'} aria-expanded={!collapsed} className="group shrink-0 focus-visible:bg-secondary" onClick={toggle}>
@@ -73,7 +73,7 @@ export function NavRail({ page, onPage, onSearch, renderSync, menu, onShowTree }
       <Button variant="ghost" title={hint('Sign out')} className={cn('justify-start gap-3 font-normal text-destructive', collapsed && 'size-control justify-center px-0')} onClick={menu.onSignOut}>
         <SignOut /> {label('Sign out')}
       </Button>
-      {!collapsed && <ResizeHandle label="Resize menu" width={width} limits={RAIL_WIDTH} onResize={resize} className="inset-y-space" />}
+      {!collapsed && <ResizeHandle label="Resize menu" width={width} limits={RAIL_WIDTH} onResize={resize} className="inset-y-space-lg" />}
     </nav>
   )
 }
