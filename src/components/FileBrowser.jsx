@@ -13,7 +13,7 @@ import Spinner from './Spinner.jsx'
 import PageLayout from './PageLayout.jsx'
 import { cn } from '@/lib/utils.js'
 
-export default function FileBrowser({ path, onNavigate, listDir, loading, error, notice, onSelect, onNewFile, repoName, onRename, onDelete, onMove, folders, onUpload, symlinks = {}, linkedBy, onOpenLink }) {
+export default function FileBrowser({ path, onNavigate, listDir, loading, error, notice, onSelect, onNewFile, repoName, onRename, onDelete, onMove, folders, onUpload, onDropMove, symlinks = {}, linkedBy, onOpenLink }) {
   // Symlinked folders sort with the folders
   const isFolder = i => i.type === 'dir' || symlinks[i.path]?.kind === 'folder'
   const listed = loading ? [] : listDir(path)
@@ -176,7 +176,7 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
                       const d = draggingRef.current
                       if (item.type !== 'dir' || !d || d.path === item.path) return
                       e.preventDefault()
-                      onMove?.(d, item.path)
+                      onDropMove(d, item.path)
                       draggingRef.current = null
                       setDragging(null)
                       setDragOverPath(null)

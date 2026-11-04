@@ -163,6 +163,14 @@ export function renameError(ch, virtual, item, to) {
   return null
 }
 
+// Whether `item` can be moved into `folder` ('' is the root): not where it
+// already is, and a folder not into itself or anything inside it.
+export function canMoveTo(item, folder) {
+  const parent = item.path.includes('/') ? item.path.slice(0, item.path.lastIndexOf('/')) : ''
+  if (folder === parent) return false
+  return item.type !== 'dir' || (folder !== item.path && !folder.startsWith(item.path + '/'))
+}
+
 // Why new files can't be created at `paths`, or null.
 export function createError(ch, virtual, paths) {
   for (const path of paths) {

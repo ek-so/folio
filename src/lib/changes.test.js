@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import {
   empty, count, virtualFiles, add, setEdit, rename, remove, conflicts, settle, treeEntries, filesAfter,
   upload, replaceUpload, normalize, freePath,
-  renameTarget, renameError, createError, getAllFolders, nameError,
+  renameTarget, renameError, canMoveTo, createError, getAllFolders, nameError,
 } from './changes.js'
 
 const files = {
@@ -141,5 +141,16 @@ describe('name checks', () => {
 describe('getAllFolders', () => {
   it('lists every folder level, sorted', () => {
     expect(getAllFolders({ 'a.md': {}, 'x/y/z.md': {}, 'x/w.md': {} })).toEqual(['x', 'x/y'])
+  })
+
+  it('only moves items to another folder, never a folder into itself', () => {
+    const dir = { path: 'a/b', type: 'dir' }
+    expect(canMoveTo(dir, 'a')).toBe(false)
+    expect(canMoveTo(dir, 'a/b')).toBe(false)
+    expect(canMoveTo(dir, 'a/b/c')).toBe(false)
+    expect(canMoveTo(dir, 'a/bc')).toBe(true)
+    expect(canMoveTo(dir, '')).toBe(true)
+    expect(canMoveTo({ path: 'x.md', type: 'file' }, '')).toBe(false)
+    expect(canMoveTo({ path: 'x.md', type: 'file' }, 'a')).toBe(true)
   })
 })

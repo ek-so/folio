@@ -4,22 +4,14 @@ import { Button } from './ui/button.jsx'
 import { Input } from './ui/input.jsx'
 import BottomSheet from './BottomSheet.jsx'
 import { LinksContext } from '../hooks/useLinkIndex.js'
+import { canMoveTo } from '../lib/changes.js'
 
 export default function MoveModal({ item, folders, onMove, onClose }) {
   const [query, setQuery] = useState('')
   const [error, setError] = useState('')
   const linkedFrom = useContext(LinksContext)?.linkedFrom(item) ?? 0
 
-  const itemFolder = item.path.includes('/') ? item.path.slice(0, item.path.lastIndexOf('/')) : ''
-
-  const available = ['', ...folders].filter(f => {
-    if (f === itemFolder) return false
-    if (item.type === 'dir') {
-      if (f === item.path) return false
-      if (f.startsWith(item.path + '/')) return false
-    }
-    return true
-  })
+  const available = ['', ...folders].filter(f => canMoveTo(item, f))
 
   const q = query.trim().toLowerCase()
   const filtered = q ? available.filter(f => (f || 'root').toLowerCase().includes(q)) : available

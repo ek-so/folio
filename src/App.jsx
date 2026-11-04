@@ -205,6 +205,12 @@ export default function App() {
     return null
   }
 
+  // A move by drag and drop (file list, file tree): a refusal shows as a toast
+  function handleDropMove(item, targetFolder) {
+    const error = handleMove(item, targetFolder)
+    if (error) toast.error(error)
+  }
+
   function handleDelete(item) {
     const inside = p => p === item.path || p?.startsWith(item.path + '/')
     replaceNext.current = inside(openFiles.files) || inside(folder)
@@ -387,6 +393,8 @@ export default function App() {
         onCollapseAll: () => setExpanded(new Set()),
         onOpenFolder: openFolder,
         onOpenFile: setSelectedFile,
+        onDropMove: handleDropMove,
+        onUpload: handleUpload,
         loading: !repo.remote && !repo.error,
         repoName,
       }}>
@@ -454,6 +462,7 @@ export default function App() {
               onSelect={setSelectedFile}
               onNewFile={(f, kind) => setNewFile({ folder: f, kind })}
               onUpload={handleUpload}
+              onDropMove={handleDropMove}
               repoName={repoName}
               symlinks={symlinks}
               linkedBy={folder ? linkedBy[folder] : undefined}
