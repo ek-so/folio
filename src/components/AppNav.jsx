@@ -24,12 +24,12 @@ export function NavRail({ page, onPage, onSearch, syncButton, menu }) {
   const [collapsed, setCollapsed] = useState(storage.getRailCollapsed)
   const [width, resize] = useResizableWidth(RAIL_WIDTH, storage.getRailWidth, storage.setRailWidth)
   const toggle = () => { setCollapsed(!collapsed); storage.setRailCollapsed(!collapsed) }
-  const item = id => cn('justify-start gap-3 font-normal', collapsed && 'justify-center', page === id && ACTIVE)
+  const item = id => cn('justify-start gap-3 font-normal', collapsed && 'size-control justify-center px-0', page === id && ACTIVE)
   // A rail button: icon, and its label unless collapsed (then the label is the tooltip)
   const label = text => collapsed ? <span className="sr-only">{text}</span> : text
   const hint = text => collapsed ? text : undefined
   return (
-    <nav aria-label="Main" style={collapsed ? undefined : { width }} className={cn('relative hidden md:flex shrink-0 flex-col gap-1 py-space pl-space', collapsed && 'w-24')}>
+    <nav aria-label="Main" style={collapsed ? undefined : { width }} className={cn('relative hidden md:flex shrink-0 flex-col gap-1 py-space pl-space', collapsed && 'w-24 items-center')}>
       <div className={cn('flex h-control items-center justify-between pl-3', collapsed && 'justify-center pl-0')}>
         {!collapsed && <span className="text-base font-bold">Folio</span>}
         <Button variant="ghost-outline" size="icon" aria-label={collapsed ? 'Expand menu' : 'Collapse menu'} title={collapsed ? 'Expand menu' : 'Collapse menu'} aria-expanded={!collapsed} className="shrink-0 border-muted-foreground/50" onClick={toggle}>
@@ -37,8 +37,8 @@ export function NavRail({ page, onPage, onSearch, syncButton, menu }) {
         </Button>
       </div>
       <div className="h-2" />
-      <div className="flex flex-col gap-space">
-        <Button variant="outline" title={hint('Search')} className={cn('justify-start gap-3 px-3 font-normal text-muted-foreground shadow-sm hover:bg-transparent hover:text-foreground', collapsed && 'justify-center px-0')} onClick={onSearch}>
+      <div className={cn('flex flex-col gap-space', collapsed && 'items-center')}>
+        <Button variant="outline" title={hint('Search')} className={cn('justify-start gap-3 px-3 font-normal text-muted-foreground shadow-sm hover:bg-transparent hover:text-foreground', collapsed && 'size-control justify-center px-0')} onClick={onSearch}>
           <MagnifyingGlass /> {label('Search')}
         </Button>
         {collapsed ? cloneElement(syncButton, { compact: true }) : syncButton}
@@ -50,7 +50,7 @@ export function NavRail({ page, onPage, onSearch, syncButton, menu }) {
         </Button>
       ))}
       <div className="flex-1" />
-      <div role="separator" className="my-1 h-px shrink-0 bg-border" />
+      <div role="separator" className="my-1 h-px w-full shrink-0 bg-border" />
       <Button variant="ghost" title={hint('Broken links')} aria-current={page === PAGE.LINKS ? 'page' : undefined} className={cn(item(PAGE.LINKS), 'relative')} onClick={() => onPage(PAGE.LINKS)}>
         <LinkBreak /> {label('Broken links')}
         {menu.brokenCount > 0 && (collapsed
@@ -60,7 +60,7 @@ export function NavRail({ page, onPage, onSearch, syncButton, menu }) {
       <Button variant="ghost" title={hint('Settings')} aria-current={page === PAGE.SETTINGS ? 'page' : undefined} className={item(PAGE.SETTINGS)} onClick={() => onPage(PAGE.SETTINGS)}>
         <Gear /> {label('Settings')}
       </Button>
-      <Button variant="ghost" title={hint('Sign out')} className={cn('justify-start gap-3 font-normal text-destructive', collapsed && 'justify-center')} onClick={menu.onSignOut}>
+      <Button variant="ghost" title={hint('Sign out')} className={cn('justify-start gap-3 font-normal text-destructive', collapsed && 'size-control justify-center px-0')} onClick={menu.onSignOut}>
         <SignOut /> {label('Sign out')}
       </Button>
       {!collapsed && <ResizeHandle label="Resize menu" width={width} limits={RAIL_WIDTH} onResize={resize} className="inset-y-space" />}
