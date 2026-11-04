@@ -47,7 +47,6 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
     <PageLayout>
       <Surface tree title={
         <TitleBar
-          tree
           name={path ? currentFolder : repoName}
           badge={<SymlinkedBy links={linkedBy} onOpen={onOpenLink} />}
         >

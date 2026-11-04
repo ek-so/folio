@@ -7,7 +7,7 @@ import { PAGE } from '@/lib/pages.js'
 export default function EmptyPage({ page }) {
   return (
     <PageLayout>
-      <Surface tree wide={page === PAGE.HOME} title={<TitleBar tree page={page} />} />
+      <Surface tree wide={page === PAGE.HOME} title={<TitleBar page={page} />} />
     </PageLayout>
   )
 }

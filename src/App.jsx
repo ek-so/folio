@@ -440,7 +440,7 @@ export default function App() {
           <div className="flex flex-1 min-h-0">
           <NavRail page={page} onPage={choosePage} onSearch={() => setSearchOpen(true)} renderSync={renderSync} menu={menu} onShowTree={treeCollapsed && page === mainPage ? toggleTree : null} />
           <main className="flex flex-col flex-1 min-w-0 min-h-0">
-          <TopBar page={page} onPage={choosePage} onSearch={() => setSearchOpen(true)} renderSync={renderSync} menu={menu} />
+          <TopBar tree={page === mainPage} page={page} onPage={choosePage} onSearch={() => setSearchOpen(true)} renderSync={renderSync} menu={menu} />
           {page === PAGE.SETTINGS ? (
             <Settings login={auth.user.login} repo={auth.repo} theme={theme} onTheme={setTheme} />
           ) : !view ? (

@@ -3,6 +3,7 @@ import { List, SidebarSimple, MagnifyingGlass, LinkBreak, Gear, SignOut, TreeVie
 import { cn } from '@/lib/utils.js'
 import { Button } from './ui/button.jsx'
 import AccountMenu from './AccountMenu.jsx'
+import { NavDrawerButton } from './NavTree.jsx'
 import { PAGE, MAIN_PAGES } from '../lib/pages.js'
 import { storage } from '../lib/storage.js'
 import { RAIL_WIDTH } from '../lib/resize.js'
@@ -80,8 +81,9 @@ export function NavRail({ page, onPage, onSearch, renderSync, menu, onShowTree }
   )
 }
 
-// Phones: a bar at the top with ☰ (every page, then the rest), Search and Sync.
-export function TopBar({ page, onPage, onSearch, renderSync, menu }) {
+// Phones: a bar at the top with ☰ (every page, then the rest), the file-tree
+// button (`tree`: on the main pages), Search and Sync.
+export function TopBar({ page, onPage, onSearch, renderSync, menu, tree }) {
   return (
     <nav aria-label="Main" className="flex shrink-0 items-center gap-2 p-space-sm md:hidden">
       <AccountMenu
@@ -92,6 +94,7 @@ export function TopBar({ page, onPage, onSearch, renderSync, menu }) {
           </Button>
         }
       />
+      {tree && <NavDrawerButton />}
       <Button variant="ghost-outline" size="icon" aria-label="Search" className="shrink-0 border-muted-foreground/50" onClick={onSearch}>
         <MagnifyingGlass />
       </Button>

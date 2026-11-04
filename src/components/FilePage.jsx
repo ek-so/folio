@@ -12,7 +12,6 @@ export default function FilePage({ linkedBy, onOpenLink, path, name, changed, on
     <PageLayout>
       <Surface tree title={
         <TitleBar
-          tree
           name={name}
           changed={changed}
           badge={<SymlinkedBy links={linkedBy} onOpen={onOpenLink} />}
