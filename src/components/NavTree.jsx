@@ -2,7 +2,7 @@ import { createContext, useContext, useState } from 'react'
 import { CaretRight, SidebarSimple } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils.js'
 import { Button } from './ui/button.jsx'
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from './ui/sheet.jsx'
+import { Sheet, SheetContent, SheetTitle, SheetDescription } from './ui/sheet.jsx'
 import FileIcon from './FileIcon.jsx'
 import Spinner from './Spinner.jsx'
 import { LINK_ERRORS } from '../lib/files.js'
@@ -66,24 +66,35 @@ function FileTree() {
   return <ul><Rows dir="" depth={0} /></ul>
 }
 
-// Desktop: the tree in its own box next to the content, titled with the repo's name
+// The tree titled with the repo's name, over the box it's in (desktop panel
+// or phone drawer). `Title`: the heading element (the drawer's is its dialog title); `closable`: leaves room for the drawer's ✕ (not on desktop).
+function TreePanel({ Title = 'h2', closable }) {
+  const nav = useContext(NavContext)
+  return (
+    <>
+      <div className={cn('shrink-0 border-b border-border p-space-sm', closable && 'pr-14')}>
+        <Title className="flex h-control items-center truncate px-2 text-base font-bold">{nav.repoName}</Title>
+      </div>
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain p-space-sm">
+        <FileTree />
+      </div>
+    </>
+  )
+}
+
+// Desktop: the tree in its own box next to the content
 export function NavPanel() {
   const nav = useContext(NavContext)
   if (!nav) return null
   return (
     <aside aria-label="Files and folders" className="hidden md:flex w-64 shrink-0 flex-col overflow-hidden rounded-xl border border-border bg-card">
-      <div className="shrink-0 border-b border-border p-space-sm">
-        <h2 className="flex h-control items-center truncate px-2 text-base font-bold">{nav.repoName}</h2>
-      </div>
-      <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain p-space-sm">
-        <FileTree />
-      </div>
+      <TreePanel />
     </aside>
   )
 }
 
-// Phones: a button in the title bar that opens the tree in a floating drawer
-// (card-colored, rounded, 8px from the screen's edges)
+// Phones: a button in the title bar that opens the same panel in a floating
+// drawer (8px from the screen's edges); its ✕ is the sheet's own
 export function NavDrawerButton() {
   const nav = useContext(NavContext)
   const [open, setOpen] = useState(false)
@@ -96,15 +107,10 @@ export function NavDrawerButton() {
       </Button>
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent side="left" className="top-[calc(var(--space-sm)+var(--safe-top))] bottom-[calc(var(--space-sm)+var(--safe-bottom))] left-space-sm h-auto gap-0 overflow-hidden rounded-xl border bg-card">
-          <SheetHeader className="p-2 pl-4">
-            <SheetTitle className="flex h-control items-center truncate pr-12">{nav.repoName}</SheetTitle>
-            <SheetDescription className="sr-only">Files and folders</SheetDescription>
-          </SheetHeader>
-          <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain p-space-sm">
-            <NavContext.Provider value={{ ...nav, onOpenFolder: close(nav.onOpenFolder), onOpenFile: close(nav.onOpenFile) }}>
-              <FileTree />
-            </NavContext.Provider>
-          </div>
+          <SheetDescription className="sr-only">Files and folders</SheetDescription>
+          <NavContext.Provider value={{ ...nav, onOpenFolder: close(nav.onOpenFolder), onOpenFile: close(nav.onOpenFile) }}>
+            <TreePanel Title={SheetTitle} closable />
+          </NavContext.Provider>
         </SheetContent>
       </Sheet>
     </>
