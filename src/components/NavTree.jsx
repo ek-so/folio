@@ -22,7 +22,7 @@ function Rows({ dir, depth }) {
     const openable = isLink ? !!link?.kind : true
     return (
       <li key={item.path}>
-        <div className={cn('flex h-control items-center rounded-sm pr-1 transition-colors hover:bg-secondary/60', nav.current === item.path && 'bg-secondary')}>
+        <div className={cn('flex h-control items-center rounded-sm px-1 transition-colors hover:bg-secondary/60', nav.current === item.path && 'bg-secondary')}>
           <span aria-hidden="true" className="shrink-0" style={{ width: `${depth}rem` }} />
           {folder ? (
             <Button
