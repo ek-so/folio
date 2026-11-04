@@ -173,7 +173,7 @@ function TreePanel({ Title = 'h2', closable, dnd }) {
   return (
     <>
       <div className={cn('flex shrink-0 items-center gap-space-sm border-b border-border p-space-sm', closable && 'pr-14')}>
-        <Title className="flex h-control min-w-0 flex-1 items-center truncate px-2 text-base font-bold">{nav.repoName}</Title>
+        <Title className="flex h-control min-w-0 flex-1 items-center truncate px-space-xs text-base font-bold">{nav.repoName}</Title>
         <Button variant="ghost" size="icon" className="shrink-0" aria-label="Collapse all folders" title="Collapse all folders" disabled={!anyOpen} onClick={nav.onCollapseAll}>
           <ArrowsInLineVertical />
         </Button>

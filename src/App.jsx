@@ -33,7 +33,7 @@ import { useTheme } from './hooks/useTheme.js'
 import { storage } from './lib/storage.js'
 import { PAGE, MAIN_PAGES } from './lib/pages.js'
 import { urlForPage, pageForUrl, existingView } from './lib/url.js'
-import { fileView, folderView, defaultViews, mapViews, movedView, removedViews } from './lib/views.js'
+import { fileView, folderView, startTrails, currentView, openView, trailTo, movedTrails, keptTrails, touches } from './lib/views.js'
 import { toast } from 'sonner'
 import { Toaster } from './components/ui/sonner.jsx'
 import { cache } from './lib/cache.js'
@@ -58,12 +58,15 @@ export default function App() {
   const [page, setPage] = useState(() => (reloaded && storage.getPage()) || (deepLink ? deepLink.page : storage.getPage() || MAIN_PAGES[0].id))
   // The main page files and folders open in (File manager when Settings / Broken links is open)
   const mainPage = MAIN_PAGES.some(p => p.id === page) ? page : PAGE.FILES
-  // Each main page has its own view (lib/views.js); files and folders open in the page you're on
-  const [views, setViews] = useState(() => ({ ...defaultViews(), ...storage.getViews(), ...(deepLink && { [deepLink.page]: deepLink.view }) }))
-  const view = views[mainPage]
+  // Each main page has its own trail of views (lib/views.js); files and folders open in the page you're on
+  const [trails, setTrails] = useState(() => {
+    const stored = { ...startTrails(), ...storage.getTrails() }
+    return deepLink ? { ...stored, [deepLink.page]: trailTo(deepLink.page, stored[deepLink.page], deepLink.view) } : stored
+  })
+  const view = currentView(mainPage, trails[mainPage])
   const selectedFile = view?.file ?? null
   const folder = view?.folder ?? ''
-  const show = v => { setPage(mainPage); setViews(o => ({ ...o, [mainPage]: v })) }
+  const show = v => { setPage(mainPage); setTrails(o => ({ ...o, [mainPage]: openView(mainPage, o[mainPage], v) })) }
   // Opening a symlink (from the list, search or a note's link) opens its
   // source: the folder, or the file
   function setSelectedFile(path) {
@@ -77,8 +80,15 @@ export default function App() {
   const openFolder = path => show(folderView(path))
   // The navigation: choosing the page you're on again takes Home and Graph back to their own content
   function choosePage(id) {
-    if (id === page && id !== PAGE.FILES && views[id]) setViews(o => ({ ...o, [id]: null }))
+    if (id === page && id !== PAGE.FILES && trails[id].length) setTrails(o => ({ ...o, [id]: [] }))
     setPage(id)
+  }
+  // ← in the title bar: the page's previous view. When that's also the
+  // browser's previous entry, it's the browser's Back, so history stays one line.
+  function goBack() {
+    const rest = trails[mainPage].slice(0, -1)
+    if (history.state?.prev === urlForPage(BASE, mainPage, currentView(mainPage, rest))) history.back()
+    else setTrails(o => ({ ...o, [mainPage]: rest }))
   }
   const [newFile, setNewFile] = useState(null) // { folder, kind } while the sheet is open
   const [confirmSignOut, setConfirmSignOut] = useState(false)
@@ -92,7 +102,7 @@ export default function App() {
   const replaceNext = useRef(false) // the next URL change replaces the history entry
   const known = useRef({ files: new Set(), folders: [] }) // what exists, for Back / Forward
 
-  useEffect(() => { storage.setViews(views) }, [views])
+  useEffect(() => { storage.setTrails(trails) }, [trails])
   useEffect(() => { storage.setPage(page) }, [page])
 
   // File tree: the open folders; the open file or folder is always revealed
@@ -114,12 +124,14 @@ export default function App() {
   // each new page, folder or file is a history entry, so Back and Forward move
   // between them. Changes that only follow a rename or delete replace the
   // entry instead. Settings and Broken links leave the address as it is.
-  const url = page === mainPage ? urlForPage(BASE, page, views[page]) : null
+  // Each entry remembers the address before it (`prev`), for ←.
+  const url = page === mainPage ? urlForPage(BASE, page, view) : null
   useEffect(() => {
     if (!url) return
-    if (window.location.pathname + window.location.search !== url) {
-      if (started.current && !replaceNext.current) history.pushState(null, '', url)
-      else history.replaceState(null, '', url)
+    const here = window.location.pathname + window.location.search
+    if (here !== url) {
+      if (started.current && !replaceNext.current) history.pushState({ prev: here }, '', url)
+      else history.replaceState(history.state, '', url)
     }
     started.current = true
     replaceNext.current = false
@@ -136,7 +148,7 @@ export default function App() {
       if (view && files.size) view = existingView(view, files, folders)
       if (urlForPage(BASE, to, view) !== window.location.pathname + window.location.search) replaceNext.current = true
       setPage(to)
-      setViews(o => ({ ...o, [to]: view }))
+      setTrails(o => ({ ...o, [to]: trailTo(to, o[to], view) }))
     }
     window.addEventListener('popstate', onPop)
     return () => window.removeEventListener('popstate', onPop)
@@ -185,7 +197,7 @@ export default function App() {
       }
       return next
     })
-    followViews(mapViews(views, v => movedView(v, item.path, to))) // the same files and folders, not newly opened ones
+    followTrails(movedTrails(trails, item.path, to)) // the same files and folders, not newly opened ones
   }
 
   function handleRename(item, name) {
@@ -210,15 +222,15 @@ export default function App() {
     if (error) toast.error(error)
   }
 
-  // Every page's views after a rename, delete or discard (`next`); the address
+  // Every page's trail after a rename, delete or discard (`next`); the address
   // is replaced, not added to history (only when it shows: not on Settings / Broken links)
-  function followViews(next) {
-    if (page === mainPage && urlForPage(BASE, page, next[page]) !== urlForPage(BASE, page, views[page])) replaceNext.current = true
-    setViews(next)
+  function followTrails(next) {
+    if (page === mainPage && urlForPage(BASE, page, currentView(page, next[page])) !== url) replaceNext.current = true
+    setTrails(next)
   }
 
   function handleDelete(item) {
-    followViews(removedViews(views, item.path))
+    followTrails(keptTrails(trails, v => !touches(v, item.path)))
     update(ch => remove(ch, virtual, item.path, item.type === 'dir'))
   }
 
@@ -298,7 +310,8 @@ export default function App() {
     setConfirmDiscard(false)
     repo.discardAll()
     const files = repo.remote?.files ?? {}
-    followViews(mapViews(views, v => existingView(v, new Set(Object.keys(files)), getAllFolders(files))))
+    const folders = new Set(getAllFolders(files))
+    followTrails(keptTrails(trails, v => v.file ? v.file in files : !v.folder || folders.has(v.folder)))
     setDiscards(n => n + 1)
   }
 
@@ -339,7 +352,7 @@ export default function App() {
     repo.discardAll()
     await cache.clearAll()
     auth.signOut()
-    setViews(defaultViews())
+    setTrails(startTrails())
   }
 
   if (!auth.ready) {
@@ -394,6 +407,7 @@ export default function App() {
         itemActions: { onRename: handleRename, onDelete: handleDelete, onMove: handleMove, folders: allFolders },
         onOpenFolder: openFolder,
         onOpenFile: setSelectedFile,
+        onBack: page === mainPage && trails[mainPage].length ? goBack : null,
         onDropMove: handleDropMove,
         onUpload: handleUpload,
         loading: !repo.remote && !repo.error,

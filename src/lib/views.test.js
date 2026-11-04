@@ -1,27 +1,33 @@
 import { describe, it, expect } from 'vitest'
-import { fileView, folderView, defaultViews, mapViews, movedView, removedView, removedViews } from './views.js'
+import { fileView, folderView, startTrails, currentView, openView, trailTo, movedTrails, keptTrails, touches } from './views.js'
 
 describe('views', () => {
-  it('starts File manager at the root and the other pages on their own content', () => {
-    expect(defaultViews()).toEqual({ home: null, files: folderView(''), graph: null })
-    expect(mapViews(defaultViews(), () => folderView('x'))).toEqual({ home: null, files: folderView('x'), graph: null })
+  it('starts every page at its own start', () => {
+    expect(startTrails()).toEqual({ home: [], files: [], graph: [] })
+    expect(currentView('home', [])).toBeNull()
+    expect(currentView('files', [])).toEqual(folderView(''))
   })
 
-  it('follows a moved file or folder', () => {
-    expect(movedView(fileView('a/x.md'), 'a', 'b/a')).toEqual({ file: 'b/a/x.md', folder: 'b/a' })
-    expect(movedView(folderView('ab'), 'a', 'z')).toEqual(folderView('ab'))
-    expect(movedView(fileView('a/x.md'), 'a/x.md', 'y.md')).toEqual({ file: 'y.md', folder: 'a' })
+  it('adds opened views to the trail; the start clears it', () => {
+    let t = openView('home', [], folderView('a'))
+    t = openView('home', t, fileView('a/x.md'))
+    expect(openView('home', t, fileView('a/x.md'))).toBe(t)
+    expect(currentView('home', t)).toEqual(fileView('a/x.md'))
+    expect(openView('files', t, folderView(''))).toEqual([])
   })
 
-  it('falls back to what is left after a delete', () => {
-    expect(removedView(fileView('a/x.md'), 'a/x.md')).toEqual(folderView('a'))
-    expect(removedView(fileView('a/b/x.md'), 'a/b')).toEqual(folderView('a'))
-    expect(removedView(folderView('a/b'), 'a')).toEqual(folderView(''))
-    expect(removedView(folderView('ab'), 'a')).toEqual(folderView('ab'))
+  it('goes back along the trail for Back / Forward', () => {
+    const t = [folderView('a'), fileView('a/x.md'), folderView('b')]
+    expect(trailTo('home', t, fileView('a/x.md'))).toEqual(t.slice(0, 2))
+    expect(trailTo('home', t, folderView('c'))).toEqual([...t, folderView('c')])
+    expect(trailTo('home', t, null)).toEqual([])
   })
 
-  it('takes Home and Graph back to their own content when their item is deleted', () => {
-    const views = { home: fileView('a/x.md'), files: fileView('a/x.md'), graph: folderView('b') }
-    expect(removedViews(views, 'a/x.md')).toEqual({ home: null, files: folderView('a'), graph: folderView('b') })
+  it('follows moves and drops deleted items', () => {
+    const trails = { home: [folderView('a'), fileView('a/x.md')], files: [folderView('ab')], graph: [] }
+    expect(movedTrails(trails, 'a', 'b/a').home).toEqual([folderView('b/a'), fileView('b/a/x.md')])
+    expect(movedTrails(trails, 'a', 'b/a').files).toEqual([folderView('ab')])
+    expect(keptTrails(trails, v => !touches(v, 'a/x.md')).home).toEqual([folderView('a')])
+    expect(keptTrails({ files: [folderView('b'), folderView('a'), folderView('b')] }, v => !touches(v, 'a')).files).toEqual([folderView('b')])
   })
 })
