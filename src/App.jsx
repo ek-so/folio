@@ -350,7 +350,7 @@ export default function App() {
   const repoName = auth.repo.split('/')[1]
   const menu = {
     brokenCount: links.index.broken.length,
-    onSignOut: () => repo.changeCount ? setConfirmSignOut(true) : signOut(),
+    onSignOut: () => setConfirmSignOut(true),
   }
   const syncButton = (
     <SyncButton
