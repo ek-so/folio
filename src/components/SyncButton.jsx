@@ -18,31 +18,65 @@ function MenuBadge({ children }) {
   )
 }
 
-// Split Sync button in the navigation (the rail, or the phone's floating panel): the main part syncs; ▾ opens
-// Push (with change count), Pull (how many files changed on GitHub, or New
-// when unknown) and Discard. An accent badge on Sync shows the directions
-// there's something to sync in (↑ push, ↓ pull, or both), without counts.
-// `compact` (the collapsed rail): the main part is just its icon.
+// Sync in the navigation (the rail, or the phone's floating panel). A split
+// button: the main part syncs; ▾ opens Push (with change count), Pull (how many
+// files changed on GitHub, or New when unknown) and Discard. An accent badge on
+// Sync shows the directions there's something to sync in (↑ push, ↓ pull, or
+// both), without counts. `compact` (the collapsed rail): one icon button (a dot
+// for changes) that opens the same menu with Sync all on top.
 export default function SyncButton({ className, compact, syncState, syncing, changeCount, incoming, onSync, onPull, onDiscard }) {
   const { variant, label, Icon } = LOOK[syncState] || LOOK.idle
   const hasPush = changeCount > 0
   const hasPull = incoming !== null
+  const directions = [hasPush && 'Changes to push', hasPull && 'Changes to pull'].filter(Boolean).join(', ')
+  const spinner = <span className="size-4 rounded-full border border-current border-t-transparent animate-spin opacity-60" />
+
+  const menu = (
+    <DropdownMenuContent align={compact ? 'start' : 'end'} onCloseAutoFocus={e => e.preventDefault()}>
+      {compact && (
+        <DropdownMenuItem disabled={syncing} onSelect={onSync}>
+          <ArrowsClockwise /> Sync all
+        </DropdownMenuItem>
+      )}
+      <DropdownMenuItem disabled={!hasPush} onSelect={onSync}>
+        <ArrowUp /> Push changes
+        {hasPush && <MenuBadge>{changeCount}</MenuBadge>}
+      </DropdownMenuItem>
+      <DropdownMenuItem disabled={!hasPull} onSelect={onPull}>
+        <ArrowDown /> Pull changes
+        {hasPull && <MenuBadge>{incoming.files ? (incoming.files >= 300 ? '300+' : incoming.files) : 'New'}</MenuBadge>}
+      </DropdownMenuItem>
+      <DropdownMenuItem variant="destructive" disabled={!hasPush} onSelect={onDiscard}>
+        <Trash /> Discard changes
+      </DropdownMenuItem>
+    </DropdownMenuContent>
+  )
+
+  if (compact) {
+    const StateIcon = Icon || ArrowsClockwise
+    return (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant={variant} size="icon" disabled={syncing} aria-label={label} title={label} className={cn('relative shrink-0', className)}>
+            {syncing ? spinner : <StateIcon />}
+            {syncState === 'idle' && !syncing && (hasPush || hasPull) && (
+              <span aria-label={directions} className="absolute right-1.5 top-1.5 size-2 rounded-full bg-primary" />
+            )}
+          </Button>
+        </DropdownMenuTrigger>
+        {menu}
+      </DropdownMenu>
+    )
+  }
 
   return (
     <div className={cn('flex shrink-0', className)}>
-      <Button onClick={onSync} disabled={syncing} variant={variant} aria-label={compact ? label : undefined} title={compact ? label : undefined} className={cn('gap-2 rounded-r-none', compact ? 'relative size-control p-0' : 'flex-1')}>
-        {syncing ? (
-          <span className="size-4 rounded-full border border-current border-t-transparent animate-spin opacity-60" />
-        ) : Icon ? (
-          <Icon />
-        ) : compact ? <ArrowsClockwise /> : null}
-        {!compact && label}
-        {compact && syncState === 'idle' && !syncing && (hasPush || hasPull) && (
-          <span aria-label={[hasPush && 'Changes to push', hasPull && 'Changes to pull'].filter(Boolean).join(', ')} className="absolute right-1.5 top-1.5 size-2 rounded-full bg-primary" />
-        )}
-        {syncState === 'idle' && !syncing && !compact && (hasPush || hasPull) && (
+      <Button onClick={onSync} disabled={syncing} variant={variant} className="flex-1 gap-2 rounded-r-none">
+        {syncing ? spinner : Icon ? <Icon /> : null}
+        {label}
+        {syncState === 'idle' && !syncing && (hasPush || hasPull) && (
           <span
-            aria-label={[hasPush && 'Changes to push', hasPull && 'Changes to pull'].filter(Boolean).join(', ')}
+            aria-label={directions}
             className="flex h-5 items-center gap-0.5 rounded-full bg-primary px-1.5 text-primary-foreground [&_svg]:size-3"
           >
             {hasPush && <ArrowUp weight="bold" />}
@@ -56,19 +90,7 @@ export default function SyncButton({ className, compact, syncState, syncing, cha
             <CaretDown />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" onCloseAutoFocus={e => e.preventDefault()}>
-          <DropdownMenuItem disabled={!hasPush} onSelect={onSync}>
-            <ArrowUp /> Push changes
-            {hasPush && <MenuBadge>{changeCount}</MenuBadge>}
-          </DropdownMenuItem>
-          <DropdownMenuItem disabled={!hasPull} onSelect={onPull}>
-            <ArrowDown /> Pull changes
-            {hasPull && <MenuBadge>{incoming.files ? (incoming.files >= 300 ? '300+' : incoming.files) : 'New'}</MenuBadge>}
-          </DropdownMenuItem>
-          <DropdownMenuItem variant="destructive" disabled={!hasPush} onSelect={onDiscard}>
-            <Trash /> Discard changes
-          </DropdownMenuItem>
-        </DropdownMenuContent>
+        {menu}
       </DropdownMenu>
     </div>
   )
