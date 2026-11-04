@@ -3,7 +3,7 @@ import { highlightMarkdown } from '../lib/markdown.js'
 import { cn } from '@/lib/utils.js'
 
 // Shared by the textarea and its styling layer so they line up exactly
-const TEXT_LAYOUT = 'w-full h-full px-5 py-4 font-mono text-base leading-relaxed whitespace-pre-wrap break-words'
+const TEXT_LAYOUT = 'w-full h-full p-space font-mono text-base leading-relaxed whitespace-pre-wrap break-words'
 
 // Markdown text box with live styling: a transparent textarea over a styled
 // copy of the same text. The ref is the textarea.

@@ -238,7 +238,7 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
       {children}
       <div
         ref={ref}
-        className="editor-preview px-5 py-4 text-base leading-relaxed touch-manipulation [&_img]:max-w-full [&_img]:h-auto [&_img]:rounded-md"
+        className="editor-preview p-space text-base leading-relaxed touch-manipulation [&_img]:max-w-full [&_img]:h-auto [&_img]:rounded-md"
         onClick={handleClick}
         dangerouslySetInnerHTML={{ __html: withImages || '<p class="text-muted-foreground italic">Nothing to preview yet.</p>' }}
       />

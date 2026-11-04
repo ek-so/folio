@@ -98,7 +98,7 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
           <p className="text-muted-foreground text-sm text-center py-12">No notes yet</p>
         )}
         {!loading && (
-          <ul className="py-2 px-2">
+          <ul className="p-space">
             {items.map(item => {
               const [base, ext] = item.type === 'dir' ? [item.name, ''] : splitName(item.name)
               const isLink = item.path in symlinks
