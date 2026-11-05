@@ -506,9 +506,10 @@ export default function App() {
     brokenCount: links.index.broken.length,
     onSignOut: () => setConfirmSignOut(true),
   }
-  const renderSync = compact => (
+  const renderSync = (compact, bar) => (
     <SyncButton
       compact={compact}
+      bar={bar}
       syncState={repo.syncState}
       syncing={repo.syncing}
       changeCount={repo.changeCount}

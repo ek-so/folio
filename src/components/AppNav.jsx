@@ -17,7 +17,7 @@ import ViewMenu from './ViewMenu.jsx'
 const ACTIVE = 'bg-primary/15 text-primary hover:bg-primary/20 hover:text-primary'
 
 // The app's primary navigation, in place of a header. `menu`: brokenCount and
-// onSignOut; `page` the open page; `renderSync(compact)` makes the SyncButton.
+// onSignOut; `page` the open page; `renderSync(compact, bar)` makes the SyncButton (`bar`: the phone's top bar).
 // Desktop (768px+): a left rail, 16px from the top like the content boxes, 24px (--space-lg) on the left and
 // bottom; on the right its own 8px and the content's 16px gutter. On top a header shaped like a title bar
 // (8px padding and a 1px top edge like the boxes' outline, around a 40px row, then the separator as its bottom
@@ -47,20 +47,29 @@ export function NavRail({ page, pages, viewActions, onPage, onSearch, renderSync
   )
   // my-3 + the 4px gap = 16px (--space) on both sides
   const separator = <div role="separator" className="my-3 h-px w-full shrink-0 bg-border" />
+  const collapseButton = (
+    <Button variant="ghost" size="icon" aria-label={collapsed ? 'Expand menu' : 'Collapse menu'} tooltip={collapsed ? 'Expand menu' : 'Collapse menu'} tooltipSide={collapsed ? 'right' : undefined} aria-expanded={!collapsed} className="group shrink-0 focus-visible:bg-secondary" onClick={toggle}>
+      {/* Collapsed, the logo stands in for the button until it's hovered or focused */}
+      {collapsed && <AppLogo className="size-6 group-hover:hidden group-focus-visible:hidden" />}
+      <SidebarSimple className={cn(collapsed && 'hidden group-hover:block group-focus-visible:block')} />
+    </Button>
+  )
   return (
     <nav aria-label="Main" style={collapsed ? undefined : { width }} className={cn('relative hidden md:flex shrink-0 flex-col gap-1 pt-space pb-space-lg pl-space-lg pr-space-sm', collapsed ? 'items-center' : 'max-w-[25vw]')}>
-      <div className={cn('flex shrink-0 items-center gap-space-sm self-stretch border-t border-b border-t-transparent border-b-border py-space-sm', collapsed ? 'justify-center' : 'pl-3')}>
-        {!collapsed && <span className="flex flex-1 items-center gap-2 text-base font-bold"><AppLogo className="size-6" />Folio</span>}
-        <Button variant="ghost" size="icon" aria-label={collapsed ? 'Expand menu' : 'Collapse menu'} tooltip={collapsed ? 'Expand menu' : 'Collapse menu'} aria-expanded={!collapsed} className="group shrink-0 focus-visible:bg-secondary" onClick={toggle}>
-          {/* Collapsed, the logo stands in for the button until it's hovered or focused */}
-          {collapsed && <AppLogo className="size-6 group-hover:hidden group-focus-visible:hidden" />}
-          <SidebarSimple className={cn(collapsed && 'hidden group-hover:block group-focus-visible:block')} />
-        </Button>
-        {!collapsed && treeButton}
-      </div>
-      <div className="h-2" /> {/* + the 4px gaps = 16px */}
-      {/* Collapsed, the tree button (while the tree is hidden) comes first, with its own separator */}
-      {collapsed && treeButton && <>{treeButton}{separator}</>}
+      {collapsed ? <>
+        {/* Collapsed: the logo button (level with the title bars' rows) and, while the tree is hidden,
+            the tree button, grouped like any items, then one separator */}
+        <div className="flex shrink-0 justify-center self-stretch border-t border-t-transparent pt-space-sm">{collapseButton}</div>
+        {treeButton}
+        {separator}
+      </> : <>
+        <div className="flex shrink-0 items-center gap-space-sm self-stretch border-t border-b border-t-transparent border-b-border py-space-sm pl-3">
+          <span className="flex flex-1 items-center gap-2 text-base font-bold"><AppLogo className="size-6" />Folio</span>
+          {collapseButton}
+          {treeButton}
+        </div>
+        <div className="h-2" /> {/* + the 4px gaps = 16px */}
+      </>}
       {renderSync(collapsed)}
       {/* Search right under Sync (the items' 4px gap), a plain item like the others */}
       <Button variant="ghost" tooltip={hint('Search')} tooltipSide="right" className={cn('justify-start gap-3 font-normal', collapsed && 'size-control justify-center px-0')} onClick={onSearch}>
@@ -123,7 +132,7 @@ export function TopBar({ host, resetKey, page, pages, viewActions, onPage, onSea
         <MagnifyingGlass />
       </Button>
       <div className="flex-1" />
-      {renderSync(false)}
+      {renderSync(false, true)}
     </div>
     </nav>
     </div>
