@@ -1,5 +1,5 @@
 import { useState, forwardRef } from 'react'
-import { DotsThree, DotsSixVertical, Trash, Plus, Columns, PencilSimple, Tag, Folder } from '@phosphor-icons/react'
+import { DotsThree, DotsSixVertical, Trash, Plus, PencilSimple, Tag, EyeSlash, SlidersHorizontal } from '@phosphor-icons/react'
 import {
   DndContext, DragOverlay, MouseSensor, TouchSensor, useSensor, useSensors,
   closestCenter, closestCorners, pointerWithin,
@@ -8,7 +8,7 @@ import { SortableContext, useSortable, arrayMove, horizontalListSortingStrategy,
 import { CSS } from '@dnd-kit/utilities'
 import { cn } from '@/lib/utils.js'
 import { Button } from '@/components/ui/button.jsx'
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu.jsx'
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuLabel } from '@/components/ui/dropdown-menu.jsx'
 import PropertyBadges from '@/components/PropertyBadges.jsx'
 import Spinner from '@/components/Spinner.jsx'
 import RenameModal from '@/components/RenameModal.jsx'
@@ -67,12 +67,13 @@ export default function Board({ id, services, onRemove }) {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" onCloseAutoFocus={e => e.preventDefault()}>
-        <DropdownMenuItem disabled={off} onSelect={() => setChoosing('columns')}><Columns /> Show columns…</DropdownMenuItem>
+        <DropdownMenuLabel>Columns visibility</DropdownMenuLabel>
         {hidden.map(c => (
           <DropdownMenuItem key={c.key} onSelect={() => act.openColumn(c)} className="text-muted-foreground">
-            <Folder /> <span className="min-w-0 truncate">{c.name}</span>
+            <EyeSlash /> <span className="min-w-0 truncate">{c.name}</span>
           </DropdownMenuItem>
         ))}
+        <DropdownMenuItem disabled={off} onSelect={() => setChoosing('columns')}><SlidersHorizontal /> Set visibility…</DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem disabled={off} onSelect={() => setChoosing('properties')}><Tag /> Card properties…</DropdownMenuItem>
         <DropdownMenuItem disabled={off} onSelect={act.newColumn}><Plus /> New column</DropdownMenuItem>
@@ -183,7 +184,7 @@ export default function Board({ id, services, onRemove }) {
       )}
       {choosing === 'columns' && board && (
         <CheckListModal
-          title="Show columns"
+          title="Columns visibility"
           description="Hidden columns are listed in the board's menu; choosing one opens its folder."
           items={data.columns.map(c => c.name)}
           selected={data.columns.map(c => c.name).filter(n => !board.hidden.includes(n))}
