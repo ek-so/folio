@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { CaretDown, Check, Trash } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
 import { Badge } from './ui/badge.jsx'
@@ -89,10 +89,22 @@ export default function PropertyBadges({ props, path, files, clamp, title, class
   )
 }
 
+// The `setOpen` of the badge whose popover is open, if any
+let closeOpenPopover = null
+
 // One value of a property as a badge with a ▾ that opens the property's popover
 // (`label` null: the property is empty and shows its name)
 function EditableBadge({ prop, label, color, options, onChange, onRemove }) {
-  const [open, setOpen] = useState(false)
+  const [open, setOpenState] = useState(false)
+  // Only one popover is open at a time, across every badge and card: opening one closes the open one
+  function setOpen(next) {
+    if (next) {
+      if (closeOpenPopover && closeOpenPopover !== setOpenState) closeOpenPopover(false)
+      closeOpenPopover = setOpenState
+    } else if (closeOpenPopover === setOpenState) closeOpenPopover = null
+    setOpenState(next)
+  }
+  useEffect(() => () => { if (closeOpenPopover === setOpenState) closeOpenPopover = null }, [])
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
