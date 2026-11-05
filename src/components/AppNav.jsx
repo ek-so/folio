@@ -23,7 +23,7 @@ const ACTIVE = 'bg-primary/15 text-primary hover:bg-primary/20 hover:text-primar
 // (8px padding and a 1px top edge like the boxes' outline, around a 40px row, then the separator as its bottom
 // border, level with the title bars' borders): the app's name (Folio, bold) and a button that collapses
 // the rail to icons only (remembered on this device; expanded, its edge is a drag handle), and after it,
-// while the file tree is hidden, `onShowTree`'s tree button (collapsed: first under the separator); 16px; Sync and Search (16px apart); 16px; the views, Add view, a separator, File manager, Graph, and at the bottom Broken links (count),
+// while the file tree is hidden, `onShowTree`'s tree button (collapsed: first under the separator); 16px; Sync, Search right under it (a plain item), a separator, the views, Add view, a separator, File manager, Graph, and at the bottom Broken links (count),
 // Settings and Sign out.
 // `pages`: the main pages (lib/pages.js): the views, then Add view, a separator, File manager and Graph. With a
 // mouse, a view shows its ⋯ (Rename / Delete: `viewActions`) on hover; the collapsed rail has none, and Add view is an icon.
@@ -62,11 +62,12 @@ export function NavRail({ page, pages, viewActions, onPage, onSearch, renderSync
       <div className={cn('flex flex-col gap-space', collapsed && 'items-center')}>
         {collapsed && treeButton}
         {renderSync(collapsed)}
-        <Button variant="outline" tooltip={hint('Search')} tooltipSide="right" className={cn('justify-start gap-3 px-3 font-normal text-muted-foreground shadow-sm hover:bg-transparent hover:text-foreground', collapsed && 'size-control justify-center px-0')} onClick={onSearch}>
-          <MagnifyingGlass /> {label('Search')}
-        </Button>
       </div>
-      <div className="h-2" /> {/* + the 4px gaps = 16px */}
+      {/* Search right under Sync (the items' 4px gap), a plain item like the others */}
+      <Button variant="ghost" tooltip={hint('Search')} tooltipSide="right" className={cn('justify-start gap-3 font-normal', collapsed && 'size-control justify-center px-0')} onClick={onSearch}>
+        <MagnifyingGlass /> {label('Search')}
+      </Button>
+      {separator}
       {pages.filter(p => p.view).map(p => (
         <div key={p.id} className="group relative">
           {pageButton(p)}
