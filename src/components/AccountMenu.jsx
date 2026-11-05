@@ -1,5 +1,7 @@
-import { Check, Gear, SignOut, LinkBreak } from '@phosphor-icons/react'
-import { PAGE, MAIN_PAGES } from '../lib/pages.js'
+import { useState } from 'react'
+import { Check, Gear, SignOut, LinkBreak, DotsThree, Lock, Plus, PencilSimple, Trash, ArrowLeft } from '@phosphor-icons/react'
+import { toast } from 'sonner'
+import { PAGE } from '../lib/pages.js'
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator,
 } from './ui/dropdown-menu.jsx'
@@ -8,25 +10,48 @@ import {
 const ACTIVE = 'bg-primary/15 text-primary focus:bg-primary/20 focus:text-primary'
 
 // The phone navigation's popover, opened by `trigger` (a Button): the main
-// pages, then Broken links (count), Settings and Sign out. `current` is the
-// open page, checked. The account and repo are shown in Settings.
-export default function AccountMenu({ trigger, current, onNavigate, brokenCount, onSignOut }) {
+// pages (`pages`) with Add view after them, then Broken links (count), Settings and Sign out.
+// `current` is the open page, checked. A view has its ⋯ (the menu turns into
+// that view's Rename / Delete: `viewActions`), File manager and Graph a lock
+// (tapping it says "Not editable"; on desktop that's its tooltip). The account and repo are shown in Settings.
+export default function AccountMenu({ trigger, current, pages, viewActions, onNavigate, brokenCount, onSignOut }) {
+  const [open, setOpen] = useState(false)
+  const [editing, setEditing] = useState(null) // the view whose actions the menu shows
   const mark = id => current === id && <Check className="ml-auto" />
+  // Inside a menu item: the button must not select the item
+  const own = fn => e => { e.preventDefault(); e.stopPropagation(); fn() }
   return (
-    <DropdownMenu>
+    <DropdownMenu open={open} onOpenChange={o => { setOpen(o); if (!o) setEditing(null) }}>
       <DropdownMenuTrigger asChild>{trigger}</DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-64" onCloseAutoFocus={e => e.preventDefault()}>
-        {MAIN_PAGES.map(({ id, title, icon: Icon }) => (
-          <DropdownMenuItem key={id} className={current === id ? ACTIVE : undefined} onSelect={() => onNavigate(id)}><Icon /> {title}{mark(id)}</DropdownMenuItem>
-        ))}
-        <DropdownMenuSeparator />
-        <DropdownMenuItem className={current === PAGE.LINKS ? ACTIVE : undefined} onSelect={() => onNavigate(PAGE.LINKS)}>
-          <LinkBreak /> Broken links
-          {brokenCount > 0 && <span className="ml-auto pl-4 text-muted-foreground">{brokenCount}</span>}
-          {current === PAGE.LINKS && !brokenCount && mark(PAGE.LINKS)}
-        </DropdownMenuItem>
-        <DropdownMenuItem className={current === PAGE.SETTINGS ? ACTIVE : undefined} onSelect={() => onNavigate(PAGE.SETTINGS)}><Gear /> Settings{mark(PAGE.SETTINGS)}</DropdownMenuItem>
-        <DropdownMenuItem variant="destructive" onSelect={onSignOut}><SignOut /> Sign out</DropdownMenuItem>
+        {editing ? (
+          <>
+            <DropdownMenuItem onSelect={e => { e.preventDefault(); setEditing(null) }}><ArrowLeft /> {editing.title}</DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem disabled={!viewActions.canEdit} onSelect={() => viewActions.onRename(editing)}><PencilSimple /> Rename</DropdownMenuItem>
+            <DropdownMenuItem variant="destructive" disabled={!viewActions.canEdit} onSelect={() => viewActions.onDelete(editing)}><Trash /> Delete</DropdownMenuItem>
+          </>
+        ) : (
+          <>
+            {pages.map(p => (
+              <DropdownMenuItem key={p.id} className={current === p.id ? ACTIVE : undefined} onSelect={() => onNavigate(p.id)}>
+                <p.icon /> {p.title}{mark(p.id)}
+                {p.view
+                  ? <button type="button" aria-label={`Actions for ${p.title}`} className={`flex size-control-md shrink-0 items-center justify-center rounded-sm ${current === p.id ? '' : 'ml-auto'}`} onClick={own(() => setEditing(p))}><DotsThree weight="bold" size={16} /></button>
+                  : <span title="Not editable" className={`flex size-control-md shrink-0 items-center justify-center text-muted-foreground ${current === p.id ? '' : 'ml-auto'}`} onClick={own(() => toast('Not editable'))}><Lock /></span>}
+              </DropdownMenuItem>
+            ))}
+            <DropdownMenuItem disabled={!viewActions.canEdit} onSelect={viewActions.onAdd}><Plus /> Add view</DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem className={current === PAGE.LINKS ? ACTIVE : undefined} onSelect={() => onNavigate(PAGE.LINKS)}>
+              <LinkBreak /> Broken links
+              {brokenCount > 0 && <span className="ml-auto pl-4 text-muted-foreground">{brokenCount}</span>}
+              {current === PAGE.LINKS && !brokenCount && mark(PAGE.LINKS)}
+            </DropdownMenuItem>
+            <DropdownMenuItem className={current === PAGE.SETTINGS ? ACTIVE : undefined} onSelect={() => onNavigate(PAGE.SETTINGS)}><Gear /> Settings{mark(PAGE.SETTINGS)}</DropdownMenuItem>
+            <DropdownMenuItem variant="destructive" onSelect={onSignOut}><SignOut /> Sign out</DropdownMenuItem>
+          </>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   )

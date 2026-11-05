@@ -3,7 +3,7 @@ import { fileView, folderView, startTrails, currentView, openView, trailTo, move
 
 describe('views', () => {
   it('starts every page at its own start', () => {
-    expect(startTrails()).toEqual({ home: [], files: [], graph: [] })
+    expect(startTrails(['home', 'files', 'graph'])).toEqual({ home: [], files: [], graph: [] })
     expect(currentView('home', [])).toBeNull()
     expect(currentView('files', [])).toEqual(folderView(''))
   })

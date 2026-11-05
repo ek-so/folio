@@ -29,9 +29,13 @@ import Settings from './components/Settings.jsx'
 import Spinner from './components/Spinner.jsx'
 import { useAuth } from './hooks/useAuth.js'
 import { useRepo } from './hooks/useRepo.js'
+import { useViews } from './hooks/useViews.js'
+import RenameModal from './components/RenameModal.jsx'
+import DeleteModal from './components/DeleteModal.jsx'
 import { useTheme } from './hooks/useTheme.js'
 import { storage } from './lib/storage.js'
-import { PAGE, MAIN_PAGES } from './lib/pages.js'
+import { PAGE, mainPages } from './lib/pages.js'
+import { isConfigPath, addView, renameView, removeView, viewNameError } from './lib/viewsConfig.js'
 import { urlForPage, pageForUrl, existingView } from './lib/url.js'
 import { fileView, folderView, startTrails, currentView, openView, trailTo, movedTrails, keptTrails } from './lib/views.js'
 import { toast } from 'sonner'
@@ -54,16 +58,24 @@ const reloaded = performance.getEntriesByType('navigation')[0]?.type === 'reload
 export default function App() {
   const auth = useAuth()
   const repo = useRepo(auth.user ? auth.repo : null, toast.success)
+  const { virtual, changes, update } = repo
+  // The views in the navigation (Home…), from the repo's .folio/views.json
+  const viewsConfig = useViews(repo)
+  const pages = mainPages(viewsConfig.views)
   const { theme, setTheme } = useTheme()
-  const [page, setPage] = useState(() => (reloaded && storage.getPage()) || (deepLink ? deepLink.page : storage.getPage() || MAIN_PAGES[0].id))
+  const [openPage, setPage] = useState(() => (reloaded && storage.getPage()) || (deepLink ? deepLink.page : storage.getPage() || PAGE.HOME))
+  // A view that's gone (deleted here or on another device) falls back to the first page; until the config is read, the remembered page stays
+  const fixedPage = openPage === PAGE.SETTINGS || openPage === PAGE.LINKS
+  const page = fixedPage || !viewsConfig.ready || pages.some(p => p.id === openPage) ? openPage : pages[0].id
   // The main page files and folders open in (File manager when Settings / Broken links is open)
-  const mainPage = MAIN_PAGES.some(p => p.id === page) ? page : PAGE.FILES
+  const mainPage = fixedPage ? PAGE.FILES : page
   // Each main page has its own trail of views (lib/views.js); files and folders open in the page you're on
   const [trails, setTrails] = useState(() => {
-    const stored = { ...startTrails(), ...storage.getTrails() }
+    const stored = { ...startTrails(pages.map(p => p.id)), ...storage.getTrails() }
     return deepLink ? { ...stored, [deepLink.page]: trailTo(deepLink.page, stored[deepLink.page], deepLink.view) } : stored
   })
-  const view = currentView(mainPage, trails[mainPage])
+  const trailOf = id => trails[id] ?? []
+  const view = currentView(mainPage, trailOf(mainPage))
   const selectedFile = view?.file ?? null
   const folder = view?.folder ?? ''
   const show = v => { setPage(mainPage); setTrails(o => ({ ...o, [mainPage]: openView(mainPage, o[mainPage], v) })) }
@@ -80,17 +92,18 @@ export default function App() {
   const openFolder = path => show(folderView(path))
   // The navigation: choosing the page you're on again takes Home and Graph back to their own content
   function choosePage(id) {
-    if (id === page && id !== PAGE.FILES && trails[id].length) setTrails(o => ({ ...o, [id]: [] }))
+    if (id === page && id !== PAGE.FILES && trailOf(id).length) setTrails(o => ({ ...o, [id]: [] }))
     setPage(id)
   }
   // ← in the title bar: the page's previous view. When that's also the
   // browser's previous entry, it's the browser's Back, so history stays one line.
   function goBack() {
-    const rest = trails[mainPage].slice(0, -1)
+    const rest = trailOf(mainPage).slice(0, -1)
     if (history.state?.prev === urlForPage(BASE, mainPage, currentView(mainPage, rest))) history.back()
     else setTrails(o => ({ ...o, [mainPage]: rest }))
   }
   const [newFile, setNewFile] = useState(null) // { folder, kind } while the sheet is open
+  const [viewDialog, setViewDialog] = useState(null) // { kind: 'rename' | 'delete', view } while it's open
   const [confirmSignOut, setConfirmSignOut] = useState(false)
   const [confirmDiscard, setConfirmDiscard] = useState(false)
   const [discards, setDiscards] = useState(0) // remounts the open note after a discard
@@ -159,17 +172,18 @@ export default function App() {
     return () => window.removeEventListener('popstate', onPop)
   }, [])
 
-  const { virtual, changes, update } = repo
-  const allFolders = useMemo(() => getAllFolders(virtual), [virtual])
+  // What File manager, the file tree and Search show: the config folder stays out of them
+  const shown = useMemo(() => Object.fromEntries(Object.entries(virtual).filter(([path]) => !isConfigPath(path))), [virtual])
+  const allFolders = useMemo(() => getAllFolders(shown), [shown])
   // Files and folders that are gone (deleted, discarded, removed by a Pull or
   // Sync) leave every page's trail: each page shows what it showed before them
   useEffect(() => {
     if (!repo.remote) return
     const folders = new Set(allFolders)
     const next = keptTrails(trails, v => v.file ? v.file in virtual : !v.folder || folders.has(v.folder))
-    if (MAIN_PAGES.some(p => next[p.id].length !== trails[p.id].length)) followTrails(next)
+    if (Object.keys(next).some(id => next[id].length !== trails[id].length)) followTrails(next)
   }, [virtual])
-  const files = useMemo(() => new Set(Object.keys(virtual)), [virtual])
+  const files = useMemo(() => new Set(Object.keys(shown)), [shown])
   known.current = { files, folders: allFolders }
   const links = useLinkIndex(virtual, changes)
   const symlinks = useSymlinks(virtual)
@@ -369,7 +383,7 @@ export default function App() {
     repo.discardAll()
     await cache.clearAll()
     auth.signOut()
-    setTrails(startTrails())
+    setTrails(startTrails(pages.map(p => p.id)))
   }
 
   if (!auth.ready) {
@@ -386,6 +400,17 @@ export default function App() {
   // A symlink never opens itself (opening one opens its source instead)
   const entry = selectedFile && !(selectedFile in symlinks) && virtual[selectedFile]
   const repoName = auth.repo.split('/')[1]
+  // Add view, and Rename / Delete of a view (the dialogs below)
+  const viewActions = {
+    canEdit: viewsConfig.ready,
+    onAdd: () => {
+      const { views, id } = addView(viewsConfig.views)
+      viewsConfig.save(views)
+      setPage(id)
+    },
+    onRename: v => setViewDialog({ kind: 'rename', view: v }),
+    onDelete: v => setViewDialog({ kind: 'delete', view: v }),
+  }
   const menu = {
     brokenCount: links.index.broken.length,
     onSignOut: () => setConfirmSignOut(true),
@@ -415,7 +440,8 @@ export default function App() {
   return (
     <LinksContext.Provider value={linkInfo}>
       <NavContext.Provider value={{
-        listDir: dir => listDir(virtual, dir, repo.changed),
+        listDir: dir => listDir(shown, dir, repo.changed),
+        views: viewsConfig.views,
         symlinks,
         current: treeCurrent,
         expanded,
@@ -426,7 +452,7 @@ export default function App() {
         onOpenFile: setSelectedFile,
         treeCollapsed,
         onToggleTree: toggleTree,
-        onBack: page === mainPage && trails[mainPage].length ? goBack : null,
+        onBack: page === mainPage && trailOf(mainPage).length ? goBack : null,
         onDropMove: handleDropMove,
         onUpload: handleUpload,
         loading: !repo.remote && !repo.error,
@@ -439,9 +465,9 @@ export default function App() {
         <Toaster theme={theme} />
         <PullToRefresh onRefresh={() => window.location.reload()}>
           <div className="flex flex-1 min-h-0">
-          <NavRail page={page} onPage={choosePage} onSearch={() => setSearchOpen(true)} renderSync={renderSync} menu={menu} onShowTree={treeCollapsed && page === mainPage ? toggleTree : null} />
+          <NavRail page={page} pages={pages} viewActions={viewActions} onPage={choosePage} onSearch={() => setSearchOpen(true)} renderSync={renderSync} menu={menu} onShowTree={treeCollapsed && page === mainPage ? toggleTree : null} />
           <main ref={mainRef} className="flex flex-col flex-1 min-w-0 min-h-0">
-          <TopBar host={mainRef} resetKey={`${page}|${selectedFile}|${folder}`} tree={page === mainPage} page={page} onPage={choosePage} onSearch={() => setSearchOpen(true)} renderSync={renderSync} menu={menu} />
+          <TopBar host={mainRef} resetKey={`${page}|${selectedFile}|${folder}`} tree={page === mainPage} page={page} pages={pages} viewActions={viewActions} onPage={choosePage} onSearch={() => setSearchOpen(true)} renderSync={renderSync} menu={menu} />
           {page === PAGE.SETTINGS ? (
             <Settings login={auth.user.login} repo={auth.repo} theme={theme} onTheme={setTheme} />
           ) : !view ? (
@@ -489,7 +515,7 @@ export default function App() {
             <FileBrowser
               path={folder}
               onNavigate={openFolder}
-              listDir={dir => listDir(virtual, dir, repo.changed)}
+              listDir={dir => listDir(shown, dir, repo.changed)}
               loading={!repo.remote && !repo.error}
               error={repo.error}
               notice={repo.remote?.truncated ? 'This repo is too large to list in full; some files are missing.' : ''}
@@ -543,6 +569,30 @@ export default function App() {
           <SignOutModal changeCount={repo.changeCount} onSignOut={signOut} onClose={() => setConfirmSignOut(false)} />
         )}
 
+        {viewDialog?.kind === 'rename' && (
+          <RenameModal
+            kind="view"
+            item={{ name: viewDialog.view.title, type: 'dir' }}
+            onRename={name => {
+              const error = viewNameError(name)
+              if (error) return error
+              viewsConfig.save(renameView(viewsConfig.views, viewDialog.view.id, name))
+              setViewDialog(null)
+              return null
+            }}
+            onClose={() => setViewDialog(null)}
+          />
+        )}
+
+        {viewDialog?.kind === 'delete' && (
+          <DeleteModal
+            kind="view"
+            item={{ name: viewDialog.view.title, type: 'dir' }}
+            onDelete={() => { viewsConfig.save(removeView(viewsConfig.views, viewDialog.view.id)); setViewDialog(null) }}
+            onClose={() => setViewDialog(null)}
+          />
+        )}
+
         {newFile && (
           <NewFileModal
             folder={newFile.folder}
@@ -566,7 +616,7 @@ export default function App() {
           <SearchSheet
             onClose={() => setSearchOpen(false)}
             onSelect={setSelectedFile}
-            virtual={virtual}
+            virtual={shown}
             changes={changes}
             recent={storage.getRecentFiles()}
           />

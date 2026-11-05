@@ -1,16 +1,17 @@
 import { useState } from 'react'
-import { List, SidebarSimple, MagnifyingGlass, LinkBreak, Gear, SignOut, TreeView } from '@phosphor-icons/react'
+import { List, SidebarSimple, MagnifyingGlass, LinkBreak, Gear, SignOut, TreeView, Lock, Plus } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils.js'
 import { Button } from './ui/button.jsx'
 import AccountMenu from './AccountMenu.jsx'
 import { NavDrawerButton } from './NavTree.jsx'
-import { PAGE, MAIN_PAGES } from '../lib/pages.js'
+import { PAGE } from '../lib/pages.js'
 import { storage } from '../lib/storage.js'
 import { RAIL_WIDTH } from '../lib/resize.js'
 import { useResizableWidth } from '../hooks/useResizableWidth.js'
 import ResizeHandle from './ResizeHandle.jsx'
 import { useHideOnScroll } from '../hooks/useHideOnScroll.js'
 import AppLogo from './AppLogo.jsx'
+import ViewMenu from './ViewMenu.jsx'
 
 // The open page's button: light accent fill, accent text
 const ACTIVE = 'bg-primary/15 text-primary hover:bg-primary/20 hover:text-primary'
@@ -24,7 +25,10 @@ const ACTIVE = 'bg-primary/15 text-primary hover:bg-primary/20 hover:text-primar
 // the rail to icons only (remembered on this device; expanded, its edge is a drag handle), and after it,
 // while the file tree is hidden, `onShowTree`'s tree button (collapsed: first under the separator); 16px; Sync and Search (16px apart); 16px; Home, File manager, Graph, and at the bottom Broken links (count),
 // Settings and Sign out.
-export function NavRail({ page, onPage, onSearch, renderSync, menu, onShowTree }) {
+// `pages`: the main pages (lib/pages.js): the views, File manager, Graph, then Add view. With a mouse, a view shows its ⋯
+// (Rename / Delete: `viewActions`) on hover, File manager and Graph a lock ("Not editable"); the
+// collapsed rail has neither, and Add view is an icon.
+export function NavRail({ page, pages, viewActions, onPage, onSearch, renderSync, menu, onShowTree }) {
   const [collapsed, setCollapsed] = useState(storage.getRailCollapsed)
   const [width, resize] = useResizableWidth(RAIL_WIDTH, storage.getRailWidth, storage.setRailWidth)
   const toggle = () => { setCollapsed(!collapsed); storage.setRailCollapsed(!collapsed) }
@@ -57,11 +61,23 @@ export function NavRail({ page, onPage, onSearch, renderSync, menu, onShowTree }
         </Button>
       </div>
       <div className="h-2" /> {/* + the 4px gaps = 16px */}
-      {MAIN_PAGES.map(({ id, title, icon: Icon }) => (
-        <Button key={id} variant="ghost" title={hint(title)} aria-current={page === id ? 'page' : undefined} className={item(id)} onClick={() => onPage(id)}>
-          <Icon /> {label(title)}
-        </Button>
+      {pages.map(p => (
+        <div key={p.id} className="group relative">
+          <Button variant="ghost" title={hint(p.title)} aria-current={page === p.id ? 'page' : undefined} className={cn(item(p.id), !collapsed && 'w-full')} onClick={() => onPage(p.id)}>
+            <p.icon /> {label(p.title)}
+          </Button>
+          {!collapsed && (
+            <div className="absolute inset-y-0 right-1 flex items-center">
+              {p.view
+                ? <ViewMenu view={p} disabled={!viewActions.canEdit} onRename={viewActions.onRename} onDelete={viewActions.onDelete} />
+                : <span title="Not editable" className="flex size-control-md items-center justify-center text-muted-foreground pointer-fine:opacity-0 pointer-fine:group-hover:opacity-100"><Lock className="size-4" /></span>}
+            </div>
+          )}
+        </div>
       ))}
+      <Button variant="ghost" title={hint('Add view')} disabled={!viewActions.canEdit} className={cn('justify-start gap-3 font-normal', collapsed && 'size-control justify-center px-0')} onClick={viewActions.onAdd}>
+        <Plus /> {label('Add view')}
+      </Button>
       <div className="flex-1" />
       {/* my-3 + the 4px gap = 16px (--space) on both sides */}
       <div role="separator" className="my-3 h-px w-full shrink-0 bg-border" />
@@ -85,14 +101,14 @@ export function NavRail({ page, onPage, onSearch, renderSync, menu, onShowTree }
 // Phones: a bar at the top with ☰ (every page, then the rest), the file-tree
 // button (`tree`: on the main pages), Search and Sync. It slides away while
 // the content scrolls down and returns on scrolling up (`useHideOnScroll`).
-export function TopBar({ host, resetKey, page, onPage, onSearch, renderSync, menu, tree }) {
+export function TopBar({ host, resetKey, page, pages, viewActions, onPage, onSearch, renderSync, menu, tree }) {
   const hidden = useHideOnScroll(host, resetKey)
   return (
     <div className={cn('grid shrink-0 transition-[grid-template-rows,visibility] duration-200 md:hidden', hidden ? 'grid-rows-[0fr] invisible' : 'grid-rows-[1fr]')}>
     <nav aria-label="Main" className="min-h-0 overflow-hidden">
     <div className="flex items-center gap-2 px-space-sm py-space">
       <AccountMenu
-        {...menu} current={page} onNavigate={onPage}
+        {...menu} current={page} pages={pages} viewActions={viewActions} onNavigate={onPage}
         trigger={
           <Button variant="ghost-outline" size="icon" aria-label="Menu" className="shrink-0 border-muted-foreground/50">
             <List />

@@ -10,7 +10,7 @@ import { Button } from './ui/button.jsx'
 // the item's actions on the right (⋯, then +, ✏️ or ✓). A border sets it
 // apart from the content below.
 export default function TitleBar({ page, name, changed, badge, children }) {
-  const onBack = useContext(NavContext)?.onBack
+  const { onBack, views } = useContext(NavContext) ?? {}
   return (
     <div className="shrink-0 border-b border-border p-space-sm">
       <div className="flex min-h-control items-center gap-space-sm">
@@ -20,7 +20,7 @@ export default function TitleBar({ page, name, changed, badge, children }) {
           </Button>
         )}
         <div className="flex min-w-0 flex-1 items-center gap-2 px-space-xs">
-          <h1 className="min-w-0 truncate text-base font-bold">{page ? pageInfo(page).title : name}</h1>
+          <h1 className="min-w-0 truncate text-base font-bold">{page ? pageInfo(page, views).title : name}</h1>
           {changed && <span className="size-1.5 shrink-0 rounded-full bg-primary" />}
           {badge}
         </div>

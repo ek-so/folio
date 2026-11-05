@@ -1,0 +1,38 @@
+import { describe, it, expect } from 'vitest'
+import { parseViews, serializeViews, addView, renameView, removeView, viewNameError, isConfigPath, DEFAULT_VIEWS } from './viewsConfig.js'
+
+describe('viewsConfig', () => {
+  it('has Home alone without a file, or with text it can\'t read', () => {
+    expect(parseViews(undefined)).toEqual(DEFAULT_VIEWS)
+    expect(parseViews('not json')).toEqual(DEFAULT_VIEWS)
+    expect(parseViews('{"views": 3}')).toEqual(DEFAULT_VIEWS)
+  })
+
+  it('keeps an emptied list empty, and drops bad or reserved entries', () => {
+    expect(parseViews(serializeViews([]))).toEqual([])
+    const text = JSON.stringify({ views: [{ id: 'a', name: 'A' }, { id: 'a', name: 'again' }, { id: 'files', name: 'X' }, { id: 'b', name: ' ' }, 4] })
+    expect(parseViews(text)).toEqual([{ id: 'a', name: 'A' }])
+  })
+
+  it('round-trips, adds, renames and removes', () => {
+    const { views, id } = addView(DEFAULT_VIEWS)
+    expect(views).toHaveLength(2)
+    expect(views[1]).toEqual({ id, name: 'Untitled view' })
+    expect(parseViews(serializeViews(views))).toEqual(views)
+    expect(renameView(views, id, '  Work ')[1].name).toBe('Work')
+    expect(removeView(views, 'home')).toEqual([views[1]])
+  })
+
+  it('checks names', () => {
+    expect(viewNameError('  ')).not.toBe('')
+    expect(viewNameError('x'.repeat(41))).not.toBe('')
+    expect(viewNameError('Work')).toBe('')
+  })
+
+  it('knows the config folder', () => {
+    expect(isConfigPath('.folio/views.json')).toBe(true)
+    expect(isConfigPath('.folio')).toBe(true)
+    expect(isConfigPath('.folios/x')).toBe(false)
+    expect(isConfigPath('notes/.folio/x')).toBe(false)
+  })
+})

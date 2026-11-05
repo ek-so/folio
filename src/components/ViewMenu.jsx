@@ -1,0 +1,32 @@
+import { DotsThree, PencilSimple, Trash } from '@phosphor-icons/react'
+import { cn } from '@/lib/utils.js'
+import { Button } from './ui/button.jsx'
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from './ui/dropdown-menu.jsx'
+
+// ⋯ menu of a view in the navigation rail: Rename / Delete. `onRename(view)`
+// and `onDelete(view)` open App's dialogs; `disabled` while the views can't
+// be changed (not read yet). With a mouse it shows only while the row (`group`) is hovered, focused or its
+// menu is open; always on touch.
+export default function ViewMenu({ view, onRename, onDelete, disabled }) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label={`Actions for ${view.title}`}
+          className={cn(
+            'size-control-md shrink-0 text-muted-foreground hover:bg-muted-foreground/10 data-[state=open]:bg-muted-foreground/10',
+            'pointer-fine:opacity-0 pointer-fine:group-hover:opacity-100 pointer-fine:focus-visible:opacity-100 pointer-fine:data-[state=open]:opacity-100',
+          )}
+        >
+          <DotsThree weight="bold" size={16} />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" onCloseAutoFocus={e => e.preventDefault()}>
+        <DropdownMenuItem disabled={disabled} onSelect={() => onRename(view)}><PencilSimple /> Rename</DropdownMenuItem>
+        <DropdownMenuItem variant="destructive" disabled={disabled} onSelect={() => onDelete(view)}><Trash /> Delete</DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}

@@ -1,9 +1,10 @@
 import { Button } from './ui/button.jsx'
 import BottomSheet from './BottomSheet.jsx'
 
-export default function DeleteModal({ item, onDelete, onClose }) {
-  const isDir = item.type === 'dir'
-  const kind = isDir ? 'folder' : item.name.endsWith('.md') ? 'note' : 'file'
+// kind: what's deleted when it's not a file or folder (a view)
+export default function DeleteModal({ item, onDelete, onClose, kind: given }) {
+  const isDir = item.type === 'dir' && !given
+  const kind = given ?? (isDir ? 'folder' : item.name.endsWith('.md') ? 'note' : 'file')
 
   return (
     <BottomSheet

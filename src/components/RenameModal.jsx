@@ -5,7 +5,8 @@ import BottomSheet from './BottomSheet.jsx'
 import { splitName, renameTarget } from '../lib/changes.js'
 import { LinksContext } from '../hooks/useLinkIndex.js'
 
-export default function RenameModal({ item, onRename, onClose }) {
+// kind: what's renamed when it's not a file or folder (a view): no file extension, no links to update
+export default function RenameModal({ item, onRename, onClose, kind }) {
   const isDir = item.type === 'dir'
   const [currentName, ext] = isDir ? [item.name, ''] : splitName(item.name)
   const [name, setName] = useState(currentName)
@@ -13,7 +14,7 @@ export default function RenameModal({ item, onRename, onClose }) {
   const inputRef = useRef()
   const linkInfo = useContext(LinksContext)
   const trimmed = name.trim()
-  const linkCount = trimmed && trimmed !== currentName && linkInfo
+  const linkCount = !kind && trimmed && trimmed !== currentName && linkInfo
     ? linkInfo.rewriteCount(item, renameTarget(item, trimmed)) : 0
 
   function handleRename(e) {
@@ -25,7 +26,7 @@ export default function RenameModal({ item, onRename, onClose }) {
 
   return (
     <BottomSheet
-      title={`Rename ${isDir ? 'folder' : ext === '.md' ? 'note' : 'file'}`}
+      title={`Rename ${kind ?? (isDir ? 'folder' : ext === '.md' ? 'note' : 'file')}`}
       onClose={onClose}
       onOpenAutoFocus={e => { e.preventDefault(); inputRef.current?.select() }}
     >
