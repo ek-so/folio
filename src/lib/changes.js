@@ -357,3 +357,15 @@ export function commitMessage(ch) {
   if (lines.length === 1) return lines[0]
   return `Update ${lines.length} files\n\n${lines.map(l => `- ${l}`).join('\n')}`
 }
+
+// `ch` with `edit(text)` applied to the note at `path` (in `ch`'s files); `remoteText(sha)`: GitHub's text of
+// a note (undefined when it isn't on this device: that note is left as it is)
+export function editNote(ch, files, path, edit, remoteText) {
+  const entry = virtualFiles(files, ch)[path]
+  if (!entry) return ch
+  const original = remoteText(entry.sha)
+  const text = ch.edits[entry.orig] ?? original
+  if (text === undefined) return ch
+  const edited = edit(text)
+  return edited === text ? ch : setEdit(ch, entry, edited, original ?? '')
+}

@@ -1,5 +1,6 @@
-import { boardPath, parseBoard, serializeBoard, boardColumns, placeCard, moveColumn, withBoardKeys, editNote, editNotes, emptyColumn, isTechnical } from './board.js'
-import { DESCRIPTION, frontMatter, withoutKeys, renameKey, keyNameError, withValue, valuesOf } from '@/lib/frontmatter.js'
+import { boardPath, parseBoard, serializeBoard, boardColumns, placeCard, moveColumn, withBoardKeys, editNotes, emptyColumn, isTechnical } from './board.js'
+import { editNote } from '@/lib/changes.js'
+import { DESCRIPTION, frontMatter, withoutKeys, renameKey, keyNameError, withValue, withoutValue, valuesOf, countValue } from '@/lib/frontmatter.js'
 
 // Board `id` as its widget shows and changes it, through the app's `services`:
 // `ready` (its settings are read), `board` (null when they can't be), `data`
@@ -57,6 +58,11 @@ export function useBoard(id, services) {
     // The property `key` of the card `path` set to `value` (a string, or a list of them)
     setProperty: (path, key, value) =>
       update(ch => editNote(ch, services.remoteFiles, path, t => withValue(t, key, value), services.remoteText)),
+    // How many of the board's notes have `value` as the property `key`
+    valueCount: (key, value) => countValue(texts, key, value),
+    // `value` out of the property `key` in every note of the board: empty, or gone from its list
+    removeValue: (key, value) =>
+      update(ch => editNotes(ch, services.remoteFiles, board.folder, t => withoutValue(t, key, value), services.remoteText)),
     // The property `from` renamed `to` in every note of the board (and on its cards); refused
     // when a note already has `to`
     renameProperty(from, to) {

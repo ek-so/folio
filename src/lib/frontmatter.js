@@ -132,6 +132,17 @@ export function withValue(text, key, value) {
   return base.slice(0, open) + lines.join('') + base.slice(fm.close)
 }
 
+// `text` with `value` taken out of the property `key`: empty when it was the
+// property's value, gone from the list when it was one of them; else as it is
+export function withoutValue(text, key, value) {
+  const have = properties(text)[key]
+  if (Array.isArray(have)) return have.includes(value) ? withValue(text, key, have.filter(v => v !== value)) : text
+  return have === value ? withValue(text, key, '') : text
+}
+
+// How many of `texts` (notes) have `value` as the property `key`
+export const countValue = (texts, key, value) => texts.filter(t => valueList(properties(t)[key] ?? '').includes(value)).length
+
 // The values the property `key` has in `texts` (notes), each once, sorted
 export function valuesOf(texts, key) {
   const seen = new Set()

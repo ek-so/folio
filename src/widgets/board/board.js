@@ -1,4 +1,4 @@
-import { virtualFiles, setEdit } from '@/lib/changes.js'
+import { virtualFiles, editNote } from '@/lib/changes.js'
 import { withKeys } from '@/lib/frontmatter.js'
 import { SYMLINK_MODE } from '@/lib/links.js'
 
@@ -102,18 +102,6 @@ export function movedBoard(board, from, to, isDir) {
   if (now[0] !== was[0]) return board
   const follow = k => k === was[1] || k.startsWith(was[1] + '/') ? now[1] + k.slice(was[1].length) : k
   return { ...board, cards: { ...board.cards, [was[0]]: (board.cards[was[0]] ?? []).map(follow) } }
-}
-
-// `ch` with `edit(text)` applied to the note at `path` (in `ch`'s files); `remoteText(sha)`: GitHub's text of
-// a note (undefined when it isn't on this device: that note is left as it is)
-export function editNote(ch, files, path, edit, remoteText) {
-  const entry = virtualFiles(files, ch)[path]
-  if (!entry) return ch
-  const original = remoteText(entry.sha)
-  const text = ch.edits[entry.orig] ?? original
-  if (text === undefined) return ch
-  const edited = edit(text)
-  return edited === text ? ch : setEdit(ch, entry, edited, original ?? '')
 }
 
 // `ch` with `edit(text)` applied to every note of the board in `folder` (in `ch`'s files):

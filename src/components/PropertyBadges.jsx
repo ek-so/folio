@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { CaretDown, Check } from '@phosphor-icons/react'
+import { CaretDown, Check, Trash } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
 import { Badge } from './ui/badge.jsx'
 import { Input } from './ui/input.jsx'
@@ -7,6 +7,7 @@ import { ListRow } from './ui/list-row.jsx'
 import { Popover, PopoverTrigger, PopoverContent } from './ui/popover.jsx'
 import { Tip } from './ui/tooltip.jsx'
 import { Button } from './ui/button.jsx'
+import ConfirmModal from './ConfirmModal.jsx'
 import { valueList, propertyColor, DESCRIPTION } from '../lib/frontmatter.js'
 import { inlineHtml } from '../lib/previewLinks.js'
 
@@ -33,7 +34,11 @@ const TINT_HOVER = 'hover:bg-[color-mix(in_oklab,var(--tag)_calc(var(--tag-tint)
 // With `onChange(key, value)` the badges open a popover to change the property
 // (`options(key)`: the values to choose from) and an empty property shows its
 // name as a badge to fill; without it they're plain and empty ones aren't shown.
-export default function PropertyBadges({ props, path, files, clamp, title, className, onChange, options }) {
+// With `onRemoveValue(key, value)` each value in the popover has a 🗑 that asks first, then
+// empties that value everywhere it's used (`valueCount(key, value)`: in how many notes;
+// `scopeName`: where, "this folder").
+export default function PropertyBadges({ props, path, files, clamp, title, className, onChange, options, onRemoveValue, valueCount, scopeName }) {
+  const [removing, setRemoving] = useState(null) // { key, value } being confirmed
   const parts = [] // [{ text }] or [{ badges: [{ id, prop, label }] }], in order
   for (const prop of props) {
     const values = valueList(prop.value)
@@ -53,7 +58,7 @@ export default function PropertyBadges({ props, path, files, clamp, title, class
     : (
       <div key={i} className="flex flex-wrap gap-space-xs">
         {part.badges.map(({ id, prop, label }) => onChange
-          ? <EditableBadge key={id} prop={prop} label={label} options={options} onChange={onChange} />
+          ? <EditableBadge key={id} prop={prop} label={label} options={options} onChange={onChange} onRemove={onRemoveValue && (value => setRemoving({ key: prop.key, value }))} />
           : (
             <Tip key={id} content={`${prop.key}: ${label}`}>
               <Badge {...tint(prop.key)}><span className="truncate">{label}</span></Badge>
@@ -61,20 +66,32 @@ export default function PropertyBadges({ props, path, files, clamp, title, class
           ))}
       </div>
     ))
-  if (!title) return <div className={cn('flex flex-col gap-space-sm', className)}>{body}</div>
+  // The confirmation is in a `contents` div so a click in it, like one in a popover, stays its own
+  const confirm = removing && (
+    <div className="contents" {...own}>
+      <ConfirmModal
+        title={`Delete “${removing.value}” from ${removing.key}?`}
+        description={`It becomes empty in ${valueCount(removing.key, removing.value)} note${valueCount(removing.key, removing.value) === 1 ? '' : 's'} in ${scopeName}. It changes on GitHub when you sync.`}
+        onConfirm={() => { onRemoveValue(removing.key, removing.value); setRemoving(null) }}
+        onClose={() => setRemoving(null)}
+      />
+    </div>
+  )
+  if (!title) return <div className={cn('flex flex-col gap-space-sm', className)}>{body}{confirm}</div>
   return (
     <div className={className}>
       <section className="flex flex-col gap-space-sm rounded-lg bg-secondary/50 p-space-sm">
         <h2 className="text-xs font-medium text-muted-foreground">{title}</h2>
         {body}
       </section>
+      {confirm}
     </div>
   )
 }
 
 // One value of a property as a badge with a ▾ that opens the property's popover
 // (`label` null: the property is empty and shows its name)
-function EditableBadge({ prop, label, options, onChange }) {
+function EditableBadge({ prop, label, options, onChange, onRemove }) {
   const [open, setOpen] = useState(false)
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -93,7 +110,7 @@ function EditableBadge({ prop, label, options, onChange }) {
         </PopoverTrigger>
       </Tip>
       <PopoverContent {...own}>
-        <ValueChooser prop={prop} options={options?.(prop.key) ?? []} onChange={onChange} close={() => setOpen(false)} />
+        <ValueChooser prop={prop} options={options?.(prop.key) ?? []} onChange={onChange} onRemove={onRemove && (value => { setOpen(false); onRemove(value) })} close={() => setOpen(false)} />
       </PopoverContent>
     </Popover>
   )
@@ -103,7 +120,7 @@ function EditableBadge({ prop, label, options, onChange }) {
 // has), a field to type a new one. A property with a list of values toggles them
 // and stays open; one with a single value takes the chosen one (choosing it
 // again empties it) and closes.
-function ValueChooser({ prop, options, onChange, close }) {
+function ValueChooser({ prop, options, onChange, onRemove, close }) {
   const [typed, setTyped] = useState('')
   const isList = Array.isArray(prop.value)
   const current = valueList(prop.value)
@@ -137,7 +154,10 @@ function ValueChooser({ prop, options, onChange, close }) {
       <div className="flex max-h-60 flex-col overflow-y-auto">
         {isNew && <ListRow title={`Add “${query}”`} icon={<span className="size-4" />} onClick={() => choose(query)} />}
         {shown.map(v => (
-          <ListRow key={v} title={v} icon={current.includes(v) ? <Check /> : <span className="size-4" />} onClick={() => choose(v)} />
+          <ListRow
+            key={v} title={v} icon={current.includes(v) ? <Check /> : <span className="size-4" />} onClick={() => choose(v)}
+            trailing={onRemove && <Button variant="ghost" size="md" aria-label={`Delete ${v}`} tooltip="Delete this value" onClick={() => onRemove(v)}><Trash /></Button>}
+          />
         ))}
         {!isNew && !shown.length && <p className="px-3 py-2 text-sm text-muted-foreground">No values yet. Type one to add it.</p>}
       </div>

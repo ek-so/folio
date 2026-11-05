@@ -46,7 +46,7 @@ import { TooltipProvider } from './components/ui/tooltip.jsx'
 import { cache } from './lib/cache.js'
 import {
   listDir, nameError, renameTarget, renameError, createError, add, setEdit, rename, remove, getAllFolders,
-  upload, replaceUpload, freePath, virtualFiles, splitName, MAX_UPLOAD_BYTES,
+  upload, replaceUpload, freePath, virtualFiles, splitName, editNote, MAX_UPLOAD_BYTES,
 } from './lib/changes.js'
 
 const BASE = import.meta.env.BASE_URL
@@ -606,6 +606,7 @@ export default function App() {
               entry={entry}
               files={virtual}
               notes={links.notes}
+              onEditNotes={(paths, edit) => update(ch => paths.reduce((c, p) => editNote(c, repo.remote?.files ?? {}, p, edit, links.remoteText), ch))}
               edited={changes.edits[entry.orig]}
               onEdit={(content, original) =>
                 update(ch => setEdit(ch, virtual[selectedFile], content, original))}

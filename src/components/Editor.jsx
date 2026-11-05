@@ -9,14 +9,14 @@ import Backlinks from './Backlinks.jsx'
 import MarkdownEditor from './MarkdownEditor.jsx'
 import { useNote } from '../hooks/useNote.js'
 import { displayName } from '../lib/files.js'
-import { frontMatter, withValue, valuesOf } from '../lib/frontmatter.js'
+import { frontMatter, withValue, withoutValue, valuesOf, countValue } from '../lib/frontmatter.js'
 import PropertyBadges from './PropertyBadges.jsx'
 
 // A note: its file name in the TitleBar (editing it renames the file), the
 // whole markdown shown as preview; ✏️ in the title bar edits the markdown,
 // starting where you were reading, and a double tap starts at the tapped
 // word. Edits save on their own; ✓ (same spot) only switches back to preview.
-export default function Editor({ linkedBy, onOpenLink, path, entry, files, notes, edited, onEdit, onNavigate, onOpenFile, onRename, onDelete, onMove, folders, backlinks }) {
+export default function Editor({ linkedBy, onOpenLink, path, entry, files, notes, onEditNotes, edited, onEdit, onNavigate, onOpenFile, onRename, onDelete, onMove, folders, backlinks }) {
   const { content, change, loading, loadError } = useNote(entry, edited, onEdit)
   const [mode, setMode] = useState('preview')
   const [editedAt, setEditedAt] = useState(null) // offset to show when back in preview
@@ -39,9 +39,15 @@ export default function Editor({ linkedBy, onOpenLink, path, entry, files, notes
     setMode('preview')
   }
 
-  // What the notes right next to this one have as a property, to choose from
+  // The notes right next to this one (this one as it is now): what they have as a property is what the badges offer
   const dir = path.slice(0, path.lastIndexOf('/') + 1)
-  const nearby = key => valuesOf(Object.entries(notes).filter(([p]) => p.startsWith(dir) && !p.slice(dir.length).includes('/')).map(([, t]) => t), key)
+  const nearby = Object.keys(notes).filter(p => p.startsWith(dir) && !p.slice(dir.length).includes('/'))
+  const nearbyTexts = nearby.map(p => p === path ? content : notes[p])
+  // `value` out of the property in all of them: this one as an edit, the others through the app
+  const removeValue = (key, value) => {
+    change(withoutValue(content, key, value))
+    onEditNotes(nearby.filter(p => p !== path), t => withoutValue(t, key, value))
+  }
 
   const fileName = displayName(path)
   const ready = !loading && !loadError
@@ -86,7 +92,7 @@ export default function Editor({ linkedBy, onOpenLink, path, entry, files, notes
           onDoubleTap={startEditing} onChange={change} onOpenFile={onOpenFile} onNavigate={onNavigate}
           footer={<Backlinks links={backlinks} onOpen={onOpenFile} />}
         >
-          <PropertyBadges props={frontMatter(content)?.props ?? []} path={path} files={files} title="Properties" onChange={(key, value) => change(withValue(content, key, value))} options={nearby} className="px-space pt-space" />
+          <PropertyBadges props={frontMatter(content)?.props ?? []} path={path} files={files} title="Properties" onChange={(key, value) => change(withValue(content, key, value))} options={key => valuesOf(nearbyTexts, key)} onRemoveValue={removeValue} valueCount={(key, value) => countValue(nearbyTexts, key, value)} scopeName="this folder" className="px-space pt-space" />
         </MarkdownPreview>
       )}
     </FilePage>

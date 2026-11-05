@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { frontMatter, properties, withKeys, blankFrontMatter, valueList, noteTitle, withoutKeys, renameKey, keyNameError, withValue, valuesOf, propertyColor } from './frontmatter.js'
+import { frontMatter, properties, withKeys, blankFrontMatter, valueList, noteTitle, withoutKeys, renameKey, keyNameError, withValue, valuesOf, propertyColor, withoutValue, countValue } from './frontmatter.js'
 
 describe('front matter', () => {
   it('reads flat keys, lists and quoted values', () => {
@@ -80,5 +80,13 @@ describe('front matter', () => {
     const keys = ['type', 'priority', 'due date', 'status', 'tags', 'project', 'date', 'owner']
     expect(new Set(keys.map(propertyColor)).size).toBe(keys.length)
     expect(propertyColor('type')).toBe(propertyColor('type'))
+  })
+
+  it('takes a value out of a property', () => {
+    expect(withoutValue('---\ntype: errand\n---\n', 'type', 'errand')).toBe('---\ntype:\n---\n')
+    expect(withoutValue('---\ntype: regular\n---\n', 'type', 'errand')).toBe('---\ntype: regular\n---\n')
+    expect(withoutValue('---\ntags: [a, b]\n---\n', 'tags', 'a')).toBe('---\ntags: [b]\n---\n')
+    expect(withoutValue('# Note', 'type', 'a')).toBe('# Note')
+    expect(countValue(['---\nt: a\n---', '---\nt: [a, b]\n---', '---\nt: b\n---', 'x'], 't', 'a')).toBe(2)
   })
 })

@@ -139,7 +139,7 @@ export default function Board({ id, services, onRemove }) {
                 onRename={() => setRenaming(c)} onDelete={() => setDeleting(c)}
               >
                 <SortableContext items={items[c.key].map(cardId)} strategy={verticalListSortingStrategy}>
-                  {items[c.key].map(path => <Card key={path} path={path} text={notes[path]} board={board} files={files} onOpen={openFile} onOpenFolder={openFolder} onChange={off ? undefined : act.setProperty} options={act.valuesOf} />)}
+                  {items[c.key].map(path => <Card key={path} path={path} text={notes[path]} board={board} files={files} onOpen={openFile} onOpenFolder={openFolder} onChange={off ? undefined : act.setProperty} options={act.valuesOf} onRemoveValue={off ? undefined : act.removeValue} valueCount={act.valueCount} />)}
                 </SortableContext>
               </Column>
             ))}
@@ -288,7 +288,7 @@ function Column({ column, canEdit, onNewCard, onRename, onDelete, children }) {
 }
 
 // A click on a link in the card's description opens what it points to, any other opens the card
-function Card({ path, text, board, files, onOpen, onOpenFolder, onChange, options }) {
+function Card({ path, text, board, files, onOpen, onOpenFolder, onChange, options, onRemoveValue, valueCount }) {
   const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
     id: cardId(path),
     data: { type: 'card', path },
@@ -297,7 +297,7 @@ function Card({ path, text, board, files, onOpen, onOpenFolder, onChange, option
     <CardBody
       ref={setNodeRef}
       path={path} text={text} board={board} files={files}
-      onChange={onChange && ((key, value) => onChange(path, key, value))} options={options}
+      onChange={onChange && ((key, value) => onChange(path, key, value))} options={options} onRemoveValue={onRemoveValue} valueCount={valueCount}
       style={{ transform: CSS.Translate.toString(transform), transition }}
       className={cn(isDragging && 'opacity-40')}
       onClick={e => {
@@ -313,7 +313,7 @@ function Card({ path, text, board, files, onOpen, onOpenFolder, onChange, option
 
 // What a card shows: the note's title, its description, the board's chosen properties' values. A div, not a button:
 // the badges in it are buttons
-const CardBody = forwardRef(function CardBody({ path, text, board, files, onChange, options, className, ...props }, ref) {
+const CardBody = forwardRef(function CardBody({ path, text, board, files, onChange, options, onRemoveValue, valueCount, className, ...props }, ref) {
   const fm = text === undefined ? [] : frontMatter(text)?.props ?? []
   const shown = fm.filter(p => p.key === DESCRIPTION || board.properties.includes(p.key)) // in the file's order
   return (
@@ -326,7 +326,7 @@ const CardBody = forwardRef(function CardBody({ path, text, board, files, onChan
       {...props}
     >
       <span className="break-words text-sm font-medium">{text === undefined ? displayName(path) : noteTitle(text, displayName(path))}</span>
-      <PropertyBadges props={shown} path={path} files={files} clamp className="pt-1" onChange={onChange} options={options} />
+      <PropertyBadges props={shown} path={path} files={files} clamp className="pt-1" onChange={onChange} options={options} onRemoveValue={onRemoveValue} valueCount={valueCount} scopeName="this board" />
     </div>
   )
 })
