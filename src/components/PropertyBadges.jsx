@@ -2,14 +2,17 @@ import { cn } from '@/lib/utils'
 import { Badge } from './ui/badge.jsx'
 import { Tip } from './ui/tooltip.jsx'
 import { valueList, DESCRIPTION } from '../lib/frontmatter.js'
+import { inlineHtml } from '../lib/previewLinks.js'
 
 // A note's properties (lib/frontmatter.js), in the file's order: its
-// description as muted text (`clamp`: cut after three lines), the others as
+// description as muted text with its markdown links (`path`: the note's, `files`:
+// the repo's, for relative links; whoever shows this opens them: see
+// `openLink`) (`clamp`: cut after three lines), the others as
 // badges, one per value, without the property's name (its tooltip has it), so
 // badges listed before the description show above it and the rest below.
 // Empty ones aren't shown. `props`: [{ key, value }]. `title`: in a box with
 // that small title on top, on a light grey fill with badges in the card's color (the note's preview); without it, bare (board cards).
-export default function PropertyBadges({ props, clamp, title, className }) {
+export default function PropertyBadges({ props, path, files, clamp, title, className }) {
   const parts = [] // [{ text }] or [{ badges: [[id, key, value]] }], in order
   for (const { key, value } of props) {
     const values = valueList(value)
@@ -20,7 +23,11 @@ export default function PropertyBadges({ props, clamp, title, className }) {
   }
   if (!parts.length) return null
   const body = parts.map((part, i) => part.text
-    ? <p key={i} className={cn('break-words text-sm text-muted-foreground', clamp && 'line-clamp-3')}>{part.text}</p>
+    ? <p
+        key={i}
+        className={cn('md-inline break-words text-sm text-muted-foreground', clamp && 'line-clamp-3')}
+        dangerouslySetInnerHTML={{ __html: inlineHtml(part.text, path, files) }}
+      />
     : (
       <div key={i} className="flex flex-wrap gap-space-xs">
         {part.badges.map(([id, key, value]) => (

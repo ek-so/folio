@@ -1,4 +1,4 @@
-import { useState, forwardRef } from 'react'
+import { useState, useMemo, forwardRef } from 'react'
 import { DotsThree, DotsSixVertical, Trash, Plus, PencilSimple, Tag, Columns } from '@phosphor-icons/react'
 import {
   DndContext, DragOverlay, MouseSensor, TouchSensor, useSensor, useSensors,
@@ -15,6 +15,7 @@ import RenameModal from '@/components/RenameModal.jsx'
 import ConfirmModal from '@/components/ConfirmModal.jsx'
 import CheckListModal from './CheckListModal.jsx'
 import { displayName } from '@/lib/files.js'
+import { openLink } from '@/lib/previewLinks.js'
 import { frontMatter, noteTitle, DESCRIPTION } from '@/lib/frontmatter.js'
 import { LOOSE } from './board.js'
 import { useBoard } from './useBoard.js'
@@ -47,7 +48,8 @@ function collide(args) {
 // useBoard; `services` come from the app (widgets/index.js).
 export default function Board({ id, services, onRemove }) {
   const { ready, board, data, title, ...act } = useBoard(id, services)
-  const { notes, canEdit, openFile } = services
+  const { notes, canEdit, openFile, openFolder } = services
+  const files = useMemo(() => Object.fromEntries(services.files.map(f => [f, true])), [services.files]) // as the preview's links want them
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 8 } }),
@@ -137,7 +139,7 @@ export default function Board({ id, services, onRemove }) {
                 onRename={() => setRenaming(c)} onDelete={() => setDeleting(c)}
               >
                 <SortableContext items={items[c.key].map(cardId)} strategy={verticalListSortingStrategy}>
-                  {items[c.key].map(path => <Card key={path} path={path} text={notes[path]} board={board} onOpen={openFile} />)}
+                  {items[c.key].map(path => <Card key={path} path={path} text={notes[path]} board={board} files={files} onOpen={openFile} onOpenFolder={openFolder} />)}
                 </SortableContext>
               </Column>
             ))}
@@ -145,7 +147,7 @@ export default function Board({ id, services, onRemove }) {
           {!columns.length && <p className="py-6 text-sm text-muted-foreground">No columns yet: its subfolders become columns.</p>}
         </div>
         <DragOverlay>
-          {dragged && drag.type === 'card' && byPath[dragged] && <CardBody path={dragged} text={notes[dragged]} board={board} className="rotate-2 shadow-lg" />}
+          {dragged && drag.type === 'card' && byPath[dragged] && <CardBody path={dragged} text={notes[dragged]} board={board} files={files} className="rotate-2 shadow-lg" />}
           {dragged && drag.type === 'column' && (
             <div className="w-72 rotate-1 rounded-lg bg-secondary p-space-sm shadow-lg">
               <ColumnTitle column={dragged} grip />
@@ -285,7 +287,8 @@ function Column({ column, canEdit, onNewCard, onRename, onDelete, children }) {
   )
 }
 
-function Card({ path, text, board, onOpen }) {
+// A click on a link in the card's description opens what it points to, any other opens the card
+function Card({ path, text, board, files, onOpen, onOpenFolder }) {
   const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
     id: cardId(path),
     data: { type: 'card', path },
@@ -293,17 +296,22 @@ function Card({ path, text, board, onOpen }) {
   return (
     <CardBody
       ref={setNodeRef}
-      path={path} text={text} board={board}
+      path={path} text={text} board={board} files={files}
       style={{ transform: CSS.Translate.toString(transform), transition }}
       className={cn(isDragging && 'opacity-40')}
-      onClick={() => onOpen(path)}
+      onClick={e => {
+        const link = e.target.closest('a[href]')
+        if (!link) return onOpen(path)
+        e.preventDefault()
+        openLink(link.getAttribute('href'), { path, files, onOpenFile: onOpen, onNavigate: onOpenFolder })
+      }}
       {...attributes} {...listeners}
     />
   )
 }
 
 // What a card shows: the note's title, its description, the board's chosen properties' values
-const CardBody = forwardRef(function CardBody({ path, text, board, className, ...props }, ref) {
+const CardBody = forwardRef(function CardBody({ path, text, board, files, className, ...props }, ref) {
   const fm = text === undefined ? [] : frontMatter(text)?.props ?? []
   const shown = fm.filter(p => p.key === DESCRIPTION || board.properties.includes(p.key)) // in the file's order
   return (
@@ -314,7 +322,7 @@ const CardBody = forwardRef(function CardBody({ path, text, board, className, ..
       {...props}
     >
       <span className="break-words text-sm font-medium">{text === undefined ? displayName(path) : noteTitle(text, displayName(path))}</span>
-      <PropertyBadges props={shown} clamp className="pt-1" />
+      <PropertyBadges props={shown} path={path} files={files} clamp className="pt-1" />
     </button>
   )
 })
