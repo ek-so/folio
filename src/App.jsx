@@ -327,7 +327,6 @@ export default function App() {
     moveAll,
     rename: (item, name) => handleRename(item, name),
     remove: item => handleDelete(item),
-    newFolder: parent => setNewFile({ folder: parent, kind: 'folder' }),
     createFolder: (parent, name) => createFolder(parent, name),
     // `keys`: the properties it starts with, empty; `stay`: don't open it
     newNote: (folder, { keys, stay } = {}) => setNewFile({ folder, kind: 'note', keys, stay }),

@@ -64,7 +64,6 @@ export function useBoard(id, services) {
       update(ch => editNotes(config.write(boardPath(id), serializeBoard({ ...board, properties: board.properties.filter(k => k !== key) }))(ch),
         services.remoteFiles, board.folder, t => withoutKeys(t, [key]), services.remoteText))
     },
-    newColumn: () => services.newFolder(board.folder),
     // A column named `name`, right away (an error message, or null)
     addColumn: name => services.createFolder(board.folder, name),
     // A new card starts with the board's properties, empty; the board stays open

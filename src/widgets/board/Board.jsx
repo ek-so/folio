@@ -69,7 +69,6 @@ export default function Board({ id, services, onRemove }) {
       <DropdownMenuContent align="end" onCloseAutoFocus={e => e.preventDefault()}>
         <DropdownMenuItem disabled={off} onSelect={() => setChoosing('columns')}><Columns /> Columns</DropdownMenuItem>
         <DropdownMenuItem disabled={off} onSelect={() => setChoosing('properties')}><Tag /> Properties</DropdownMenuItem>
-        <DropdownMenuItem disabled={off} onSelect={act.newColumn}><Plus /> New column</DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem variant="destructive" disabled={!canEdit} onSelect={onRemove}><Trash /> Remove board</DropdownMenuItem>
       </DropdownMenuContent>
