@@ -9,6 +9,8 @@ import Backlinks from './Backlinks.jsx'
 import MarkdownEditor from './MarkdownEditor.jsx'
 import { useNote } from '../hooks/useNote.js'
 import { displayName } from '../lib/files.js'
+import { frontMatter } from '../lib/frontmatter.js'
+import PropertyBadges from './PropertyBadges.jsx'
 
 // A note: its file name in the TitleBar (editing it renames the file), the
 // whole markdown shown as preview; ✏️ in the title bar edits the markdown,
@@ -79,7 +81,9 @@ export default function Editor({ linkedBy, onOpenLink, path, entry, files, edite
           content={content} path={path} files={files} scrollTo={editedAt}
           onDoubleTap={startEditing} onChange={change} onOpenFile={onOpenFile} onNavigate={onNavigate}
           footer={<Backlinks links={backlinks} onOpen={onOpenFile} />}
-        />
+        >
+          <PropertyBadges props={frontMatter(content)?.props ?? []} keys className="px-space pt-space" />
+        </MarkdownPreview>
       )}
     </FilePage>
   )

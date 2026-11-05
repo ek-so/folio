@@ -1,4 +1,5 @@
 import { marked } from 'marked'
+import { blankFrontMatter } from './frontmatter.js'
 
 marked.setOptions({ breaks: true, gfm: true })
 
@@ -100,8 +101,10 @@ const detailsDepth = raw => (raw.match(/<details[\s>]/gi) || []).length - (raw.m
 // <div data-src="start" data-len="length"> pointing at its markdown source.
 // A <details> accordion (as on GitHub: <summary>, then markdown after a blank
 // line, then </details>) is one block from its opening to its closing tag, so
-// the browser doesn't close it early.
-export function renderBlocks(markdown) {
+// the browser doesn't close it early. The front matter (properties) isn't
+// rendered: the preview shows it as badges.
+export function renderBlocks(source) {
+  const markdown = blankFrontMatter(source)
   const tokens = marked.lexer(markdown)
   marked.walkTokens(tokens, addDates)
   let offset = 0
