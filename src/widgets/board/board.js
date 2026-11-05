@@ -1,5 +1,6 @@
 import { virtualFiles, setEdit } from '@/lib/changes.js'
 import { withKeys } from '@/lib/frontmatter.js'
+import { SYMLINK_MODE } from '@/lib/links.js'
 
 // A board widget (Kanban): a folder whose direct subfolders are its columns
 // and whose files are its cards (a column holds every file inside its folder,
@@ -37,7 +38,8 @@ export const newBoard = folder => ({ folder, properties: [], hidden: [], columns
 const nameOf = path => path.slice(path.lastIndexOf('/') + 1)
 // Technical files and folders (".assets", "_attachments", ".gitkeep"…): a name starting with "." or "_"
 // anywhere in the path keeps it off the board
-const isTechnical = rest => rest.split('/').some(part => /^[._]/.test(part))
+const technical = part => /^[._]/.test(part)
+export const isTechnical = rest => rest.split('/').some(technical)
 
 // `items` in the saved order (`saved`: keys), then the rest by name
 function ordered(items, saved = []) {
@@ -102,13 +104,14 @@ export function movedBoard(board, from, to, isDir) {
   return { ...board, cards: { ...board.cards, [was[0]]: (board.cards[was[0]] ?? []).map(follow) } }
 }
 
-// `ch` with `edit(text)` applied to every note in `folder` (in `ch`'s files).
+// `ch` with `edit(text)` applied to every note of the board in `folder` (in `ch`'s files):
+// technical files and symlinks (whose text is the path they point to) are left alone.
 // `remoteText(sha)`: GitHub's text of a note (undefined when it isn't on this device: that note is left as it is).
 export function editNotes(ch, files, folder, edit, remoteText) {
   const prefix = folder ? folder + '/' : ''
   let next = ch
   for (const [path, entry] of Object.entries(virtualFiles(files, ch))) {
-    if (!path.startsWith(prefix) || !path.endsWith('.md')) continue
+    if (!path.startsWith(prefix) || !path.endsWith('.md') || entry.mode === SYMLINK_MODE || isTechnical(path.slice(prefix.length))) continue
     const original = remoteText(entry.sha)
     const text = ch.edits[entry.orig] ?? original
     if (text === undefined) continue
@@ -139,6 +142,18 @@ export function placeCard(board, data, path, column, index) {
   if (!same) cards[from.key] = from.cards.filter(c => c.path !== path).map(c => c.key)
   const to = same ? null : (target.path ? target.path + '/' : '') + key
   return { board: { ...board, cards }, to }
+}
+
+// Where each file in `column` (a column's folder: its `path`) goes when its cards move to
+// No status, as [path, folder]: a card right into the board's folder, a technical file
+// with its technical folder (".../_assets/x.png" -> "<board>/_assets"), so it stays off the board
+export function emptyColumn(board, column, files) {
+  const prefix = board.folder ? board.folder + '/' : ''
+  return files.filter(p => p.startsWith(column + '/') && !p.endsWith('/.gitkeep')).map(path => {
+    const parts = path.slice(column.length + 1).split('/')
+    const at = parts.findIndex(technical)
+    return [path, at === -1 || at === parts.length - 1 ? board.folder : prefix + parts.slice(at, -1).join('/')]
+  })
 }
 
 // `board` with column `name` moved to `index` in the order the board shows (`data`)

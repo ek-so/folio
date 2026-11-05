@@ -14,13 +14,13 @@ const RESERVED = ['files', 'graph', 'settings', 'links']
 
 export const isConfigPath = path => path === '.folio' || path.startsWith('.folio/')
 
-// The views a file's text holds: the default for no file (undefined), and for
-// text that can't be read as views (never an error: the nav must always work)
+// The views a file's text holds: the default for no file (undefined), null for
+// text that can't be read as views (shown as the default, but never saved over)
 export function parseViews(text) {
   if (text === undefined) return DEFAULT_VIEWS
   try {
     const list = JSON.parse(text)?.views
-    if (!Array.isArray(list)) return DEFAULT_VIEWS
+    if (!Array.isArray(list)) return null
     const seen = new Set(RESERVED)
     const views = []
     for (const v of list) {
@@ -33,7 +33,7 @@ export function parseViews(text) {
     }
     return views
   } catch {
-    return DEFAULT_VIEWS
+    return null
   }
 }
 

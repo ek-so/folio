@@ -35,7 +35,7 @@ import DeleteModal from './components/DeleteModal.jsx'
 import { useTheme } from './hooks/useTheme.js'
 import { storage } from './lib/storage.js'
 import { PAGE, mainPages } from './lib/pages.js'
-import { isConfigPath, addView, renameView, removeView, VIEWS_PATH, parseViews, serializeViews, addWidget, removeWidget } from './lib/viewsConfig.js'
+import { isConfigPath, addView, renameView, removeView, VIEWS_PATH, DEFAULT_VIEWS, parseViews, serializeViews, addWidget, removeWidget } from './lib/viewsConfig.js'
 import { withKeys } from './lib/frontmatter.js'
 import { widgetType } from './widgets/index.js'
 import { urlForPage, pageForUrl, existingView } from './lib/url.js'
@@ -65,15 +65,18 @@ export default function App() {
   // The app's settings in the repo's .folio/: the views in the navigation (Home…) and their widgets' own
   const config = useConfig(repo)
   const viewsFile = config.read(VIEWS_PATH)
-  const views = parseViews(viewsFile.ready ? viewsFile.text : undefined)
-  const viewsReady = viewsFile.ready
+  const parsedViews = viewsFile.ready ? parseViews(viewsFile.text) : undefined
+  const views = parsedViews ?? DEFAULT_VIEWS
+  // Views can be changed once the file is read, and only when it could be (an unreadable one is never saved over)
+  const viewsBroken = parsedViews === null
+  const viewsReady = viewsFile.ready && !viewsBroken
   const pages = mainPages(views)
   const widgets = views.flatMap(v => v.widgets ?? []) // on every view
   const { theme, setTheme } = useTheme()
   const [openPage, setPage] = useState(() => (reloaded && storage.getPage()) || (deepLink ? deepLink.page : storage.getPage() || PAGE.HOME))
   // A view that's gone (deleted here or on another device) falls back to the first page; until the config is read, the remembered page stays
   const fixedPage = openPage === PAGE.SETTINGS || openPage === PAGE.LINKS
-  const page = fixedPage || !viewsReady || pages.some(p => p.id === openPage) ? openPage : pages[0].id
+  const page = fixedPage || !viewsFile.ready || pages.some(p => p.id === openPage) ? openPage : pages[0].id
   // The main page files and folders open in (File manager when Settings / Broken links is open)
   const mainPage = fixedPage ? PAGE.FILES : page
   // Each main page has its own trail of views (lib/views.js); files and folders open in the page you're on
@@ -288,14 +291,14 @@ export default function App() {
     if (viewsReady) update(ch => viewsChange(ch, removeWidget(views, viewId, widgetId), widgets.filter(w => w.id === widgetId)))
   }
 
-  // Files moved right into `folder` in one step (a taken name gets a number:
-  // "x 2.md"); links and widgets follow, like any move
-  function moveAll(paths, folder) {
+  // Files moved in one step, each right into its folder (`targets`: [path, folder]; a taken
+  // name gets a number: "x 2.md"); links and widgets follow, like any move
+  function moveAll(targets) {
     window.dispatchEvent(new Event('folio:flush'))
     const moves = []
     update(ch => {
       let next = ch
-      for (const path of paths) {
+      for (const [path, folder] of targets) {
         const item = { path, name: path.slice(path.lastIndexOf('/') + 1), type: 'file' }
         const [stem, ext] = splitName(item.name)
         const dir = folder ? folder + '/' : ''
@@ -569,6 +572,7 @@ export default function App() {
             <ViewPage
               page={page}
               widgets={views.find(v => v.id === page)?.widgets}
+              error={viewsBroken ? `The views file (${VIEWS_PATH}) can't be read, so views can't be changed here. Fix or delete it on GitHub, then Pull.` : null}
               services={widgetServices}
               onAdd={type => startWidget(page, type)}
               onRemove={id => removeWidgetOf(page, id)}

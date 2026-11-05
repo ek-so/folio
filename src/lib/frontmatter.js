@@ -48,6 +48,12 @@ export function frontMatter(text) {
   return null // never closed: not front matter
 }
 
+// Why `key` can't be a property name (one `withKeys` writes and `frontMatter` reads back), or null
+export function keyNameError(key) {
+  const m = /\n/.test(key) ? null : `${key}:`.match(KEY)
+  return m && m[1].trim() === key ? null : 'A property name can\'t start with "-" or "#", or contain ":".'
+}
+
 // The note's properties as { key: value }
 export const properties = text => Object.fromEntries((frontMatter(text)?.props ?? []).map(p => [p.key, p.value]))
 

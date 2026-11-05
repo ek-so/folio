@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { parseBoard, serializeBoard, newBoard, boardColumns, movedBoard, withBoardKeys, editNotes, placeCard, moveColumn, LOOSE } from './board.js'
+import { parseBoard, serializeBoard, newBoard, boardColumns, movedBoard, withBoardKeys, editNotes, placeCard, moveColumn, emptyColumn, LOOSE } from './board.js'
 import { empty, add } from '@/lib/changes.js'
 
 const files = ['T/Todo/b.md', 'T/Todo/a.md', 'T/Done/2025/old.md', 'T/Done/.gitkeep', 'T/Empty/.gitkeep', 'T/loose.md', 'Other/x.md']
@@ -76,5 +76,26 @@ describe('board', () => {
     // and back: an edit that undoes it leaves the note unchanged
     const undone = editNotes(ch, remote, 'T', t => t.replace('---\ndescription:\n---\n', ''), sha => sha === null ? '' : texts[sha])
     expect(Object.keys(undone.edits)).toEqual(['T/new.md'])
+  })
+
+  it('edits only its own notes: no symlinks, no technical files', () => {
+    const remote = {
+      'T/a.md': { sha: 's1', mode: '100644' }, 'T/link.md': { sha: 's2', mode: '120000' },
+      'T/_templates/t.md': { sha: 's1', mode: '100644' }, 'T/Todo/.x/n.md': { sha: 's1', mode: '100644' },
+    }
+    const texts = { s1: '# A\n', s2: '../a.md' }
+    const ch = withBoardKeys(empty(), remote, 'T', ['description'], sha => texts[sha])
+    expect(Object.keys(ch.edits)).toEqual(['T/a.md'])
+    const renamed = editNotes(ch, remote, 'T', t => t.replace('description:', 'summary:'), sha => texts[sha])
+    expect(renamed.edits['T/a.md']).toBe('---\nsummary:\n---\n# A\n')
+  })
+
+  it('empties a column into No status, technical files with their folder', () => {
+    const files = ['T/Todo/a.md', 'T/Todo/sub/b.md', 'T/Todo/_assets/x.png', 'T/Todo/sub/_assets/y.png', 'T/Todo/_t.md', 'T/Todo/.gitkeep', 'T/Done/c.md']
+    expect(emptyColumn(newBoard('T'), 'T/Todo', files)).toEqual([
+      ['T/Todo/a.md', 'T'], ['T/Todo/sub/b.md', 'T'], ['T/Todo/_assets/x.png', 'T/_assets'],
+      ['T/Todo/sub/_assets/y.png', 'T/_assets'], ['T/Todo/_t.md', 'T'],
+    ])
+    expect(emptyColumn(newBoard(''), 'Todo', ['Todo/_a/x.png'])).toEqual([['Todo/_a/x.png', '_a']])
   })
 })

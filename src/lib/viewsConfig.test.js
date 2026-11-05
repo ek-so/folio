@@ -2,10 +2,10 @@ import { describe, it, expect } from 'vitest'
 import { parseViews, serializeViews, addView, renameView, removeView, isConfigPath, DEFAULT_VIEWS, addWidget, removeWidget } from './viewsConfig.js'
 
 describe('viewsConfig', () => {
-  it('has Home alone without a file, or with text it can\'t read', () => {
+  it('has Home alone without a file, and nothing from text it can\'t read', () => {
     expect(parseViews(undefined)).toEqual(DEFAULT_VIEWS)
-    expect(parseViews('not json')).toEqual(DEFAULT_VIEWS)
-    expect(parseViews('{"views": 3}')).toEqual(DEFAULT_VIEWS)
+    expect(parseViews('not json')).toBeNull()
+    expect(parseViews('{"views": 3}')).toBeNull()
   })
 
   it('keeps an emptied list empty, and drops bad or reserved entries', () => {

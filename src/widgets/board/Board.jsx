@@ -37,9 +37,9 @@ function collide(args) {
   return closestCorners(args)
 }
 
-// A board widget (lib/board.js): its folder's name and ⋯ on top, then its
+// A board widget (board.js): its folder's name and ⋯ on top, then its
 // columns side by side, scrolling sideways; No status first while it has
-// cards. A card shows the file's name, its description and the values of the
+// cards. A card shows the note's title, its description and the values of the
 // board's chosen properties; tapping it opens the file. Cards and columns are
 // dragged into any order (with a mouse right away; on touch after holding
 // 0.25s, so a swipe still scrolls): a card dropped in another column moves its
@@ -302,7 +302,7 @@ function Card({ path, text, board, onOpen }) {
   )
 }
 
-// What a card shows: the file's name, its description, the board's chosen properties' values
+// What a card shows: the note's title, its description, the board's chosen properties' values
 const CardBody = forwardRef(function CardBody({ path, text, board, className, ...props }, ref) {
   const fm = text === undefined ? [] : frontMatter(text)?.props ?? []
   const shown = fm.filter(p => p.key === DESCRIPTION || board.properties.includes(p.key)) // in the file's order

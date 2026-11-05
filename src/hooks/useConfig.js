@@ -4,10 +4,11 @@ import { add, setEdit, remove, virtualFiles } from '../lib/changes.js'
 import { isConfigPath } from '../lib/viewsConfig.js'
 
 // The app's settings kept in the repo: the files in `.folio/` (the views,
-// lib/viewsConfig.js; each board, lib/board.js). `read(path)` is { ready, text }:
+// lib/viewsConfig.js; each board, widgets/board/board.js). `read(path)` is { ready, text }:
 // its local edit, else its saved copy (text undefined: no such file). Until a
 // file is ready (and offline without a copy on the device) it must not be
-// changed, so a file that couldn't be read is never overwritten. `readIn(ch,
+// changed, so a file that couldn't be read is never overwritten; one that
+// couldn't be fetched is tried again on coming online or returning to the app. `readIn(ch,
 // path)` is the text a set of changes gives it (inside a change: undefined, no
 // file; null, not read yet). `write(path, content)` and `erase(path)` are
 // changes (ch => ch) for `update`, alone or together with other changes in one
@@ -27,6 +28,20 @@ export function useConfig({ remote, virtual, changes }) {
     }
     return () => { live = false }
   }, [wanted])
+
+  // What couldn't be fetched (offline, a dropped connection) is fetched again
+  useEffect(() => {
+    const retry = () => {
+      if (document.visibilityState === 'hidden') return
+      setCopies(c => Object.values(c).includes(null) ? Object.fromEntries(Object.entries(c).filter(([, t]) => t !== null)) : c)
+    }
+    window.addEventListener('online', retry)
+    document.addEventListener('visibilitychange', retry)
+    return () => {
+      window.removeEventListener('online', retry)
+      document.removeEventListener('visibilitychange', retry)
+    }
+  }, [])
 
   // The saved text a local edit is compared with: '' for a new file; undefined (loading) or null (unreadable) until known
   const saved = entry => entry.sha === null ? '' : copies[entry.sha]

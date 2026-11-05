@@ -13,7 +13,8 @@ import { WIDGET_TYPES, widgetType } from '../widgets/index.js'
 // kind's own component, given the app's `services`; `onAdd(type)`, `onRemove(id)`
 // (always confirmed first: a widget's own Remove asks here).
 // Until the settings are read (`services.canEdit` false) nothing can be added.
-export default function ViewPage({ page, widgets = [], services, onAdd, onRemove }) {
+// `error`: why the views can't be changed (shown on top), or null.
+export default function ViewPage({ page, widgets = [], error, services, onAdd, onRemove }) {
   const { canEdit } = services
   const [removing, setRemoving] = useState(null) // the widget whose Remove is being confirmed
   const addMenu = (
@@ -32,6 +33,7 @@ export default function ViewPage({ page, widgets = [], services, onAdd, onRemove
     <PageLayout>
       <Surface tree wide title={<TitleBar page={page}>{addMenu}</TitleBar>}>
         <div className="flex min-h-0 flex-1 flex-col gap-space overflow-y-auto p-space">
+          {error && <p className="text-center text-sm text-destructive">{error}</p>}
           {widgets.length === 0 ? (
             <div className="flex flex-1 flex-col items-center justify-center gap-space py-12 text-center">
               <p className="text-sm text-muted-foreground">Nothing on this view yet.</p>

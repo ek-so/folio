@@ -1,5 +1,5 @@
-import { boardPath, parseBoard, serializeBoard, boardColumns, placeCard, moveColumn, withBoardKeys, editNotes } from './board.js'
-import { DESCRIPTION, frontMatter, withoutKeys, renameKey } from '@/lib/frontmatter.js'
+import { boardPath, parseBoard, serializeBoard, boardColumns, placeCard, moveColumn, withBoardKeys, editNotes, emptyColumn, isTechnical } from './board.js'
+import { DESCRIPTION, frontMatter, withoutKeys, renameKey, keyNameError } from '@/lib/frontmatter.js'
 
 // Board `id` as its widget shows and changes it, through the app's `services`:
 // `ready` (its settings are read), `board` (null when they can't be), `data`
@@ -12,12 +12,13 @@ export function useBoard(id, services) {
   const data = board && boardColumns(board, files)
   const save = next => update(config.write(boardPath(id), serializeBoard(next)))
   const folderOf = path => path.slice(0, Math.max(path.lastIndexOf('/'), 0))
-  // The properties of every note in the board's folder, as [key, …] per note (on this device)
+  // The properties of every note of the board, as [key, …] per note (on this device; no technical files)
   const prefix = board?.folder ? board.folder + '/' : ''
-  const noteKeys = board ? Object.entries(services.notes).filter(([p]) => p.startsWith(prefix))
+  const noteKeys = board ? Object.entries(services.notes)
+    .filter(([p]) => p.startsWith(prefix) && !isTechnical(p.slice(prefix.length)))
     .map(([, text]) => frontMatter(text)?.props.map(p => p.key) ?? []) : []
-  // A name that can't be a property: an error message, or null
-  const keyError = key => /[:\n]/.test(key) ? 'A property name can\'t contain ":".' : key === DESCRIPTION ? 'The description is always shown.' : null
+  // A name that can't be a property here: an error message, or null
+  const keyError = key => keyNameError(key) ?? (key === DESCRIPTION ? 'The description is always shown.' : null)
   const fileItem = path => ({ path, name: path.slice(path.lastIndexOf('/') + 1), type: 'file' })
 
   return {
@@ -41,9 +42,9 @@ export function useBoard(id, services) {
         return added.length ? withBoardKeys(next, services.remoteFiles, board.folder, added, services.remoteText) : next
       })
     },
-    // The columns shown (`shown`: names); the others are hidden, still listed in the board's ⋯
+    // The columns shown (`shown`: names); the others are hidden (still listed in the Columns sheet)
     showColumns: shown => save({ ...board, hidden: data.columns.map(c => c.name).filter(n => !shown.includes(n)) }),
-    // A hidden column's folder opens in the view, like File manager (← comes back)
+    // A column's folder opens in the view, like File manager (← comes back)
     openColumn: column => services.openFolder(column.path),
     // The keys its notes have, besides the description, by name
     propertyKeys: () => [...new Set(noteKeys.flat())].filter(k => k !== DESCRIPTION).sort(),
@@ -71,7 +72,7 @@ export function useBoard(id, services) {
     renameColumn: (column, name) => services.rename({ name: column.name, path: column.path, type: 'dir' }, name),
     // With its files, or after moving them right into the board's folder (No status)
     deleteColumn(column, keepCards) {
-      if (keepCards) services.moveAll(files.filter(p => p.startsWith(column.path + '/') && !p.endsWith('/.gitkeep')), board.folder)
+      if (keepCards) services.moveAll(emptyColumn(board, column.path, files))
       services.remove({ name: column.name, path: column.path, type: 'dir' })
     },
   }

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { frontMatter, properties, withKeys, blankFrontMatter, valueList, noteTitle, withoutKeys, renameKey } from './frontmatter.js'
+import { frontMatter, properties, withKeys, blankFrontMatter, valueList, noteTitle, withoutKeys, renameKey, keyNameError } from './frontmatter.js'
 
 describe('front matter', () => {
   it('reads flat keys, lists and quoted values', () => {
@@ -50,5 +50,12 @@ describe('front matter', () => {
   it('renames a property, keeping its value', () => {
     expect(renameKey('---\nprio: high\ntags: [a]\n---\nprio: body', 'prio', 'priority')).toBe('---\npriority: high\ntags: [a]\n---\nprio: body')
     expect(renameKey('# N', 'a', 'b')).toBe('# N')
+  })
+
+  it('accepts only property names it can read back', () => {
+    expect(keyNameError('status')).toBeNull()
+    expect(keyNameError('due date')).toBeNull()
+    for (const bad of ['a:b', '-x', '#x', 'a\nb', ' x']) expect(keyNameError(bad)).not.toBeNull()
+    expect(frontMatter(withKeys('', ['due date'])).props).toEqual([{ key: 'due date', value: '' }])
   })
 })
