@@ -104,19 +104,26 @@ export function movedBoard(board, from, to, isDir) {
   return { ...board, cards: { ...board.cards, [was[0]]: (board.cards[was[0]] ?? []).map(follow) } }
 }
 
+// `ch` with `edit(text)` applied to the note at `path` (in `ch`'s files); `remoteText(sha)`: GitHub's text of
+// a note (undefined when it isn't on this device: that note is left as it is)
+export function editNote(ch, files, path, edit, remoteText) {
+  const entry = virtualFiles(files, ch)[path]
+  if (!entry) return ch
+  const original = remoteText(entry.sha)
+  const text = ch.edits[entry.orig] ?? original
+  if (text === undefined) return ch
+  const edited = edit(text)
+  return edited === text ? ch : setEdit(ch, entry, edited, original ?? '')
+}
+
 // `ch` with `edit(text)` applied to every note of the board in `folder` (in `ch`'s files):
 // technical files and symlinks (whose text is the path they point to) are left alone.
-// `remoteText(sha)`: GitHub's text of a note (undefined when it isn't on this device: that note is left as it is).
 export function editNotes(ch, files, folder, edit, remoteText) {
   const prefix = folder ? folder + '/' : ''
   let next = ch
   for (const [path, entry] of Object.entries(virtualFiles(files, ch))) {
     if (!path.startsWith(prefix) || !path.endsWith('.md') || entry.mode === SYMLINK_MODE || isTechnical(path.slice(prefix.length))) continue
-    const original = remoteText(entry.sha)
-    const text = ch.edits[entry.orig] ?? original
-    if (text === undefined) continue
-    const edited = edit(text)
-    if (edited !== text) next = setEdit(next, entry, edited, original ?? '')
+    next = editNote(next, files, path, edit, remoteText)
   }
   return next
 }

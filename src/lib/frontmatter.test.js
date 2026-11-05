@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { frontMatter, properties, withKeys, blankFrontMatter, valueList, noteTitle, withoutKeys, renameKey, keyNameError } from './frontmatter.js'
+import { frontMatter, properties, withKeys, blankFrontMatter, valueList, noteTitle, withoutKeys, renameKey, keyNameError, withValue, valuesOf } from './frontmatter.js'
 
 describe('front matter', () => {
   it('reads flat keys, lists and quoted values', () => {
@@ -57,5 +57,22 @@ describe('front matter', () => {
     expect(keyNameError('due date')).toBeNull()
     for (const bad of ['a:b', '-x', '#x', 'a\nb', ' x']) expect(keyNameError(bad)).not.toBeNull()
     expect(frontMatter(withKeys('', ['due date'])).props).toEqual([{ key: 'due date', value: '' }])
+  })
+
+  it('sets a property value, keeping the form it had', () => {
+    expect(withValue('---\ntype: regular\nx: 1\n---\nB', 'type', 'recurring')).toBe('---\ntype: recurring\nx: 1\n---\nB')
+    expect(withValue('---\ntags: [a, b]\n---\n', 'tags', ['a', 'c'])).toBe('---\ntags: [a, c]\n---\n')
+    expect(withValue('---\ntags:\n  - a\n  - b\nx: 1\n---\n', 'tags', ['b'])).toBe('---\ntags:\n  - b\nx: 1\n---\n')
+    expect(withValue('---\ntags: [a]\n---\n', 'tags', ['a', 'b, c'])).toBe('---\ntags:\n  - a\n  - b, c\n---\n')
+    expect(withValue('---\ntags: [a]\n---\n', 'tags', [])).toBe('---\ntags:\n---\n')
+    expect(withValue('---\ntype:\n---\n', 'type', '[x]')).toBe('---\ntype: "[x]"\n---\n')
+    expect(withValue('---\r\ntype: a\r\n---\r\n', 'type', 'b')).toBe('---\r\ntype: b\r\n---\r\n')
+    expect(withValue('# Note\n', 'type', 'a')).toBe('---\ntype: a\n---\n# Note\n')
+    expect(properties(withValue('---\ntitle: "x: y"\n---\n', 'title', 'p: q')).title).toBe('p: q')
+  })
+
+  it('collects the values a property has', () => {
+    const notes = ['---\nt: b\n---', '---\nt: [a, b]\n---', '---\nu: z\n---', 'plain', '---\nt:\n---']
+    expect(valuesOf(notes, 't')).toEqual(['a', 'b'])
   })
 })

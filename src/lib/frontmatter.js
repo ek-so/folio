@@ -93,6 +93,47 @@ export function withoutKeys(text, keys) {
   return text.slice(0, open) + kept.join('') + text.slice(fm.close)
 }
 
+const quoted = s => /^[["'#]/.test(s) ? `"${s}"` : s
+
+// `text` with the property `key` set to `value` (a string, or a list of strings
+// for a property that has a list: `[a, b]` stays inline, `- item` lines stay
+// lines, and a value with "," or brackets goes on lines), added when the note
+// lacks it. Empty strings are dropped; no value leaves `key:`. The rest is untouched.
+export function withValue(text, key, value) {
+  const base = withKeys(text, [key])
+  const fm = frontMatter(base)
+  const open = base.match(OPEN)[0].length
+  const lines = base.slice(open, fm.close).split(/(?<=\n)/)
+  const bare = l => l.replace(/\r?\n$/, '')
+  const at = lines.findIndex(l => bare(l).match(KEY)?.[1].trim() === key)
+  let end = at + 1
+  while (end < lines.length && (ITEM.test(bare(lines[end])) || /^[ \t]+\S/.test(bare(lines[end])))) end++
+  const eol = lines[at].match(/\r?\n$/)?.[0] ?? '\n'
+  const wasItems = lines.slice(at + 1, end).some(l => ITEM.test(bare(l)))
+  let out
+  if (Array.isArray(value)) {
+    const items = value.map(v => v.trim()).filter(Boolean)
+    if (!items.length) out = `${key}:${eol}`
+    else if (!wasItems && items.every(i => !/[,[\]]/.test(i))) out = `${key}: [${items.map(quoted).join(', ')}]${eol}`
+    else out = `${key}:${eol}` + items.map(i => `  - ${quoted(i)}${eol}`).join('')
+  } else {
+    const v = value.trim()
+    out = `${key}:${v ? ' ' + quoted(v) : ''}${eol}`
+  }
+  lines.splice(at, end - at, out)
+  return base.slice(0, open) + lines.join('') + base.slice(fm.close)
+}
+
+// The values the property `key` has in `texts` (notes), each once, sorted
+export function valuesOf(texts, key) {
+  const seen = new Set()
+  for (const text of texts) {
+    const value = properties(text)[key]
+    if (value !== undefined) valueList(value).forEach(v => seen.add(v))
+  }
+  return [...seen].sort((a, b) => a.localeCompare(b))
+}
+
 // `text` with the property `from` named `to` (its value kept), or as it is
 // when it has no `from`
 export function renameKey(text, from, to) {

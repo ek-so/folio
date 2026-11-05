@@ -1,5 +1,5 @@
-import { boardPath, parseBoard, serializeBoard, boardColumns, placeCard, moveColumn, withBoardKeys, editNotes, emptyColumn, isTechnical } from './board.js'
-import { DESCRIPTION, frontMatter, withoutKeys, renameKey, keyNameError } from '@/lib/frontmatter.js'
+import { boardPath, parseBoard, serializeBoard, boardColumns, placeCard, moveColumn, withBoardKeys, editNote, editNotes, emptyColumn, isTechnical } from './board.js'
+import { DESCRIPTION, frontMatter, withoutKeys, renameKey, keyNameError, withValue, valuesOf } from '@/lib/frontmatter.js'
 
 // Board `id` as its widget shows and changes it, through the app's `services`:
 // `ready` (its settings are read), `board` (null when they can't be), `data`
@@ -12,11 +12,12 @@ export function useBoard(id, services) {
   const data = board && boardColumns(board, files)
   const save = next => update(config.write(boardPath(id), serializeBoard(next)))
   const folderOf = path => path.slice(0, Math.max(path.lastIndexOf('/'), 0))
-  // The properties of every note of the board, as [key, …] per note (on this device; no technical files)
+  // Every note of the board (on this device; no technical files), and its properties as [key, …] per note
   const prefix = board?.folder ? board.folder + '/' : ''
-  const noteKeys = board ? Object.entries(services.notes)
+  const texts = board ? Object.entries(services.notes)
     .filter(([p]) => p.startsWith(prefix) && !isTechnical(p.slice(prefix.length)))
-    .map(([, text]) => frontMatter(text)?.props.map(p => p.key) ?? []) : []
+    .map(([, text]) => text) : []
+  const noteKeys = texts.map(text => frontMatter(text)?.props.map(p => p.key) ?? [])
   // A name that can't be a property here: an error message, or null
   const keyError = key => keyNameError(key) ?? (key === DESCRIPTION ? 'The description is always shown.' : null)
   const fileItem = path => ({ path, name: path.slice(path.lastIndexOf('/') + 1), type: 'file' })
@@ -51,6 +52,11 @@ export function useBoard(id, services) {
     // How many of its notes have the property `key`
     notesWith: key => noteKeys.filter(keys => keys.includes(key)).length,
     keyError,
+    // What the board's notes have as the property `key`, to choose from
+    valuesOf: key => valuesOf(texts, key),
+    // The property `key` of the card `path` set to `value` (a string, or a list of them)
+    setProperty: (path, key, value) =>
+      update(ch => editNote(ch, services.remoteFiles, path, t => withValue(t, key, value), services.remoteText)),
     // The property `from` renamed `to` in every note of the board (and on its cards); refused
     // when a note already has `to`
     renameProperty(from, to) {
