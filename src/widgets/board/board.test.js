@@ -38,10 +38,11 @@ describe('board', () => {
   })
 
   it('keeps its order when things are renamed', () => {
-    const board = { ...newBoard('T'), columns: ['Todo', 'Done'], cards: { Todo: ['b.md', 'a.md'] } }
+    const board = { ...newBoard('T'), columns: ['Todo', 'Done'], hidden: ['Todo'], cards: { Todo: ['b.md', 'a.md'] } }
     expect(movedBoard(board, 'T', 'Tasks', true).folder).toBe('Tasks')
     const col = movedBoard(board, 'T/Todo', 'T/Next', true)
     expect(col.columns).toEqual(['Next', 'Done'])
+    expect(col.hidden).toEqual(['Next'])
     expect(col.cards).toEqual({ Next: ['b.md', 'a.md'] })
     expect(movedBoard(board, 'T/Todo/a.md', 'T/Todo/c.md', false).cards.Todo).toEqual(['b.md', 'c.md'])
     expect(movedBoard(board, 'Other/x.md', 'Other/y.md', false)).toBe(board)

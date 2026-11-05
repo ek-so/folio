@@ -7,7 +7,7 @@ import { withKeys } from '@/lib/frontmatter.js'
 // shown only while there are any. Moving a card to another column moves its
 // file there. Each board's settings live in the repo, beside the views:
 // `.folio/boards/<id>.json`,
-//   { "folder", "properties": [keys shown on cards],
+//   { "folder", "properties": [keys shown on cards], "hidden": [column names not shown],
 //     "columns": [column names, in order], "cards": { column name: [card keys, in order] } }
 // A card's key is its path inside its column ('' for No status: inside the board's folder).
 // What isn't in the saved order follows it, by name.
@@ -25,7 +25,7 @@ export function parseBoard(text) {
     if (typeof data?.folder !== 'string') return null
     const cards = {}
     for (const [k, v] of Object.entries(data.cards ?? {})) cards[k] = strings(v)
-    return { folder: data.folder, properties: strings(data.properties), columns: strings(data.columns), cards }
+    return { folder: data.folder, properties: strings(data.properties), hidden: strings(data.hidden), columns: strings(data.columns), cards }
   } catch {
     return null
   }
@@ -33,7 +33,7 @@ export function parseBoard(text) {
 
 export const serializeBoard = board => JSON.stringify(board, null, 2) + '\n'
 
-export const newBoard = folder => ({ folder, properties: [], columns: [], cards: {} })
+export const newBoard = folder => ({ folder, properties: [], hidden: [], columns: [], cards: {} })
 
 const nameOf = path => path.slice(path.lastIndexOf('/') + 1)
 // Technical files and folders (".assets", "_attachments", ".gitkeep"…): a name starting with "." or "_"
@@ -95,7 +95,8 @@ export function movedBoard(board, from, to, isDir) {
     if (now[1] !== '') return board // a column moved into another: it's a card folder now
     const cards = { ...board.cards, [now[0]]: board.cards[was[0]] ?? [] }
     delete cards[was[0]]
-    return { ...board, columns: board.columns.map(c => c === was[0] ? now[0] : c), cards }
+    const follow = c => c === was[0] ? now[0] : c
+    return { ...board, columns: board.columns.map(follow), hidden: board.hidden.map(follow), cards }
   }
   if (now[0] !== was[0]) return board
   const follow = k => k === was[1] || k.startsWith(was[1] + '/') ? now[1] + k.slice(was[1].length) : k

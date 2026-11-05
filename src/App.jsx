@@ -321,6 +321,7 @@ export default function App() {
     config,
     update,
     openFile: path => setSelectedFile(path),
+    openFolder: path => openFolder(path),
     // A move that's refused shows as a toast; true when it's done
     move: (item, folder) => { const error = handleMove(item, folder); if (error) toast.error(error); return !error },
     moveAll,

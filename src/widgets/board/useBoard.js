@@ -34,6 +34,10 @@ export function useBoard(id, services) {
         return added.length ? withBoardKeys(next, services.remoteFiles, board.folder, added, services.remoteText) : next
       })
     },
+    // The columns shown (`shown`: names); the others are hidden, still listed in the board's ⋯
+    showColumns: shown => save({ ...board, hidden: data.columns.map(c => c.name).filter(n => !shown.includes(n)) }),
+    // A hidden column's folder opens in the view, like File manager (← comes back)
+    openColumn: column => services.openFolder(column.path),
     newColumn: () => services.newFolder(board.folder),
     // A new card starts with the board's properties, empty; the board stays open
     newCard: folder => services.newNote(folder, { keys: [DESCRIPTION, ...board.properties], stay: true }),

@@ -1,5 +1,5 @@
 import { useState, forwardRef } from 'react'
-import { DotsThree, DotsSixVertical, Trash, Plus, Columns, PencilSimple, Tag } from '@phosphor-icons/react'
+import { DotsThree, DotsSixVertical, Trash, Plus, Columns, PencilSimple, Tag, Folder } from '@phosphor-icons/react'
 import {
   DndContext, DragOverlay, MouseSensor, TouchSensor, useSensor, useSensors,
   closestCenter, closestCorners, pointerWithin,
@@ -8,12 +8,12 @@ import { SortableContext, useSortable, arrayMove, horizontalListSortingStrategy,
 import { CSS } from '@dnd-kit/utilities'
 import { cn } from '@/lib/utils.js'
 import { Button } from '@/components/ui/button.jsx'
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu.jsx'
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu.jsx'
 import PropertyBadges from '@/components/PropertyBadges.jsx'
 import Spinner from '@/components/Spinner.jsx'
 import RenameModal from '@/components/RenameModal.jsx'
 import ColumnDeleteModal from './ColumnDeleteModal.jsx'
-import CardPropertiesModal from './CardPropertiesModal.jsx'
+import CheckListModal from './CheckListModal.jsx'
 import { displayName } from '@/lib/files.js'
 import { frontMatter, valueList, noteTitle } from '@/lib/frontmatter.js'
 import { DESCRIPTION, LOOSE } from './board.js'
@@ -55,7 +55,9 @@ export default function Board({ id, services, onRemove }) {
   const [drag, setDrag] = useState(null) // { id, type, items } while dragging: each column's cards as shown meanwhile
   const [renaming, setRenaming] = useState(null) // the column whose Rename / Delete sheet is open
   const [deleting, setDeleting] = useState(null)
-  const [choosing, setChoosing] = useState(false) // the Card properties sheet
+  const [choosing, setChoosing] = useState(null) // the open checklist: 'columns' | 'properties'
+  const off = !canEdit || !board || data?.missing
+  const hidden = board && data && !data.missing ? data.columns.filter(c => board.hidden.includes(c.name)) : []
 
   const menu = (
     <DropdownMenu>
@@ -65,8 +67,16 @@ export default function Board({ id, services, onRemove }) {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" onCloseAutoFocus={e => e.preventDefault()}>
-        <DropdownMenuItem disabled={!canEdit || !board || data?.missing} onSelect={act.newColumn}><Columns /> New column</DropdownMenuItem>
-        <DropdownMenuItem disabled={!canEdit || !board || data?.missing} onSelect={() => setChoosing(true)}><Tag /> Card properties…</DropdownMenuItem>
+        <DropdownMenuItem disabled={off} onSelect={() => setChoosing('columns')}><Columns /> Show columns…</DropdownMenuItem>
+        {hidden.map(c => (
+          <DropdownMenuItem key={c.key} onSelect={() => act.openColumn(c)} className="text-muted-foreground">
+            <Folder /> <span className="min-w-0 truncate">{c.name}</span>
+          </DropdownMenuItem>
+        ))}
+        <DropdownMenuSeparator />
+        <DropdownMenuItem disabled={off} onSelect={() => setChoosing('properties')}><Tag /> Card properties…</DropdownMenuItem>
+        <DropdownMenuItem disabled={off} onSelect={act.newColumn}><Plus /> New column</DropdownMenuItem>
+        <DropdownMenuSeparator />
         <DropdownMenuItem variant="destructive" disabled={!canEdit} onSelect={onRemove}><Trash /> Remove board</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -77,7 +87,7 @@ export default function Board({ id, services, onRemove }) {
   else if (!board) body = <p className="py-6 text-center text-sm text-muted-foreground">This board's settings can't be read.</p>
   else if (data.missing) body = <p className="py-6 text-center text-sm text-muted-foreground">Its folder “{board.folder}” is gone.</p>
   else {
-    const columns = [...(data.loose.length ? [{ key: LOOSE, name: 'No status', cards: data.loose }] : []), ...data.columns]
+    const columns = [...(data.loose.length ? [{ key: LOOSE, name: 'No status', cards: data.loose }] : []), ...data.columns.filter(c => !board.hidden.includes(c.name))]
     const base = Object.fromEntries(columns.map(c => [c.key, c.cards.map(card => card.path)]))
     const items = drag?.items ?? base
     const columnOf = path => Object.keys(items).find(k => items[k].includes(path))
@@ -171,16 +181,34 @@ export default function Board({ id, services, onRemove }) {
           onClose={() => setRenaming(null)}
         />
       )}
-      {choosing && board && (
-        <CardPropertiesModal
-          available={[...new Set([...data.loose, ...data.columns.flatMap(c => c.cards)]
-            .flatMap(c => notes[c.path] === undefined ? [] : frontMatter(notes[c.path])?.props.map(p => p.key) ?? []))]
-            .filter(k => k !== DESCRIPTION).sort()}
-          selected={board.properties}
-          onChange={act.setProperties}
-          onClose={() => setChoosing(false)}
+      {choosing === 'columns' && board && (
+        <CheckListModal
+          title="Show columns"
+          description="Hidden columns are listed in the board's menu; choosing one opens its folder."
+          items={data.columns.map(c => c.name)}
+          selected={data.columns.map(c => c.name).filter(n => !board.hidden.includes(n))}
+          onChange={act.showColumns}
+          empty="No columns yet: its subfolders become columns."
+          onClose={() => setChoosing(null)}
         />
       )}
+      {choosing === 'properties' && board && (() => {
+        const available = [...new Set([...data.loose, ...data.columns.flatMap(c => c.cards)]
+          .flatMap(c => notes[c.path] === undefined ? [] : frontMatter(notes[c.path])?.props.map(p => p.key) ?? []))]
+          .filter(k => k !== DESCRIPTION && !board.properties.includes(k)).sort()
+        return (
+          <CheckListModal
+            title="Card properties"
+            description="Their values show on the cards, without names. The description always shows."
+            items={[...board.properties, ...available]}
+            selected={board.properties}
+            onChange={act.setProperties}
+            addLabel="New property"
+            empty="Its notes have no other properties yet."
+            onClose={() => setChoosing(null)}
+          />
+        )
+      })()}
       {deleting && (
         <ColumnDeleteModal
           name={deleting.name}
