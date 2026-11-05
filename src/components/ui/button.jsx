@@ -15,6 +15,8 @@ const buttonVariants = cva(
         outline: 'border border-input bg-transparent shadow-sm hover:bg-secondary hover:text-secondary-foreground',
         secondary: 'bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80',
         ghost: 'hover:bg-secondary hover:text-secondary-foreground',
+        // Trash and other destructive icon buttons: red, a light red fill on hover
+        'ghost-destructive': 'text-destructive hover:bg-destructive/10',
         'ghost-outline': 'bg-secondary text-muted-foreground hover:bg-secondary/80 hover:text-foreground',
         link: 'text-primary underline-offset-4 hover:underline',
       },

@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { boardPath, parseBoard, serializeBoard, boardColumns, placeCard, moveColumn, withBoardKeys, editNotes, emptyColumn, isTechnical } from './board.js'
 import { editNote } from '@/lib/changes.js'
-import { DESCRIPTION, frontMatter, withoutKeys, renameKey, keyNameError, withValue, withoutValue, valuesOf, countValue } from '@/lib/frontmatter.js'
+import { DESCRIPTION, frontMatter, withoutKeys, renameKey, keyNameError, withValue, withoutValue, renameValue, valuesOf, countValue } from '@/lib/frontmatter.js'
 
 // Board `id` as its widget shows and changes it, through the app's `services`:
 // `ready` (its settings are read), `board` (null when they can't be), `data`
@@ -65,6 +65,10 @@ export function useBoard(id, services) {
       update(ch => editNote(ch, services.remoteFiles, path, t => withValue(t, key, value), services.remoteText)),
     // How many of the board's notes have `value` as the property `key`
     valueCount: (key, value) => countValue(texts, key, value),
+    // `from` renamed `to` in the property `key` in every note of the board, and given `color`
+    editValue: (key, from, to, color) =>
+      update(ch => editNotes(services.tagColors.set(key, to, color)(ch), services.remoteFiles, board.folder,
+        t => renameValue(t, key, from, to), services.remoteText)),
     // `value` out of the property `key` in every note of the board: empty, or gone from its list
     removeValue: (key, value) =>
       update(ch => editNotes(ch, services.remoteFiles, board.folder, t => withoutValue(t, key, value), services.remoteText)),

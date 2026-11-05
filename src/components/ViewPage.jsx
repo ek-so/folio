@@ -69,7 +69,7 @@ function UnknownWidget({ type, canEdit, onRemove }) {
   return (
     <section className="flex items-center gap-space-sm rounded-lg border border-border p-space-sm">
       <p className="min-w-0 flex-1 px-space-xs text-sm text-muted-foreground">This widget (“{type}”) needs a newer version of Folio.</p>
-      <Button variant="ghost" size="icon" aria-label="Remove widget" tooltip="Remove widget" disabled={!canEdit} onClick={onRemove}><Trash /></Button>
+      <Button variant="ghost-destructive" size="icon" aria-label="Remove widget" tooltip="Remove widget" disabled={!canEdit} onClick={onRemove}><Trash /></Button>
     </section>
   )
 }

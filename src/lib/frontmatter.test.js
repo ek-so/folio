@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { frontMatter, properties, withKeys, blankFrontMatter, valueList, noteTitle, withoutKeys, renameKey, keyNameError, withValue, valuesOf, valueColors, withoutValue, countValue } from './frontmatter.js'
+import { frontMatter, properties, withKeys, blankFrontMatter, valueList, noteTitle, withoutKeys, renameKey, keyNameError, withValue, valuesOf, valueColors, withoutValue, countValue, renameValue } from './frontmatter.js'
 
 describe('front matter', () => {
   it('reads flat keys, lists and quoted values', () => {
@@ -90,5 +90,21 @@ describe('front matter', () => {
     expect(withoutValue('---\ntags: [a, b]\n---\n', 'tags', 'a')).toBe('---\ntags: [b]\n---\n')
     expect(withoutValue('# Note', 'type', 'a')).toBe('# Note')
     expect(countValue(['---\nt: a\n---', '---\nt: [a, b]\n---', '---\nt: b\n---', 'x'], 't', 'a')).toBe(2)
+  })
+
+  it('keeps the colors picked for values and gives the others different ones', () => {
+    const colors = valueColors('type', ['a', 'b', 'c'], { a: 3, gone: 4 })
+    expect(colors.get('a')).toBe(3)
+    expect(colors.has('gone')).toBe(false)
+    expect(colors.get('b')).not.toBe(3)
+    expect(colors.get('c')).not.toBe(3)
+  })
+
+  it('renames a value, once in a list', () => {
+    expect(renameValue('---\ntype: errand\n---\n', 'type', 'errand', 'chore')).toBe('---\ntype: chore\n---\n')
+    expect(renameValue('---\ntype: other\n---\n', 'type', 'errand', 'chore')).toBe('---\ntype: other\n---\n')
+    expect(renameValue('---\ntags: [a, b]\n---\n', 'tags', 'a', 'c')).toBe('---\ntags: [c, b]\n---\n')
+    expect(renameValue('---\ntags: [a, b]\n---\n', 'tags', 'a', 'b')).toBe('---\ntags: [b]\n---\n')
+    expect(renameValue('# Note', 'type', 'a', 'b')).toBe('# Note')
   })
 })

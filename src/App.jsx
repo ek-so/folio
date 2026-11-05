@@ -29,6 +29,7 @@ import Spinner from './components/Spinner.jsx'
 import { useAuth } from './hooks/useAuth.js'
 import { useRepo } from './hooks/useRepo.js'
 import { useConfig } from './hooks/useConfig.js'
+import { useTagColors } from './hooks/useTagColors.js'
 import ViewPage from './components/ViewPage.jsx'
 import RenameModal from './components/RenameModal.jsx'
 import DeleteModal from './components/DeleteModal.jsx'
@@ -64,6 +65,7 @@ export default function App() {
   const { virtual, changes, update } = repo
   // The app's settings in the repo's .folio/: the views in the navigation (Home…) and their widgets' own
   const config = useConfig(repo)
+  const tagColors = useTagColors(config)
   const viewsFile = config.read(VIEWS_PATH)
   const parsedViews = viewsFile.ready ? parseViews(viewsFile.text) : undefined
   const views = parsedViews ?? DEFAULT_VIEWS
@@ -322,6 +324,7 @@ export default function App() {
     remoteText: links.remoteText,
     repoName: auth.repo?.split('/')[1] ?? '',
     config,
+    tagColors,
     update,
     openFile: path => setSelectedFile(path),
     openFolder: path => openFolder(path),
@@ -606,6 +609,8 @@ export default function App() {
               entry={entry}
               files={virtual}
               notes={links.notes}
+              tagColors={tagColors}
+              onTagColor={(key, value, color) => update(tagColors.set(key, value, color))}
               onEditNotes={(paths, edit) => update(ch => paths.reduce((c, p) => editNote(c, repo.remote?.files ?? {}, p, edit, links.remoteText), ch))}
               edited={changes.edits[entry.orig]}
               onEdit={(content, original) =>

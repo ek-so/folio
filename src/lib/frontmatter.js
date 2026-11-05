@@ -64,13 +64,18 @@ const hash = text => [...text].reduce((h, c) => (h * 131 + c.charCodeAt(0)) >>> 
 
 // The color (0 … PROPERTY_COLORS - 1) of each of `values` of the property `key`
 // as a Map: the values of one property all differ (up to PROPERTY_COLORS of
-// them; more start over). Each value prefers the color its name hashes to, so
-// it keeps it while the others stay the same; one that finds it taken (values
-// taken in alphabetical order) gets the next free one.
-export function valueColors(key, values) {
+// them; more start over). A value in `chosen` ({ value: color }, picked by the
+// user: lib/tagColors.js) has its color; the others avoid the chosen ones. Each
+// prefers the color its name hashes to, so it keeps it while the others stay
+// the same; one that finds it taken (values taken in alphabetical order) gets
+// the next free one.
+export function valueColors(key, values, chosen = {}) {
   const colors = new Map()
-  let used = new Set()
-  for (const value of [...new Set(values)].sort((a, b) => a.localeCompare(b))) {
+  const all = [...new Set(values)].sort((a, b) => a.localeCompare(b))
+  for (const value of all) if (Number.isInteger(chosen[value])) colors.set(value, chosen[value])
+  let used = new Set(colors.values())
+  for (const value of all) {
+    if (colors.has(value)) continue
     if (used.size === PROPERTY_COLORS) used = new Set()
     let color = hash(`${key}\n${value}`) % PROPERTY_COLORS
     while (used.has(color)) color = (color + 1) % PROPERTY_COLORS
@@ -153,6 +158,14 @@ export function withoutValue(text, key, value) {
   const have = properties(text)[key]
   if (Array.isArray(have)) return have.includes(value) ? withValue(text, key, have.filter(v => v !== value)) : text
   return have === value ? withValue(text, key, '') : text
+}
+
+// `text` with `from` renamed `to` in the property `key` (in its list, once, when
+// the note already has `to`), or as it is when it doesn't have `from`
+export function renameValue(text, key, from, to) {
+  const have = properties(text)[key]
+  if (Array.isArray(have)) return have.includes(from) ? withValue(text, key, [...new Set(have.map(v => v === from ? to : v))]) : text
+  return have === from ? withValue(text, key, to) : text
 }
 
 // How many of `texts` (notes) have `value` as the property `key`

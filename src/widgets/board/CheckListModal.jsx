@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { FolderOpen, Trash, PencilSimple, X, Check } from '@phosphor-icons/react'
-import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button.jsx'
 import { Input } from '@/components/ui/input.jsx'
 import { ListRow } from '@/components/ui/list-row.jsx'
@@ -83,7 +82,7 @@ export default function CheckListModal({ title, description, items, selected, on
                     </Button>
                   )}
                   {onDelete && (
-                    <Button variant="ghost" size="icon" aria-label={`Delete ${item}`} tooltip="Delete" className={cn(rowButton, 'text-destructive hover:bg-destructive/10 hover:text-destructive')} onClick={() => onDelete(item)}>
+                    <Button variant="ghost-destructive" size="icon" aria-label={`Delete ${item}`} tooltip="Delete" className="size-control-md" onClick={() => onDelete(item)}>
                       <Trash />
                     </Button>
                   )}
