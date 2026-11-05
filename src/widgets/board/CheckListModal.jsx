@@ -24,7 +24,8 @@ export default function CheckListModal({ title, description, items, selected, on
   }
 
   return (
-    <BottomSheet title={title} description={description} onClose={onClose}>
+    // Focus goes to the sheet itself, not its first row, so no row opens lit up
+    <BottomSheet title={title} description={description} onClose={onClose} onOpenAutoFocus={e => { e.preventDefault(); e.currentTarget?.focus() }}>
       <div className="flex flex-col gap-3">
         <ul className="-mx-1 flex max-h-64 flex-col gap-0.5 overflow-y-auto" data-no-pull>
           {items.map(item => (
