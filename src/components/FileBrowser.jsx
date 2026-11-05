@@ -10,7 +10,7 @@ import { CardTile } from './ui/card-tile.jsx'
 import { storage } from '../lib/storage.js'
 import { splitName } from '../lib/changes.js'
 import { fileKind, LINK_ERRORS } from '../lib/files.js'
-import FileIcon from './FileIcon.jsx'
+import FileIcon, { iconTint } from './FileIcon.jsx'
 import SymlinkedBy from './SymlinkedBy.jsx'
 import Spinner from './Spinner.jsx'
 import PageLayout from './PageLayout.jsx'
@@ -166,6 +166,7 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
                       {isLink && <span className="text-muted-foreground"> (symlink)</span>}
                       {link?.error && <span className={cn('text-sm text-muted-foreground', !cards && 'ml-2')}>{LINK_ERRORS[link.error]}</span>}
                     </>}
+                    tint={cards ? iconTint(isLink ? (link?.path ?? item.path) : item.path, isLink ? link?.kind === 'folder' : item.type === 'dir') : undefined}
                     changed={item.changed}
                     onClick={() => navigate(item)}
                     disabled={!openable}

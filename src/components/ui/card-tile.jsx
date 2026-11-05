@@ -2,15 +2,15 @@ import { cn } from '@/lib/utils'
 
 // One tile of the cards layout (File manager): `icon` large on top, `title` under
 // it (up to two lines), `trailing` (⋯) in the top right corner. Takes the same
-// props as ListRow, so a list and its cards show the same things.
+// props as ListRow (plus `tint`: background classes, light and darker on hover), so a list and its cards show the same things.
 // `className` and `tileProps` (drag and drop) go on the tile itself.
-export function CardTile({ icon, title, trailing, onClick, active, dimmed, changed, disabled, tooltip, className, tileProps }) {
+export function CardTile({ icon, title, trailing, onClick, tint, dimmed, changed, disabled, tooltip, className, tileProps }) {
   return (
     <div
       {...tileProps}
       className={cn(
-        'group relative flex flex-col rounded-sm transition-colors hover:bg-secondary/60 has-[[data-state=open]]:bg-secondary/60',
-        active && 'bg-secondary hover:bg-secondary',
+        'group relative flex flex-col rounded-sm transition-colors',
+        tint,
         className,
       )}
     >
