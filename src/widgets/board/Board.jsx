@@ -7,16 +7,17 @@ import {
 import { SortableContext, useSortable, arrayMove, horizontalListSortingStrategy, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { cn } from '@/lib/utils.js'
-import { Button } from './ui/button.jsx'
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from './ui/dropdown-menu.jsx'
-import PropertyBadges from './PropertyBadges.jsx'
-import Spinner from './Spinner.jsx'
-import RenameModal from './RenameModal.jsx'
+import { Button } from '@/components/ui/button.jsx'
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu.jsx'
+import PropertyBadges from '@/components/PropertyBadges.jsx'
+import Spinner from '@/components/Spinner.jsx'
+import RenameModal from '@/components/RenameModal.jsx'
 import ColumnDeleteModal from './ColumnDeleteModal.jsx'
 import CardPropertiesModal from './CardPropertiesModal.jsx'
-import { displayName } from '../lib/files.js'
-import { frontMatter, valueList } from '../lib/frontmatter.js'
-import { DESCRIPTION, LOOSE } from '../lib/board.js'
+import { displayName } from '@/lib/files.js'
+import { frontMatter, valueList } from '@/lib/frontmatter.js'
+import { DESCRIPTION, LOOSE } from './board.js'
+import { useBoard } from './useBoard.js'
 
 // Drag ids: a column's and a card's
 const colId = key => 'col:' + key
@@ -42,10 +43,11 @@ function collide(args) {
 // board's chosen properties; tapping it opens the file. Cards and columns are
 // dragged into any order (with a mouse right away; on touch after holding
 // 0.25s, so a swipe still scrolls): a card dropped in another column moves its
-// file there (`actions.onPlaceCard`), a column's title moves the column
-// (`actions.onMoveColumn`). `board` its settings, `data` what it shows
-// (boardColumns); `ready` false while its settings load.
-export default function Board({ id, ready, board, data, title, notes, canEdit, actions, onRemove }) {
+// file there, a column's title moves the column. Everything it does is in
+// useBoard; `services` come from the app (widgets/index.js).
+export default function Board({ id, services, onRemove }) {
+  const { ready, board, data, title, ...act } = useBoard(id, services)
+  const { notes, canEdit, openFile } = services
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 8 } }),
@@ -63,7 +65,7 @@ export default function Board({ id, ready, board, data, title, notes, canEdit, a
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" onCloseAutoFocus={e => e.preventDefault()}>
-        <DropdownMenuItem disabled={!canEdit || !board || data?.missing} onSelect={() => actions.onNewColumn(board.folder)}><Columns /> New column</DropdownMenuItem>
+        <DropdownMenuItem disabled={!canEdit || !board || data?.missing} onSelect={act.newColumn}><Columns /> New column</DropdownMenuItem>
         <DropdownMenuItem disabled={!canEdit || !board || data?.missing} onSelect={() => setChoosing(true)}><Tag /> Card properties…</DropdownMenuItem>
         <DropdownMenuItem variant="destructive" disabled={!canEdit} onSelect={onRemove}><Trash /> Remove board</DropdownMenuItem>
       </DropdownMenuContent>
@@ -99,7 +101,7 @@ export default function Board({ id, ready, board, data, title, notes, canEdit, a
       if (active.data.current.type === 'column') {
         const to = target(over)
         const names = data.columns.map(c => c.key)
-        if (to !== undefined && to !== LOOSE) actions.onMoveColumn(id, active.data.current.key, names.indexOf(to))
+        if (to !== undefined && to !== LOOSE) act.moveColumn(active.data.current.key, names.indexOf(to))
         return
       }
       const path = active.data.current.path
@@ -109,7 +111,7 @@ export default function Board({ id, ready, board, data, title, notes, canEdit, a
       if (over.data.current?.type === 'card' && over.data.current.path !== path) {
         list = arrayMove(list, list.indexOf(path), list.indexOf(over.data.current.path))
       }
-      actions.onPlaceCard(id, path, column, list.indexOf(path))
+      act.placeCard(path, column, list.indexOf(path))
     }
 
     const byPath = Object.fromEntries(columns.flatMap(c => c.cards.map(card => [card.path, card])))
@@ -128,11 +130,11 @@ export default function Board({ id, ready, board, data, title, notes, canEdit, a
             {columns.map(c => (
               <Column
                 key={c.key} column={c} count={items[c.key].length} canEdit={canEdit}
-                onNewCard={() => actions.onNewCard(c.key === LOOSE ? board.folder : c.path, board)}
+                onNewCard={() => act.newCard(c.key === LOOSE ? board.folder : c.path)}
                 onRename={() => setRenaming(c)} onDelete={() => setDeleting(c)}
               >
                 <SortableContext items={items[c.key].map(cardId)} strategy={verticalListSortingStrategy}>
-                  {items[c.key].map(path => <Card key={path} path={path} text={notes[path]} board={board} onOpen={actions.onOpenFile} />)}
+                  {items[c.key].map(path => <Card key={path} path={path} text={notes[path]} board={board} onOpen={openFile} />)}
                 </SortableContext>
               </Column>
             ))}
@@ -162,7 +164,7 @@ export default function Board({ id, ready, board, data, title, notes, canEdit, a
         <RenameModal
           item={{ name: renaming.name, path: renaming.path, type: 'dir' }}
           onRename={name => {
-            const err = actions.onRenameColumn({ name: renaming.name, path: renaming.path, type: 'dir' }, name)
+            const err = act.renameColumn(renaming, name)
             if (!err) setRenaming(null)
             return err
           }}
@@ -175,7 +177,7 @@ export default function Board({ id, ready, board, data, title, notes, canEdit, a
             .flatMap(c => notes[c.path] === undefined ? [] : frontMatter(notes[c.path])?.props.map(p => p.key) ?? []))]
             .filter(k => k !== DESCRIPTION).sort()}
           selected={board.properties}
-          onChange={keys => actions.onCardProperties(id, keys)}
+          onChange={act.setProperties}
           onClose={() => setChoosing(false)}
         />
       )}
@@ -183,7 +185,7 @@ export default function Board({ id, ready, board, data, title, notes, canEdit, a
         <ColumnDeleteModal
           name={deleting.name}
           count={deleting.cards.length}
-          onDelete={keep => { setDeleting(null); actions.onDeleteColumn(deleting, board.folder, keep) }}
+          onDelete={keep => { setDeleting(null); act.deleteColumn(deleting, keep) }}
           onClose={() => setDeleting(null)}
         />
       )}

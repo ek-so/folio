@@ -1,15 +1,13 @@
 // The views in the navigation (Home and the ones added with "Add view") live
 // in the repo, like Obsidian's config folder: `.folio/views.json`,
 // { "views": [{ "id", "name", "widgets": [{ "id", "type" }] }] }. A repo without the file has Home alone.
-// A view's widgets show on it, in order; a board (`type` 'board') keeps its settings in its own file (lib/board.js).
+// A view's widgets show on it, in order; each kind is in src/widgets/ and keeps its own settings
+// (a board: .folio/boards/<id>.json). A kind this version doesn't know is kept as it is.
 // The file is a normal local change, committed by Sync; it never shows in
 // File manager, the file tree or Search (`isConfigPath`).
 
 export const VIEWS_PATH = '.folio/views.json'
 export const DEFAULT_VIEWS = [{ id: 'home', name: 'Home' }]
-
-// The kinds of widget a view can hold
-export const WIDGETS = ['board']
 
 // Ids that belong to other pages
 const RESERVED = ['files', 'graph', 'settings', 'links']
@@ -29,7 +27,7 @@ export function parseViews(text) {
       if (typeof v?.id !== 'string' || typeof v?.name !== 'string' || !v.name.trim() || seen.has(v.id)) continue
       seen.add(v.id)
       const widgets = Array.isArray(v.widgets)
-        ? v.widgets.filter(w => typeof w?.id === 'string' && WIDGETS.includes(w.type)).map(w => ({ id: w.id, type: w.type }))
+        ? v.widgets.filter(w => typeof w?.id === 'string' && typeof w.type === 'string').map(w => ({ id: w.id, type: w.type }))
         : []
       views.push(widgets.length ? { id: v.id, name: v.name, widgets } : { id: v.id, name: v.name })
     }

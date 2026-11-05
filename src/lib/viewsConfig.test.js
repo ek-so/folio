@@ -24,11 +24,11 @@ describe('viewsConfig', () => {
     expect(removeView(views, 'home')).toEqual([views[1]])
   })
 
-  it('adds and removes widgets, keeping only known kinds', () => {
+  it('adds and removes widgets, keeping kinds it doesn\'t know', () => {
     const { views, id } = addWidget(DEFAULT_VIEWS, 'home', 'board')
     expect(views[0].widgets).toEqual([{ id, type: 'board' }])
     expect(parseViews(serializeViews(views))).toEqual(views)
-    expect(parseViews(JSON.stringify({ views: [{ id: 'a', name: 'A', widgets: [{ id: 'w', type: 'chart' }, 3] }] }))).toEqual([{ id: 'a', name: 'A' }])
+    expect(parseViews(JSON.stringify({ views: [{ id: 'a', name: 'A', widgets: [{ id: 'w', type: 'chart' }, 3, { id: 'x' }] }] }))).toEqual([{ id: 'a', name: 'A', widgets: [{ id: 'w', type: 'chart' }] }])
     expect(removeWidget(views, 'home', id)).toEqual(DEFAULT_VIEWS)
   })
 

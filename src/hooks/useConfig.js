@@ -7,9 +7,11 @@ import { isConfigPath } from '../lib/viewsConfig.js'
 // lib/viewsConfig.js; each board, lib/board.js). `read(path)` is { ready, text }:
 // its local edit, else its saved copy (text undefined: no such file). Until a
 // file is ready (and offline without a copy on the device) it must not be
-// changed, so a file that couldn't be read is never overwritten. `write(path,
-// content)` and `erase(path)` are changes (ch => ch) for `update`, alone or
-// together with other changes in one step; Sync commits them like any edit.
+// changed, so a file that couldn't be read is never overwritten. `readIn(ch,
+// path)` is the text a set of changes gives it (inside a change: undefined, no
+// file; null, not read yet). `write(path, content)` and `erase(path)` are
+// changes (ch => ch) for `update`, alone or together with other changes in one
+// step; Sync commits them like any edit.
 export function useConfig({ remote, virtual, changes }) {
   const [copies, setCopies] = useState({}) // blob sha -> text, null if it couldn't be read
   const shas = Object.entries(virtual).filter(([path, e]) => isConfigPath(path) && e.sha !== null).map(([, e]) => e.sha)
@@ -38,6 +40,12 @@ export function useConfig({ remote, virtual, changes }) {
     return { ready: true, text: changes.edits[entry.orig] ?? original }
   }
 
+  function readIn(ch, path) {
+    const entry = virtualFiles(remote.files, ch)[path]
+    if (!entry) return undefined
+    return ch.edits[entry.orig] ?? saved(entry) ?? null
+  }
+
   const write = (path, content) => ch => {
     const entry = virtualFiles(remote.files, ch)[path]
     return entry ? setEdit(ch, entry, content, saved(entry) ?? '') : add(ch, remote.files, path, content)
@@ -48,5 +56,5 @@ export function useConfig({ remote, virtual, changes }) {
     return files[path] ? remove(ch, files, path, false) : ch
   }
 
-  return { read, write, erase }
+  return { read, readIn, write, erase }
 }

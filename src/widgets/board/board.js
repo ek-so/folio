@@ -1,5 +1,5 @@
-import { virtualFiles, setEdit } from './changes.js'
-import { withKeys } from './frontmatter.js'
+import { virtualFiles, setEdit } from '@/lib/changes.js'
+import { withKeys } from '@/lib/frontmatter.js'
 
 // A board widget (Kanban): a folder whose direct subfolders are its columns
 // and whose files are its cards (a column holds every file inside its folder,

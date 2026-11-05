@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { parseBoard, serializeBoard, newBoard, boardColumns, movedBoard, withBoardKeys, placeCard, moveColumn, LOOSE } from './board.js'
-import { empty, add } from './changes.js'
+import { empty, add } from '@/lib/changes.js'
 
 const files = ['T/Todo/b.md', 'T/Todo/a.md', 'T/Done/2025/old.md', 'T/Done/.gitkeep', 'T/Empty/.gitkeep', 'T/loose.md', 'Other/x.md']
 

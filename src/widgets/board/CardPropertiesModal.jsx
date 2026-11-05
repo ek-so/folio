@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { CheckSquare, Square } from '@phosphor-icons/react'
-import { Button } from './ui/button.jsx'
-import { Input } from './ui/input.jsx'
-import { ListRow } from './ui/list-row.jsx'
-import BottomSheet from './BottomSheet.jsx'
+import { Button } from '@/components/ui/button.jsx'
+import { Input } from '@/components/ui/input.jsx'
+import { ListRow } from '@/components/ui/list-row.jsx'
+import BottomSheet from '@/components/BottomSheet.jsx'
 
 // Which properties a board's cards show (their values, in this order):
 // `available` the keys its notes have, `selected` the chosen ones. Choosing

@@ -1,16 +1,17 @@
-import { Plus, Kanban } from '@phosphor-icons/react'
+import { Plus, Trash } from '@phosphor-icons/react'
 import PageLayout from './PageLayout.jsx'
 import Surface from './Surface.jsx'
 import TitleBar from './TitleBar.jsx'
-import Board from './Board.jsx'
 import { Button } from './ui/button.jsx'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from './ui/dropdown-menu.jsx'
+import { WIDGET_TYPES, widgetType } from '../widgets/index.js'
 
-// A view (Home…): its title bar with + (Add widget), over its widgets,
-// stacked full width (a dashboard). `widgets` are the view's ({ id, type });
-// `boards[id]` each board's { ready, board, data } (App); `actions` what the widgets can do (App).
-// Until the config is read (`canEdit` false) nothing can be added.
-export default function ViewPage({ page, widgets = [], boards, notes, canEdit, actions }) {
+// A view (Home…): its title bar with + (Add widget: every kind in widgets/index.js),
+// over its widgets ({ id, type }), stacked full width (a dashboard). Each widget is its
+// kind's own component, given the app's `services`; `onAdd(type)`, `onRemove(id)`.
+// Until the settings are read (`services.canEdit` false) nothing can be added.
+export default function ViewPage({ page, widgets = [], services, onAdd, onRemove }) {
+  const { canEdit } = services
   const addMenu = (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -19,7 +20,7 @@ export default function ViewPage({ page, widgets = [], boards, notes, canEdit, a
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" onCloseAutoFocus={e => e.preventDefault()}>
-        <DropdownMenuItem onSelect={() => actions.onAddBoard(page)}><Kanban /> Board</DropdownMenuItem>
+        {WIDGET_TYPES.map(t => <DropdownMenuItem key={t.type} onSelect={() => onAdd(t.type)}><t.icon /> {t.label}</DropdownMenuItem>)}
       </DropdownMenuContent>
     </DropdownMenu>
   )
@@ -30,13 +31,30 @@ export default function ViewPage({ page, widgets = [], boards, notes, canEdit, a
           {widgets.length === 0 ? (
             <div className="flex flex-1 flex-col items-center justify-center gap-space py-12 text-center">
               <p className="text-sm text-muted-foreground">Nothing on this view yet.</p>
-              <Button variant="secondary" disabled={!canEdit} onClick={() => actions.onAddBoard(page)}><Kanban /> Add board</Button>
+              <div className="flex flex-wrap justify-center gap-space-sm">
+                {WIDGET_TYPES.map(t => (
+                  <Button key={t.type} variant="secondary" disabled={!canEdit} onClick={() => onAdd(t.type)}><t.icon /> Add {t.label.toLowerCase()}</Button>
+                ))}
+              </div>
             </div>
-          ) : widgets.map(w => (
-            <Board key={w.id} id={w.id} {...boards[w.id]} notes={notes} canEdit={canEdit} actions={actions} onRemove={() => actions.onRemoveWidget(page, w.id)} />
-          ))}
+          ) : widgets.map(w => {
+            const type = widgetType(w.type)
+            return type
+              ? <type.Widget key={w.id} id={w.id} services={services} onRemove={() => onRemove(w.id)} />
+              : <UnknownWidget key={w.id} type={w.type} canEdit={canEdit} onRemove={() => onRemove(w.id)} />
+          })}
         </div>
       </Surface>
     </PageLayout>
+  )
+}
+
+// A widget of a kind this version doesn't know (added by a newer one): kept, and it can be removed
+function UnknownWidget({ type, canEdit, onRemove }) {
+  return (
+    <section className="flex items-center gap-space-sm rounded-lg border border-border p-space-sm">
+      <p className="min-w-0 flex-1 px-space-xs text-sm text-muted-foreground">This widget (“{type}”) needs a newer version of Folio.</p>
+      <Button variant="ghost" size="icon" aria-label="Remove widget" title="Remove widget" disabled={!canEdit} onClick={onRemove}><Trash /></Button>
+    </section>
   )
 }

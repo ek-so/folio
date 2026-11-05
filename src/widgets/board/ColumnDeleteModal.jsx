@@ -1,5 +1,5 @@
-import { Button } from './ui/button.jsx'
-import BottomSheet from './BottomSheet.jsx'
+import { Button } from '@/components/ui/button.jsx'
+import BottomSheet from '@/components/BottomSheet.jsx'
 
 // Deleting a board's column (its folder): with `count` cards, ask whether they
 // go with it or move to No status (`onDelete(keepCards)`); an empty one is just confirmed
