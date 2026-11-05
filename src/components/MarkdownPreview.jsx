@@ -234,11 +234,11 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
   }
 
   return (
-    <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto">
+    <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
       {children}
       <div
         ref={ref}
-        className="editor-preview p-space text-base leading-relaxed touch-manipulation [&_img]:max-w-full [&_img]:h-auto [&_img]:rounded-md"
+        className="editor-preview min-w-0 break-words p-space text-base leading-relaxed touch-manipulation [&_img]:max-w-full [&_img]:h-auto [&_img]:rounded-md"
         onClick={handleClick}
         dangerouslySetInnerHTML={{ __html: withImages || '<p class="text-muted-foreground italic">Nothing to preview yet.</p>' }}
       />

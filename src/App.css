@@ -25,7 +25,7 @@
 .editor-preview details[open] > summary { margin-bottom: 8px; }
 .editor-preview details[open] > summary > .summary-caret { transform: rotate(90deg); }
 .editor-preview code { background: var(--code-bg); padding: 2px 6px; border-radius: 4px; font-family: 'SF Mono', monospace; font-size: 13px; }
-.editor-preview pre { background: var(--code-bg); padding: 16px; border-radius: 12px; overflow-x: auto; margin: 0 0 14px; }
+.editor-preview pre { max-width: 100%; background: var(--code-bg); padding: 16px; border-radius: 12px; overflow-x: auto; margin: 0 0 14px; }
 .editor-preview pre code { background: none; padding: 0; }
 .editor-preview blockquote { border-left: 3px solid var(--accent); padding-left: 16px; color: var(--muted-foreground); margin: 0 0 14px; }
 .editor-preview .callout { --c: var(--callout-note); border-left-color: var(--c); background: color-mix(in oklab, var(--c) var(--callout-tint), var(--background)); color: var(--foreground); padding: 12px 16px; border-radius: 0 8px 8px 0; }
@@ -53,8 +53,8 @@
 .editor-preview hr { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
 .editor-preview strong { font-weight: 600; }
 .editor-preview em { font-style: italic; }
-.editor-preview table { width: 100%; border-collapse: collapse; margin: 0 0 14px; font-size: 14px; }
-/* Tables fit the screen: cells wrap at words; long words get <wbr> break points (MarkdownPreview) */
+/* A wide table scrolls inside itself, never the page; cells wrap at words, long words get <wbr> break points (MarkdownPreview) */
+.editor-preview table { display: block; width: fit-content; max-width: 100%; overflow-x: auto; border-collapse: collapse; margin: 0 0 14px; font-size: 14px; }
 .editor-preview th, .editor-preview td { padding: 6px 8px; border: 1px solid var(--border); text-align: left; vertical-align: top; }
 .editor-preview th { background: var(--secondary); font-weight: 600; }
 /* Smart tables: an ISO date in a cell (lib/markdown.js) */
