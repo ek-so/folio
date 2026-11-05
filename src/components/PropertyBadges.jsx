@@ -106,6 +106,12 @@ export default function PropertyBadges({ props, path, files, clamp, title, class
   )
 }
 
+// Closing a popover gives the focus back to its badge; when another popover has just opened
+// (it has the focus), that would pull the focus out of it and close it too
+const keepFocusInOtherPopover = e => {
+  if (document.activeElement?.closest('[data-radix-popper-content-wrapper]')) e.preventDefault()
+}
+
 // The `setOpen` of the badge whose popover is open, if any
 let closeOpenPopover = null
 
@@ -137,7 +143,7 @@ function EditableBadge({ prop, label, color, options, onChange, onRemove, onEdit
         </Badge>
       </PopoverTrigger>
       {/* Opening it doesn't focus the field (the keyboard on a phone): the panel takes the focus, a tap or Tab reaches the field */}
-      <PopoverContent {...own} tabIndex={-1} onOpenAutoFocus={e => { e.preventDefault(); e.currentTarget.focus() }}>
+      <PopoverContent {...own} tabIndex={-1} onOpenAutoFocus={e => { e.preventDefault(); e.currentTarget.focus() }} onCloseAutoFocus={keepFocusInOtherPopover}>
         <ValueChooser prop={prop} options={options?.(prop.key) ?? []} onChange={onChange} onRemove={onRemove && (value => { setOpen(false); onRemove(value) })} onEdit={onEdit && (value => { setOpen(false); onEdit(value) })} close={() => setOpen(false)} />
       </PopoverContent>
     </Popover>
