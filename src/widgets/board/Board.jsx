@@ -12,7 +12,7 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuIte
 import PropertyBadges from '@/components/PropertyBadges.jsx'
 import Spinner from '@/components/Spinner.jsx'
 import RenameModal from '@/components/RenameModal.jsx'
-import ColumnDeleteModal from './ColumnDeleteModal.jsx'
+import ConfirmModal from '@/components/ConfirmModal.jsx'
 import CheckListModal from './CheckListModal.jsx'
 import { displayName } from '@/lib/files.js'
 import { frontMatter, noteTitle, DESCRIPTION } from '@/lib/frontmatter.js'
@@ -54,7 +54,8 @@ export default function Board({ id, services, onRemove }) {
   )
   const [drag, setDrag] = useState(null) // { id, type, items } while dragging: each column's cards as shown meanwhile
   const [renaming, setRenaming] = useState(null) // the column whose Rename / Delete sheet is open
-  const [deleting, setDeleting] = useState(null)
+  const [deleting, setDeleting] = useState(null) // the column whose Delete is being confirmed
+  const [dropping, setDropping] = useState(null) // the property whose removal is being confirmed
   const [choosing, setChoosing] = useState(null) // the open checklist: 'columns' | 'properties'
   const off = !canEdit || !board || data?.missing
 
@@ -190,33 +191,44 @@ export default function Board({ id, services, onRemove }) {
           onClose={() => setChoosing(null)}
         />
       )}
-      {choosing === 'properties' && board && (() => {
-        const available = [...new Set([...data.loose, ...data.columns.flatMap(c => c.cards)]
-          .flatMap(c => notes[c.path] === undefined ? [] : frontMatter(notes[c.path])?.props.map(p => p.key) ?? []))]
-          .filter(k => k !== DESCRIPTION && !board.properties.includes(k)).sort()
-        return (
-          <CheckListModal
-            title="Properties"
-            description="Their values show on the cards, without names. The description always shows."
-            items={[...board.properties, ...available]}
-            selected={board.properties}
-            onChange={act.setProperties}
-            addLabel="New property"
-            onAdd={key => {
-              if (/[:\n]/.test(key)) return 'A property name can\'t contain ":".'
-              if (!board.properties.includes(key)) act.setProperties([...board.properties, key])
-              return null
-            }}
-            empty="Its notes have no other properties yet."
-            onClose={() => setChoosing(null)}
-          />
-        )
-      })()}
+      {choosing === 'properties' && board && (
+        <CheckListModal
+          title="Properties"
+          description="Their values show on the cards, without names. The description always shows."
+          items={[...board.properties, ...act.propertyKeys().filter(k => !board.properties.includes(k))]}
+          selected={board.properties}
+          onChange={act.setProperties}
+          addLabel="New property"
+          onAdd={key => {
+            const error = act.keyError(key)
+            if (error) return error
+            if (!board.properties.includes(key)) act.setProperties([...board.properties, key])
+            return null
+          }}
+          onRename={(from, to) => act.renameProperty(from, to)}
+          onDelete={key => { setChoosing(null); setDropping(key) }}
+          empty="Its notes have no other properties yet."
+          onClose={() => setChoosing(null)}
+        />
+      )}
+      {dropping && (
+        <ConfirmModal
+          title={`Remove property “${dropping}”?`}
+          description={`It's removed, with its value, from ${act.notesWith(dropping)} note${act.notesWith(dropping) === 1 ? '' : 's'} in this board's folder. It's removed from GitHub when you sync.`}
+          confirm="Remove"
+          onConfirm={() => { act.removeProperty(dropping); setDropping(null) }}
+          onClose={() => setDropping(null)}
+        />
+      )}
       {deleting && (
-        <ColumnDeleteModal
-          name={deleting.name}
-          count={deleting.cards.length}
-          onDelete={keep => { setDeleting(null); act.deleteColumn(deleting, keep) }}
+        <ConfirmModal
+          title={`Delete column “${deleting.name}”?`}
+          description={deleting.cards.length
+            ? `It has ${deleting.cards.length} card${deleting.cards.length === 1 ? '' : 's'}. Delete them too, or move them to No status? It's removed from GitHub when you sync.`
+            : 'Its folder is removed from GitHub when you sync.'}
+          confirm={deleting.cards.length ? 'Delete with cards' : 'Delete'}
+          onConfirm={() => { setDeleting(null); act.deleteColumn(deleting, false) }}
+          alternative={deleting.cards.length ? { label: 'Move to No status', onSelect: () => { setDeleting(null); act.deleteColumn(deleting, true) } } : undefined}
           onClose={() => setDeleting(null)}
         />
       )}

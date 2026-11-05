@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { frontMatter, properties, withKeys, blankFrontMatter, valueList, noteTitle } from './frontmatter.js'
+import { frontMatter, properties, withKeys, blankFrontMatter, valueList, noteTitle, withoutKeys, renameKey } from './frontmatter.js'
 
 describe('front matter', () => {
   it('reads flat keys, lists and quoted values', () => {
@@ -38,5 +38,17 @@ describe('front matter', () => {
     expect(noteTitle('---\ntitle: From props\n---\n# Heading\n', 'file')).toBe('From props')
     expect(noteTitle('---\ndescription: x\n---\nIntro\n\n# The heading #\n', 'file')).toBe('The heading')
     expect(noteTitle('## Only h2\n', 'file')).toBe('file')
+  })
+
+  it('removes properties with their values', () => {
+    expect(withoutKeys('---\na: 1\ntags:\n  - x\n  - y\nb: 2\n---\nbody', ['tags'])).toBe('---\na: 1\nb: 2\n---\nbody')
+    expect(withoutKeys('---\ntags: x\n---\n# N\n', ['tags'])).toBe('# N\n')
+    const same = '---\na: 1\n---\n'
+    expect(withoutKeys(same, ['b'])).toBe(same)
+  })
+
+  it('renames a property, keeping its value', () => {
+    expect(renameKey('---\nprio: high\ntags: [a]\n---\nprio: body', 'prio', 'priority')).toBe('---\npriority: high\ntags: [a]\n---\nprio: body')
+    expect(renameKey('# N', 'a', 'b')).toBe('# N')
   })
 })

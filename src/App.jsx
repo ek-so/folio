@@ -10,8 +10,7 @@ import NewFileModal from './components/NewFileModal.jsx'
 import ConflictModal from './components/ConflictModal.jsx'
 import SyncButton from './components/SyncButton.jsx'
 import SearchSheet from './components/SearchSheet.jsx'
-import SignOutModal from './components/SignOutModal.jsx'
-import DiscardModal from './components/DiscardModal.jsx'
+import ConfirmModal from './components/ConfirmModal.jsx'
 import UploadClashModal from './components/UploadClashModal.jsx'
 import UploadErrorsModal from './components/UploadErrorsModal.jsx'
 import { blobShaOf, toBase64 } from './lib/github.js'
@@ -662,11 +661,25 @@ export default function App() {
         )}
 
         {confirmDiscard && (
-          <DiscardModal changeCount={repo.changeCount} onDiscard={discardChanges} onClose={() => setConfirmDiscard(false)} />
+          <ConfirmModal
+            title={`Discard ${repo.changeCount} change${repo.changeCount === 1 ? '' : 's'}?`}
+            description="They're deleted from this device and can't be recovered."
+            confirm="Discard"
+            onConfirm={discardChanges}
+            onClose={() => setConfirmDiscard(false)}
+          />
         )}
 
         {confirmSignOut && (
-          <SignOutModal changeCount={repo.changeCount} onSignOut={signOut} onClose={() => setConfirmSignOut(false)} />
+          <ConfirmModal
+            title="Sign out?"
+            description={repo.changeCount
+              ? `You have ${repo.changeCount} unsynced change${repo.changeCount === 1 ? '' : 's'}. Signing out deletes them from this device.`
+              : 'The offline copies of your notes are removed from this device, and you\'ll need your token to sign in again.'}
+            confirm="Sign out"
+            onConfirm={signOut}
+            onClose={() => setConfirmSignOut(false)}
+          />
         )}
 
         {viewDialog?.kind === 'add' && (

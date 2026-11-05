@@ -1,6 +1,8 @@
+import { useState } from 'react'
 import { Plus, Trash } from '@phosphor-icons/react'
 import PageLayout from './PageLayout.jsx'
 import Surface from './Surface.jsx'
+import ConfirmModal from './ConfirmModal.jsx'
 import TitleBar from './TitleBar.jsx'
 import { Button } from './ui/button.jsx'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from './ui/dropdown-menu.jsx'
@@ -8,10 +10,12 @@ import { WIDGET_TYPES, widgetType } from '../widgets/index.js'
 
 // A view (Home…): its title bar with + (Add widget: every kind in widgets/index.js),
 // over its widgets ({ id, type }), stacked full width (a dashboard). Each widget is its
-// kind's own component, given the app's `services`; `onAdd(type)`, `onRemove(id)`.
+// kind's own component, given the app's `services`; `onAdd(type)`, `onRemove(id)`
+// (always confirmed first: a widget's own Remove asks here).
 // Until the settings are read (`services.canEdit` false) nothing can be added.
 export default function ViewPage({ page, widgets = [], services, onAdd, onRemove }) {
   const { canEdit } = services
+  const [removing, setRemoving] = useState(null) // the widget whose Remove is being confirmed
   const addMenu = (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -40,11 +44,20 @@ export default function ViewPage({ page, widgets = [], services, onAdd, onRemove
           ) : widgets.map(w => {
             const type = widgetType(w.type)
             return type
-              ? <type.Widget key={w.id} id={w.id} services={services} onRemove={() => onRemove(w.id)} />
-              : <UnknownWidget key={w.id} type={w.type} canEdit={canEdit} onRemove={() => onRemove(w.id)} />
+              ? <type.Widget key={w.id} id={w.id} services={services} onRemove={() => setRemoving(w)} />
+              : <UnknownWidget key={w.id} type={w.type} canEdit={canEdit} onRemove={() => setRemoving(w)} />
           })}
         </div>
       </Surface>
+      {removing && (
+        <ConfirmModal
+          title={`Remove this ${(widgetType(removing.type)?.label ?? 'widget').toLowerCase()}?`}
+          description="Its settings are removed from this view. The files it shows stay as they are."
+          confirm="Remove"
+          onConfirm={() => { onRemove(removing.id); setRemoving(null) }}
+          onClose={() => setRemoving(null)}
+        />
+      )}
     </PageLayout>
   )
 }

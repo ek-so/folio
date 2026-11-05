@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { parseBoard, serializeBoard, newBoard, boardColumns, movedBoard, withBoardKeys, placeCard, moveColumn, LOOSE } from './board.js'
+import { parseBoard, serializeBoard, newBoard, boardColumns, movedBoard, withBoardKeys, editNotes, placeCard, moveColumn, LOOSE } from './board.js'
 import { empty, add } from '@/lib/changes.js'
 
 const files = ['T/Todo/b.md', 'T/Todo/a.md', 'T/Done/2025/old.md', 'T/Done/.gitkeep', 'T/Empty/.gitkeep', 'T/loose.md', 'Other/x.md']
@@ -73,5 +73,8 @@ describe('board', () => {
     expect(ch.edits['T/a.md']).toBe('---\ndescription:\n---\n# A\n')
     expect(ch.edits['T/new.md']).toBe('---\ndescription: x\n---\n')
     expect(Object.keys(ch.edits).sort()).toEqual(['T/a.md', 'T/new.md'])
+    // and back: an edit that undoes it leaves the note unchanged
+    const undone = editNotes(ch, remote, 'T', t => t.replace('---\ndescription:\n---\n', ''), sha => sha === null ? '' : texts[sha])
+    expect(Object.keys(undone.edits)).toEqual(['T/new.md'])
   })
 })

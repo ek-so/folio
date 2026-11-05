@@ -67,6 +67,39 @@ export function withKeys(text, keys) {
   return before + (before.endsWith('\n') ? '' : '\n') + lines + text.slice(fm.close)
 }
 
+// `text` without the properties `keys` (each line, with its `- item` lines);
+// a block left empty goes too. The rest is untouched.
+export function withoutKeys(text, keys) {
+  const fm = frontMatter(text)
+  if (!fm || !fm.props.some(p => keys.includes(p.key))) return text
+  const open = text.match(OPEN)[0].length
+  const lines = text.slice(open, fm.close).split(/(?<=\n)/)
+  const kept = []
+  let dropping = false
+  for (const line of lines) {
+    const bare = line.replace(/\r?\n$/, '')
+    if (dropping && (ITEM.test(bare) || /^[ \t]+\S/.test(bare))) continue
+    const m = bare.match(KEY)
+    dropping = !!m && keys.includes(m[1].trim())
+    if (!dropping) kept.push(line)
+  }
+  if (!kept.some(l => l.trim())) return text.slice(fm.end)
+  return text.slice(0, open) + kept.join('') + text.slice(fm.close)
+}
+
+// `text` with the property `from` named `to` (its value kept), or as it is
+// when it has no `from`
+export function renameKey(text, from, to) {
+  const fm = frontMatter(text)
+  if (!fm?.props.some(p => p.key === from)) return text
+  const open = text.match(OPEN)[0].length
+  const block = text.slice(open, fm.close).split(/(?<=\n)/).map(line => {
+    const m = line.replace(/\r?\n$/, '').match(KEY)
+    return m && m[1].trim() === from ? line.replace(m[1], to) : line
+  })
+  return text.slice(0, open) + block.join('') + text.slice(fm.close)
+}
+
 // `text` with its front matter turned into blank lines of the same length, so
 // the preview skips it while every offset still matches the note
 export function blankFrontMatter(text) {

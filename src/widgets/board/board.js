@@ -102,9 +102,9 @@ export function movedBoard(board, from, to, isDir) {
   return { ...board, cards: { ...board.cards, [was[0]]: (board.cards[was[0]] ?? []).map(follow) } }
 }
 
-// `ch` with every note in `folder` (in `ch`'s files) given the `keys` it lacks, empty (lib/frontmatter.js).
+// `ch` with `edit(text)` applied to every note in `folder` (in `ch`'s files).
 // `remoteText(sha)`: GitHub's text of a note (undefined when it isn't on this device: that note is left as it is).
-export function withBoardKeys(ch, files, folder, keys, remoteText) {
+export function editNotes(ch, files, folder, edit, remoteText) {
   const prefix = folder ? folder + '/' : ''
   let next = ch
   for (const [path, entry] of Object.entries(virtualFiles(files, ch))) {
@@ -112,11 +112,14 @@ export function withBoardKeys(ch, files, folder, keys, remoteText) {
     const original = remoteText(entry.sha)
     const text = ch.edits[entry.orig] ?? original
     if (text === undefined) continue
-    const filled = withKeys(text, keys)
-    if (filled !== text) next = setEdit(next, entry, filled, original ?? '')
+    const edited = edit(text)
+    if (edited !== text) next = setEdit(next, entry, edited, original ?? '')
   }
   return next
 }
+
+// `ch` with every note in `folder` given the `keys` it lacks, empty (lib/frontmatter.js)
+export const withBoardKeys = (ch, files, folder, keys, remoteText) => editNotes(ch, files, folder, t => withKeys(t, keys), remoteText)
 
 // Where a card goes when dropped in `column` (a column's name, or LOOSE) at
 // `index` among that column's other cards, from what the board shows (`data`,
