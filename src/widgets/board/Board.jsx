@@ -1,5 +1,5 @@
 import { useState, forwardRef } from 'react'
-import { DotsThree, Trash, Plus, Columns, PencilSimple, Tag } from '@phosphor-icons/react'
+import { DotsThree, DotsSixVertical, Trash, Plus, Columns, PencilSimple, Tag } from '@phosphor-icons/react'
 import {
   DndContext, DragOverlay, MouseSensor, TouchSensor, useSensor, useSensors,
   closestCenter, closestCorners, pointerWithin,
@@ -15,7 +15,7 @@ import RenameModal from '@/components/RenameModal.jsx'
 import ColumnDeleteModal from './ColumnDeleteModal.jsx'
 import CardPropertiesModal from './CardPropertiesModal.jsx'
 import { displayName } from '@/lib/files.js'
-import { frontMatter, valueList } from '@/lib/frontmatter.js'
+import { frontMatter, valueList, noteTitle } from '@/lib/frontmatter.js'
 import { DESCRIPTION, LOOSE } from './board.js'
 import { useBoard } from './useBoard.js'
 
@@ -129,7 +129,7 @@ export default function Board({ id, services, onRemove }) {
           <SortableContext items={columns.map(c => colId(c.key))} strategy={horizontalListSortingStrategy}>
             {columns.map(c => (
               <Column
-                key={c.key} column={c} count={items[c.key].length} canEdit={canEdit}
+                key={c.key} column={c} canEdit={canEdit}
                 onNewCard={() => act.newCard(c.key === LOOSE ? board.folder : c.path)}
                 onRename={() => setRenaming(c)} onDelete={() => setDeleting(c)}
               >
@@ -145,7 +145,7 @@ export default function Board({ id, services, onRemove }) {
           {dragged && drag.type === 'card' && byPath[dragged] && <CardBody path={dragged} text={notes[dragged]} board={board} className="rotate-2 shadow-lg" />}
           {dragged && drag.type === 'column' && (
             <div className="w-72 rotate-1 rounded-lg bg-secondary p-space-sm shadow-lg">
-              <ColumnTitle column={dragged} count={dragged.cards.length} />
+              <ColumnTitle column={dragged} grip />
             </div>
           )}
         </DragOverlay>
@@ -193,18 +193,19 @@ export default function Board({ id, services, onRemove }) {
   )
 }
 
-function ColumnTitle({ column, count }) {
+// A column's name; `grip`: the drag indicator before it (a column that can be moved)
+function ColumnTitle({ column, grip }) {
   return (
-    <div className="flex min-h-control-md items-center gap-space-sm px-space-xs">
+    <div className="flex min-h-control-md items-center gap-1 px-space-xs">
+      {grip && <DotsSixVertical className="size-4 shrink-0 text-muted-foreground" aria-hidden />}
       <h3 className="min-w-0 flex-1 truncate text-sm font-semibold">{column.name}</h3>
-      <span className="text-xs text-muted-foreground">{count}</span>
     </div>
   )
 }
 
 // A column: a drop target for cards; its title moves it (not No status, which stays first).
 // ⋯ beside the title: Rename / Delete (not No status); New card under its cards.
-function Column({ column, count, canEdit, onNewCard, onRename, onDelete, children }) {
+function Column({ column, canEdit, onNewCard, onRename, onDelete, children }) {
   const { setNodeRef, setActivatorNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
     id: colId(column.key),
     data: { type: 'column', key: column.key },
@@ -216,10 +217,10 @@ function Column({ column, count, canEdit, onNewCard, onRename, onDelete, childre
       style={{ transform: CSS.Translate.toString(transform), transition }}
       className={cn('flex w-72 shrink-0 flex-col gap-space-sm rounded-lg bg-secondary/60 p-space-sm', isDragging && 'opacity-40')}
     >
-      {column.key === LOOSE ? <ColumnTitle column={column} count={count} /> : (
+      {column.key === LOOSE ? <ColumnTitle column={column} /> : (
         <div className="flex items-center gap-1">
           <div ref={setActivatorNodeRef} {...attributes} {...listeners} className={cn('min-w-0 flex-1 cursor-grab touch-manipulation select-none', NO_CALLOUT)}>
-            <ColumnTitle column={column} count={count} />
+            <ColumnTitle column={column} grip />
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -271,7 +272,7 @@ const CardBody = forwardRef(function CardBody({ path, text, board, className, ..
       className={cn('flex w-full touch-manipulation select-none flex-col gap-1 rounded-lg border border-border bg-card p-3 text-left shadow-sm outline-none transition-colors hover:bg-secondary/40 focus-visible:ring-1 focus-visible:ring-ring', NO_CALLOUT, className)}
       {...props}
     >
-      <span className="break-words text-sm font-medium">{displayName(path)}</span>
+      <span className="break-words text-sm font-medium">{text === undefined ? displayName(path) : noteTitle(text, displayName(path))}</span>
       {description && <span className="line-clamp-3 break-words text-xs text-muted-foreground">{description}</span>}
       <PropertyBadges props={shown} className="pt-1" />
     </button>

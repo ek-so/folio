@@ -23,6 +23,13 @@ describe('board', () => {
     expect(boardColumns(newBoard('Gone'), files).missing).toBe(true)
   })
 
+  it('leaves technical folders and files off the board', () => {
+    const { columns, loose } = boardColumns(newBoard('T'), [...files, 'T/_assets/a.png', 'T/.hidden/x.md', 'T/Todo/_img/p.png', 'T/Todo/.draft.md', 'T/_index.md'])
+    expect(columns.map(c => c.name)).toEqual(['Done', 'Empty', 'Todo'])
+    expect(columns[2].cards.map(c => c.key)).toEqual(['a.md', 'b.md'])
+    expect(loose.map(c => c.key)).toEqual(['loose.md'])
+  })
+
   it('follows the saved order, the rest by name after it', () => {
     const board = { ...newBoard('T'), columns: ['Todo', 'Gone'], cards: { Todo: ['b.md'] } }
     const { columns } = boardColumns(board, files)

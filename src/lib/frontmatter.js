@@ -70,3 +70,13 @@ export function blankFrontMatter(text) {
   const fm = frontMatter(text)
   return fm ? text.slice(0, fm.end).replace(/[^\n]/g, ' ') + text.slice(fm.end) : text
 }
+
+// A note's title: its `title` property, else its first "# heading" (outside
+// the front matter), else `fallback` (its file name)
+export function noteTitle(text, fallback) {
+  const fm = frontMatter(text)
+  const title = fm?.props.find(p => p.key === 'title')?.value
+  if (typeof title === 'string' && title.trim()) return title.trim()
+  const heading = text.slice(fm?.end ?? 0).match(/^ {0,3}#[ \t]+(.+?)[ \t#]*$/m)
+  return heading ? heading[1] : fallback
+}

@@ -36,7 +36,9 @@ export const serializeBoard = board => JSON.stringify(board, null, 2) + '\n'
 export const newBoard = folder => ({ folder, properties: [], columns: [], cards: {} })
 
 const nameOf = path => path.slice(path.lastIndexOf('/') + 1)
-const isKeep = path => nameOf(path) === '.gitkeep'
+// Technical files and folders (".assets", "_attachments", ".gitkeep"…): a name starting with "." or "_"
+// anywhere in the path keeps it off the board
+const isTechnical = rest => rest.split('/').some(part => /^[._]/.test(part))
 
 // `items` in the saved order (`saved`: keys), then the rest by name
 function ordered(items, saved = []) {
@@ -46,7 +48,7 @@ function ordered(items, saved = []) {
 }
 
 // What the board shows, from `files` (paths of the repo's files): `columns`
-// [{ name, path, cards: [{ key, path }] }] in order, `loose` (No status) the
+// [{ name, path, cards: [{ key, path }] }] in order (technical folders and files left out), `loose` (No status) the
 // files right in its folder (empty: the column isn't shown), and `missing`
 // when its folder is gone
 export function boardColumns(board, files) {
@@ -57,11 +59,12 @@ export function boardColumns(board, files) {
     if (!path.startsWith(prefix)) continue
     const rest = path.slice(prefix.length)
     const slash = rest.indexOf('/')
-    if (slash === -1) { if (!isKeep(rest)) loose.push({ key: rest, path }); continue }
+    if (slash === -1) { if (!isTechnical(rest)) loose.push({ key: rest, path }); continue }
     const name = rest.slice(0, slash)
+    if (isTechnical(name)) continue
     if (!folders.has(name)) folders.set(name, { key: name, name, path: prefix + name, cards: [] })
     const key = rest.slice(slash + 1)
-    if (!isKeep(key)) folders.get(name).cards.push({ key, path })
+    if (!isTechnical(key)) folders.get(name).cards.push({ key, path })
   }
   const missing = board.folder !== '' && !files.some(p => p.startsWith(prefix))
   const columns = ordered([...folders.values()], board.columns)

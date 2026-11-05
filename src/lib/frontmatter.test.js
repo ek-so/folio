@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { frontMatter, properties, withKeys, blankFrontMatter, valueList } from './frontmatter.js'
+import { frontMatter, properties, withKeys, blankFrontMatter, valueList, noteTitle } from './frontmatter.js'
 
 describe('front matter', () => {
   it('reads flat keys, lists and quoted values', () => {
@@ -32,5 +32,11 @@ describe('front matter', () => {
     expect(valueList('')).toEqual([])
     expect(valueList(['a', ''])).toEqual(['a'])
     expect(valueList('x')).toEqual(['x'])
+  })
+
+  it('finds a note\'s title', () => {
+    expect(noteTitle('---\ntitle: From props\n---\n# Heading\n', 'file')).toBe('From props')
+    expect(noteTitle('---\ndescription: x\n---\nIntro\n\n# The heading #\n', 'file')).toBe('The heading')
+    expect(noteTitle('## Only h2\n', 'file')).toBe('file')
   })
 })
