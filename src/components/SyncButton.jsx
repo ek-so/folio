@@ -1,7 +1,7 @@
 import { ArrowUp, ArrowDown, ArrowsClockwise, X, CloudSlash, CaretDown, Trash } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils.js'
 import { Button } from './ui/button.jsx'
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from './ui/dropdown-menu.jsx'
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from './ui/dropdown-menu.jsx'
 
 const LOOK = {
   idle: { variant: 'ghost-outline', label: 'Sync' },
@@ -23,20 +23,30 @@ function MenuBadge({ children }) {
 // files changed on GitHub, or New when unknown) and Discard. An accent badge on
 // Sync shows the directions there's something to sync in (↑ push, ↓ pull, or
 // both), without counts. `compact` (the collapsed rail): one icon button (a dot
-// for changes) that opens the same menu with Sync all on top.
+// for changes) that opens the same menu with Sync all on top, its badge the
+// total of both ("7+" or New when GitHub can't say how many), then a separator.
 export default function SyncButton({ className, compact, syncState, syncing, changeCount, incoming, onSync, onPull, onDiscard }) {
   const { variant, label, Icon } = LOOK[syncState] || LOOK.idle
   const hasPush = changeCount > 0
   const hasPull = incoming !== null
   const directions = [hasPush && 'Changes to push', hasPull && 'Changes to pull'].filter(Boolean).join(', ')
+  // Files to pull: a number, or null when GitHub can't compare (New); it lists at most 300
+  const pullCount = hasPull && incoming.files ? incoming.files : null
+  const pullLabel = pullCount === null ? 'New' : pullCount >= 300 ? '300+' : pullCount
+  const pushPull = (hasPush ? changeCount : 0) + (pullCount ?? 0)
+  const totalLabel = hasPull && (pullCount === null || pullCount >= 300) ? (pushPull ? `${pushPull}+` : 'New') : pushPull
   const spinner = <span className="size-4 rounded-full border border-current border-t-transparent animate-spin opacity-60" />
 
   const menu = (
     <DropdownMenuContent align={compact ? 'start' : 'end'} onCloseAutoFocus={e => e.preventDefault()}>
       {compact && (
-        <DropdownMenuItem disabled={syncing} onSelect={onSync}>
-          <ArrowsClockwise /> Sync all
-        </DropdownMenuItem>
+        <>
+          <DropdownMenuItem disabled={syncing} onSelect={onSync}>
+            <ArrowsClockwise /> Sync all
+            {(hasPush || hasPull) && <MenuBadge>{totalLabel}</MenuBadge>}
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+        </>
       )}
       <DropdownMenuItem disabled={!hasPush} onSelect={onSync}>
         <ArrowUp /> Push changes
@@ -44,7 +54,7 @@ export default function SyncButton({ className, compact, syncState, syncing, cha
       </DropdownMenuItem>
       <DropdownMenuItem disabled={!hasPull} onSelect={onPull}>
         <ArrowDown /> Pull changes
-        {hasPull && <MenuBadge>{incoming.files ? (incoming.files >= 300 ? '300+' : incoming.files) : 'New'}</MenuBadge>}
+        {hasPull && <MenuBadge>{pullLabel}</MenuBadge>}
       </DropdownMenuItem>
       <DropdownMenuItem variant="destructive" disabled={!hasPush} onSelect={onDiscard}>
         <Trash /> Discard changes
