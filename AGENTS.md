@@ -16,7 +16,7 @@ React + Vite PWA. Reads/writes markdown files from any GitHub repo via the GitHu
 6. **Assume the network can disappear at any moment.** Every remote call has an offline answer. Tell "offline", "rejected" and "broken" apart and handle each.
 7. **Fail visibly, recover calmly.** Show a clear state for loading, empty, error and offline. Never swallow an error in a way that leaves the screen lying.
 8. **Design system first.** Use the shared components and theme tokens. A one-off style or color is a future inconsistency.
-9. **Small changes, verified before shipping.** Build, run tests and lint (`npm run lint`), and check the change once in the real app. Test logic, not pixels; keep tests few and meaningful.
+9. **Small changes, verified before shipping.** Build, run tests and lint (`npm run lint`), and check the change once in the real app (`npm run local` builds it and serves it at localhost:4173/folio/). Test logic, not pixels; keep tests few and meaningful.
 10. **Replace means remove.** When something new replaces something old, delete the old code in the same change.
 
 ## Keeping this file true

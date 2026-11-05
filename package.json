@@ -8,7 +8,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "lint": "eslint src"
+    "lint": "eslint src",
+    "local": "vite build && vite preview --base /folio/ --open"
   },
   "dependencies": {
     "@octokit/rest": "^21.0.0",
