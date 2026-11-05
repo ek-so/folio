@@ -1,4 +1,5 @@
-import { boardPath, parseBoard, serializeBoard, boardColumns, placeCard, moveColumn, withBoardKeys, DESCRIPTION } from './board.js'
+import { boardPath, parseBoard, serializeBoard, boardColumns, placeCard, moveColumn, withBoardKeys } from './board.js'
+import { DESCRIPTION } from '@/lib/frontmatter.js'
 
 // Board `id` as its widget shows and changes it, through the app's `services`:
 // `ready` (its settings are read), `board` (null when they can't be), `data`

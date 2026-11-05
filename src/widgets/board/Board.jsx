@@ -15,8 +15,8 @@ import RenameModal from '@/components/RenameModal.jsx'
 import ColumnDeleteModal from './ColumnDeleteModal.jsx'
 import CheckListModal from './CheckListModal.jsx'
 import { displayName } from '@/lib/files.js'
-import { frontMatter, valueList, noteTitle } from '@/lib/frontmatter.js'
-import { DESCRIPTION, LOOSE } from './board.js'
+import { frontMatter, noteTitle, DESCRIPTION } from '@/lib/frontmatter.js'
+import { LOOSE } from './board.js'
 import { useBoard } from './useBoard.js'
 
 // Drag ids: a column's and a card's
@@ -291,8 +291,7 @@ function Card({ path, text, board, onOpen }) {
 // What a card shows: the file's name, its description, the board's chosen properties' values
 const CardBody = forwardRef(function CardBody({ path, text, board, className, ...props }, ref) {
   const fm = text === undefined ? [] : frontMatter(text)?.props ?? []
-  const description = valueList(fm.find(p => p.key === DESCRIPTION)?.value ?? '').join(', ')
-  const shown = board.properties.flatMap(key => fm.filter(p => p.key === key))
+  const shown = [DESCRIPTION, ...board.properties].flatMap(key => fm.filter(p => p.key === key))
   return (
     <button
       ref={ref}
@@ -301,8 +300,7 @@ const CardBody = forwardRef(function CardBody({ path, text, board, className, ..
       {...props}
     >
       <span className="break-words text-sm font-medium">{text === undefined ? displayName(path) : noteTitle(text, displayName(path))}</span>
-      {description && <span className="line-clamp-3 break-words text-xs text-muted-foreground">{description}</span>}
-      <PropertyBadges props={shown} className="pt-1" />
+      <PropertyBadges props={shown} clamp className="pt-1" />
     </button>
   )
 })

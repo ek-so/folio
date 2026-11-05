@@ -14,7 +14,6 @@ import { withKeys } from '@/lib/frontmatter.js'
 
 export const boardPath = id => `.folio/boards/${id}.json`
 export const LOOSE = '' // the No status column's key in `cards`
-export const DESCRIPTION = 'description' // shown under a card's name; every board's notes get it
 
 const strings = list => Array.isArray(list) ? list.filter(s => typeof s === 'string') : []
 

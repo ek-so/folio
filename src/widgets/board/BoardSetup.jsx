@@ -1,5 +1,6 @@
 import FolderSheet from '@/components/FolderSheet.jsx'
-import { boardPath, serializeBoard, newBoard, withBoardKeys, DESCRIPTION } from './board.js'
+import { boardPath, serializeBoard, newBoard, withBoardKeys } from './board.js'
+import { DESCRIPTION } from '@/lib/frontmatter.js'
 
 // A new board: pick its folder. Its notes get a description, empty, if they lack one.
 export default function BoardSetup({ services, onCreate, onClose }) {

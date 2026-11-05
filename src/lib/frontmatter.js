@@ -7,6 +7,9 @@
 // Only flat `key: value` lines are read (a value can be a [list] or `- item`
 // lines under its key); anything else in the block is kept as it is.
 
+// The property shown as a note's description: plain text under its title, never a badge
+export const DESCRIPTION = 'description'
+
 const OPEN = /^---[ \t]*\r?\n/
 const CLOSE = /^(?:---|\.\.\.)[ \t]*$/
 const KEY = /^([^\s:#-][^:]*?):(?:[ \t]+(.*?))?[ \t]*$/
