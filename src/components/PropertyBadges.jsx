@@ -89,7 +89,11 @@ export default function PropertyBadges({ props, path, files, clamp, title, class
         description={`Applies to ${valueCount(editing.key, editing.value)} note${valueCount(editing.key, editing.value) === 1 ? '' : 's'} with it in ${scopeName}. It changes on GitHub when you sync.`}
         value={editing.value}
         color={colors[editing.key]?.get(editing.value) ?? 0}
-        onSave={(name, color) => { onEditValue(editing.key, editing.value, name, color); setEditing(null) }}
+        onSave={(name, color) => {
+          // Unchanged: nothing is saved (that would pin the automatic color)
+          if (name !== editing.value || color !== (colors[editing.key]?.get(editing.value) ?? 0)) onEditValue(editing.key, editing.value, name, color)
+          setEditing(null)
+        }}
         onClose={() => setEditing(null)}
       />
     </div>

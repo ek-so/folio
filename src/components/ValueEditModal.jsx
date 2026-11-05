@@ -34,7 +34,7 @@ export default function ValueEditModal({ title, description, value, color, onSav
               variant="ghost"
               size="icon"
               style={{ '--tag': `var(--tag-${i})` }}
-              className={cn('bg-[var(--tag)] text-white hover:bg-[var(--tag)] hover:opacity-80', picked === i && 'ring-2 ring-foreground ring-offset-2 ring-offset-card')}
+              className={cn('bg-[var(--tag)] text-primary-foreground hover:bg-[var(--tag)] hover:opacity-80', picked === i && 'ring-2 ring-foreground ring-offset-2 ring-offset-card')}
               onClick={() => setPicked(i)}
             >
               {picked === i && <Check weight="bold" />}
