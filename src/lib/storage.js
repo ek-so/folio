@@ -44,8 +44,9 @@ export const storage = {
   getTreeCollapsed: () => read(localStorage, TREE_KEY) === '1',
   setTreeCollapsed: (collapsed) => write(localStorage, TREE_KEY, collapsed ? '1' : null),
   // File manager's layout: 'list' | 'cards'
-  getFilesView: () => read(localStorage, FILES_VIEW_KEY) === 'cards' ? 'cards' : 'list',
-  setFilesView: (view) => write(localStorage, FILES_VIEW_KEY, view === 'cards' ? 'cards' : null),
+  // Cards unless the list was chosen
+  getFilesView: () => read(localStorage, FILES_VIEW_KEY) === 'list' ? 'list' : 'cards',
+  setFilesView: (view) => write(localStorage, FILES_VIEW_KEY, view === 'list' ? 'list' : null),
   getTheme: () => read(localStorage, THEME_KEY),
   setTheme: (theme) => write(localStorage, THEME_KEY, theme),
   // Session-only, so a reload keeps the current folder, open note and page
