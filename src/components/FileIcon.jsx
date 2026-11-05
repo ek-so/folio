@@ -2,16 +2,16 @@ import { Folder, FileText, FilePdf, FileImage, File, ArrowUpRight } from '@phosp
 import { fileKind } from '../lib/files.js'
 import { cn } from '@/lib/utils.js'
 
-// kind: [icon, icon color, card tint (light, darker on hover)]
+// kind: [icon, icon color, tint of the square behind a card's icon (light, darker while its card is hovered)]
 const ICONS = {
-  note: [FileText, 'text-primary', 'bg-primary/10 hover:bg-primary/20'],
-  pdf: [FilePdf, 'text-destructive', 'bg-destructive/10 hover:bg-destructive/20'],
-  image: [FileImage, 'text-file-image', 'bg-file-image/10 hover:bg-file-image/20'],
-  file: [File, 'text-primary', 'bg-primary/10 hover:bg-primary/20'],
+  note: [FileText, 'text-primary', 'bg-primary/10 group-hover:bg-primary/20'],
+  pdf: [FilePdf, 'text-destructive', 'bg-destructive/10 group-hover:bg-destructive/20'],
+  image: [FileImage, 'text-file-image', 'bg-file-image/10 group-hover:bg-file-image/20'],
+  file: [File, 'text-primary', 'bg-primary/10 group-hover:bg-primary/20'],
 }
-const FOLDER_TINT = 'bg-folder/10 hover:bg-folder/20'
+const FOLDER_TINT = 'bg-folder/10 group-hover:bg-folder/20'
 
-// Card background matching the icon's color
+// Background of the square behind a card's icon, matching the icon's color
 export const iconTint = (path, dir) => dir ? FOLDER_TINT : ICONS[fileKind(path)][2]
 
 // Text color of an item's icon

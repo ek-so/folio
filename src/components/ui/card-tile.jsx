@@ -3,15 +3,14 @@ import { cn } from '@/lib/utils'
 // One tile of the cards layout (File manager): `icon` large on top, `title` under
 // it (`tall`: two lines tall even for a short name, so tiles are the same height; File manager
 // sets it when any name in the folder wraps), `trailing` (⋯) in the top right corner. Takes the same
-// props as ListRow (plus `tint`: background classes, light and darker on hover), so a list and its cards show the same things.
+// props as ListRow (plus `tint`: background classes of the square behind the icon), so a list and its cards show the same things.
 // `className` and `tileProps` (drag and drop) go on the tile itself.
 export function CardTile({ icon, title, trailing, onClick, tint, tall, dimmed, changed, disabled, tooltip, className, tileProps }) {
   return (
     <div
       {...tileProps}
       className={cn(
-        'group relative flex flex-col rounded-sm transition-colors',
-        tint,
+        'group relative flex flex-col rounded-sm border border-border transition-colors hover:border-muted-foreground/40 has-[[data-state=open]]:border-muted-foreground/40',
         className,
       )}
     >
@@ -25,7 +24,7 @@ export function CardTile({ icon, title, trailing, onClick, tint, tall, dimmed, c
           dimmed && 'opacity-50',
         )}
       >
-        {icon}
+        <span className={cn('flex size-12 items-center justify-center rounded-sm transition-colors', tint)}>{icon}</span>
         <span className={cn('line-clamp-2 w-full break-words', tall && 'min-h-[2lh]')}>
           <span data-card-label>
             {title}
