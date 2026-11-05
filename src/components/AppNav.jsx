@@ -45,8 +45,8 @@ export function NavRail({ page, pages, viewActions, onPage, onSearch, renderSync
       <p.icon /> {collapsed ? label(p.title) : <span className="min-w-0 truncate">{p.title}</span>}
     </Button>
   )
-  // my-3 + the 4px gap = 16px (--space) on both sides
-  const separator = <div role="separator" className="my-3 h-px w-full shrink-0 bg-border" />
+  // Items in a group touch (no gap); a separator has 16px (--space) on both sides
+  const separator = <div role="separator" className="my-space h-px w-full shrink-0 bg-border" />
   const collapseButton = (
     <Button variant="ghost" size="icon" aria-label={collapsed ? 'Expand menu' : 'Collapse menu'} tooltip={collapsed ? 'Expand menu' : 'Collapse menu'} tooltipSide={collapsed ? 'right' : undefined} aria-expanded={!collapsed} className="group shrink-0 focus-visible:bg-secondary" onClick={toggle}>
       {/* Collapsed, the logo stands in for the button until it's hovered or focused */}
@@ -55,7 +55,7 @@ export function NavRail({ page, pages, viewActions, onPage, onSearch, renderSync
     </Button>
   )
   return (
-    <nav aria-label="Main" style={collapsed ? undefined : { width }} className={cn('relative hidden md:flex shrink-0 flex-col gap-1 pt-space pb-space-lg pl-space-lg pr-space-sm', collapsed ? 'items-center' : 'max-w-[25vw]')}>
+    <nav aria-label="Main" style={collapsed ? undefined : { width }} className={cn('relative hidden md:flex shrink-0 flex-col pt-space pb-space-lg pl-space-lg pr-space-sm', collapsed ? 'items-center' : 'max-w-[25vw]')}>
       {collapsed ? <>
         {/* Collapsed: the logo button (level with the title bars' rows) and, while the tree is hidden,
             the tree button, grouped like any items, then one separator (expanded: the header row, then it) */}
@@ -65,12 +65,12 @@ export function NavRail({ page, pages, viewActions, onPage, onSearch, renderSync
       </> : <>
         <div className="flex shrink-0 items-center gap-space-sm self-stretch border-t border-t-transparent pt-space-sm pl-3">
           <span className="flex flex-1 items-center gap-2 text-base font-bold"><AppLogo className="size-6" />Folio</span>
-          <div className="flex items-center gap-1">{collapseButton}{treeButton}</div>
+          <div className="flex items-center">{collapseButton}{treeButton}</div>
         </div>
         {separator}
       </>}
       {renderSync(collapsed)}
-      {/* Search right under Sync (the items' 4px gap), a plain item like the others */}
+      {/* Search right under Sync, a plain item like the others */}
       <Button variant="ghost" tooltip={hint('Search')} tooltipSide="right" className={cn('justify-start gap-3 font-normal', collapsed && 'size-control justify-center px-0')} onClick={onSearch}>
         <MagnifyingGlass /> {label('Search')}
       </Button>
