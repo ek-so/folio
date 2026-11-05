@@ -9,6 +9,7 @@ import { storage } from '../lib/storage.js'
 import { RAIL_WIDTH } from '../lib/resize.js'
 import { useResizableWidth } from '../hooks/useResizableWidth.js'
 import ResizeHandle from './ResizeHandle.jsx'
+import { useHideOnScroll } from '../hooks/useHideOnScroll.js'
 import AppLogo from './AppLogo.jsx'
 
 // The open page's button: light accent fill, accent text
@@ -82,10 +83,14 @@ export function NavRail({ page, onPage, onSearch, renderSync, menu, onShowTree }
 }
 
 // Phones: a bar at the top with ☰ (every page, then the rest), the file-tree
-// button (`tree`: on the main pages), Search and Sync.
-export function TopBar({ page, onPage, onSearch, renderSync, menu, tree }) {
+// button (`tree`: on the main pages), Search and Sync. It slides away while
+// the content scrolls down and returns on scrolling up (`useHideOnScroll`).
+export function TopBar({ host, resetKey, page, onPage, onSearch, renderSync, menu, tree }) {
+  const hidden = useHideOnScroll(host, resetKey)
   return (
-    <nav aria-label="Main" className="flex shrink-0 items-center gap-2 px-space-sm py-space md:hidden">
+    <div className={cn('grid shrink-0 transition-[grid-template-rows,visibility] duration-200 md:hidden', hidden ? 'grid-rows-[0fr] invisible' : 'grid-rows-[1fr]')}>
+    <nav aria-label="Main" className="min-h-0 overflow-hidden">
+    <div className="flex items-center gap-2 px-space-sm py-space">
       <AccountMenu
         {...menu} current={page} onNavigate={onPage}
         trigger={
@@ -100,6 +105,8 @@ export function TopBar({ page, onPage, onSearch, renderSync, menu, tree }) {
       </Button>
       <div className="flex-1" />
       {renderSync(false)}
+    </div>
     </nav>
+    </div>
   )
 }

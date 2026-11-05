@@ -98,6 +98,7 @@ export default function App() {
   const [syncCheck, setSyncCheck] = useState(false) // broken-links sheet before syncing
   const [uploadClash, setUploadClash] = useState(null) // { name, folder, resolve } while asking
   const [uploadErrors, setUploadErrors] = useState([]) // [name, reason] after adding files
+  const mainRef = useRef(null) // the page's column: the phone top bar hides while it scrolls
   const started = useRef(false) // false until the first URL is set (replaced, not pushed)
   const replaceNext = useRef(false) // the next URL change replaces the history entry
   const known = useRef({ files: new Set(), folders: [] }) // what exists, for Back / Forward
@@ -439,8 +440,8 @@ export default function App() {
         <PullToRefresh onRefresh={() => window.location.reload()}>
           <div className="flex flex-1 min-h-0">
           <NavRail page={page} onPage={choosePage} onSearch={() => setSearchOpen(true)} renderSync={renderSync} menu={menu} onShowTree={treeCollapsed && page === mainPage ? toggleTree : null} />
-          <main className="flex flex-col flex-1 min-w-0 min-h-0">
-          <TopBar tree={page === mainPage} page={page} onPage={choosePage} onSearch={() => setSearchOpen(true)} renderSync={renderSync} menu={menu} />
+          <main ref={mainRef} className="flex flex-col flex-1 min-w-0 min-h-0">
+          <TopBar host={mainRef} resetKey={`${page}|${selectedFile}|${folder}`} tree={page === mainPage} page={page} onPage={choosePage} onSearch={() => setSearchOpen(true)} renderSync={renderSync} menu={menu} />
           {page === PAGE.SETTINGS ? (
             <Settings login={auth.user.login} repo={auth.repo} theme={theme} onTheme={setTheme} />
           ) : !view ? (
