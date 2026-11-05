@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { CaretDown, Check, Trash, PencilSimple } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
 import { Badge } from './ui/badge.jsx'
@@ -8,6 +8,7 @@ import { Popover, PopoverTrigger, PopoverContent } from './ui/popover.jsx'
 import { Button } from './ui/button.jsx'
 import ConfirmModal from './ConfirmModal.jsx'
 import ValueEditModal from './ValueEditModal.jsx'
+import { useSingleOpen } from '../hooks/useSingleOpen.jsx'
 import { valueList, valueColors, DESCRIPTION } from '../lib/frontmatter.js'
 import { inlineHtml } from '../lib/previewLinks.js'
 
@@ -88,6 +89,7 @@ export default function PropertyBadges({ props, path, files, clamp, title, class
         title={`Edit “${editing.value}”`}
         description={`Applies to ${valueCount(editing.key, editing.value)} note${valueCount(editing.key, editing.value) === 1 ? '' : 's'} with it in ${scopeName}. It changes on GitHub when you sync.`}
         value={editing.value}
+        others={(options?.(editing.key) ?? []).filter(v => v !== editing.value)}
         color={colors[editing.key]?.get(editing.value) ?? 0}
         onSave={(name, color) => {
           // Unchanged: nothing is saved (that would pin the automatic color)
@@ -113,25 +115,13 @@ export default function PropertyBadges({ props, path, files, clamp, title, class
 // Closing a popover gives the focus back to its badge; when another popover has just opened
 // (it has the focus), that would pull the focus out of it and close it too
 const keepFocusInOtherPopover = e => {
-  if (document.activeElement?.closest('[data-radix-popper-content-wrapper]')) e.preventDefault()
+  if (document.activeElement?.closest('[data-badge-popover]')) e.preventDefault()
 }
-
-// The `setOpen` of the badge whose popover is open, if any
-let closeOpenPopover = null
 
 // One value of a property as a badge with a ▾ that opens the property's popover
 // (`label` null: the property is empty and shows its name)
 function EditableBadge({ prop, label, color, options, onChange, onRemove, onEdit }) {
-  const [open, setOpenState] = useState(false)
-  // Only one popover is open at a time, across every badge and card: opening one closes the open one
-  function setOpen(next) {
-    if (next) {
-      if (closeOpenPopover && closeOpenPopover !== setOpenState) closeOpenPopover(false)
-      closeOpenPopover = setOpenState
-    } else if (closeOpenPopover === setOpenState) closeOpenPopover = null
-    setOpenState(next)
-  }
-  useEffect(() => () => { if (closeOpenPopover === setOpenState) closeOpenPopover = null }, [])
+  const [open, setOpen] = useSingleOpen()
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -147,7 +137,7 @@ function EditableBadge({ prop, label, color, options, onChange, onRemove, onEdit
         </Badge>
       </PopoverTrigger>
       {/* Opening it doesn't focus the field (the keyboard on a phone): the panel takes the focus, a tap or Tab reaches the field */}
-      <PopoverContent {...own} tabIndex={-1} onOpenAutoFocus={e => { e.preventDefault(); e.currentTarget.focus() }} onCloseAutoFocus={keepFocusInOtherPopover}>
+      <PopoverContent {...own} data-badge-popover tabIndex={-1} onOpenAutoFocus={e => { e.preventDefault(); e.currentTarget.focus() }} onCloseAutoFocus={keepFocusInOtherPopover}>
         <ValueChooser prop={prop} options={options?.(prop.key) ?? []} onChange={onChange} onRemove={onRemove && (value => { setOpen(false); onRemove(value) })} onEdit={onEdit && (value => { setOpen(false); onEdit(value) })} close={() => setOpen(false)} />
       </PopoverContent>
     </Popover>

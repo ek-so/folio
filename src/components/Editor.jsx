@@ -16,7 +16,7 @@ import PropertyBadges from './PropertyBadges.jsx'
 // whole markdown shown as preview; ✏️ in the title bar edits the markdown,
 // starting where you were reading, and a double tap starts at the tapped
 // word. Edits save on their own; ✓ (same spot) only switches back to preview.
-export default function Editor({ linkedBy, onOpenLink, path, entry, files, notes, onEditNotes, tagColors, onTagColor, edited, onEdit, onNavigate, onOpenFile, onRename, onDelete, onMove, folders, backlinks }) {
+export default function Editor({ linkedBy, onOpenLink, path, entry, files, notes, onEditNotes, tagColors, edited, onEdit, onNavigate, onOpenFile, onRename, onDelete, onMove, folders, backlinks }) {
   const { content, change, loading, loadError } = useNote(entry, edited, onEdit)
   const [mode, setMode] = useState('preview')
   const [editedAt, setEditedAt] = useState(null) // offset to show when back in preview
@@ -49,13 +49,11 @@ export default function Editor({ linkedBy, onOpenLink, path, entry, files, notes
     onEditNotes(nearby.filter(p => p !== path), t => withoutValue(t, key, value))
   }
 
-  // `from` renamed `to` in all of them, and given `color`
+  // `from` renamed `to` in all of them, and given `color`: this one as an edit (its text may have
+  // typing not saved yet), the others and the color in one step
   const editValue = (key, from, to, color) => {
-    if (to !== from) {
-      change(renameValue(content, key, from, to))
-      onEditNotes(nearby.filter(p => p !== path), t => renameValue(t, key, from, to))
-    }
-    onTagColor(key, to, color)
+    if (to !== from) change(renameValue(content, key, from, to))
+    onEditNotes(to === from ? [] : nearby.filter(p => p !== path), t => renameValue(t, key, from, to), tagColors.set(key, to, color))
   }
 
   const fileName = displayName(path)

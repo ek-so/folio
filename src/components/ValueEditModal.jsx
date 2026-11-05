@@ -8,11 +8,23 @@ import { PROPERTY_COLORS } from '../lib/frontmatter.js'
 
 // Edits one value of a property: its name and its color (`color`: 0 …
 // PROPERTY_COLORS - 1, the --tag-N of index.css). `description` says where it
-// applies. Save calls `onSave(name, color)`.
-export default function ValueEditModal({ title, description, value, color, onSave, onClose }) {
+// applies; `others`: the property's other values (a name taken by one merges them). Save calls
+// `onSave(name, color)`.
+export default function ValueEditModal({ title, description, value, others, color, onSave, onClose }) {
   const [name, setName] = useState(value)
   const [picked, setPicked] = useState(color)
   const trimmed = name.trim()
+  const merges = others.includes(trimmed)
+
+  // Arrow keys move between the colors (the picked one is the tab stop)
+  function arrow(e) {
+    const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key]
+    if (!step) return
+    e.preventDefault()
+    const next = (picked + step + PROPERTY_COLORS) % PROPERTY_COLORS
+    setPicked(next)
+    e.currentTarget.children[next].focus()
+  }
 
   function save(e) {
     e.preventDefault()
@@ -23,13 +35,15 @@ export default function ValueEditModal({ title, description, value, color, onSav
     <BottomSheet title={title} description={description} onClose={onClose}>
       <form onSubmit={save} className="flex flex-col gap-3">
         <Input value={name} onChange={e => setName(e.target.value)} aria-label="Name" autoCorrect="off" className="bg-background border-border" />
-        <div role="radiogroup" aria-label="Color" className="flex flex-wrap gap-space-sm">
+        {merges && <p className="text-sm text-muted-foreground">“{trimmed}” already exists. They become one value.</p>}
+        <div role="radiogroup" aria-label="Color" onKeyDown={arrow} className="flex flex-wrap gap-space-sm">
           {Array.from({ length: PROPERTY_COLORS }, (_, i) => (
             <Button
               key={i}
               type="button"
               role="radio"
               aria-checked={picked === i}
+              tabIndex={picked === i ? 0 : -1}
               aria-label={`Color ${i + 1}`}
               variant="ghost"
               size="icon"

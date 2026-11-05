@@ -44,6 +44,7 @@ import { fileView, folderView, startTrails, currentView, openView, trailTo, move
 import { toast } from 'sonner'
 import { Toaster } from './components/ui/sonner.jsx'
 import { TooltipProvider } from './components/ui/tooltip.jsx'
+import { SingleOpenProvider } from './hooks/useSingleOpen.jsx'
 import { cache } from './lib/cache.js'
 import {
   listDir, nameError, renameTarget, renameError, createError, add, setEdit, rename, remove, getAllFolders,
@@ -560,6 +561,7 @@ export default function App() {
         syncing: repo.syncing,
       }}>
       <TooltipProvider>
+        <SingleOpenProvider>
       <div className="flex flex-col h-full bg-background">
         <Toaster theme={theme} />
         <PullToRefresh onRefresh={() => window.location.reload()}>
@@ -610,8 +612,7 @@ export default function App() {
               files={virtual}
               notes={links.notes}
               tagColors={tagColors}
-              onTagColor={(key, value, color) => update(tagColors.set(key, value, color))}
-              onEditNotes={(paths, edit) => update(ch => paths.reduce((c, p) => editNote(c, repo.remote?.files ?? {}, p, edit, links.remoteText), ch))}
+              onEditNotes={(paths, edit, first = ch => ch) => update(ch => paths.reduce((c, p) => editNote(c, repo.remote?.files ?? {}, p, edit, links.remoteText), first(ch)))}
               edited={changes.edits[entry.orig]}
               onEdit={(content, original) =>
                 update(ch => setEdit(ch, virtual[selectedFile], content, original))}
@@ -778,6 +779,7 @@ export default function App() {
           />
         )}
       </div>
+        </SingleOpenProvider>
       </TooltipProvider>
       </NavContext.Provider>
     </LinksContext.Provider>
