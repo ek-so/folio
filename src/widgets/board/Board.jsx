@@ -292,7 +292,7 @@ function Card({ path, text, board, onOpen }) {
 // What a card shows: the file's name, its description, the board's chosen properties' values
 const CardBody = forwardRef(function CardBody({ path, text, board, className, ...props }, ref) {
   const fm = text === undefined ? [] : frontMatter(text)?.props ?? []
-  const shown = [DESCRIPTION, ...board.properties].flatMap(key => fm.filter(p => p.key === key))
+  const shown = fm.filter(p => p.key === DESCRIPTION || board.properties.includes(p.key)) // in the file's order
   return (
     <button
       ref={ref}

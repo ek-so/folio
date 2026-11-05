@@ -2,27 +2,40 @@ import { cn } from '@/lib/utils'
 import { Badge } from './ui/badge.jsx'
 import { valueList, DESCRIPTION } from '../lib/frontmatter.js'
 
-// A note's properties (lib/frontmatter.js): its description as muted text
-// (`clamp`: cut after three lines), then the others as badges, one per value,
-// without the property's name (its tooltip has it); empty ones aren't shown.
-// `props`: [{ key, value }]. Used in the note's preview and on board cards.
-export default function PropertyBadges({ props, clamp, className }) {
-  const description = valueList(props.find(p => p.key === DESCRIPTION)?.value ?? '').join(', ')
-  const badges = props.filter(p => p.key !== DESCRIPTION)
-    .flatMap(({ key, value }) => valueList(value).map((v, i) => [`${key}:${i}`, key, v]))
-  if (!description && !badges.length) return null
+// A note's properties (lib/frontmatter.js), in the file's order: its
+// description as muted text (`clamp`: cut after three lines), the others as
+// badges, one per value, without the property's name (its tooltip has it), so
+// badges listed before the description show above it and the rest below.
+// Empty ones aren't shown. `props`: [{ key, value }]. `title`: in a box with
+// that small title on top (the note's preview); without it, bare (board cards).
+export default function PropertyBadges({ props, clamp, title, className }) {
+  const parts = [] // [{ text }] or [{ badges: [[id, key, value]] }], in order
+  for (const { key, value } of props) {
+    const values = valueList(value)
+    if (!values.length) continue
+    if (key === DESCRIPTION) { parts.push({ text: values.join(', ') }); continue }
+    if (!parts.at(-1)?.badges) parts.push({ badges: [] })
+    parts.at(-1).badges.push(...values.map((v, i) => [`${key}:${i}`, key, v]))
+  }
+  if (!parts.length) return null
+  const body = parts.map((part, i) => part.text
+    ? <p key={i} className={cn('break-words text-sm text-muted-foreground', clamp && 'line-clamp-3')}>{part.text}</p>
+    : (
+      <div key={i} className="flex flex-wrap gap-space-xs">
+        {part.badges.map(([id, key, value]) => (
+          <Badge key={id} title={`${key}: ${value}`}>
+            <span className="truncate">{value}</span>
+          </Badge>
+        ))}
+      </div>
+    ))
+  if (!title) return <div className={cn('flex flex-col gap-space-sm', className)}>{body}</div>
   return (
-    <div className={cn('flex flex-col gap-space-sm', className)}>
-      {description && <p className={cn('break-words text-sm text-muted-foreground', clamp && 'line-clamp-3')}>{description}</p>}
-      {badges.length > 0 && (
-        <div className="flex flex-wrap gap-space-xs">
-          {badges.map(([id, key, value]) => (
-            <Badge key={id} title={`${key}: ${value}`}>
-              <span className="truncate">{value}</span>
-            </Badge>
-          ))}
-        </div>
-      )}
+    <div className={className}>
+      <section className="flex flex-col gap-space-sm rounded-lg border border-border p-space-sm">
+        <h2 className="text-xs font-medium text-muted-foreground">{title}</h2>
+        {body}
+      </section>
     </div>
   )
 }

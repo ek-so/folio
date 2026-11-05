@@ -82,7 +82,7 @@ export default function Editor({ linkedBy, onOpenLink, path, entry, files, edite
           onDoubleTap={startEditing} onChange={change} onOpenFile={onOpenFile} onNavigate={onNavigate}
           footer={<Backlinks links={backlinks} onOpen={onOpenFile} />}
         >
-          <PropertyBadges props={frontMatter(content)?.props ?? []} className="px-space pt-space" />
+          <PropertyBadges props={frontMatter(content)?.props ?? []} title="Metadata" className="px-space pt-space" />
         </MarkdownPreview>
       )}
     </FilePage>
