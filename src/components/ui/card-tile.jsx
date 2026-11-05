@@ -10,7 +10,7 @@ export function CardTile({ icon, title, trailing, onClick, tint, tall, dimmed, c
     <div
       {...tileProps}
       className={cn(
-        'group relative flex flex-col rounded-sm border border-border transition-colors hover:bg-secondary/60 has-[[data-state=open]]:bg-secondary/60',
+        'group relative flex flex-col rounded-lg border border-border transition-colors hover:bg-secondary/60 has-[[data-state=open]]:bg-secondary/60',
         className,
       )}
     >
