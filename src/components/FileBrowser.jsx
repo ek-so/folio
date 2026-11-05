@@ -102,7 +102,7 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
           <p className="text-muted-foreground text-sm text-center py-12">No notes yet</p>
         )}
         {!loading && (
-          <ul className={cn('p-space', view === 'cards' && 'grid grid-cols-[repeat(auto-fill,minmax(120px,1fr))] gap-space-sm')}>
+          <ul className={cn('p-space', view === 'cards' && 'grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-space-sm')}>
             {items.map(item => {
               const [base, ext] = item.type === 'dir' ? [item.name, ''] : splitName(item.name)
               const isLink = item.path in symlinks
