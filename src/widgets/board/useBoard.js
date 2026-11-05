@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { boardPath, parseBoard, serializeBoard, boardColumns, placeCard, moveColumn, withBoardKeys, editNotes, emptyColumn, isTechnical } from './board.js'
 import { editNote } from '@/lib/changes.js'
 import { DESCRIPTION, frontMatter, withoutKeys, renameKey, keyNameError, withValue, withoutValue, valuesOf, countValue } from '@/lib/frontmatter.js'
@@ -15,9 +16,10 @@ export function useBoard(id, services) {
   const folderOf = path => path.slice(0, Math.max(path.lastIndexOf('/'), 0))
   // Every note of the board (on this device; no technical files), and its properties as [key, …] per note
   const prefix = board?.folder ? board.folder + '/' : ''
-  const texts = board ? Object.entries(services.notes)
+  const texts = useMemo(() => board ? Object.entries(services.notes)
     .filter(([p]) => p.startsWith(prefix) && !isTechnical(p.slice(prefix.length)))
-    .map(([, text]) => text) : []
+    .map(([, text]) => text) : [], [services.notes, prefix, !!board])
+  const valuesByKey = useMemo(() => new Map(), [texts]) // every card asks for its properties' values on every render
   const noteKeys = texts.map(text => frontMatter(text)?.props.map(p => p.key) ?? [])
   // A name that can't be a property here: an error message, or null
   const keyError = key => keyNameError(key) ?? (key === DESCRIPTION ? 'The description is always shown.' : null)
@@ -54,7 +56,10 @@ export function useBoard(id, services) {
     notesWith: key => noteKeys.filter(keys => keys.includes(key)).length,
     keyError,
     // What the board's notes have as the property `key`, to choose from
-    valuesOf: key => valuesOf(texts, key),
+    valuesOf: key => {
+      if (!valuesByKey.has(key)) valuesByKey.set(key, valuesOf(texts, key))
+      return valuesByKey.get(key)
+    },
     // The property `key` of the card `path` set to `value` (a string, or a list of them)
     setProperty: (path, key, value) =>
       update(ch => editNote(ch, services.remoteFiles, path, t => withValue(t, key, value), services.remoteText)),

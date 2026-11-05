@@ -8,7 +8,7 @@ import { Popover, PopoverTrigger, PopoverContent } from './ui/popover.jsx'
 import { Tip } from './ui/tooltip.jsx'
 import { Button } from './ui/button.jsx'
 import ConfirmModal from './ConfirmModal.jsx'
-import { valueList, propertyColor, DESCRIPTION } from '../lib/frontmatter.js'
+import { valueList, valueColors, DESCRIPTION } from '../lib/frontmatter.js'
 import { inlineHtml } from '../lib/previewLinks.js'
 
 // A click or press inside a badge or its popover is the property's, never the
@@ -16,9 +16,9 @@ import { inlineHtml } from '../lib/previewLinks.js'
 // events pass through portals to the parent
 const own = { onClick: e => e.stopPropagation(), onMouseDown: e => e.stopPropagation(), onTouchStart: e => e.stopPropagation() }
 
-// A badge's color: its property's hue (--tag-N, index.css) tinted against the card; a bit stronger on hover
-const tint = key => ({
-  style: { '--tag': `var(--tag-${propertyColor(key)})` },
+// A badge's color: its value's hue within its property (--tag-N, index.css), grey when empty; tinted against the card, a bit stronger on hover
+const tint = color => ({
+  style: { '--tag': color === undefined ? 'var(--muted-foreground)' : `var(--tag-${color})` },
   className: 'bg-[color-mix(in_oklab,var(--tag)_var(--tag-tint),var(--card))]',
 })
 const TINT_HOVER = 'hover:bg-[color-mix(in_oklab,var(--tag)_calc(var(--tag-tint)_*_1.7),var(--card))]'
@@ -49,6 +49,9 @@ export default function PropertyBadges({ props, path, files, clamp, title, class
     parts.at(-1).badges.push(...labels.map((label, i) => ({ id: `${prop.key}:${i}`, prop, label })))
   }
   if (!parts.length) return null
+  // Each property's values (all it can have, so none shares a color with another)
+  const colors = Object.fromEntries([...new Set(props.map(p => p.key))].map(key =>
+    [key, valueColors(key, [...(options?.(key) ?? []), ...valueList(props.find(p => p.key === key).value)])]))
   const body = parts.map((part, i) => part.text
     ? <p
         key={i}
@@ -58,10 +61,10 @@ export default function PropertyBadges({ props, path, files, clamp, title, class
     : (
       <div key={i} className="flex flex-wrap gap-space-xs">
         {part.badges.map(({ id, prop, label }) => onChange
-          ? <EditableBadge key={id} prop={prop} label={label} options={options} onChange={onChange} onRemove={onRemoveValue && (value => setRemoving({ key: prop.key, value }))} />
+          ? <EditableBadge key={id} prop={prop} label={label} color={colors[prop.key].get(label)} options={options} onChange={onChange} onRemove={onRemoveValue && (value => setRemoving({ key: prop.key, value }))} />
           : (
             <Tip key={id} content={`${prop.key}: ${label}`}>
-              <Badge {...tint(prop.key)}><span className="truncate">{label}</span></Badge>
+              <Badge {...tint(colors[prop.key].get(label))}><span className="truncate">{label}</span></Badge>
             </Tip>
           ))}
       </div>
@@ -91,7 +94,7 @@ export default function PropertyBadges({ props, path, files, clamp, title, class
 
 // One value of a property as a badge with a ▾ that opens the property's popover
 // (`label` null: the property is empty and shows its name)
-function EditableBadge({ prop, label, options, onChange, onRemove }) {
+function EditableBadge({ prop, label, color, options, onChange, onRemove }) {
   const [open, setOpen] = useState(false)
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -100,8 +103,8 @@ function EditableBadge({ prop, label, options, onChange, onRemove }) {
           <Badge
             as="button"
             type="button"
-            style={tint(prop.key).style}
-            className={cn('cursor-pointer outline-none focus-visible:ring-1 focus-visible:ring-ring', tint(prop.key).className, TINT_HOVER, label === null && 'text-muted-foreground')}
+            style={tint(color).style}
+            className={cn('cursor-pointer outline-none focus-visible:ring-1 focus-visible:ring-ring', tint(color).className, TINT_HOVER, label === null && 'text-muted-foreground')}
             {...own}
           >
             <span className="truncate">{label ?? prop.key}</span>

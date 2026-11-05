@@ -58,7 +58,7 @@
     --callout-warning: oklch(0.72 0.15 75);
     --callout-caution: oklch(0.6 0.2 27);
     --callout-tint: 14%;
-    /* Property badges: one hue per property (lib/frontmatter.js propertyColor), tinted against --card */
+    /* Property badges: one hue per value of a property (lib/frontmatter.js valueColors), tinted against --card */
     --tag-0: oklch(0.65 0.15 27);
     --tag-1: oklch(0.7 0.15 55);
     --tag-2: oklch(0.75 0.14 85);

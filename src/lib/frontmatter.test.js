@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { frontMatter, properties, withKeys, blankFrontMatter, valueList, noteTitle, withoutKeys, renameKey, keyNameError, withValue, valuesOf, propertyColor, withoutValue, countValue } from './frontmatter.js'
+import { frontMatter, properties, withKeys, blankFrontMatter, valueList, noteTitle, withoutKeys, renameKey, keyNameError, withValue, valuesOf, valueColors, withoutValue, countValue } from './frontmatter.js'
 
 describe('front matter', () => {
   it('reads flat keys, lists and quoted values', () => {
@@ -76,10 +76,12 @@ describe('front matter', () => {
     expect(valuesOf(notes, 't')).toEqual(['a', 'b'])
   })
 
-  it('gives each usual property its own badge color', () => {
-    const keys = ['type', 'priority', 'due date', 'status', 'tags', 'project', 'date', 'owner']
-    expect(new Set(keys.map(propertyColor)).size).toBe(keys.length)
-    expect(propertyColor('type')).toBe(propertyColor('type'))
+  it('gives the values of a property different colors', () => {
+    const values = ['regular', 'recurring', 'errand', 'x', 'y', 'z', 'one', 'two', 'three', 'four']
+    const colors = valueColors('type', values)
+    expect(new Set(colors.values()).size).toBe(10)
+    expect(valueColors('type', ['a', 'b', 'c']).get('b')).toBe(valueColors('type', ['b', 'c', 'a']).get('b'))
+    expect(valueColors('type', ['a']).get('a')).toBe(valueColors('type', ['a', 'q']).get('a'))
   })
 
   it('takes a value out of a property', () => {
