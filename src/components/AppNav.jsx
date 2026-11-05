@@ -65,8 +65,7 @@ export function NavRail({ page, pages, viewActions, onPage, onSearch, renderSync
       </> : <>
         <div className="flex shrink-0 items-center gap-space-sm self-stretch border-t border-t-transparent pt-space-sm pl-3">
           <span className="flex flex-1 items-center gap-2 text-base font-bold"><AppLogo className="size-6" />Folio</span>
-          {collapseButton}
-          {treeButton}
+          <div className="flex items-center gap-1">{collapseButton}{treeButton}</div>
         </div>
         {separator}
       </>}
