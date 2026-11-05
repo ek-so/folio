@@ -36,7 +36,7 @@ export function NavRail({ page, pages, viewActions, onPage, onSearch, renderSync
   const label = text => collapsed ? <span className="sr-only">{text}</span> : text
   const hint = text => collapsed ? text : undefined
   const treeButton = onShowTree && (
-    <Button variant="ghost-outline" size="icon" aria-label="Show file tree" tooltip="Show file tree" className="shrink-0 border-muted-foreground/50" onClick={onShowTree}>
+    <Button variant="ghost" size="icon" aria-label="Show file tree" tooltip="Show file tree" tooltipSide={collapsed ? "right" : undefined} className="shrink-0" onClick={onShowTree}>
       <TreeView />
     </Button>
   )
