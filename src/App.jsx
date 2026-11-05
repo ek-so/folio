@@ -38,6 +38,7 @@ import { useTheme } from './hooks/useTheme.js'
 import { storage } from './lib/storage.js'
 import { PAGE, mainPages } from './lib/pages.js'
 import { isConfigPath, addView, renameView, removeView, VIEWS_PATH, parseViews, serializeViews, addWidget, removeWidget } from './lib/viewsConfig.js'
+import { withKeys } from './lib/frontmatter.js'
 import { boardPath, parseBoard, serializeBoard, newBoard, boardColumns, movedBoard, withBoardKeys, placeCard, moveColumn, DESCRIPTION } from './lib/board.js'
 import { urlForPage, pageForUrl, existingView } from './lib/url.js'
 import { fileView, folderView, startTrails, currentView, openView, trailTo, movedTrails, keptTrails } from './lib/views.js'
@@ -46,7 +47,7 @@ import { Toaster } from './components/ui/sonner.jsx'
 import { cache } from './lib/cache.js'
 import {
   listDir, nameError, renameTarget, renameError, createError, add, setEdit, rename, remove, getAllFolders,
-  upload, replaceUpload, freePath, virtualFiles, MAX_UPLOAD_BYTES,
+  upload, replaceUpload, freePath, virtualFiles, splitName, MAX_UPLOAD_BYTES,
 } from './lib/changes.js'
 
 const BASE = import.meta.env.BASE_URL
@@ -113,7 +114,7 @@ export default function App() {
     if (history.state?.prev === urlForPage(BASE, mainPage, currentView(mainPage, rest))) history.back()
     else setTrails(o => ({ ...o, [mainPage]: rest }))
   }
-  const [newFile, setNewFile] = useState(null) // { folder, kind } while the sheet is open
+  const [newFile, setNewFile] = useState(null) // { folder, kind, keys?, stay? } while the sheet is open (keys: a new note's properties; stay: don't open it)
   const [viewDialog, setViewDialog] = useState(null) // { kind: 'add' } or { kind: 'rename' | 'delete', view } while a view's dialog is open
   const [boardFor, setBoardFor] = useState(null) // the view a board is being added to (picking its folder)
   const [confirmSignOut, setConfirmSignOut] = useState(false)
@@ -211,37 +212,51 @@ export default function App() {
   // Notes whose links change if `item` moves to `to` (their path -> new text),
   // from `edits` (the latest local changes). The moved notes' own links are
   // rewritten too, so relative paths keep working from the new place.
-  function linkRewrites(item, to, edits) {
+  // `files`: the files those edits make (default: as they are now).
+  function linkRewrites(item, to, edits, files = virtual) {
     const mapPath = p => p === item.path || p.startsWith(item.path + '/') ? to + p.slice(item.path.length) : p
     const out = new Map()
-    for (const [path, entry] of Object.entries(virtual)) {
+    for (const [path, entry] of Object.entries(files)) {
       if (!path.endsWith('.md')) continue
       const text = edits[entry.orig] ?? links.remoteText(entry.sha)
       if (text === undefined) continue // not on this device yet
-      const next = rewriteLinks(text, path, mapPath(path), mapPath, virtual)
+      const next = rewriteLinks(text, path, mapPath(path), mapPath, files)
       if (next !== text) out.set(path, next)
     }
     return out
   }
 
+  // The files `ch` makes
+  const filesOf = ch => virtualFiles(repo.remote?.files ?? {}, ch)
+  // Board `id`'s settings as `ch` has them
+  function boardIn(ch, id) {
+    const entry = filesOf(ch)[boardPath(id)]
+    const text = entry && ch.edits[entry.orig]
+    return text !== undefined ? parseBoard(text) : boards[id]?.board
+  }
+
+  // `ch` with `item` moved to path `to`: links to and from it are rewritten in
+  // the same local changes (one commit), and boards keep their folder, columns and order
+  function relocated(ch, item, to) {
+    const files = filesOf(ch)
+    let next = rename(ch, files, item.path, to, item.type === 'dir')
+    for (const [path, text] of linkRewrites(item, to, ch.edits, files)) {
+      const entry = files[path]
+      next = setEdit(next, entry, text, links.remoteText(entry.sha) ?? '')
+    }
+    for (const id of Object.keys(boards)) {
+      const board = boardIn(next, id)
+      if (!board) continue
+      const moved = serializeBoard(movedBoard(board, item.path, to, item.type === 'dir'))
+      if (moved !== serializeBoard(board)) next = config.write(boardPath(id), moved)(next)
+    }
+    return next
+  }
+
   // Rename or move `item` to path `to`; the open folder / note follows it
-  // Links to and from it are rewritten in the same local changes (one commit), and boards follow it.
   function relocate(item, to) {
     window.dispatchEvent(new Event('folio:flush')) // typing in an open note first
-    update(ch => {
-      let next = rename(ch, virtual, item.path, to, item.type === 'dir')
-      for (const [path, text] of linkRewrites(item, to, ch.edits)) {
-        const entry = virtual[path]
-        next = setEdit(next, entry, text, links.remoteText(entry.sha) ?? '')
-      }
-      // Boards keep their folder, columns and order
-      for (const [id, { board }] of Object.entries(boards)) {
-        if (!board) continue
-        const moved = serializeBoard(movedBoard(board, item.path, to, item.type === 'dir'))
-        if (moved !== serializeBoard(board)) next = config.write(boardPath(id), moved)(next)
-      }
-      return next
-    })
+    update(ch => relocated(ch, item, to))
     followTrails(movedTrails(trails, item.path, to)) // the same files and folders, not newly opened ones
   }
 
@@ -294,6 +309,29 @@ export default function App() {
     update(config.write(boardPath(id), serializeBoard(next)))
   }
 
+  // A board's column (its folder) deleted: with its files, or after moving
+  // them right into the board's folder (No status; a taken name gets a number)
+  function deleteColumn(column, boardFolder, keepCards) {
+    window.dispatchEvent(new Event('folio:flush'))
+    if (!keepCards) { handleDelete({ path: column.path, type: 'dir' }); return }
+    const inside = Object.keys(virtual).filter(p => p.startsWith(column.path + '/') && !p.endsWith('/.gitkeep'))
+    const moves = []
+    update(ch => {
+      let next = ch
+      for (const path of inside) {
+        const item = { path, name: path.slice(path.lastIndexOf('/') + 1), type: 'file' }
+        const [stem, ext] = splitName(item.name)
+        const dir = boardFolder ? boardFolder + '/' : ''
+        let to = dir + item.name
+        for (let n = 2; renameError(next, filesOf(next), item, to); n++) to = `${dir}${stem} ${n}${ext}`
+        next = relocated(next, item, to)
+        moves.push([path, to])
+      }
+      return remove(next, filesOf(next), column.path, true)
+    })
+    followTrails(moves.reduce((t, [from, to]) => movedTrails(t, from, to), trails))
+  }
+
   function moveBoardColumn(id, name, index) {
     const { board, data } = boardData[id] ?? {}
     if (board && viewsReady) update(config.write(boardPath(id), serializeBoard(moveColumn(board, data, name, index))))
@@ -329,8 +367,9 @@ export default function App() {
       const path = `${base}.md`
       const err = createError(changes, virtual, [path])
       if (err) return err
-      update(ch => add(ch, repo.remote.files, path, `# ${name}\n\n`))
-      setSelectedFile(path)
+      // A board's new card starts with the board's properties, empty
+      update(ch => add(ch, repo.remote.files, path, withKeys(`# ${name}\n\n`, newFile.keys ?? [])))
+      if (!newFile.stay) setSelectedFile(path)
     }
     setNewFile(null)
     return null
@@ -539,7 +578,13 @@ export default function App() {
               boards={boardData}
               notes={links.notes}
               canEdit={viewsReady && !!repo.remote}
-              actions={{ onAddBoard: setBoardFor, onRemoveWidget: removeWidgetOf, onOpenFile: setSelectedFile, onPlaceCard: placeBoardCard, onMoveColumn: moveBoardColumn }}
+              actions={{
+                onAddBoard: setBoardFor, onRemoveWidget: removeWidgetOf, onOpenFile: setSelectedFile,
+                onPlaceCard: placeBoardCard, onMoveColumn: moveBoardColumn,
+                onNewColumn: folder => setNewFile({ folder, kind: 'folder' }),
+                onNewCard: (folder, board) => setNewFile({ folder, kind: 'note', keys: [DESCRIPTION, ...board.properties], stay: true }),
+                onRenameColumn: handleRename, onDeleteColumn: deleteColumn,
+              }}
             />
           ) : page === PAGE.LINKS ? (
             <BrokenLinks

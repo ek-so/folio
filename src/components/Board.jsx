@@ -1,5 +1,5 @@
 import { useState, forwardRef } from 'react'
-import { DotsThree, Trash } from '@phosphor-icons/react'
+import { DotsThree, Trash, Plus, Columns, PencilSimple } from '@phosphor-icons/react'
 import {
   DndContext, DragOverlay, MouseSensor, TouchSensor, useSensor, useSensors,
   closestCenter, closestCorners, pointerWithin,
@@ -11,6 +11,8 @@ import { Button } from './ui/button.jsx'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from './ui/dropdown-menu.jsx'
 import PropertyBadges from './PropertyBadges.jsx'
 import Spinner from './Spinner.jsx'
+import RenameModal from './RenameModal.jsx'
+import ColumnDeleteModal from './ColumnDeleteModal.jsx'
 import { displayName } from '../lib/files.js'
 import { frontMatter, valueList } from '../lib/frontmatter.js'
 import { DESCRIPTION, LOOSE } from '../lib/board.js'
@@ -48,6 +50,8 @@ export default function Board({ id, ready, board, data, title, notes, canEdit, a
     useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 8 } }),
   )
   const [drag, setDrag] = useState(null) // { id, type, items } while dragging: each column's cards as shown meanwhile
+  const [renaming, setRenaming] = useState(null) // the column whose Rename / Delete sheet is open
+  const [deleting, setDeleting] = useState(null)
 
   const menu = (
     <DropdownMenu>
@@ -57,6 +61,7 @@ export default function Board({ id, ready, board, data, title, notes, canEdit, a
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" onCloseAutoFocus={e => e.preventDefault()}>
+        <DropdownMenuItem disabled={!canEdit || !board || data?.missing} onSelect={() => actions.onNewColumn(board.folder)}><Columns /> New column</DropdownMenuItem>
         <DropdownMenuItem variant="destructive" disabled={!canEdit} onSelect={onRemove}><Trash /> Remove board</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -118,7 +123,11 @@ export default function Board({ id, ready, board, data, title, notes, canEdit, a
         <div data-no-pull className="-mx-space flex items-start gap-space-sm overflow-x-auto px-space pb-space-sm">
           <SortableContext items={columns.map(c => colId(c.key))} strategy={horizontalListSortingStrategy}>
             {columns.map(c => (
-              <Column key={c.key} column={c} count={items[c.key].length}>
+              <Column
+                key={c.key} column={c} count={items[c.key].length} canEdit={canEdit}
+                onNewCard={() => actions.onNewCard(c.key === LOOSE ? board.folder : c.path, board)}
+                onRename={() => setRenaming(c)} onDelete={() => setDeleting(c)}
+              >
                 <SortableContext items={items[c.key].map(cardId)} strategy={verticalListSortingStrategy}>
                   {items[c.key].map(path => <Card key={path} path={path} text={notes[path]} board={board} onOpen={actions.onOpenFile} />)}
                 </SortableContext>
@@ -146,6 +155,25 @@ export default function Board({ id, ready, board, data, title, notes, canEdit, a
         {menu}
       </div>
       {body}
+      {renaming && (
+        <RenameModal
+          item={{ name: renaming.name, path: renaming.path, type: 'dir' }}
+          onRename={name => {
+            const err = actions.onRenameColumn({ name: renaming.name, path: renaming.path, type: 'dir' }, name)
+            if (!err) setRenaming(null)
+            return err
+          }}
+          onClose={() => setRenaming(null)}
+        />
+      )}
+      {deleting && (
+        <ColumnDeleteModal
+          name={deleting.name}
+          count={deleting.cards.length}
+          onDelete={keep => { setDeleting(null); actions.onDeleteColumn(deleting, board.folder, keep) }}
+          onClose={() => setDeleting(null)}
+        />
+      )}
     </section>
   )
 }
@@ -159,8 +187,9 @@ function ColumnTitle({ column, count }) {
   )
 }
 
-// A column: a drop target for cards; its title moves it (not No status, which stays first)
-function Column({ column, count, children }) {
+// A column: a drop target for cards; its title moves it (not No status, which stays first).
+// ⋯ beside the title: Rename / Delete (not No status); New card under its cards.
+function Column({ column, count, canEdit, onNewCard, onRename, onDelete, children }) {
   const { setNodeRef, setActivatorNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
     id: colId(column.key),
     data: { type: 'column', key: column.key },
@@ -173,11 +202,27 @@ function Column({ column, count, children }) {
       className={cn('flex w-72 shrink-0 flex-col gap-space-sm rounded-lg bg-secondary/60 p-space-sm', isDragging && 'opacity-40')}
     >
       {column.key === LOOSE ? <ColumnTitle column={column} count={count} /> : (
-        <div ref={setActivatorNodeRef} {...attributes} {...listeners} className={cn('cursor-grab touch-manipulation select-none', NO_CALLOUT)}>
-          <ColumnTitle column={column} count={count} />
+        <div className="flex items-center gap-1">
+          <div ref={setActivatorNodeRef} {...attributes} {...listeners} className={cn('min-w-0 flex-1 cursor-grab touch-manipulation select-none', NO_CALLOUT)}>
+            <ColumnTitle column={column} count={count} />
+          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" aria-label={`Actions for ${column.name}`} disabled={!canEdit} className="size-control-md shrink-0 text-muted-foreground hover:bg-muted-foreground/10 data-[state=open]:bg-muted-foreground/10">
+                <DotsThree weight="bold" size={16} />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" onCloseAutoFocus={e => e.preventDefault()}>
+              <DropdownMenuItem onSelect={onRename}><PencilSimple /> Rename</DropdownMenuItem>
+              <DropdownMenuItem variant="destructive" onSelect={onDelete}><Trash /> Delete</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       )}
       {children}
+      <Button variant="ghost" disabled={!canEdit} className="justify-start gap-2 px-3 text-sm font-normal text-muted-foreground hover:bg-muted-foreground/10" onClick={onNewCard}>
+        <Plus /> New card
+      </Button>
     </div>
   )
 }
