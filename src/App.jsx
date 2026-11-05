@@ -42,6 +42,7 @@ import { urlForPage, pageForUrl, existingView } from './lib/url.js'
 import { fileView, folderView, startTrails, currentView, openView, trailTo, movedTrails, keptTrails } from './lib/views.js'
 import { toast } from 'sonner'
 import { Toaster } from './components/ui/sonner.jsx'
+import { TooltipProvider } from './components/ui/tooltip.jsx'
 import { cache } from './lib/cache.js'
 import {
   listDir, nameError, renameTarget, renameError, createError, add, setEdit, rename, remove, getAllFolders,
@@ -552,6 +553,7 @@ export default function App() {
         onSwitchRepo: switchRepo,
         syncing: repo.syncing,
       }}>
+      <TooltipProvider>
       <div className="flex flex-col h-full bg-background">
         <Toaster theme={theme} />
         <PullToRefresh onRefresh={() => window.location.reload()}>
@@ -765,6 +767,7 @@ export default function App() {
           />
         )}
       </div>
+      </TooltipProvider>
       </NavContext.Provider>
     </LinksContext.Provider>
   )

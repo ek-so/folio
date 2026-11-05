@@ -1,5 +1,6 @@
 import { cn } from '@/lib/utils'
 import { Badge } from './ui/badge.jsx'
+import { Tip } from './ui/tooltip.jsx'
 import { valueList, DESCRIPTION } from '../lib/frontmatter.js'
 
 // A note's properties (lib/frontmatter.js), in the file's order: its
@@ -23,9 +24,9 @@ export default function PropertyBadges({ props, clamp, title, className }) {
     : (
       <div key={i} className="flex flex-wrap gap-space-xs">
         {part.badges.map(([id, key, value]) => (
-          <Badge key={id} title={`${key}: ${value}`}>
-            <span className="truncate">{value}</span>
-          </Badge>
+          <Tip key={id} content={`${key}: ${value}`}>
+            <Badge><span className="truncate">{value}</span></Badge>
+          </Tip>
         ))}
       </div>
     ))

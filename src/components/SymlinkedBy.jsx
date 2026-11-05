@@ -12,7 +12,7 @@ export default function SymlinkedBy({ links, onOpen }) {
   if (!links?.length) return null
   if (links.length === 1) {
     return (
-      <Button variant="ghost-outline" size="sm" title={`Symlink: ${links[0]}`} aria-label={`Symlink: ${links[0]}`} onClick={() => onOpen(links[0])} className={`${buttonClass} min-w-0`}>
+      <Button variant="ghost-outline" size="sm" tooltip={`Symlink: ${links[0]}`} aria-label={`Symlink: ${links[0]}`} onClick={() => onOpen(links[0])} className={`${buttonClass} min-w-0`}>
         <ArrowDownRight />
         <span className="truncate">{nameOf(links[0])}</span>
       </Button>
@@ -21,7 +21,7 @@ export default function SymlinkedBy({ links, onOpen }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost-outline" size="sm" title={`${links.length} symlinks point here`} aria-label={`${links.length} symlinks point here`} className={buttonClass}>
+        <Button variant="ghost-outline" size="sm" tooltip={`${links.length} symlinks point here`} aria-label={`${links.length} symlinks point here`} className={buttonClass}>
           <ArrowDownRight />
           {links.length}
         </Button>

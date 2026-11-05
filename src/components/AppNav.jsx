@@ -36,12 +36,12 @@ export function NavRail({ page, pages, viewActions, onPage, onSearch, renderSync
   const label = text => collapsed ? <span className="sr-only">{text}</span> : text
   const hint = text => collapsed ? text : undefined
   const treeButton = onShowTree && (
-    <Button variant="ghost-outline" size="icon" aria-label="Show file tree" title="Show file tree" className="shrink-0 border-muted-foreground/50" onClick={onShowTree}>
+    <Button variant="ghost-outline" size="icon" aria-label="Show file tree" tooltip="Show file tree" className="shrink-0 border-muted-foreground/50" onClick={onShowTree}>
       <TreeView />
     </Button>
   )
   const pageButton = p => (
-    <Button variant="ghost" title={hint(p.title)} aria-current={page === p.id ? 'page' : undefined} className={cn(item(p.id), !collapsed && 'w-full', !collapsed && p.view && 'pr-10')} onClick={() => onPage(p.id)}>
+    <Button variant="ghost" tooltip={hint(p.title)} tooltipSide="right" aria-current={page === p.id ? 'page' : undefined} className={cn(item(p.id), !collapsed && 'w-full', !collapsed && p.view && 'pr-10')} onClick={() => onPage(p.id)}>
       <p.icon /> {collapsed ? label(p.title) : <span className="min-w-0 truncate">{p.title}</span>}
     </Button>
   )
@@ -51,7 +51,7 @@ export function NavRail({ page, pages, viewActions, onPage, onSearch, renderSync
     <nav aria-label="Main" style={collapsed ? undefined : { width }} className={cn('relative hidden md:flex shrink-0 flex-col gap-1 pt-space pb-space-lg pl-space-lg pr-space-sm', collapsed ? 'items-center' : 'max-w-[25vw]')}>
       <div className={cn('flex shrink-0 items-center gap-space-sm self-stretch border-t border-b border-t-transparent border-b-border py-space-sm', collapsed ? 'justify-center' : 'pl-3')}>
         {!collapsed && <span className="flex flex-1 items-center gap-2 text-base font-bold"><AppLogo className="size-6" />Folio</span>}
-        <Button variant="ghost" size="icon" aria-label={collapsed ? 'Expand menu' : 'Collapse menu'} title={collapsed ? 'Expand menu' : 'Collapse menu'} aria-expanded={!collapsed} className="group shrink-0 focus-visible:bg-secondary" onClick={toggle}>
+        <Button variant="ghost" size="icon" aria-label={collapsed ? 'Expand menu' : 'Collapse menu'} tooltip={collapsed ? 'Expand menu' : 'Collapse menu'} aria-expanded={!collapsed} className="group shrink-0 focus-visible:bg-secondary" onClick={toggle}>
           {/* Collapsed, the logo stands in for the button until it's hovered or focused */}
           {collapsed && <AppLogo className="size-6 group-hover:hidden group-focus-visible:hidden" />}
           <SidebarSimple className={cn(collapsed && 'hidden group-hover:block group-focus-visible:block')} />
@@ -62,7 +62,7 @@ export function NavRail({ page, pages, viewActions, onPage, onSearch, renderSync
       <div className={cn('flex flex-col gap-space', collapsed && 'items-center')}>
         {collapsed && treeButton}
         {renderSync(collapsed)}
-        <Button variant="outline" title={hint('Search')} className={cn('justify-start gap-3 px-3 font-normal text-muted-foreground shadow-sm hover:bg-transparent hover:text-foreground', collapsed && 'size-control justify-center px-0')} onClick={onSearch}>
+        <Button variant="outline" tooltip={hint('Search')} tooltipSide="right" className={cn('justify-start gap-3 px-3 font-normal text-muted-foreground shadow-sm hover:bg-transparent hover:text-foreground', collapsed && 'size-control justify-center px-0')} onClick={onSearch}>
           <MagnifyingGlass /> {label('Search')}
         </Button>
       </div>
@@ -77,23 +77,23 @@ export function NavRail({ page, pages, viewActions, onPage, onSearch, renderSync
           )}
         </div>
       ))}
-      <Button variant="ghost" title={hint('Add view')} disabled={!viewActions.canEdit} className={cn('justify-start gap-3 font-normal', collapsed && 'size-control justify-center px-0')} onClick={viewActions.onAdd}>
+      <Button variant="ghost" tooltip={hint('Add view')} tooltipSide="right" disabled={!viewActions.canEdit} className={cn('justify-start gap-3 font-normal', collapsed && 'size-control justify-center px-0')} onClick={viewActions.onAdd}>
         <Plus /> {label('Add view')}
       </Button>
       {separator}
       {pages.filter(p => !p.view).map(p => <div key={p.id}>{pageButton(p)}</div>)}
       <div className="flex-1" />
       {separator}
-      <Button variant="ghost" title={hint('Broken links')} aria-current={page === PAGE.LINKS ? 'page' : undefined} className={cn(item(PAGE.LINKS), 'relative')} onClick={() => onPage(PAGE.LINKS)}>
+      <Button variant="ghost" tooltip={hint('Broken links')} tooltipSide="right" aria-current={page === PAGE.LINKS ? 'page' : undefined} className={cn(item(PAGE.LINKS), 'relative')} onClick={() => onPage(PAGE.LINKS)}>
         <LinkBreak /> {label('Broken links')}
         {menu.brokenCount > 0 && (collapsed
           ? <span className="absolute right-1.5 top-1.5 size-2 rounded-full bg-muted-foreground" aria-label={`${menu.brokenCount} broken`} />
           : <span className="ml-auto text-muted-foreground">{menu.brokenCount}</span>)}
       </Button>
-      <Button variant="ghost" title={hint('Settings')} aria-current={page === PAGE.SETTINGS ? 'page' : undefined} className={item(PAGE.SETTINGS)} onClick={() => onPage(PAGE.SETTINGS)}>
+      <Button variant="ghost" tooltip={hint('Settings')} tooltipSide="right" aria-current={page === PAGE.SETTINGS ? 'page' : undefined} className={item(PAGE.SETTINGS)} onClick={() => onPage(PAGE.SETTINGS)}>
         <Gear /> {label('Settings')}
       </Button>
-      <Button variant="ghost" title={hint('Sign out')} className={cn('justify-start gap-3 font-normal text-destructive', collapsed && 'size-control justify-center px-0')} onClick={menu.onSignOut}>
+      <Button variant="ghost" tooltip={hint('Sign out')} tooltipSide="right" className={cn('justify-start gap-3 font-normal text-destructive', collapsed && 'size-control justify-center px-0')} onClick={menu.onSignOut}>
         <SignOut /> {label('Sign out')}
       </Button>
       {!collapsed && <ResizeHandle label="Resize menu" width={width} limits={RAIL_WIDTH} onResize={resize} className="inset-y-space-lg" />}

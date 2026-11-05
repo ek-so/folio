@@ -59,8 +59,8 @@ export default function CheckListModal({ title, description, items, selected, on
                     aria-label={`New name for ${item}`}
                     className="bg-background border-border"
                   />
-                  <Button type="submit" variant="ghost" size="icon" aria-label="Save" title="Save" className="shrink-0"><Check /></Button>
-                  <Button type="button" variant="ghost" size="icon" aria-label="Cancel" title="Cancel" className="shrink-0" onClick={() => setEditing(null)}><X /></Button>
+                  <Button type="submit" variant="ghost" size="icon" aria-label="Save" tooltip="Save" className="shrink-0"><Check /></Button>
+                  <Button type="button" variant="ghost" size="icon" aria-label="Cancel" tooltip="Cancel" className="shrink-0" onClick={() => setEditing(null)}><X /></Button>
                 </div>
                 {editing.error && <p className="text-destructive text-xs">{editing.error}</p>}
               </form>
@@ -73,17 +73,17 @@ export default function CheckListModal({ title, description, items, selected, on
                 onClick={() => toggle(item)}
                 trailing={(onOpen || onRename || onDelete) && <>
                   {onOpen && (
-                    <Button variant="ghost" size="icon" aria-label={`${openLabel} ${item}`} title={openLabel} className={rowButton} onClick={() => onOpen(item)}>
+                    <Button variant="ghost" size="icon" aria-label={`${openLabel} ${item}`} tooltip={openLabel} className={rowButton} onClick={() => onOpen(item)}>
                       <FolderOpen />
                     </Button>
                   )}
                   {onRename && (
-                    <Button variant="ghost" size="icon" aria-label={`Rename ${item}`} title="Rename" className={rowButton} onClick={() => setEditing({ item, name: item, error: '' })}>
+                    <Button variant="ghost" size="icon" aria-label={`Rename ${item}`} tooltip="Rename" className={rowButton} onClick={() => setEditing({ item, name: item, error: '' })}>
                       <PencilSimple />
                     </Button>
                   )}
                   {onDelete && (
-                    <Button variant="ghost" size="icon" aria-label={`Delete ${item}`} title="Delete" className={cn(rowButton, 'text-destructive hover:bg-destructive/10 hover:text-destructive')} onClick={() => onDelete(item)}>
+                    <Button variant="ghost" size="icon" aria-label={`Delete ${item}`} tooltip="Delete" className={cn(rowButton, 'text-destructive hover:bg-destructive/10 hover:text-destructive')} onClick={() => onDelete(item)}>
                       <Trash />
                     </Button>
                   )}
@@ -104,7 +104,7 @@ export default function CheckListModal({ title, description, items, selected, on
                 autoCapitalize="none"
                 className="bg-background border-border"
               />
-              <Button type="submit" variant="secondary" size="icon" aria-label="Add" title="Add" disabled={!name.trim()} className="shrink-0"><Check /></Button>
+              <Button type="submit" variant="secondary" size="icon" aria-label="Add" tooltip="Add" disabled={!name.trim()} className="shrink-0"><Check /></Button>
             </div>
             {error && <p className="text-destructive text-xs">{error}</p>}
           </form>

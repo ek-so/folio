@@ -19,7 +19,7 @@ export default function ViewPage({ page, widgets = [], services, onAdd, onRemove
   const addMenu = (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button size="icon" aria-label="Add widget" title="Add widget" disabled={!canEdit} className="shrink-0">
+        <Button size="icon" aria-label="Add widget" tooltip="Add widget" disabled={!canEdit} className="shrink-0">
           <Plus />
         </Button>
       </DropdownMenuTrigger>
@@ -67,7 +67,7 @@ function UnknownWidget({ type, canEdit, onRemove }) {
   return (
     <section className="flex items-center gap-space-sm rounded-lg border border-border p-space-sm">
       <p className="min-w-0 flex-1 px-space-xs text-sm text-muted-foreground">This widget (“{type}”) needs a newer version of Folio.</p>
-      <Button variant="ghost" size="icon" aria-label="Remove widget" title="Remove widget" disabled={!canEdit} onClick={onRemove}><Trash /></Button>
+      <Button variant="ghost" size="icon" aria-label="Remove widget" tooltip="Remove widget" disabled={!canEdit} onClick={onRemove}><Trash /></Button>
     </section>
   )
 }

@@ -57,7 +57,7 @@ export default function SyncButton({ className, compact, syncState, syncing, cha
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant={variant} size="icon" disabled={syncing} aria-label={label} title={label} className={cn('relative shrink-0', className)}>
+          <Button variant={variant} size="icon" disabled={syncing} aria-label={label} tooltip={label} className={cn('relative shrink-0', className)}>
             {syncing ? spinner : <StateIcon />}
             {syncState === 'idle' && !syncing && (hasPush || hasPull) && (
               <span aria-label={directions} className="absolute right-1.5 top-1.5 size-2 rounded-full bg-primary" />

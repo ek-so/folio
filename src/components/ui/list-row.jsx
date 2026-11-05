@@ -1,4 +1,5 @@
 import { cn } from '@/lib/utils'
+import { Tip } from './tooltip.jsx'
 import { Button } from './button.jsx'
 
 // One row of any list (file manager, file tree, search, move, backlinks): a
@@ -9,10 +10,12 @@ import { Button } from './button.jsx'
 // chevron), `trailing` after it (⋯, a badge…). `active`: the open item;
 // `dimmed`: a hidden file or symlink, its icon and text faded (not the row's
 // hover or ⋯); `changed`: the blue dot of local changes after the title;
-// `disabled`: can't be opened; `tooltip`: the browser's own.
+// `disabled`: can't be opened; `tooltip`: on the whole row (ui/tooltip.jsx).
 // `className` and `rowProps` (drag and drop) go on the row itself.
 export function ListRow({ icon, title, description, leading, trailing, onClick, active, dimmed, changed, disabled, tooltip, className, rowProps }) {
+  // The tooltip is on the whole row, so it also explains a row that can't be opened
   return (
+    <Tip content={tooltip}>
     <div
       {...rowProps}
       className={cn(
@@ -30,7 +33,6 @@ export function ListRow({ icon, title, description, leading, trailing, onClick, 
         )}
         onClick={onClick}
         disabled={disabled}
-        title={tooltip}
       >
         {icon}
         <span className="min-w-0 flex-1">
@@ -43,5 +45,6 @@ export function ListRow({ icon, title, description, leading, trailing, onClick, 
       </Button>
       {trailing && <div className="flex shrink-0 items-center pr-1">{trailing}</div>}
     </div>
+    </Tip>
   )
 }

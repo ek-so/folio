@@ -2,6 +2,7 @@ import * as React from 'react'
 import { Slot } from '@radix-ui/react-slot'
 import { cva } from 'class-variance-authority'
 import { cn } from '@/lib/utils'
+import { Tip } from './tooltip.jsx'
 
 const buttonVariants = cva(
   "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-sm text-base font-medium transition-colors [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-40",
@@ -32,10 +33,13 @@ const buttonVariants = cva(
   }
 )
 
-const Button = React.forwardRef(({ className, variant, size, asChild = false, ...props }, ref) => {
+// `tooltip`: shown on hover (ui/tooltip.jsx); the app never uses the browser's `title`
+const Button = React.forwardRef(({ className, variant, size, asChild = false, tooltip, tooltipSide, ...props }, ref) => {
   const Comp = asChild ? Slot : 'button'
   return (
-    <Comp ref={ref} className={cn(buttonVariants({ variant, size, className }))} {...props} />
+    <Tip content={tooltip} side={tooltipSide}>
+      <Comp ref={ref} className={cn(buttonVariants({ variant, size, className }))} {...props} />
+    </Tip>
   )
 })
 Button.displayName = 'Button'
