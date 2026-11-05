@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { FolderOpen } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button.jsx'
 import { Input } from '@/components/ui/input.jsx'
 import { ListRow } from '@/components/ui/list-row.jsx'
@@ -8,8 +9,9 @@ import BottomSheet from '@/components/BottomSheet.jsx'
 // A sheet of names to tick (a board's columns to show, the properties its cards show):
 // `items` in the order listed, `selected` the ticked ones; ticking calls
 // `onChange(selected)`, in the order they were ticked. `addLabel`: a field to
-// add a name that isn't listed yet (ticked); `empty`: the text when there's nothing to list.
-export default function CheckListModal({ title, description, items, selected, onChange, addLabel, empty, onClose }) {
+// add a name that isn't listed yet (ticked); `onOpen(item)`: a folder button at the end of each row
+// (`openLabel` its label); `empty`: the text when there's nothing to list.
+export default function CheckListModal({ title, description, items, selected, onChange, addLabel, onOpen, openLabel, empty, onClose }) {
   const [name, setName] = useState('')
   const toggle = item => onChange(selected.includes(item) ? selected.filter(k => k !== item) : [...selected, item])
 
@@ -26,11 +28,16 @@ export default function CheckListModal({ title, description, items, selected, on
       <div className="flex flex-col gap-3">
         <ul className="-mx-1 flex max-h-64 flex-col gap-0.5 overflow-y-auto" data-no-pull>
           {items.map(item => (
-            <li key={item} role="checkbox" aria-checked={selected.includes(item)}>
+            <li key={item}>
               <ListRow
                 icon={<Checkbox checked={selected.includes(item)} />}
                 title={item}
                 onClick={() => toggle(item)}
+                trailing={onOpen && (
+                  <Button variant="ghost" size="icon" aria-label={`${openLabel} ${item}`} title={openLabel} className="size-control-md text-muted-foreground hover:bg-muted-foreground/10" onClick={() => onOpen(item)}>
+                    <FolderOpen />
+                  </Button>
+                )}
               />
             </li>
           ))}

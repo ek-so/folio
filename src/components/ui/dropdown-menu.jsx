@@ -46,11 +46,6 @@ function DropdownMenuSeparator({ className, ...props }) {
   return <DropdownMenuPrimitive.Separator data-slot="dropdown-menu-separator" className={cn('-mx-1 my-1 h-px bg-border', className)} {...props} />
 }
 
-// A subsection's heading inside a menu: small, muted, not selectable
-function DropdownMenuLabel({ className, ...props }) {
-  return <DropdownMenuPrimitive.Label data-slot="dropdown-menu-label" className={cn('px-3 pb-1 pt-2 text-xs font-medium text-muted-foreground', className)} {...props} />
-}
-
 export {
-  DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuLabel,
+  DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator,
 }
