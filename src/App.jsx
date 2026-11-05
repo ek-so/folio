@@ -103,7 +103,7 @@ export default function App() {
     else setTrails(o => ({ ...o, [mainPage]: rest }))
   }
   const [newFile, setNewFile] = useState(null) // { folder, kind } while the sheet is open
-  const [viewDialog, setViewDialog] = useState(null) // { kind: 'rename' | 'delete', view } while it's open
+  const [viewDialog, setViewDialog] = useState(null) // { kind: 'add' } or { kind: 'rename' | 'delete', view } while a view's dialog is open
   const [confirmSignOut, setConfirmSignOut] = useState(false)
   const [confirmDiscard, setConfirmDiscard] = useState(false)
   const [discards, setDiscards] = useState(0) // remounts the open note after a discard
@@ -403,11 +403,7 @@ export default function App() {
   // Add view, and Rename / Delete of a view (the dialogs below)
   const viewActions = {
     canEdit: viewsConfig.ready,
-    onAdd: () => {
-      const { views, id } = addView(viewsConfig.views)
-      viewsConfig.save(views)
-      setPage(id)
-    },
+    onAdd: () => setViewDialog({ kind: 'add' }),
     onRename: v => setViewDialog({ kind: 'rename', view: v }),
     onDelete: v => setViewDialog({ kind: 'delete', view: v }),
   }
@@ -567,6 +563,22 @@ export default function App() {
 
         {confirmSignOut && (
           <SignOutModal changeCount={repo.changeCount} onSignOut={signOut} onClose={() => setConfirmSignOut(false)} />
+        )}
+
+        {viewDialog?.kind === 'add' && (
+          <NewFileModal
+            kind="view"
+            onCreate={name => {
+              const error = name && viewNameError(name)
+              if (error) return error
+              const { views, id } = addView(viewsConfig.views, name)
+              viewsConfig.save(views)
+              setPage(id)
+              setViewDialog(null)
+              return null
+            }}
+            onClose={() => setViewDialog(null)}
+          />
         )}
 
         {viewDialog?.kind === 'rename' && (

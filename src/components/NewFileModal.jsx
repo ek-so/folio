@@ -4,8 +4,10 @@ import { Input } from './ui/input.jsx'
 import BottomSheet from './BottomSheet.jsx'
 
 // Creates the note or folder locally; it reaches GitHub on the next sync.
+// kind 'view': a new view in the navigation; an empty name is fine (it's called Untitled).
 export default function NewFileModal({ folder, kind, onCreate, onClose }) {
   const isFolder = kind === 'folder'
+  const isView = kind === 'view'
   const [name, setName] = useState('')
   const [error, setError] = useState('')
 
@@ -16,14 +18,14 @@ export default function NewFileModal({ folder, kind, onCreate, onClose }) {
 
   return (
     <BottomSheet
-      title={isFolder ? 'New folder' : 'New note'}
+      title={isView ? 'New view' : isFolder ? 'New folder' : 'New note'}
       description={folder ? `in ${folder}` : undefined}
       onClose={onClose}
     >
       <form onSubmit={handleCreate} className="flex flex-col gap-3">
         <Input
           type="text"
-          placeholder={isFolder ? 'Folder name' : 'Note name'}
+          placeholder={isView ? 'Untitled' : isFolder ? 'Folder name' : 'Note name'}
           value={name}
           onChange={e => { setName(e.target.value); setError('') }}
           autoCorrect="off"
@@ -33,7 +35,7 @@ export default function NewFileModal({ folder, kind, onCreate, onClose }) {
         {error && <p className="text-destructive text-xs">{error}</p>}
         <div className="flex justify-end gap-2">
           <Button type="button" variant="secondary" onClick={onClose}>Cancel</Button>
-          <Button type="submit" disabled={!name.trim()}>Create</Button>
+          <Button type="submit" disabled={!isView && !name.trim()}>Create</Button>
         </div>
       </form>
     </BottomSheet>

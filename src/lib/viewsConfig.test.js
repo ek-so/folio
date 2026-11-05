@@ -17,7 +17,8 @@ describe('viewsConfig', () => {
   it('round-trips, adds, renames and removes', () => {
     const { views, id } = addView(DEFAULT_VIEWS)
     expect(views).toHaveLength(2)
-    expect(views[1]).toEqual({ id, name: 'Untitled view' })
+    expect(views[1]).toEqual({ id, name: 'Untitled' })
+    expect(addView(DEFAULT_VIEWS, '  Work ').views[1].name).toBe('Work')
     expect(parseViews(serializeViews(views))).toEqual(views)
     expect(renameView(views, id, '  Work ')[1].name).toBe('Work')
     expect(removeView(views, 'home')).toEqual([views[1]])
