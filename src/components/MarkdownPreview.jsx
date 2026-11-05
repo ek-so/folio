@@ -65,8 +65,8 @@ const repoImages = (root, notePath) => [...root.querySelectorAll('img')]
 // tapped word. On mount, scrolls the block holding `scrollTo` (a markdown
 // offset) into view. The ref's
 // visibleOffset() is the markdown offset of the first block on screen, where
-// editing starts. `children` render above the note and `footer` below it;
-// both scroll with it.
+// editing starts. `children` render above the note (a double tap there edits
+// from the start of the file) and `footer` below it; both scroll with it.
 const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, files, scrollTo, onDoubleTap, onChange, onOpenFile, onNavigate, footer, children }, handle) {
   const ref = useRef()
   const scrollRef = useRef()
@@ -223,19 +223,24 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
       return
     }
     if (e.target.closest('a, img, summary')) return // summary opens/closes its accordion
-    // Counted here rather than with dblclick, which iPhones don't send on a
-    // double tap; it must run inside the tap so the keyboard opens
+    if (isDoubleTap(e)) onDoubleTap?.(offsetAt(e.clientX, e.clientY, e.target))
+  }
+
+  // Counted here rather than with dblclick, which iPhones don't send on a
+  // double tap; it must run inside the tap so the keyboard opens
+  function isDoubleTap(e) {
     const prev = lastTap.current
     const now = { time: e.timeStamp, x: e.clientX, y: e.clientY }
     const double = prev && now.time - prev.time < DOUBLE_TAP_MS
       && Math.hypot(now.x - prev.x, now.y - prev.y) < DOUBLE_TAP_PX
     lastTap.current = double ? null : now
-    if (double) onDoubleTap?.(offsetAt(e.clientX, e.clientY, e.target))
+    return double
   }
 
   return (
     <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
-      {children}
+      {/* What's above the note (its properties, from the front matter at the top of the file): a double tap edits from the start */}
+      {children && <div onClick={e => { if (isDoubleTap(e)) onDoubleTap?.(0) }}>{children}</div>}
       <div
         ref={ref}
         className="editor-preview min-w-0 break-words p-space text-base leading-relaxed touch-manipulation [&_img]:max-w-full [&_img]:h-auto [&_img]:rounded-md"
