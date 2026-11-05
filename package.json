@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "test": "vitest run",
     "lint": "eslint src",
-    "local": "vite build && vite preview --base /folio/ --open"
+    "local": "vite build --base / && vite preview --base / --port 7070 --strictPort --open"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
