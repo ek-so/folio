@@ -1,10 +1,11 @@
 import { cn } from '@/lib/utils'
 
 // One tile of the cards layout (File manager): `icon` large on top, `title` under
-// it (always two lines tall, so every tile has the same height), `trailing` (⋯) in the top right corner. Takes the same
+// it (`tall`: two lines tall even for a short name, so tiles are the same height; File manager
+// sets it when any name in the folder wraps), `trailing` (⋯) in the top right corner. Takes the same
 // props as ListRow (plus `tint`: background classes, light and darker on hover), so a list and its cards show the same things.
 // `className` and `tileProps` (drag and drop) go on the tile itself.
-export function CardTile({ icon, title, trailing, onClick, tint, dimmed, changed, disabled, tooltip, className, tileProps }) {
+export function CardTile({ icon, title, trailing, onClick, tint, tall, dimmed, changed, disabled, tooltip, className, tileProps }) {
   return (
     <div
       {...tileProps}
@@ -25,9 +26,11 @@ export function CardTile({ icon, title, trailing, onClick, tint, dimmed, changed
         )}
       >
         {icon}
-        <span className="line-clamp-2 min-h-[2lh] w-full break-words">
-          {title}
-          {changed && <span className="ml-1.5 inline-block size-1.5 rounded-full bg-primary align-middle" />}
+        <span className={cn('line-clamp-2 w-full break-words', tall && 'min-h-[2lh]')}>
+          <span data-card-label>
+            {title}
+            {changed && <span className="ml-1.5 inline-block size-1.5 rounded-full bg-primary align-middle" />}
+          </span>
         </span>
       </button>
       {trailing && <div className="absolute right-1 top-1">{trailing}</div>}

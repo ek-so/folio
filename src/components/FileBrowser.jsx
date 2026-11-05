@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useLayoutEffect } from 'react'
 import { Plus, FileText, Folder, UploadSimple } from '@phosphor-icons/react'
 import { Button } from './ui/button.jsx'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from './ui/dropdown-menu.jsx'
@@ -28,6 +28,23 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
   const pickerRef = useRef()
   const [view, setView] = useState(storage.getFilesView) // 'list' | 'cards', one choice for every folder
   useEffect(() => { storage.setFilesView(view) }, [view])
+
+  // Cards are two label lines tall only when some name in this folder wraps; otherwise one line
+  const gridRef = useRef(null)
+  const [tall, setTall] = useState(false)
+  const measureLabels = () => {
+    const labels = [...(gridRef.current?.querySelectorAll('[data-card-label]') ?? [])]
+    const wraps = labels.some(l => l.getBoundingClientRect().height > parseFloat(getComputedStyle(l).lineHeight) * 1.5)
+    setTall(wraps)
+  }
+  useLayoutEffect(measureLabels) // after every render: names, folder or view changed
+  useEffect(() => { // and when the width changes
+    const grid = gridRef.current
+    if (!grid) return
+    const observer = new ResizeObserver(measureLabels)
+    observer.observe(grid)
+    return () => observer.disconnect()
+  })
 
   // Dragging files from the device (not a row being moved)
   const isFileDrag = e => !draggingRef.current && e.dataTransfer.types.includes('Files')
@@ -102,7 +119,7 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
           <p className="text-muted-foreground text-sm text-center py-12">No notes yet</p>
         )}
         {!loading && (
-          <ul className={cn('p-space', view === 'cards' && 'grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-space-sm')}>
+          <ul ref={gridRef} className={cn('p-space', view === 'cards' && 'grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-space-sm')}>
             {items.map(item => {
               const [base, ext] = item.type === 'dir' ? [item.name, ''] : splitName(item.name)
               const isLink = item.path in symlinks
@@ -167,6 +184,7 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
                       {link?.error && <span className={cn('text-sm text-muted-foreground', !cards && 'ml-2')}>{LINK_ERRORS[link.error]}</span>}
                     </>}
                     tint={cards ? iconTint(isLink ? (link?.path ?? item.path) : item.path, isLink ? link?.kind === 'folder' : item.type === 'dir') : undefined}
+                    tall={cards ? tall : undefined}
                     changed={item.changed}
                     onClick={() => navigate(item)}
                     disabled={!openable}
