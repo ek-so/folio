@@ -1,11 +1,15 @@
 // The views in the navigation (Home and the ones added with "Add view") live
 // in the repo, like Obsidian's config folder: `.folio/views.json`,
-// { "views": [{ "id", "name" }] }. A repo without the file has Home alone.
+// { "views": [{ "id", "name", "widgets": [{ "id", "type" }] }] }. A repo without the file has Home alone.
+// A view's widgets show on it, in order; a board (`type` 'board') keeps its settings in its own file (lib/board.js).
 // The file is a normal local change, committed by Sync; it never shows in
 // File manager, the file tree or Search (`isConfigPath`).
 
 export const VIEWS_PATH = '.folio/views.json'
 export const DEFAULT_VIEWS = [{ id: 'home', name: 'Home' }]
+
+// The kinds of widget a view can hold
+export const WIDGETS = ['board']
 
 // Ids that belong to other pages
 const RESERVED = ['files', 'graph', 'settings', 'links']
@@ -24,7 +28,10 @@ export function parseViews(text) {
     for (const v of list) {
       if (typeof v?.id !== 'string' || typeof v?.name !== 'string' || !v.name.trim() || seen.has(v.id)) continue
       seen.add(v.id)
-      views.push({ id: v.id, name: v.name })
+      const widgets = Array.isArray(v.widgets)
+        ? v.widgets.filter(w => typeof w?.id === 'string' && WIDGETS.includes(w.type)).map(w => ({ id: w.id, type: w.type }))
+        : []
+      views.push(widgets.length ? { id: v.id, name: v.name, widgets } : { id: v.id, name: v.name })
     }
     return views
   } catch {
@@ -34,10 +41,10 @@ export function parseViews(text) {
 
 export const serializeViews = views => JSON.stringify({ views }, null, 2) + '\n'
 
-const newId = views => {
-  const used = new Set([...views.map(v => v.id), ...RESERVED])
+const newId = (views, letter = 'v') => {
+  const used = new Set([...views.flatMap(v => [v.id, ...(v.widgets ?? []).map(w => w.id)]), ...RESERVED])
   let id
-  do id = 'v' + Math.random().toString(36).slice(2, 8)
+  do id = letter + Math.random().toString(36).slice(2, 8)
   while (used.has(id))
   return id
 }
@@ -52,3 +59,15 @@ export function addView(views, name = '') {
 export const renameView = (views, id, name) => views.map(v => v.id === id ? { ...v, name: name.trim() } : v)
 
 export const removeView = (views, id) => views.filter(v => v.id !== id)
+
+// `views` with a new widget of `type` at the end of view `viewId`, and its id
+export function addWidget(views, viewId, type) {
+  const id = newId(views, 'w')
+  return { views: views.map(v => v.id === viewId ? { ...v, widgets: [...(v.widgets ?? []), { id, type }] } : v), id }
+}
+
+export const removeWidget = (views, viewId, widgetId) => views.map(v => {
+  if (v.id !== viewId) return v
+  const widgets = (v.widgets ?? []).filter(w => w.id !== widgetId)
+  return widgets.length ? { ...v, widgets } : { id: v.id, name: v.name }
+})

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { parseViews, serializeViews, addView, renameView, removeView, isConfigPath, DEFAULT_VIEWS } from './viewsConfig.js'
+import { parseViews, serializeViews, addView, renameView, removeView, isConfigPath, DEFAULT_VIEWS, addWidget, removeWidget } from './viewsConfig.js'
 
 describe('viewsConfig', () => {
   it('has Home alone without a file, or with text it can\'t read', () => {
@@ -22,6 +22,14 @@ describe('viewsConfig', () => {
     expect(parseViews(serializeViews(views))).toEqual(views)
     expect(renameView(views, id, '  Work ')[1].name).toBe('Work')
     expect(removeView(views, 'home')).toEqual([views[1]])
+  })
+
+  it('adds and removes widgets, keeping only known kinds', () => {
+    const { views, id } = addWidget(DEFAULT_VIEWS, 'home', 'board')
+    expect(views[0].widgets).toEqual([{ id, type: 'board' }])
+    expect(parseViews(serializeViews(views))).toEqual(views)
+    expect(parseViews(JSON.stringify({ views: [{ id: 'a', name: 'A', widgets: [{ id: 'w', type: 'chart' }, 3] }] }))).toEqual([{ id: 'a', name: 'A' }])
+    expect(removeWidget(views, 'home', id)).toEqual(DEFAULT_VIEWS)
   })
 
   it('knows the config folder', () => {

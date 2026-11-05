@@ -29,13 +29,16 @@ import Settings from './components/Settings.jsx'
 import Spinner from './components/Spinner.jsx'
 import { useAuth } from './hooks/useAuth.js'
 import { useRepo } from './hooks/useRepo.js'
-import { useViews } from './hooks/useViews.js'
+import { useConfig } from './hooks/useConfig.js'
+import ViewPage from './components/ViewPage.jsx'
+import FolderSheet from './components/FolderSheet.jsx'
 import RenameModal from './components/RenameModal.jsx'
 import DeleteModal from './components/DeleteModal.jsx'
 import { useTheme } from './hooks/useTheme.js'
 import { storage } from './lib/storage.js'
 import { PAGE, mainPages } from './lib/pages.js'
-import { isConfigPath, addView, renameView, removeView } from './lib/viewsConfig.js'
+import { isConfigPath, addView, renameView, removeView, VIEWS_PATH, parseViews, serializeViews, addWidget, removeWidget } from './lib/viewsConfig.js'
+import { boardPath, parseBoard, serializeBoard, newBoard, boardColumns, movedBoard, withBoardKeys, DESCRIPTION } from './lib/board.js'
 import { urlForPage, pageForUrl, existingView } from './lib/url.js'
 import { fileView, folderView, startTrails, currentView, openView, trailTo, movedTrails, keptTrails } from './lib/views.js'
 import { toast } from 'sonner'
@@ -59,14 +62,22 @@ export default function App() {
   const auth = useAuth()
   const repo = useRepo(auth.user ? auth.repo : null, toast.success)
   const { virtual, changes, update } = repo
-  // The views in the navigation (Home…), from the repo's .folio/views.json
-  const viewsConfig = useViews(repo)
-  const pages = mainPages(viewsConfig.views)
+  // The app's settings in the repo's .folio/: the views in the navigation (Home…) and their boards
+  const config = useConfig(repo)
+  const viewsFile = config.read(VIEWS_PATH)
+  const views = parseViews(viewsFile.ready ? viewsFile.text : undefined)
+  const viewsReady = viewsFile.ready
+  const pages = mainPages(views)
+  // Every board on every view: { ready, board } (board null when its file can't be read)
+  const boards = Object.fromEntries(views.flatMap(v => v.widgets ?? []).filter(w => w.type === 'board').map(w => {
+    const file = config.read(boardPath(w.id))
+    return [w.id, { ready: file.ready, board: file.ready && file.text !== undefined ? parseBoard(file.text) : null }]
+  }))
   const { theme, setTheme } = useTheme()
   const [openPage, setPage] = useState(() => (reloaded && storage.getPage()) || (deepLink ? deepLink.page : storage.getPage() || PAGE.HOME))
   // A view that's gone (deleted here or on another device) falls back to the first page; until the config is read, the remembered page stays
   const fixedPage = openPage === PAGE.SETTINGS || openPage === PAGE.LINKS
-  const page = fixedPage || !viewsConfig.ready || pages.some(p => p.id === openPage) ? openPage : pages[0].id
+  const page = fixedPage || !viewsReady || pages.some(p => p.id === openPage) ? openPage : pages[0].id
   // The main page files and folders open in (File manager when Settings / Broken links is open)
   const mainPage = fixedPage ? PAGE.FILES : page
   // Each main page has its own trail of views (lib/views.js); files and folders open in the page you're on
@@ -104,6 +115,7 @@ export default function App() {
   }
   const [newFile, setNewFile] = useState(null) // { folder, kind } while the sheet is open
   const [viewDialog, setViewDialog] = useState(null) // { kind: 'add' } or { kind: 'rename' | 'delete', view } while a view's dialog is open
+  const [boardFor, setBoardFor] = useState(null) // the view a board is being added to (picking its folder)
   const [confirmSignOut, setConfirmSignOut] = useState(false)
   const [confirmDiscard, setConfirmDiscard] = useState(false)
   const [discards, setDiscards] = useState(0) // remounts the open note after a discard
@@ -213,7 +225,7 @@ export default function App() {
   }
 
   // Rename or move `item` to path `to`; the open folder / note follows it
-  // Links to and from it are rewritten in the same local changes (one commit).
+  // Links to and from it are rewritten in the same local changes (one commit), and boards follow it.
   function relocate(item, to) {
     window.dispatchEvent(new Event('folio:flush')) // typing in an open note first
     update(ch => {
@@ -221,6 +233,12 @@ export default function App() {
       for (const [path, text] of linkRewrites(item, to, ch.edits)) {
         const entry = virtual[path]
         next = setEdit(next, entry, text, links.remoteText(entry.sha) ?? '')
+      }
+      // Boards keep their folder, columns and order
+      for (const [id, { board }] of Object.entries(boards)) {
+        if (!board) continue
+        const moved = serializeBoard(movedBoard(board, item.path, to, item.type === 'dir'))
+        if (moved !== serializeBoard(board)) next = config.write(boardPath(id), moved)(next)
       }
       return next
     })
@@ -247,6 +265,26 @@ export default function App() {
   function handleDropMove(item, targetFolder) {
     const error = handleMove(item, targetFolder)
     if (error) toast.error(error)
+  }
+
+  const saveViews = next => { if (viewsReady) update(config.write(VIEWS_PATH, serializeViews(next))) }
+
+  // A new board on view `viewId` showing `folder`: its notes get a description, empty, if they lack one
+  function addBoard(viewId, folder) {
+    if (!viewsReady || !repo.remote) return 'Settings are still loading.'
+    const { views: next, id } = addWidget(views, viewId, 'board')
+    update(ch => {
+      let out = config.write(VIEWS_PATH, serializeViews(next))(ch)
+      out = config.write(boardPath(id), serializeBoard(newBoard(folder)))(out)
+      return withBoardKeys(out, repo.remote.files, folder, [DESCRIPTION], links.remoteText)
+    })
+    return null
+  }
+
+  // A view's widget leaves it; a board's settings file goes with it
+  function removeWidgetOf(viewId, widgetId) {
+    if (!viewsReady) return
+    update(ch => config.erase(boardPath(widgetId))(config.write(VIEWS_PATH, serializeViews(removeWidget(views, viewId, widgetId)))(ch)))
   }
 
   // Every page's trail after a rename, delete or discard (`next`); the address
@@ -402,7 +440,7 @@ export default function App() {
   const repoName = auth.repo.split('/')[1]
   // Add view, and Rename / Delete of a view (the dialogs below)
   const viewActions = {
-    canEdit: viewsConfig.ready,
+    canEdit: viewsReady,
     onAdd: () => setViewDialog({ kind: 'add' }),
     onRename: v => setViewDialog({ kind: 'rename', view: v }),
     onDelete: v => setViewDialog({ kind: 'delete', view: v }),
@@ -424,6 +462,14 @@ export default function App() {
     />
   )
 
+  // What each board shows (its title and columns), from the files as they are now
+  const fileList = Object.keys(shown)
+  const boardData = Object.fromEntries(Object.entries(boards).map(([id, b]) => [id, {
+    ...b,
+    title: b.board ? (b.board.folder.split('/').pop() || repoName) : 'Board',
+    data: b.board && boardColumns(b.board, fileList),
+  }]))
+
   // For the Rename / Move sheets: how many notes' links a change would touch
   const linkInfo = {
     rewriteCount: (item, to) => linkRewrites(item, to, changes.edits).size,
@@ -437,7 +483,7 @@ export default function App() {
     <LinksContext.Provider value={linkInfo}>
       <NavContext.Provider value={{
         listDir: dir => listDir(shown, dir, repo.changed),
-        views: viewsConfig.views,
+        views,
         symlinks,
         current: treeCurrent,
         expanded,
@@ -466,8 +512,17 @@ export default function App() {
           <TopBar host={mainRef} resetKey={`${page}|${selectedFile}|${folder}`} tree={page === mainPage} page={page} pages={pages} viewActions={viewActions} onPage={choosePage} onSearch={() => setSearchOpen(true)} renderSync={renderSync} menu={menu} />
           {page === PAGE.SETTINGS ? (
             <Settings login={auth.user.login} repo={auth.repo} theme={theme} onTheme={setTheme} />
-          ) : !view ? (
+          ) : !view && page === PAGE.GRAPH ? (
             <EmptyPage page={page} />
+          ) : !view ? (
+            <ViewPage
+              page={page}
+              widgets={views.find(v => v.id === page)?.widgets}
+              boards={boardData}
+              notes={links.notes}
+              canEdit={viewsReady && !!repo.remote}
+              actions={{ onAddBoard: setBoardFor, onRemoveWidget: removeWidgetOf, onOpenFile: setSelectedFile }}
+            />
           ) : page === PAGE.LINKS ? (
             <BrokenLinks
               broken={links.index.broken}
@@ -569,8 +624,9 @@ export default function App() {
           <NewFileModal
             kind="view"
             onCreate={name => {
-              const { views, id } = addView(viewsConfig.views, name)
-              viewsConfig.save(views)
+              const added = addView(views, name)
+              saveViews(added.views)
+              const id = added.id
               setPage(id)
               setViewDialog(null)
               return null
@@ -585,7 +641,7 @@ export default function App() {
             item={{ name: viewDialog.view.title, type: 'dir' }}
             onRename={name => {
               if (!name.trim()) return 'Enter a name.'
-              viewsConfig.save(renameView(viewsConfig.views, viewDialog.view.id, name))
+              saveViews(renameView(views, viewDialog.view.id, name))
               setViewDialog(null)
               return null
             }}
@@ -597,9 +653,25 @@ export default function App() {
           <DeleteModal
             kind="view"
             item={{ name: viewDialog.view.title, type: 'dir' }}
-            onDelete={() => { viewsConfig.save(removeView(viewsConfig.views, viewDialog.view.id)); setViewDialog(null) }}
+            onDelete={() => {
+              // Its boards' settings go with it
+              const gone = views.find(v => v.id === viewDialog.view.id)?.widgets ?? []
+              if (viewsReady) update(ch => gone.reduce((c, w) => config.erase(boardPath(w.id))(c), config.write(VIEWS_PATH, serializeViews(removeView(views, viewDialog.view.id)))(ch)))
+              setViewDialog(null)
+            }}
             onClose={() => setViewDialog(null)}
           />
+        )}
+
+        {boardFor && (
+          <FolderSheet
+            title="Board from folder…"
+            folders={['', ...allFolders]}
+            onPick={folder => addBoard(boardFor, folder)}
+            onClose={() => setBoardFor(null)}
+          >
+            <p className="text-muted-foreground text-xs">Its subfolders become the columns and their files the cards.</p>
+          </FolderSheet>
         )}
 
         {newFile && (
