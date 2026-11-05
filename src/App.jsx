@@ -38,7 +38,7 @@ import { useTheme } from './hooks/useTheme.js'
 import { storage } from './lib/storage.js'
 import { PAGE, mainPages } from './lib/pages.js'
 import { isConfigPath, addView, renameView, removeView, VIEWS_PATH, parseViews, serializeViews, addWidget, removeWidget } from './lib/viewsConfig.js'
-import { boardPath, parseBoard, serializeBoard, newBoard, boardColumns, movedBoard, withBoardKeys, DESCRIPTION } from './lib/board.js'
+import { boardPath, parseBoard, serializeBoard, newBoard, boardColumns, movedBoard, withBoardKeys, placeCard, moveColumn, DESCRIPTION } from './lib/board.js'
 import { urlForPage, pageForUrl, existingView } from './lib/url.js'
 import { fileView, folderView, startTrails, currentView, openView, trailTo, movedTrails, keptTrails } from './lib/views.js'
 import { toast } from 'sonner'
@@ -281,6 +281,24 @@ export default function App() {
     return null
   }
 
+  // A card dropped at `index` in `column` of board `id`: the order is saved, and a card
+  // dropped in another column moves its file there (a taken name is refused, as a toast)
+  function placeBoardCard(id, path, column, index) {
+    const { board, data } = boardData[id] ?? {}
+    if (!board || !viewsReady) return
+    const { board: next, to } = placeCard(board, data, path, column, index)
+    if (to) {
+      const error = handleMove({ path, name: path.slice(path.lastIndexOf('/') + 1), type: 'file' }, to.slice(0, Math.max(to.lastIndexOf('/'), 0)))
+      if (error) { toast.error(error); return }
+    }
+    update(config.write(boardPath(id), serializeBoard(next)))
+  }
+
+  function moveBoardColumn(id, name, index) {
+    const { board, data } = boardData[id] ?? {}
+    if (board && viewsReady) update(config.write(boardPath(id), serializeBoard(moveColumn(board, data, name, index))))
+  }
+
   // A view's widget leaves it; a board's settings file goes with it
   function removeWidgetOf(viewId, widgetId) {
     if (!viewsReady) return
@@ -521,7 +539,7 @@ export default function App() {
               boards={boardData}
               notes={links.notes}
               canEdit={viewsReady && !!repo.remote}
-              actions={{ onAddBoard: setBoardFor, onRemoveWidget: removeWidgetOf, onOpenFile: setSelectedFile }}
+              actions={{ onAddBoard: setBoardFor, onRemoveWidget: removeWidgetOf, onOpenFile: setSelectedFile, onPlaceCard: placeBoardCard, onMoveColumn: moveBoardColumn }}
             />
           ) : page === PAGE.LINKS ? (
             <BrokenLinks

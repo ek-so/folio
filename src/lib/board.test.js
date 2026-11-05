@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { parseBoard, serializeBoard, newBoard, boardColumns, movedBoard, withBoardKeys } from './board.js'
+import { parseBoard, serializeBoard, newBoard, boardColumns, movedBoard, withBoardKeys, placeCard, moveColumn, LOOSE } from './board.js'
 import { empty, add } from './changes.js'
 
 const files = ['T/Todo/b.md', 'T/Todo/a.md', 'T/Done/2025/old.md', 'T/Done/.gitkeep', 'T/Empty/.gitkeep', 'T/loose.md', 'Other/x.md']
@@ -38,6 +38,24 @@ describe('board', () => {
     expect(col.cards).toEqual({ Next: ['b.md', 'a.md'] })
     expect(movedBoard(board, 'T/Todo/a.md', 'T/Todo/c.md', false).cards.Todo).toEqual(['b.md', 'c.md'])
     expect(movedBoard(board, 'Other/x.md', 'Other/y.md', false)).toBe(board)
+  })
+
+  it('places cards: reordered in their column, or moved into another', () => {
+    const board = newBoard('T')
+    const data = boardColumns(board, files)
+    const same = placeCard(board, data, 'T/Todo/b.md', 'Todo', 0)
+    expect(same.to).toBeNull()
+    expect(same.board.cards.Todo).toEqual(['b.md', 'a.md'])
+    const moved = placeCard(board, data, 'T/Done/2025/old.md', 'Todo', 1)
+    expect(moved.to).toBe('T/Todo/old.md')
+    expect(moved.board.cards).toEqual({ Todo: ['a.md', 'old.md', 'b.md'], Done: [] })
+    expect(placeCard(board, data, 'T/Todo/a.md', LOOSE, 0).to).toBe('T/a.md')
+    expect(placeCard(board, data, 'T/loose.md', 'Empty', 0).to).toBe('T/Empty/loose.md')
+  })
+
+  it('reorders columns', () => {
+    const board = newBoard('T')
+    expect(moveColumn(board, boardColumns(board, files), 'Todo', 0).columns).toEqual(['Todo', 'Done', 'Empty'])
   })
 
   it('gives the notes in its folder the keys they lack', () => {

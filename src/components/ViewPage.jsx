@@ -33,7 +33,7 @@ export default function ViewPage({ page, widgets = [], boards, notes, canEdit, a
               <Button variant="secondary" disabled={!canEdit} onClick={() => actions.onAddBoard(page)}><Kanban /> Add board</Button>
             </div>
           ) : widgets.map(w => (
-            <Board key={w.id} {...boards[w.id]} notes={notes} canEdit={canEdit} actions={actions} onRemove={() => actions.onRemoveWidget(page, w.id)} />
+            <Board key={w.id} id={w.id} {...boards[w.id]} notes={notes} canEdit={canEdit} actions={actions} onRemove={() => actions.onRemoveWidget(page, w.id)} />
           ))}
         </div>
       </Surface>

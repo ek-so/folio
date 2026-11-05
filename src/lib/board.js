@@ -114,3 +114,30 @@ export function withBoardKeys(ch, files, folder, keys, remoteText) {
   }
   return next
 }
+
+// Where a card goes when dropped in `column` (a column's name, or LOOSE) at
+// `index` among that column's other cards, from what the board shows (`data`,
+// boardColumns): `board` with the new order, and `to`, the file's new path
+// when it changes column (it goes right into that column's folder), else null
+export function placeCard(board, data, path, column, index) {
+  const all = [{ key: LOOSE, path: board.folder, cards: data.loose }, ...data.columns]
+  const from = all.find(c => c.cards.some(card => card.path === path))
+  const target = all.find(c => c.key === column)
+  if (!from || !target) return { board, to: null }
+  const card = from.cards.find(c => c.path === path)
+  const same = from === target
+  const key = same ? card.key : nameOf(path)
+  const keys = target.cards.filter(c => c.path !== path).map(c => c.key)
+  keys.splice(Math.max(0, Math.min(index, keys.length)), 0, key)
+  const cards = { ...board.cards, [column]: keys }
+  if (!same) cards[from.key] = from.cards.filter(c => c.path !== path).map(c => c.key)
+  const to = same ? null : (target.path ? target.path + '/' : '') + key
+  return { board: { ...board, cards }, to }
+}
+
+// `board` with column `name` moved to `index` in the order the board shows (`data`)
+export function moveColumn(board, data, name, index) {
+  const names = data.columns.map(c => c.name).filter(n => n !== name)
+  names.splice(Math.max(0, Math.min(index, names.length)), 0, name)
+  return { ...board, columns: names }
+}
