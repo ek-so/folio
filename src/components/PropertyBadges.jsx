@@ -5,7 +5,6 @@ import { Badge } from './ui/badge.jsx'
 import { Input } from './ui/input.jsx'
 import { ListRow } from './ui/list-row.jsx'
 import { Popover, PopoverTrigger, PopoverContent } from './ui/popover.jsx'
-import { Tip } from './ui/tooltip.jsx'
 import { Button } from './ui/button.jsx'
 import ConfirmModal from './ConfirmModal.jsx'
 import { valueList, valueColors, DESCRIPTION } from '../lib/frontmatter.js'
@@ -63,9 +62,7 @@ export default function PropertyBadges({ props, path, files, clamp, title, class
         {part.badges.map(({ id, prop, label }) => onChange
           ? <EditableBadge key={id} prop={prop} label={label} color={colors[prop.key].get(label)} options={options} onChange={onChange} onRemove={onRemoveValue && (value => setRemoving({ key: prop.key, value }))} />
           : (
-            <Tip key={id} content={`${prop.key}: ${label}`}>
-              <Badge {...tint(colors[prop.key].get(label))}><span className="truncate">{label}</span></Badge>
-            </Tip>
+            <Badge key={id} {...tint(colors[prop.key].get(label))}><span className="truncate">{label}</span></Badge>
           ))}
       </div>
     ))
@@ -98,21 +95,20 @@ function EditableBadge({ prop, label, color, options, onChange, onRemove }) {
   const [open, setOpen] = useState(false)
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <Tip content={label === null ? undefined : `${prop.key}: ${label}`}>
-        <PopoverTrigger asChild>
-          <Badge
-            as="button"
-            type="button"
-            style={tint(color).style}
-            className={cn('cursor-pointer outline-none focus-visible:ring-1 focus-visible:ring-ring', tint(color).className, TINT_HOVER, label === null && 'text-muted-foreground')}
-            {...own}
-          >
-            <span className="truncate">{label ?? prop.key}</span>
-            <CaretDown className="size-3 shrink-0" />
-          </Badge>
-        </PopoverTrigger>
-      </Tip>
-      <PopoverContent {...own}>
+      <PopoverTrigger asChild>
+        <Badge
+          as="button"
+          type="button"
+          style={tint(color).style}
+          className={cn('cursor-pointer outline-none focus-visible:ring-1 focus-visible:ring-ring', tint(color).className, TINT_HOVER, label === null && 'text-muted-foreground')}
+          {...own}
+        >
+          <span className="truncate">{label ?? prop.key}</span>
+          <CaretDown className="size-3 shrink-0" />
+        </Badge>
+      </PopoverTrigger>
+      {/* Opening it doesn't focus the field (the keyboard on a phone): the panel takes the focus, a tap or Tab reaches the field */}
+      <PopoverContent {...own} tabIndex={-1} onOpenAutoFocus={e => { e.preventDefault(); e.currentTarget.focus() }}>
         <ValueChooser prop={prop} options={options?.(prop.key) ?? []} onChange={onChange} onRemove={onRemove && (value => { setOpen(false); onRemove(value) })} close={() => setOpen(false)} />
       </PopoverContent>
     </Popover>
@@ -144,7 +140,6 @@ function ValueChooser({ prop, options, onChange, onRemove, close }) {
   return (
     <div className="flex flex-col gap-space-xs">
       <Input
-        autoFocus
         value={typed}
         placeholder={`Find or add ${prop.key}`}
         onChange={e => setTyped(e.target.value)}
