@@ -177,10 +177,13 @@ export default function Board({ id, services, onRemove }) {
       {choosing === 'columns' && board && (
         <CheckListModal
           title="Columns"
-          description="Tick the columns to show. The folder button opens a column's folder, hidden or not."
+          description="Tick the columns to show. Each one's folder can be opened or deleted here."
           items={data.columns.map(c => c.name)}
           onOpen={name => { setChoosing(null); act.openColumn(data.columns.find(c => c.name === name)) }}
           openLabel="Open folder"
+          onDelete={name => { setChoosing(null); setDeleting(data.columns.find(c => c.name === name)) }}
+          addLabel="New column"
+          onAdd={act.addColumn}
           selected={data.columns.map(c => c.name).filter(n => !board.hidden.includes(n))}
           onChange={act.showColumns}
           empty="No columns yet: its subfolders become columns."
@@ -199,6 +202,11 @@ export default function Board({ id, services, onRemove }) {
             selected={board.properties}
             onChange={act.setProperties}
             addLabel="New property"
+            onAdd={key => {
+              if (/[:\n]/.test(key)) return 'A property name can\'t contain ":".'
+              if (!board.properties.includes(key)) act.setProperties([...board.properties, key])
+              return null
+            }}
             empty="Its notes have no other properties yet."
             onClose={() => setChoosing(null)}
           />

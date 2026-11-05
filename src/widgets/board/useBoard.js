@@ -40,6 +40,8 @@ export function useBoard(id, services) {
     // A hidden column's folder opens in the view, like File manager (← comes back)
     openColumn: column => services.openFolder(column.path),
     newColumn: () => services.newFolder(board.folder),
+    // A column named `name`, right away (an error message, or null)
+    addColumn: name => services.createFolder(board.folder, name),
     // A new card starts with the board's properties, empty; the board stays open
     newCard: folder => services.newNote(folder, { keys: [DESCRIPTION, ...board.properties], stay: true }),
     renameColumn: (column, name) => services.rename({ name: column.name, path: column.path, type: 'dir' }, name),

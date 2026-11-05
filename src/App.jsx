@@ -328,6 +328,7 @@ export default function App() {
     rename: (item, name) => handleRename(item, name),
     remove: item => handleDelete(item),
     newFolder: parent => setNewFile({ folder: parent, kind: 'folder' }),
+    createFolder: (parent, name) => createFolder(parent, name),
     // `keys`: the properties it starts with, empty; `stay`: don't open it
     newNote: (folder, { keys, stay } = {}) => setNewFile({ folder, kind: 'note', keys, stay }),
   }
@@ -343,15 +344,26 @@ export default function App() {
     update(ch => remove(ch, filesOf(ch), item.path, item.type === 'dir'))
   }
 
+  // A new folder `name` in `parent` (kept by an empty .gitkeep): an error message, or null
+  function createFolder(parent, name) {
+    if (!repo.remote) return 'Files are still loading.'
+    const error = nameError(name)
+    if (error) return error
+    const base = parent ? `${parent}/${name}` : name
+    const err = createError(changes, virtual, [base, `${base}/.gitkeep`])
+    if (err) return err
+    update(ch => add(ch, repo.remote.files, `${base}/.gitkeep`, ''))
+    return null
+  }
+
   function handleCreate(name) {
     if (!repo.remote) return 'Files are still loading.'
     const error = nameError(name)
     if (error) return error
     const base = newFile.folder ? `${newFile.folder}/${name}` : name
     if (newFile.kind === 'folder') {
-      const err = createError(changes, virtual, [base, `${base}/.gitkeep`])
+      const err = createFolder(newFile.folder, name)
       if (err) return err
-      update(ch => add(ch, repo.remote.files, `${base}/.gitkeep`, ''))
     } else {
       const path = `${base}.md`
       const err = createError(changes, virtual, [path])
