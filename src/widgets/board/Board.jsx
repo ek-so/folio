@@ -1,5 +1,5 @@
 import { useState, forwardRef } from 'react'
-import { DotsThree, DotsSixVertical, Trash, Plus, PencilSimple, Tag, SlidersHorizontal } from '@phosphor-icons/react'
+import { DotsThree, DotsSixVertical, Trash, Plus, PencilSimple, Tag, Columns } from '@phosphor-icons/react'
 import {
   DndContext, DragOverlay, MouseSensor, TouchSensor, useSensor, useSensors,
   closestCenter, closestCorners, pointerWithin,
@@ -66,8 +66,8 @@ export default function Board({ id, services, onRemove }) {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" onCloseAutoFocus={e => e.preventDefault()}>
-        <DropdownMenuItem disabled={off} onSelect={() => setChoosing('columns')}><SlidersHorizontal /> Set visibility…</DropdownMenuItem>
-        <DropdownMenuItem disabled={off} onSelect={() => setChoosing('properties')}><Tag /> Card properties…</DropdownMenuItem>
+        <DropdownMenuItem disabled={off} onSelect={() => setChoosing('columns')}><Columns /> Columns</DropdownMenuItem>
+        <DropdownMenuItem disabled={off} onSelect={() => setChoosing('properties')}><Tag /> Properties</DropdownMenuItem>
         <DropdownMenuItem disabled={off} onSelect={act.newColumn}><Plus /> New column</DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem variant="destructive" disabled={!canEdit} onSelect={onRemove}><Trash /> Remove board</DropdownMenuItem>
@@ -176,7 +176,7 @@ export default function Board({ id, services, onRemove }) {
       )}
       {choosing === 'columns' && board && (
         <CheckListModal
-          title="Columns visibility"
+          title="Columns"
           description="Tick the columns to show. The folder button opens a column's folder, hidden or not."
           items={data.columns.map(c => c.name)}
           onOpen={name => { setChoosing(null); act.openColumn(data.columns.find(c => c.name === name)) }}
@@ -193,7 +193,7 @@ export default function Board({ id, services, onRemove }) {
           .filter(k => k !== DESCRIPTION && !board.properties.includes(k)).sort()
         return (
           <CheckListModal
-            title="Card properties"
+            title="Properties"
             description="Their values show on the cards, without names. The description always shows."
             items={[...board.properties, ...available]}
             selected={board.properties}
