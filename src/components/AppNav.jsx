@@ -59,10 +59,9 @@ export function NavRail({ page, pages, viewActions, onPage, onSearch, renderSync
         {!collapsed && treeButton}
       </div>
       <div className="h-2" /> {/* + the 4px gaps = 16px */}
-      <div className={cn('flex flex-col gap-space', collapsed && 'items-center')}>
-        {collapsed && treeButton}
-        {renderSync(collapsed)}
-      </div>
+      {/* Collapsed, the tree button (while the tree is hidden) comes first, with its own separator */}
+      {collapsed && treeButton && <>{treeButton}{separator}</>}
+      {renderSync(collapsed)}
       {/* Search right under Sync (the items' 4px gap), a plain item like the others */}
       <Button variant="ghost" tooltip={hint('Search')} tooltipSide="right" className={cn('justify-start gap-3 font-normal', collapsed && 'size-control justify-center px-0')} onClick={onSearch}>
         <MagnifyingGlass /> {label('Search')}
