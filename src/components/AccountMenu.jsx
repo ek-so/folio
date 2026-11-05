@@ -26,7 +26,7 @@ export default function AccountMenu({ trigger, current, pages, viewActions, onNa
       <DropdownMenuContent align="start" className="w-64" onCloseAutoFocus={e => e.preventDefault()}>
         {editing ? (
           <>
-            <DropdownMenuItem onSelect={e => { e.preventDefault(); setEditing(null) }}><ArrowLeft /> {editing.title}</DropdownMenuItem>
+            <DropdownMenuItem onSelect={e => { e.preventDefault(); setEditing(null) }}><ArrowLeft /> <span className="min-w-0 truncate">{editing.title}</span></DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem disabled={!viewActions.canEdit} onSelect={() => viewActions.onRename(editing)}><PencilSimple /> Rename</DropdownMenuItem>
             <DropdownMenuItem variant="destructive" disabled={!viewActions.canEdit} onSelect={() => viewActions.onDelete(editing)}><Trash /> Delete</DropdownMenuItem>
@@ -35,7 +35,7 @@ export default function AccountMenu({ trigger, current, pages, viewActions, onNa
           <>
             {pages.map(p => (
               <DropdownMenuItem key={p.id} className={current === p.id ? ACTIVE : undefined} onSelect={() => onNavigate(p.id)}>
-                <p.icon /> {p.title}{mark(p.id)}
+                <p.icon /> <span className="min-w-0 truncate">{p.title}</span>{mark(p.id)}
                 {p.view
                   ? <button type="button" aria-label={`Actions for ${p.title}`} className={`flex size-control-md shrink-0 items-center justify-center rounded-sm ${current === p.id ? '' : 'ml-auto'}`} onClick={own(() => setEditing(p))}><DotsThree weight="bold" size={16} /></button>
                   : <span title="Not editable" className={`flex size-control-md shrink-0 items-center justify-center text-muted-foreground ${current === p.id ? '' : 'ml-auto'}`} onClick={own(() => toast('Not editable'))}><Lock /></span>}

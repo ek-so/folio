@@ -6,7 +6,6 @@
 
 export const VIEWS_PATH = '.folio/views.json'
 export const DEFAULT_VIEWS = [{ id: 'home', name: 'Home' }]
-export const MAX_VIEW_NAME = 40
 
 // Ids that belong to other pages
 const RESERVED = ['files', 'graph', 'settings', 'links']
@@ -35,13 +34,6 @@ export function parseViews(text) {
 
 export const serializeViews = views => JSON.stringify({ views }, null, 2) + '\n'
 
-// An error message for a view name, or '' when it's fine (a new view may have none: see addView)
-export function viewNameError(name) {
-  if (!name.trim()) return 'Enter a name.'
-  if (name.trim().length > MAX_VIEW_NAME) return `Use at most ${MAX_VIEW_NAME} characters.`
-  return ''
-}
-
 const newId = views => {
   const used = new Set([...views.map(v => v.id), ...RESERVED])
   let id
@@ -50,7 +42,8 @@ const newId = views => {
   return id
 }
 
-// `views` with one more at the end, and its id; no name is called Untitled
+// `views` with one more at the end, and its id; no name is called Untitled. Names have no
+// length limit: the interface cuts what doesn't fit.
 export function addView(views, name = '') {
   const id = newId(views)
   return { views: [...views, { id, name: name.trim() || 'Untitled' }], id }

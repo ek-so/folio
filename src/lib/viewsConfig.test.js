@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { parseViews, serializeViews, addView, renameView, removeView, viewNameError, isConfigPath, DEFAULT_VIEWS } from './viewsConfig.js'
+import { parseViews, serializeViews, addView, renameView, removeView, isConfigPath, DEFAULT_VIEWS } from './viewsConfig.js'
 
 describe('viewsConfig', () => {
   it('has Home alone without a file, or with text it can\'t read', () => {
@@ -22,12 +22,6 @@ describe('viewsConfig', () => {
     expect(parseViews(serializeViews(views))).toEqual(views)
     expect(renameView(views, id, '  Work ')[1].name).toBe('Work')
     expect(removeView(views, 'home')).toEqual([views[1]])
-  })
-
-  it('checks names', () => {
-    expect(viewNameError('  ')).not.toBe('')
-    expect(viewNameError('x'.repeat(41))).not.toBe('')
-    expect(viewNameError('Work')).toBe('')
   })
 
   it('knows the config folder', () => {

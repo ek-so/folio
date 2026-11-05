@@ -35,7 +35,7 @@ import DeleteModal from './components/DeleteModal.jsx'
 import { useTheme } from './hooks/useTheme.js'
 import { storage } from './lib/storage.js'
 import { PAGE, mainPages } from './lib/pages.js'
-import { isConfigPath, addView, renameView, removeView, viewNameError } from './lib/viewsConfig.js'
+import { isConfigPath, addView, renameView, removeView } from './lib/viewsConfig.js'
 import { urlForPage, pageForUrl, existingView } from './lib/url.js'
 import { fileView, folderView, startTrails, currentView, openView, trailTo, movedTrails, keptTrails } from './lib/views.js'
 import { toast } from 'sonner'
@@ -569,8 +569,6 @@ export default function App() {
           <NewFileModal
             kind="view"
             onCreate={name => {
-              const error = name && viewNameError(name)
-              if (error) return error
               const { views, id } = addView(viewsConfig.views, name)
               viewsConfig.save(views)
               setPage(id)
@@ -586,8 +584,7 @@ export default function App() {
             kind="view"
             item={{ name: viewDialog.view.title, type: 'dir' }}
             onRename={name => {
-              const error = viewNameError(name)
-              if (error) return error
+              if (!name.trim()) return 'Enter a name.'
               viewsConfig.save(renameView(viewsConfig.views, viewDialog.view.id, name))
               setViewDialog(null)
               return null

@@ -63,8 +63,8 @@ export function NavRail({ page, pages, viewActions, onPage, onSearch, renderSync
       <div className="h-2" /> {/* + the 4px gaps = 16px */}
       {pages.map(p => (
         <div key={p.id} className="group relative">
-          <Button variant="ghost" title={hint(p.title)} aria-current={page === p.id ? 'page' : undefined} className={cn(item(p.id), !collapsed && 'w-full')} onClick={() => onPage(p.id)}>
-            <p.icon /> {label(p.title)}
+          <Button variant="ghost" title={hint(p.title)} aria-current={page === p.id ? 'page' : undefined} className={cn(item(p.id), !collapsed && 'w-full pr-10')} onClick={() => onPage(p.id)}>
+            <p.icon /> {collapsed ? label(p.title) : <span className="min-w-0 truncate">{p.title}</span>}
           </Button>
           {!collapsed && (
             <div className="absolute inset-y-0 right-1 flex items-center">
