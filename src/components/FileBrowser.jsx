@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Plus, FileText, Folder, UploadSimple } from '@phosphor-icons/react'
 import { Button } from './ui/button.jsx'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from './ui/dropdown-menu.jsx'
@@ -6,6 +6,8 @@ import Surface from './Surface.jsx'
 import TitleBar from './TitleBar.jsx'
 import ItemMenu from './ItemMenu.jsx'
 import { ListRow } from './ui/list-row.jsx'
+import { CardTile } from './ui/card-tile.jsx'
+import { storage } from '../lib/storage.js'
 import { splitName } from '../lib/changes.js'
 import { fileKind, LINK_ERRORS } from '../lib/files.js'
 import FileIcon from './FileIcon.jsx'
@@ -24,6 +26,8 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
   const [dragOverPath, setDragOverPath] = useState(null)
   const [filesOver, setFilesOver] = useState(false) // files from the device dragged over the list
   const pickerRef = useRef()
+  const [view, setView] = useState(storage.getFilesView) // 'list' | 'cards', one choice for every folder
+  useEffect(() => { storage.setFilesView(view) }, [view])
 
   // Dragging files from the device (not a row being moved)
   const isFileDrag = e => !draggingRef.current && e.dataTransfer.types.includes('Files')
@@ -50,7 +54,7 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
           name={path ? currentFolder : repoName}
           badge={<SymlinkedBy links={linkedBy} onOpen={onOpenLink} />}
         >
-          {path && <ItemMenu item={{ name: currentFolder, path, type: 'dir' }} onRename={onRename} onDelete={onDelete} onMove={onMove} folders={folders} />}
+          <ItemMenu item={path ? { name: currentFolder, path, type: 'dir' } : null} onRename={onRename} onDelete={onDelete} onMove={onMove} folders={folders} view={view} onView={setView} />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button size="icon" aria-label="New" className="shrink-0">
@@ -98,24 +102,69 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
           <p className="text-muted-foreground text-sm text-center py-12">No notes yet</p>
         )}
         {!loading && (
-          <ul className="p-space">
+          <ul className={cn('p-space', view === 'cards' && 'grid grid-cols-[repeat(auto-fill,minmax(120px,1fr))] gap-space-sm')}>
             {items.map(item => {
               const [base, ext] = item.type === 'dir' ? [item.name, ''] : splitName(item.name)
               const isLink = item.path in symlinks
               const link = symlinks[item.path] // undefined while loading
               const openable = isLink ? !!link?.kind : item.type === 'dir' || fileKind(item.path) !== 'file'
               const isDraggedItem = dragging?.path === item.path
+              const Item = view === 'cards' ? CardTile : ListRow
+              const cards = view === 'cards'
+              const dragProps = {
+                draggable: true,
+                onDragStart: e => {
+                  draggingRef.current = item
+                  setDragging(item)
+                  e.dataTransfer.effectAllowed = 'move'
+                },
+                onDragEnd: () => {
+                  draggingRef.current = null
+                  setDragging(null)
+                  setDragOverPath(null)
+                },
+                onDragOver: e => {
+                  if (item.type !== 'dir') return
+                  if (isFileDrag(e)) {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    e.dataTransfer.dropEffect = 'copy'
+                    setFilesOver(true)
+                    setDragOverPath(item.path)
+                    return
+                  }
+                  const d = draggingRef.current
+                  if (!d || d.path === item.path) return
+                  e.preventDefault()
+                  e.dataTransfer.dropEffect = 'move'
+                  setDragOverPath(item.path)
+                },
+                onDragLeave: e => {
+                  if (item.type !== 'dir') return
+                  if (!e.currentTarget.contains(e.relatedTarget)) setDragOverPath(null)
+                },
+                onDrop: e => {
+                  if (item.type === 'dir' && isFileDrag(e)) return dropFiles(e, item.path)
+                  const d = draggingRef.current
+                  if (item.type !== 'dir' || !d || d.path === item.path) return
+                  e.preventDefault()
+                  onDropMove(d, item.path)
+                  draggingRef.current = null
+                  setDragging(null)
+                  setDragOverPath(null)
+                },
+              }
               return (
                 <li key={item.path}>
-                  <ListRow
+                  <Item
                     icon={isLink
-                      ? <FileIcon path={link?.path ?? item.path} dir={link?.kind === 'folder'} link />
-                      : <FileIcon path={item.path} dir={item.type === 'dir'} />}
+                      ? <FileIcon path={link?.path ?? item.path} dir={link?.kind === 'folder'} link large={cards} />
+                      : <FileIcon path={item.path} dir={item.type === 'dir'} large={cards} />}
                     title={<>
                       {base}
                       {ext && <span className="text-muted-foreground">{ext}</span>}
                       {isLink && <span className="text-muted-foreground"> (symlink)</span>}
-                      {link?.error && <span className="ml-2 text-sm text-muted-foreground">{LINK_ERRORS[link.error]}</span>}
+                      {link?.error && <span className={cn('text-sm text-muted-foreground', !cards && 'ml-2')}>{LINK_ERRORS[link.error]}</span>}
                     </>}
                     changed={item.changed}
                     onClick={() => navigate(item)}
@@ -124,54 +173,12 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
                     dimmed={!isDraggedItem && (item.name.startsWith('.') || isLink)}
                     // Where a link points: the browser's own tooltip on hover
                     tooltip={link?.path ? `Symlinked from ${link.path}` : undefined}
-                    trailing={<ItemMenu item={item} onRename={onRename} onDelete={onDelete} onMove={onMove} folders={folders} inList />}
+                    trailing={<ItemMenu item={item} onRename={onRename} onDelete={onDelete} onMove={onMove} folders={folders} inList hoverReveal={cards} />}
                     className={cn(
                       isDraggedItem && 'opacity-40',
                       dragOverPath === item.path && item.type === 'dir' && 'bg-primary/10 ring-1 ring-primary/40',
                     )}
-                    rowProps={{
-                      draggable: true,
-                      onDragStart: e => {
-                        draggingRef.current = item
-                        setDragging(item)
-                        e.dataTransfer.effectAllowed = 'move'
-                      },
-                      onDragEnd: () => {
-                        draggingRef.current = null
-                        setDragging(null)
-                        setDragOverPath(null)
-                      },
-                      onDragOver: e => {
-                        if (item.type !== 'dir') return
-                        if (isFileDrag(e)) {
-                          e.preventDefault()
-                          e.stopPropagation()
-                          e.dataTransfer.dropEffect = 'copy'
-                          setFilesOver(true)
-                          setDragOverPath(item.path)
-                          return
-                        }
-                        const d = draggingRef.current
-                        if (!d || d.path === item.path) return
-                        e.preventDefault()
-                        e.dataTransfer.dropEffect = 'move'
-                        setDragOverPath(item.path)
-                      },
-                      onDragLeave: e => {
-                        if (item.type !== 'dir') return
-                        if (!e.currentTarget.contains(e.relatedTarget)) setDragOverPath(null)
-                      },
-                      onDrop: e => {
-                        if (item.type === 'dir' && isFileDrag(e)) return dropFiles(e, item.path)
-                        const d = draggingRef.current
-                        if (item.type !== 'dir' || !d || d.path === item.path) return
-                        e.preventDefault()
-                        onDropMove(d, item.path)
-                        draggingRef.current = null
-                        setDragging(null)
-                        setDragOverPath(null)
-                      },
-                    }}
+                    {...(cards ? { tileProps: dragProps } : { rowProps: dragProps })}
                   />
                 </li>
               )

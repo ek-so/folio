@@ -16,13 +16,15 @@ const iconColor = (path, dir) => dir ? 'text-folder' : ICONS[fileKind(path)][1]
 // red PDF, green image).
 // `link`: a symlink — the icon of what it points to (`path` / `dir`), with a
 // small ↗ in the corner, like an alias on a Mac.
-export default function FileIcon({ path, dir, link }) {
+// `large`: 48px, for cards.
+export default function FileIcon({ path, dir, link, large }) {
   const Icon = dir ? Folder : ICONS[fileKind(path)][0]
   const color = iconColor(path, dir)
-  if (!link) return <Icon className={cn('size-5 shrink-0', color)} />
+  const size = large ? 'size-12' : 'size-5'
+  if (!link) return <Icon className={cn(size, 'shrink-0', color)} />
   return (
-    <span className="relative flex size-5 shrink-0">
-      <Icon className={cn('size-5', color)} />
+    <span className={cn('relative flex shrink-0', size)}>
+      <Icon className={cn(size, color)} />
       <span className="absolute -bottom-0.5 -left-0.5 flex size-2.5 items-center justify-center rounded-[3px] bg-background text-foreground">
         <ArrowUpRight weight="bold" className="size-2" />
       </span>

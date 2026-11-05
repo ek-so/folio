@@ -11,6 +11,7 @@ const TREE_WIDTH_KEY = 'folio_tree_width'
 const RAIL_WIDTH_KEY = 'folio_rail_width'
 const RAIL_KEY = 'folio_rail_collapsed'
 const TREE_KEY = 'folio_tree_collapsed'
+const FILES_VIEW_KEY = 'folio_files_view'
 const CHANGES_KEY = 'folio_changes_'
 
 function read(store, key) {
@@ -42,6 +43,9 @@ export const storage = {
   setRailCollapsed: (collapsed) => write(localStorage, RAIL_KEY, collapsed ? '1' : null),
   getTreeCollapsed: () => read(localStorage, TREE_KEY) === '1',
   setTreeCollapsed: (collapsed) => write(localStorage, TREE_KEY, collapsed ? '1' : null),
+  // File manager's layout: 'list' | 'cards'
+  getFilesView: () => read(localStorage, FILES_VIEW_KEY) === 'cards' ? 'cards' : 'list',
+  setFilesView: (view) => write(localStorage, FILES_VIEW_KEY, view === 'cards' ? 'cards' : null),
   getTheme: () => read(localStorage, THEME_KEY),
   setTheme: (theme) => write(localStorage, THEME_KEY, theme),
   // Session-only, so a reload keeps the current folder, open note and page
