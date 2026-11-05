@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { List, SidebarSimple, MagnifyingGlass, LinkBreak, Gear, SignOut, TreeView, Lock, Plus } from '@phosphor-icons/react'
+import { List, SidebarSimple, MagnifyingGlass, LinkBreak, Gear, SignOut, TreeView, Plus } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils.js'
 import { Button } from './ui/button.jsx'
 import AccountMenu from './AccountMenu.jsx'
@@ -23,11 +23,10 @@ const ACTIVE = 'bg-primary/15 text-primary hover:bg-primary/20 hover:text-primar
 // (8px padding and a 1px top edge like the boxes' outline, around a 40px row, then the separator as its bottom
 // border, level with the title bars' borders): the app's name (Folio, bold) and a button that collapses
 // the rail to icons only (remembered on this device; expanded, its edge is a drag handle), and after it,
-// while the file tree is hidden, `onShowTree`'s tree button (collapsed: first under the separator); 16px; Sync and Search (16px apart); 16px; Home, File manager, Graph, and at the bottom Broken links (count),
+// while the file tree is hidden, `onShowTree`'s tree button (collapsed: first under the separator); 16px; Sync and Search (16px apart); 16px; the views, Add view, a separator, File manager, Graph, and at the bottom Broken links (count),
 // Settings and Sign out.
-// `pages`: the main pages (lib/pages.js): the views, File manager, Graph, then Add view. With a mouse, a view shows its ⋯
-// (Rename / Delete: `viewActions`) on hover, File manager and Graph a lock ("Not editable"); the
-// collapsed rail has neither, and Add view is an icon.
+// `pages`: the main pages (lib/pages.js): the views, then Add view, a separator, File manager and Graph. With a
+// mouse, a view shows its ⋯ (Rename / Delete: `viewActions`) on hover; the collapsed rail has none, and Add view is an icon.
 export function NavRail({ page, pages, viewActions, onPage, onSearch, renderSync, menu, onShowTree }) {
   const [collapsed, setCollapsed] = useState(storage.getRailCollapsed)
   const [width, resize] = useResizableWidth(RAIL_WIDTH, storage.getRailWidth, storage.setRailWidth)
@@ -41,6 +40,13 @@ export function NavRail({ page, pages, viewActions, onPage, onSearch, renderSync
       <TreeView />
     </Button>
   )
+  const pageButton = p => (
+    <Button variant="ghost" title={hint(p.title)} aria-current={page === p.id ? 'page' : undefined} className={cn(item(p.id), !collapsed && 'w-full', !collapsed && p.view && 'pr-10')} onClick={() => onPage(p.id)}>
+      <p.icon /> {collapsed ? label(p.title) : <span className="min-w-0 truncate">{p.title}</span>}
+    </Button>
+  )
+  // my-3 + the 4px gap = 16px (--space) on both sides
+  const separator = <div role="separator" className="my-3 h-px w-full shrink-0 bg-border" />
   return (
     <nav aria-label="Main" style={collapsed ? undefined : { width }} className={cn('relative hidden md:flex shrink-0 flex-col gap-1 pt-space pb-space-lg pl-space-lg pr-space-sm', collapsed ? 'items-center' : 'max-w-[25vw]')}>
       <div className={cn('flex shrink-0 items-center gap-space-sm self-stretch border-t border-b border-t-transparent border-b-border py-space-sm', collapsed ? 'justify-center' : 'pl-3')}>
@@ -61,16 +67,12 @@ export function NavRail({ page, pages, viewActions, onPage, onSearch, renderSync
         </Button>
       </div>
       <div className="h-2" /> {/* + the 4px gaps = 16px */}
-      {pages.map(p => (
+      {pages.filter(p => p.view).map(p => (
         <div key={p.id} className="group relative">
-          <Button variant="ghost" title={hint(p.title)} aria-current={page === p.id ? 'page' : undefined} className={cn(item(p.id), !collapsed && 'w-full pr-10')} onClick={() => onPage(p.id)}>
-            <p.icon /> {collapsed ? label(p.title) : <span className="min-w-0 truncate">{p.title}</span>}
-          </Button>
+          {pageButton(p)}
           {!collapsed && (
             <div className="absolute inset-y-0 right-1 flex items-center">
-              {p.view
-                ? <ViewMenu view={p} disabled={!viewActions.canEdit} onRename={viewActions.onRename} onDelete={viewActions.onDelete} />
-                : <span title="Not editable" className="flex size-control-md items-center justify-center text-muted-foreground pointer-fine:opacity-0 pointer-fine:group-hover:opacity-100"><Lock className="size-4" /></span>}
+              <ViewMenu view={p} disabled={!viewActions.canEdit} onRename={viewActions.onRename} onDelete={viewActions.onDelete} />
             </div>
           )}
         </div>
@@ -78,9 +80,10 @@ export function NavRail({ page, pages, viewActions, onPage, onSearch, renderSync
       <Button variant="ghost" title={hint('Add view')} disabled={!viewActions.canEdit} className={cn('justify-start gap-3 font-normal', collapsed && 'size-control justify-center px-0')} onClick={viewActions.onAdd}>
         <Plus /> {label('Add view')}
       </Button>
+      {separator}
+      {pages.filter(p => !p.view).map(p => <div key={p.id}>{pageButton(p)}</div>)}
       <div className="flex-1" />
-      {/* my-3 + the 4px gap = 16px (--space) on both sides */}
-      <div role="separator" className="my-3 h-px w-full shrink-0 bg-border" />
+      {separator}
       <Button variant="ghost" title={hint('Broken links')} aria-current={page === PAGE.LINKS ? 'page' : undefined} className={cn(item(PAGE.LINKS), 'relative')} onClick={() => onPage(PAGE.LINKS)}>
         <LinkBreak /> {label('Broken links')}
         {menu.brokenCount > 0 && (collapsed

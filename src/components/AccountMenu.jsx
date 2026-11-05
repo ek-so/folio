@@ -1,6 +1,5 @@
 import { useState } from 'react'
-import { Check, Gear, SignOut, LinkBreak, DotsThree, Lock, Plus, PencilSimple, Trash, ArrowLeft } from '@phosphor-icons/react'
-import { toast } from 'sonner'
+import { Check, Gear, SignOut, LinkBreak, DotsThree, Plus, PencilSimple, Trash, ArrowLeft } from '@phosphor-icons/react'
 import { PAGE } from '../lib/pages.js'
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator,
@@ -10,10 +9,9 @@ import {
 const ACTIVE = 'bg-primary/15 text-primary focus:bg-primary/20 focus:text-primary'
 
 // The phone navigation's popover, opened by `trigger` (a Button): the main
-// pages (`pages`) with Add view after them, then Broken links (count), Settings and Sign out.
-// `current` is the open page, checked. A view has its ⋯ (the menu turns into
-// that view's Rename / Delete: `viewActions`), File manager and Graph a lock
-// (tapping it says "Not editable"; on desktop that's its tooltip). The account and repo are shown in Settings.
+// pages (`pages`): the views and Add view, then File manager and Graph, then Broken links (count), Settings
+// and Sign out. `current` is the open page, checked. A view has its ⋯ (the menu turns into
+// that view's Rename / Delete: `viewActions`). The account and repo are shown in Settings.
 export default function AccountMenu({ trigger, current, pages, viewActions, onNavigate, brokenCount, onSignOut }) {
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState(null) // the view whose actions the menu shows
@@ -33,15 +31,19 @@ export default function AccountMenu({ trigger, current, pages, viewActions, onNa
           </>
         ) : (
           <>
-            {pages.map(p => (
+            {pages.filter(p => p.view).map(p => (
               <DropdownMenuItem key={p.id} className={current === p.id ? ACTIVE : undefined} onSelect={() => onNavigate(p.id)}>
                 <p.icon /> <span className="min-w-0 truncate">{p.title}</span>{mark(p.id)}
-                {p.view
-                  ? <button type="button" aria-label={`Actions for ${p.title}`} className={`flex size-control-md shrink-0 items-center justify-center rounded-sm ${current === p.id ? '' : 'ml-auto'}`} onClick={own(() => setEditing(p))}><DotsThree weight="bold" size={16} /></button>
-                  : <span title="Not editable" className={`flex size-control-md shrink-0 items-center justify-center text-muted-foreground ${current === p.id ? '' : 'ml-auto'}`} onClick={own(() => toast('Not editable'))}><Lock /></span>}
+                <button type="button" aria-label={`Actions for ${p.title}`} className={`flex size-control-md shrink-0 items-center justify-center rounded-sm ${current === p.id ? '' : 'ml-auto'}`} onClick={own(() => setEditing(p))}><DotsThree weight="bold" size={16} /></button>
               </DropdownMenuItem>
             ))}
             <DropdownMenuItem disabled={!viewActions.canEdit} onSelect={viewActions.onAdd}><Plus /> Add view</DropdownMenuItem>
+            <DropdownMenuSeparator />
+            {pages.filter(p => !p.view).map(p => (
+              <DropdownMenuItem key={p.id} className={current === p.id ? ACTIVE : undefined} onSelect={() => onNavigate(p.id)}>
+                <p.icon /> {p.title}{mark(p.id)}
+              </DropdownMenuItem>
+            ))}
             <DropdownMenuSeparator />
             <DropdownMenuItem className={current === PAGE.LINKS ? ACTIVE : undefined} onSelect={() => onNavigate(PAGE.LINKS)}>
               <LinkBreak /> Broken links
