@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { frontMatter, properties, withKeys, blankFrontMatter, valueList, noteTitle, withoutKeys, renameKey, keyNameError, withValue, valuesOf } from './frontmatter.js'
+import { frontMatter, properties, withKeys, blankFrontMatter, valueList, noteTitle, withoutKeys, renameKey, keyNameError, withValue, valuesOf, propertyColor } from './frontmatter.js'
 
 describe('front matter', () => {
   it('reads flat keys, lists and quoted values', () => {
@@ -74,5 +74,11 @@ describe('front matter', () => {
   it('collects the values a property has', () => {
     const notes = ['---\nt: b\n---', '---\nt: [a, b]\n---', '---\nu: z\n---', 'plain', '---\nt:\n---']
     expect(valuesOf(notes, 't')).toEqual(['a', 'b'])
+  })
+
+  it('gives each usual property its own badge color', () => {
+    const keys = ['type', 'priority', 'due date', 'status', 'tags', 'project', 'date', 'owner']
+    expect(new Set(keys.map(propertyColor)).size).toBe(keys.length)
+    expect(propertyColor('type')).toBe(propertyColor('type'))
   })
 })

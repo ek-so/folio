@@ -57,6 +57,14 @@ export function keyNameError(key) {
 // The note's properties as { key: value }
 export const properties = text => Object.fromEntries((frontMatter(text)?.props ?? []).map(p => [p.key, p.value]))
 
+// How many colors a property's badges can have (--tag-0 … in index.css)
+export const PROPERTY_COLORS = 10
+
+// The color (0 … PROPERTY_COLORS - 1) of a property's badges: the same one for
+// a name everywhere. A hash, picked so that the usual names (type, priority,
+// due date, status, tags, project, date, owner) all differ; others can share.
+export const propertyColor = key => [...key].reduce((h, c) => (h * 111 + c.charCodeAt(0)) >>> 0, 7) % PROPERTY_COLORS
+
 // A property's value as the strings to show (empty ones left out)
 export const valueList = value => (Array.isArray(value) ? value : [value]).filter(v => v !== '' && v != null)
 

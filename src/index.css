@@ -58,6 +58,18 @@
     --callout-warning: oklch(0.72 0.15 75);
     --callout-caution: oklch(0.6 0.2 27);
     --callout-tint: 14%;
+    /* Property badges: one hue per property (lib/frontmatter.js propertyColor), tinted against --card */
+    --tag-0: oklch(0.65 0.15 27);
+    --tag-1: oklch(0.7 0.15 55);
+    --tag-2: oklch(0.75 0.14 85);
+    --tag-3: oklch(0.7 0.15 125);
+    --tag-4: oklch(0.65 0.15 155);
+    --tag-5: oklch(0.65 0.12 190);
+    --tag-6: oklch(0.65 0.13 235);
+    --tag-7: oklch(0.6 0.15 265);
+    --tag-8: oklch(0.6 0.17 305);
+    --tag-9: oklch(0.65 0.17 350);
+    --tag-tint: 20%;
     /* Image file icons in lists (folders use primary, PDFs destructive) */
     --file-image: oklch(0.62 0.15 150);
     /* Folder icons: yellowish (files are blue, the primary) */
@@ -117,6 +129,7 @@
       /* Code block background: a little lighter than secondary, slight accent tint */
       --code-bg: oklch(0.26 0.04 240);
       --callout-tint: 24%;
+      --tag-tint: 30%;
     }
   }
 
@@ -159,6 +172,7 @@
     /* Code block background: a little lighter than secondary, slight accent tint */
     --code-bg: oklch(0.26 0.04 240);
     --callout-tint: 24%;
+    --tag-tint: 30%;
   }
 }
 

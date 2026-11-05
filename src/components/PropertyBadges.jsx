@@ -6,13 +6,21 @@ import { Input } from './ui/input.jsx'
 import { ListRow } from './ui/list-row.jsx'
 import { Popover, PopoverTrigger, PopoverContent } from './ui/popover.jsx'
 import { Tip } from './ui/tooltip.jsx'
-import { valueList, DESCRIPTION } from '../lib/frontmatter.js'
+import { Button } from './ui/button.jsx'
+import { valueList, propertyColor, DESCRIPTION } from '../lib/frontmatter.js'
 import { inlineHtml } from '../lib/previewLinks.js'
 
 // A click or press inside a badge or its popover is the property's, never the
 // note's or the card's (open it, start a drag, double tap to edit): React
 // events pass through portals to the parent
 const own = { onClick: e => e.stopPropagation(), onMouseDown: e => e.stopPropagation(), onTouchStart: e => e.stopPropagation() }
+
+// A badge's color: its property's hue (--tag-N, index.css) tinted against the card; a bit stronger on hover
+const tint = key => ({
+  style: { '--tag': `var(--tag-${propertyColor(key)})` },
+  className: 'bg-[color-mix(in_oklab,var(--tag)_var(--tag-tint),var(--card))]',
+})
+const TINT_HOVER = 'hover:bg-[color-mix(in_oklab,var(--tag)_calc(var(--tag-tint)_*_1.7),var(--card))]'
 
 // A note's properties (lib/frontmatter.js), in the file's order: its
 // description as muted text with its markdown links (`path`: the note's, `files`:
@@ -45,10 +53,10 @@ export default function PropertyBadges({ props, path, files, clamp, title, class
     : (
       <div key={i} className="flex flex-wrap gap-space-xs">
         {part.badges.map(({ id, prop, label }) => onChange
-          ? <EditableBadge key={id} prop={prop} label={label} card={!!title} options={options} onChange={onChange} />
+          ? <EditableBadge key={id} prop={prop} label={label} options={options} onChange={onChange} />
           : (
             <Tip key={id} content={`${prop.key}: ${label}`}>
-              <Badge className={cn(title && 'bg-card')}><span className="truncate">{label}</span></Badge>
+              <Badge {...tint(prop.key)}><span className="truncate">{label}</span></Badge>
             </Tip>
           ))}
       </div>
@@ -66,7 +74,7 @@ export default function PropertyBadges({ props, path, files, clamp, title, class
 
 // One value of a property as a badge with a ▾ that opens the property's popover
 // (`label` null: the property is empty and shows its name)
-function EditableBadge({ prop, label, card, options, onChange }) {
+function EditableBadge({ prop, label, options, onChange }) {
   const [open, setOpen] = useState(false)
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -75,7 +83,8 @@ function EditableBadge({ prop, label, card, options, onChange }) {
           <Badge
             as="button"
             type="button"
-            className={cn('cursor-pointer outline-none focus-visible:ring-1 focus-visible:ring-ring', card ? 'bg-card hover:bg-secondary' : 'hover:bg-secondary/70', label === null && 'text-muted-foreground')}
+            style={tint(prop.key).style}
+            className={cn('cursor-pointer outline-none focus-visible:ring-1 focus-visible:ring-ring', tint(prop.key).className, TINT_HOVER, label === null && 'text-muted-foreground')}
             {...own}
           >
             <span className="truncate">{label ?? prop.key}</span>
@@ -132,6 +141,7 @@ function ValueChooser({ prop, options, onChange, close }) {
         ))}
         {!isNew && !shown.length && <p className="px-3 py-2 text-sm text-muted-foreground">No values yet. Type one to add it.</p>}
       </div>
+      <Button onClick={close}>Done</Button>
     </div>
   )
 }
