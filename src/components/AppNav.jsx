@@ -19,12 +19,12 @@ const ACTIVE = 'bg-primary/15 text-primary hover:bg-primary/20 hover:text-primar
 // The app's primary navigation, in place of a header. `menu`: brokenCount and
 // onSignOut; `page` the open page; `renderSync(compact, bar)` makes the SyncButton (`bar`: the phone's top bar).
 // Desktop (768px+): a left rail, 16px from the top like the content boxes, 24px (--space-lg) on the left and
-// bottom; on the right its own 8px and the content's 16px gutter. On top a header shaped like a title bar
-// (8px padding and a 1px top edge like the boxes' outline, around a 40px row, then the separator as its bottom
-// border, level with the title bars' borders): the app's name (Folio, bold) and a button that collapses
-// the rail to icons only (remembered on this device; expanded, its edge is a drag handle), and after it,
-// while the file tree is hidden, `onShowTree`'s tree button (collapsed: first under the separator); 16px; Sync, Search right under it (a plain item), a separator, the views, Add view, a separator, File manager, Graph, and at the bottom Broken links (count),
-// Settings and Sign out.
+// bottom; on the right its own 8px and the content's 16px gutter. On top a header row, level with the title
+// bars' rows (8px and a 1px top edge like the boxes' outline above it): the app's name (Folio, bold) and a
+// button that collapses the rail to icons only (remembered on this device; expanded, its edge is a drag handle),
+// and after it, while the file tree is hidden, `onShowTree`'s tree button (collapsed: under it, like any item);
+// then a separator like every other; Sync, Search right under it (plain items), a separator, the views, Add view,
+// a separator, File manager, Graph, and at the bottom Broken links (count), Settings and Sign out.
 // `pages`: the main pages (lib/pages.js): the views, then Add view, a separator, File manager and Graph. With a
 // mouse, a view shows its ⋯ (Rename / Delete: `viewActions`) on hover; the collapsed rail has none, and Add view is an icon.
 export function NavRail({ page, pages, viewActions, onPage, onSearch, renderSync, menu, onShowTree }) {
@@ -58,17 +58,17 @@ export function NavRail({ page, pages, viewActions, onPage, onSearch, renderSync
     <nav aria-label="Main" style={collapsed ? undefined : { width }} className={cn('relative hidden md:flex shrink-0 flex-col gap-1 pt-space pb-space-lg pl-space-lg pr-space-sm', collapsed ? 'items-center' : 'max-w-[25vw]')}>
       {collapsed ? <>
         {/* Collapsed: the logo button (level with the title bars' rows) and, while the tree is hidden,
-            the tree button, grouped like any items, then one separator */}
+            the tree button, grouped like any items, then one separator (expanded: the header row, then it) */}
         <div className="flex shrink-0 justify-center self-stretch border-t border-t-transparent pt-space-sm">{collapseButton}</div>
         {treeButton}
         {separator}
       </> : <>
-        <div className="flex shrink-0 items-center gap-space-sm self-stretch border-t border-b border-t-transparent border-b-border py-space-sm pl-3">
+        <div className="flex shrink-0 items-center gap-space-sm self-stretch border-t border-t-transparent pt-space-sm pl-3">
           <span className="flex flex-1 items-center gap-2 text-base font-bold"><AppLogo className="size-6" />Folio</span>
           {collapseButton}
           {treeButton}
         </div>
-        <div className="h-2" /> {/* + the 4px gaps = 16px */}
+        {separator}
       </>}
       {renderSync(collapsed)}
       {/* Search right under Sync (the items' 4px gap), a plain item like the others */}
