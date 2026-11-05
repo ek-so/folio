@@ -332,6 +332,17 @@ export default function App() {
     followTrails(moves.reduce((t, [from, to]) => movedTrails(t, from, to), trails))
   }
 
+  // The properties board `id`'s cards show; a newly chosen one is added, empty, to its notes that lack it
+  function setCardProperties(id, keys) {
+    const { board } = boards[id] ?? {}
+    if (!board || !viewsReady || !repo.remote) return
+    const added = keys.filter(k => !board.properties.includes(k))
+    update(ch => {
+      const next = config.write(boardPath(id), serializeBoard({ ...board, properties: keys }))(ch)
+      return added.length ? withBoardKeys(next, repo.remote.files, board.folder, added, links.remoteText) : next
+    })
+  }
+
   function moveBoardColumn(id, name, index) {
     const { board, data } = boardData[id] ?? {}
     if (board && viewsReady) update(config.write(boardPath(id), serializeBoard(moveColumn(board, data, name, index))))
@@ -583,7 +594,7 @@ export default function App() {
                 onPlaceCard: placeBoardCard, onMoveColumn: moveBoardColumn,
                 onNewColumn: folder => setNewFile({ folder, kind: 'folder' }),
                 onNewCard: (folder, board) => setNewFile({ folder, kind: 'note', keys: [DESCRIPTION, ...board.properties], stay: true }),
-                onRenameColumn: handleRename, onDeleteColumn: deleteColumn,
+                onRenameColumn: handleRename, onDeleteColumn: deleteColumn, onCardProperties: setCardProperties,
               }}
             />
           ) : page === PAGE.LINKS ? (

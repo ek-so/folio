@@ -1,5 +1,5 @@
 import { useState, forwardRef } from 'react'
-import { DotsThree, Trash, Plus, Columns, PencilSimple } from '@phosphor-icons/react'
+import { DotsThree, Trash, Plus, Columns, PencilSimple, Tag } from '@phosphor-icons/react'
 import {
   DndContext, DragOverlay, MouseSensor, TouchSensor, useSensor, useSensors,
   closestCenter, closestCorners, pointerWithin,
@@ -13,6 +13,7 @@ import PropertyBadges from './PropertyBadges.jsx'
 import Spinner from './Spinner.jsx'
 import RenameModal from './RenameModal.jsx'
 import ColumnDeleteModal from './ColumnDeleteModal.jsx'
+import CardPropertiesModal from './CardPropertiesModal.jsx'
 import { displayName } from '../lib/files.js'
 import { frontMatter, valueList } from '../lib/frontmatter.js'
 import { DESCRIPTION, LOOSE } from '../lib/board.js'
@@ -52,6 +53,7 @@ export default function Board({ id, ready, board, data, title, notes, canEdit, a
   const [drag, setDrag] = useState(null) // { id, type, items } while dragging: each column's cards as shown meanwhile
   const [renaming, setRenaming] = useState(null) // the column whose Rename / Delete sheet is open
   const [deleting, setDeleting] = useState(null)
+  const [choosing, setChoosing] = useState(false) // the Card properties sheet
 
   const menu = (
     <DropdownMenu>
@@ -62,6 +64,7 @@ export default function Board({ id, ready, board, data, title, notes, canEdit, a
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" onCloseAutoFocus={e => e.preventDefault()}>
         <DropdownMenuItem disabled={!canEdit || !board || data?.missing} onSelect={() => actions.onNewColumn(board.folder)}><Columns /> New column</DropdownMenuItem>
+        <DropdownMenuItem disabled={!canEdit || !board || data?.missing} onSelect={() => setChoosing(true)}><Tag /> Card properties…</DropdownMenuItem>
         <DropdownMenuItem variant="destructive" disabled={!canEdit} onSelect={onRemove}><Trash /> Remove board</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -164,6 +167,16 @@ export default function Board({ id, ready, board, data, title, notes, canEdit, a
             return err
           }}
           onClose={() => setRenaming(null)}
+        />
+      )}
+      {choosing && board && (
+        <CardPropertiesModal
+          available={[...new Set([...data.loose, ...data.columns.flatMap(c => c.cards)]
+            .flatMap(c => notes[c.path] === undefined ? [] : frontMatter(notes[c.path])?.props.map(p => p.key) ?? []))]
+            .filter(k => k !== DESCRIPTION).sort()}
+          selected={board.properties}
+          onChange={keys => actions.onCardProperties(id, keys)}
+          onClose={() => setChoosing(false)}
         />
       )}
       {deleting && (
