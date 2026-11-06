@@ -36,9 +36,9 @@ const TINT_HOVER = 'hover:bg-[color-mix(in_oklab,var(--tag)_calc(var(--tag-tint)
 // (`options(key)`: the values to choose from) and an empty property shows its
 // name as a badge to fill; without it they're plain and empty ones aren't shown.
 // With `onRemoveValue(key, value)` and `onEditValue(key, from, to, color)` the popover has a
-// pencil beside Done that opens a dialog (`ValuesModal`) with every value of the property:
-// to add one, rename one and pick its color, for that value everywhere in the same
-// scope, or delete it (a 🗑 that asks first, then empties that value everywhere it's used);
+// pencil on each value (`ValueEditPopover`) that opens a sub popover to rename it and pick its
+// color, for that value everywhere in the same scope, or remove it (asks first, then empties
+// that value everywhere it's used);
 // `valueCount(key, value)`: in how many notes; `scopeName`: where, "this folder";
 // `chosen` ({ key: { value: color } }, lib/tagColors.js) are the colors picked so far.
 export default function PropertyBadges({ props, path, files, clamp, title, className, onChange, options, onRemoveValue, valueCount, scopeName, onEditValue, chosen }) {
