@@ -1,7 +1,6 @@
 import { Note } from '@phosphor-icons/react'
 import NoteWidget from './NoteWidget.jsx'
 import NoteSetup from './NoteSetup.jsx'
-import { noteTitle } from '@/lib/frontmatter.js'
 import { displayName } from '@/lib/files.js'
 import { notePath, parseNote, serializeNote, movedNote } from './note.js'
 
@@ -12,10 +11,10 @@ export default {
   icon: Note,
   Widget: NoteWidget,
   Setup: NoteSetup,
-  title(id, { config, notes }) {
+  title(id, { config }) {
     const file = config.read(notePath(id))
     const note = file.ready && file.text !== undefined ? parseNote(file.text) : null
-    return note ? noteTitle(notes[note.file] ?? '', displayName(note.file)) : 'Note'
+    return note ? displayName(note.file) : 'Note'
   },
   // Its note follows renames and moves
   moved(ch, id, from, to, isDir, { config }) {

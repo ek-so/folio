@@ -4,14 +4,15 @@ import { DotsThree, Trash, PencilSimple, Check, ArrowsOut } from '@phosphor-icon
 import { Button } from '@/components/ui/button.jsx'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu.jsx'
 import Spinner from '@/components/Spinner.jsx'
+import RenameModal from '@/components/RenameModal.jsx'
 import MarkdownPreview from '@/components/MarkdownPreview.jsx'
 import MarkdownEditor from '@/components/MarkdownEditor.jsx'
 import { useNote } from '@/hooks/useNote.js'
 import { displayName } from '@/lib/files.js'
-import { noteTitle } from '@/lib/frontmatter.js'
 import { notePath, parseNote } from './note.js'
 
-// A note widget (note.js): the note's title, Edit (✓ when done) and ⋯ (Open full screen, Remove) on top,
+// A note widget (note.js): the note's file name, Edit (✓ when done) and ⋯ (Open full screen, Rename: renames
+// the file, Remove) on top,
 // then its text in a box of fixed height that scrolls inside; a double tap edits at the tapped word. Edits save on their own, like on
 // the note's own page; opening it full screen is opening the note, as a board's card does.
 export default function NoteWidget({ id, services, onRemove }) {
@@ -21,8 +22,22 @@ export default function NoteWidget({ id, services, onRemove }) {
   const found = path && services.noteFile(path)
   const open = () => { window.dispatchEvent(new Event('folio:flush')); services.openFile(path) } // typing first
 
+  const [renaming, setRenaming] = useState(false)
   const frame = (title, body, actions) => (
-    <Frame title={title} onOpen={found ? open : undefined} actions={actions} canRemove={services.canEdit} onRemove={onRemove}>{body}</Frame>
+    <Frame title={title} onOpen={found ? open : undefined} onRename={found ? () => setRenaming(true) : undefined} actions={actions} canRemove={services.canEdit} onRemove={onRemove}>
+      {body}
+      {renaming && found && (
+        <RenameModal
+          item={{ name: path.slice(path.lastIndexOf('/') + 1), path, type: 'file' }}
+          onRename={name => {
+            const error = services.rename({ name: path.slice(path.lastIndexOf('/') + 1), path, type: 'file' }, name)
+            if (!error) setRenaming(false)
+            return error
+          }}
+          onClose={() => setRenaming(false)}
+        />
+      )}
+    </Frame>
   )
   const message = text => <p className="py-6 text-center text-sm text-muted-foreground">{text}</p>
   if (!file.ready) return frame('Note', <div className="flex justify-center py-12"><Spinner /></div>)
@@ -46,7 +61,6 @@ function NoteBox({ path, found, services, frame }) {
     textareaRef.current?.focus()
   }
 
-  const title = noteTitle(ready ? content : services.notes[path] ?? '', displayName(path))
   const actions = editing ? (
     <Button variant="success" size="icon" aria-label="Done" tooltip="Done" className="shrink-0" onClick={() => setEditing(false)}><Check /></Button>
   ) : (
@@ -56,11 +70,11 @@ function NoteBox({ path, found, services, frame }) {
     : loadError ? <p className="px-6 py-12 text-center text-sm text-muted-foreground">Couldn't open this note. It isn't saved on this device yet — connect to the internet and pull to refresh.</p>
     : editing ? <MarkdownEditor ref={textareaRef} content={content} onChange={change} onDone={() => setEditing(false)} />
     : <MarkdownPreview content={content} path={path} files={services.virtual} onDoubleTap={startEditing} onChange={change} onOpenFile={services.openFile} onNavigate={services.openFolder} />
-  return frame(title, <div data-no-pull className="flex h-80 flex-col overflow-hidden rounded-lg border border-border bg-card">{body}</div>, actions)
+  return frame(displayName(path), <div data-no-pull className="flex h-80 flex-col overflow-hidden rounded-lg border border-border bg-card">{body}</div>, actions)
 }
 
 // The widget's title row over `children`; ⋯ opens the note full screen (`onOpen`)
-function Frame({ title, onOpen, actions, canRemove, onRemove, children }) {
+function Frame({ title, onOpen, onRename, actions, canRemove, onRemove, children }) {
   return (
     <section className="flex shrink-0 flex-col gap-space-sm">
       <div className="flex min-h-control items-center gap-space-sm">
@@ -76,6 +90,7 @@ function Frame({ title, onOpen, actions, canRemove, onRemove, children }) {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" onCloseAutoFocus={e => e.preventDefault()}>
             <DropdownMenuItem disabled={!onOpen} onSelect={onOpen}><ArrowsOut /> Open full screen</DropdownMenuItem>
+            <DropdownMenuItem disabled={!onRename} onSelect={onRename}><PencilSimple /> Rename</DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem variant="destructive" disabled={!canRemove} onSelect={onRemove}><Trash /> Remove</DropdownMenuItem>
           </DropdownMenuContent>
