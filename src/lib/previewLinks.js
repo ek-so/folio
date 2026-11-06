@@ -14,11 +14,11 @@ const ICON_PATHS = {
 }
 const linkIcon = kind => `<svg class="link-icon" aria-hidden="true" viewBox="0 0 256 256" fill="currentColor"><path d="${ICON_PATHS[kind]}"/></svg>`
 
-// External links (websites) get a colored ↗ after them; internal links
-// (notes, files, folders in the repo) a colored icon of what they point to,
+// In a property's value: external links (websites) get a colored ↗ after them; internal
+// links (notes, files, folders in the repo) a colored icon of what they point to,
 // grey when it's missing. `files`: the repo's paths as keys. Styles:
 // .link-external / .link-internal in App.css
-export function decorateLinks(root, notePath, files) {
+function decorateLinks(root, notePath, files) {
   for (const a of root.querySelectorAll('a[href]')) {
     const href = a.getAttribute('href')
     if (!href || href.startsWith('#')) continue
@@ -32,6 +32,32 @@ export function decorateLinks(root, notePath, files) {
       a.classList.add('link-external')
       a.insertAdjacentHTML('beforeend', '<span class="link-arrow" aria-hidden="true">↗</span>')
     }
+  }
+}
+
+// The note preview's links, swapped for spots where MarkdownPreview renders a LinkBadge:
+// <span class="link-spot"> with `data-href`, `data-text` (what the link shows), `data-kind`
+// (`web`, or `note` / `file` / `folder` / `missing` in the repo) and `data-span`, the link's
+// index in `spans` (lib/markdown.js linkSpans) when the block's links line up with them (else
+// it can only be opened and copied). Links to a heading (#…) and around an image stay as they are.
+export function linkSpots(root, notePath, files, spans) {
+  for (const block of root.querySelectorAll('[data-src]')) {
+    const start = Number(block.dataset.src)
+    const end = start + Number(block.dataset.len)
+    const own = spans.flatMap((s, i) => s.start >= start && s.end <= end ? [i] : [])
+    const anchors = [...block.querySelectorAll('a[href]')]
+    anchors.forEach((a, i) => {
+      const href = a.getAttribute('href')
+      if (!href || href.startsWith('#') || a.querySelector('img')) return
+      const repoPath = resolveImage(notePath, href)
+      const spot = document.createElement('span')
+      spot.className = 'link-spot'
+      spot.dataset.href = href
+      spot.dataset.text = a.textContent.trim() || href
+      spot.dataset.kind = repoPath ? linkTarget(repoPath, files)?.kind ?? 'missing' : 'web'
+      if (anchors.length === own.length) spot.dataset.span = String(own[i])
+      a.replaceWith(spot)
+    })
   }
 }
 

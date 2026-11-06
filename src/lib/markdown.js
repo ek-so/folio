@@ -134,6 +134,48 @@ export function renderBlocks(source) {
   return html
 }
 
+// Every markdown link in `source` (not images), in the order the preview shows them:
+// [{ start, end, label, href, bare }]. `label`: the link text's markdown; `bare`: a URL
+// written as is (https://… or <https://…>), not [label](url)
+export function linkSpans(source) {
+  const markdown = blankFrontMatter(source)
+  const tokens = marked.lexer(markdown)
+  const spans = []
+  let offset = 0
+  for (const token of tokens) {
+    const start = markdown.indexOf(token.raw, offset)
+    if (start === -1) continue
+    offset = start + token.raw.length
+    let at = start
+    marked.walkTokens([token], t => {
+      if (t.type !== 'link') return
+      const found = markdown.indexOf(t.raw, at)
+      if (found === -1 || found >= offset) return
+      at = found + t.raw.length
+      spans.push({ start: found, end: at, label: t.text, href: t.href, bare: !t.raw.startsWith('[') })
+    })
+  }
+  return spans
+}
+
+// The markdown for a link named `name` to `url`; a bare URL stays bare while it has no other name
+export function linkMarkdown(name, url, bare) {
+  const u = url.trim()
+  const n = name.trim()
+  const dest = /[\s()<>]/.test(u) ? `<${u.replace(/[<>]/g, encodeURIComponent)}>` : u
+  if (bare && dest === u && (!n || n === u)) return u
+  return `[${n || u}](${dest})`
+}
+
+// `text` with the link at `span` replaced by `markdown`; '' takes the link out with
+// one of the spaces around it
+export function replaceLink(text, span, markdown) {
+  let { start, end } = span
+  if (!markdown && text[end] === ' ' && (start === 0 || /[ \n]/.test(text[start - 1]))) end++
+  else if (!markdown && text[start - 1] === ' ' && /^[ \n]?$/.test(text[end] ?? '')) start--
+  return text.slice(0, start) + markdown + text.slice(end)
+}
+
 // Offsets of each task checkbox's mark (the " " or "x" in "- [ ]") in a
 // block's markdown, in order. Only a box opening a list item counts, not
 // "[x]" further along in its text.

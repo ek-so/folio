@@ -1,8 +1,9 @@
 # Notes and properties
 
 ## Note page
-- `Editor` switches between `MarkdownPreview` (read-only apart from task checkboxes and accordions; open accordions stay open across re-renders) and `MarkdownEditor` (highlighted textarea).
+- `Editor` switches between `MarkdownPreview` (read-only apart from task checkboxes, accordions and links' menus; open accordions stay open across re-renders) and `MarkdownEditor` (highlighted textarea).
 - ✏️ opens the editor at the first block on screen (`visibleOffset`); a double tap or double click on text opens it at that word (counted from two clicks, since iPhones send no dblclick). Closing the keyboard (iOS Done, tapping elsewhere, Esc) or ✓ returns to preview. The finishing ✓ follows the ✓ button rules.
+- **Links in the preview** are badges (`LinkBadge`, put in place of each `<a>` by `linkSpots`), even mid-sentence: a website's favicon (Google's favicon service; a globe offline or without one), or for the repo what it points to (note, file, folder; grey link-break when missing), then the link's text; a tap opens it. Its ⋯ (small, 24px, to fit the line): Copy link address, Edit link (`LinkModal`: Name and URL; a bare URL stays bare while it has no other name) and Remove (the link and its text, confirmed). Edits go through `onChange` like a checkbox, found by `linkSpans` (lib/markdown.js, tested); a block whose links don't line up with them (raw HTML links) only offers Copy. Links to a heading (#…) and around an image stay plain. Property values keep plain links.
 - The preview never scrolls sideways: text wraps; a wide table or code block scrolls inside itself. A note's `# heading` is plain markdown.
 - Images and PDFs open read-only in `FileViewer` (`useBlob`); PDFs use pdf.js (`PdfView`, loaded on first use) and draw only pages near the screen, for iOS memory. `Editor` and `FileViewer` share `FilePage`.
 

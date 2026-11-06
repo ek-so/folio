@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { renderBlocks, tapOffset, taskOffsets, taskProgress, highlightMarkdown, parseIsoDate } from './markdown.js'
+import { renderBlocks, tapOffset, taskOffsets, taskProgress, linkSpans, linkMarkdown, replaceLink, highlightMarkdown, parseIsoDate } from './markdown.js'
 
 describe('markdown', () => {
   it('tags each block with its source range', () => {
@@ -37,6 +37,25 @@ describe('markdown', () => {
     const md = '---\nlist:\n  - [x] no\n---\n- [x] a\n- [ ] b\n  - [X] c\n```\n- [x] code\n```\n'
     expect(taskProgress(md)).toEqual({ done: 2, total: 3 })
     expect(taskProgress('no tasks')).toEqual({ done: 0, total: 0 })
+  })
+
+  it('finds every link with its source range', () => {
+    const md = '---\nu: https://x.io\n---\nSee [the **docs**](https://a.io) and https://b.io.\n\n| [c][r] |\n|-|\n| ![i](p.png) |\n\n[r]: notes/c.md\n'
+    const spans = linkSpans(md)
+    expect(spans.map(s => md.slice(s.start, s.end))).toEqual(['[the **docs**](https://a.io)', 'https://b.io', '[c][r]'])
+    expect(spans.map(s => [s.label, s.href, s.bare])).toEqual([['the **docs**', 'https://a.io', false], ['https://b.io', 'https://b.io', true], ['c', 'notes/c.md', false]])
+  })
+
+  it('writes and removes links', () => {
+    expect(linkMarkdown('Docs', ' https://a.io ')).toBe('[Docs](https://a.io)')
+    expect(linkMarkdown('', 'https://a.io', true)).toBe('https://a.io')
+    expect(linkMarkdown('', 'https://a.io', false)).toBe('[https://a.io](https://a.io)')
+    expect(linkMarkdown('My note', 'notes/my note.md')).toBe('[My note](<notes/my note.md>)')
+    const md = 'See [a](https://a.io) here'
+    const [span] = linkSpans(md)
+    expect(replaceLink(md, span, '[b](https://b.io)')).toBe('See [b](https://b.io) here')
+    expect(replaceLink(md, span, '')).toBe('See here')
+    expect(replaceLink('[a](x) end', linkSpans('[a](x) end')[0], '')).toBe('end')
   })
 
   it('renders smart-punctuated dashes as a divider', () => {

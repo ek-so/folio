@@ -1,11 +1,15 @@
 import { useMemo, useEffect, useLayoutEffect, useRef, useState, forwardRef, useImperativeHandle } from 'react'
 import DOMPurify from 'dompurify'
-import { renderBlocks, tapOffset, taskOffsets, resolveImage } from '../lib/markdown.js'
+import { renderBlocks, tapOffset, taskOffsets, resolveImage, linkSpans, linkMarkdown, replaceLink } from '../lib/markdown.js'
 import { useRepoImages } from '../hooks/useRepoImages.js'
-import { decorateLinks, openLink } from '../lib/previewLinks.js'
+import { linkSpots, openLink } from '../lib/previewLinks.js'
 import { isPortaled } from '../lib/utils.js'
 import { CaretRight } from '@phosphor-icons/react'
 import { createPortal } from 'react-dom'
+import { toast } from 'sonner'
+import LinkBadge from './LinkBadge.jsx'
+import LinkModal from './LinkModal.jsx'
+import ConfirmModal from './ConfirmModal.jsx'
 
 // Text node and offset under a screen point
 function caretAt(x, y) {
@@ -50,7 +54,7 @@ const repoImages = (root, notePath) => [...root.querySelectorAll('img')]
   .map(img => [img, resolveImage(notePath, img.getAttribute('src'))])
   .filter(([, repoPath]) => repoPath !== null)
 
-// Rendered note, read-only apart from task checkboxes. Double-tapping (or
+// Rendered note, read-only apart from task checkboxes and links' Edit link / Remove (with `onChange`). Double-tapping (or
 // double-clicking) text calls onDoubleTap with the markdown offset of the
 // tapped word. On mount, scrolls the block holding `scrollTo` (a markdown
 // offset) into view. The ref's
@@ -63,6 +67,9 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
   const lastTap = useRef(null) // { time, x, y } of the previous tap on text
   const openDetails = useRef(new Set()) // indexes of accordions opened by the reader
   const [carets, setCarets] = useState([]) // accordion title spots for CaretRight
+  const [links, setLinks] = useState([]) // link spots for LinkBadge
+  const [editing, setEditing] = useState(null) // the link span in the Edit link dialog
+  const [removing, setRemoving] = useState(null) // the link span being confirmed
 
   useImperativeHandle(handle, () => ({
     visibleOffset() {
@@ -75,11 +82,12 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
   const tipTimer = useRef()
   const linkHandlerRef = useRef()
 
+  const spans = useMemo(() => linkSpans(content), [content])
   const [html, imagePaths] = useMemo(() => {
     const sanitized = DOMPurify.sanitize(renderBlocks(content))
     const tpl = document.createElement('template')
     tpl.innerHTML = sanitized
-    decorateLinks(tpl.content, path, files)
+    linkSpots(tpl.content, path, files, spans)
     breakLongWords(tpl.content)
     // Task list items: remove bullet, enable checkbox, record markdown offset
     for (const cb of tpl.content.querySelectorAll('input[type="checkbox"]')) {
@@ -99,7 +107,7 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
       summary.insertAdjacentHTML('afterbegin', '<span class="summary-caret" aria-hidden="true"></span>')
     }
     return [tpl.innerHTML, repoImages(tpl.content, path).map(([, repoPath]) => repoPath)]
-  }, [content, path, files])
+  }, [content, path, files, spans])
 
   const images = useRepoImages(imagePaths, files)
 
@@ -137,6 +145,7 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
   useLayoutEffect(() => {
     ref.current.querySelectorAll('details').forEach((d, i) => { if (openDetails.current.has(i)) d.open = true })
     setCarets([...ref.current.querySelectorAll('.summary-caret')])
+    setLinks([...ref.current.querySelectorAll('.link-spot')])
   }, [withImages])
 
   // Always up-to-date handler without re-attaching the listener
@@ -189,7 +198,7 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
       }
       return
     }
-    if (e.target.closest('a, img, summary')) return // summary opens/closes its accordion
+    if (e.target.closest('a, img, summary, .link-spot')) return // summary opens/closes its accordion
     if (isDoubleTap(e)) onDoubleTap?.(offsetAt(e.clientX, e.clientY, e.target))
   }
 
@@ -215,6 +224,32 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
         dangerouslySetInnerHTML={{ __html: withImages || '<p class="text-muted-foreground italic">Nothing to preview yet.</p>' }}
       />
       {carets.map((spot, i) => createPortal(<CaretRight />, spot, i))}
+      {links.map((spot, i) => {
+        const { href, text, kind } = spot.dataset
+        const span = spans[spot.dataset.span]
+        return createPortal(
+          <LinkBadge
+            href={href} text={text} kind={kind}
+            onCopy={() => navigator.clipboard.writeText(href).then(() => toast.success('Link address copied'), () => toast.error("Couldn't copy the link address"))}
+            onEdit={onChange && span ? () => setEditing(span) : undefined}
+            onRemove={onChange && span ? () => setRemoving({ ...span, text }) : undefined}
+          />, spot, `link-${i}`)
+      })}
+      {editing && (
+        <LinkModal
+          name={editing.bare ? '' : editing.label} url={editing.href}
+          onSave={(name, url) => { onChange(replaceLink(content, editing, linkMarkdown(name, url, editing.bare))); setEditing(null) }}
+          onClose={() => setEditing(null)}
+        />
+      )}
+      {removing && (
+        <ConfirmModal
+          title="Remove link?"
+          description={`“${removing.text}” is removed from the note.`}
+          onConfirm={() => { onChange(replaceLink(content, removing, '')); setRemoving(null) }}
+          onClose={() => setRemoving(null)}
+        />
+      )}
       {footer}
       {brokenTip && (
         <div

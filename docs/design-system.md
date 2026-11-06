@@ -18,7 +18,7 @@ shadcn/ui (new-york) · Tailwind CSS v4 · Radix UI · Phosphor icons (`@phospho
 ## Control sizes (tokens in `src/index.css`)
 - **Base 40px** (`h-control`, `size-control`, `min-h-control`): every tappable or input element: `Button` default and `size="icon"`, `Input`, menu items, list rows, sheet and dialog close.
 - **Medium 32px** (`-md`): the tree's chevrons, and every button inside something that is itself hoverable or tappable: a list row's, tile's or card's ⋯, ✏️, 🗑 or color swatch (`ColorPicker` `className`).
-- **Small 24px** (`-sm`, `Button size="sm"`): secondary controls beside a title, such as the symlink button.
+- **Small 24px** (`-sm`, `Button size="sm"`): secondary controls beside a title, such as the symlink button; a link badge's ⋯ in the note preview, to fit the line of text.
 - Exceptions: segmented toggles (`ui/segmented.jsx`: a base-height track, `p-1`), and two-line result rows (search, backlinks), which grow from the base minimum.
 
 ## Colors
