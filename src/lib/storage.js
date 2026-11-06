@@ -55,7 +55,7 @@ export const storage = {
     try { return JSON.parse(read(sessionStorage, TRAILS_KEY)) || {} } catch { return {} }
   },
   setTrails: (trails) => write(sessionStorage, TRAILS_KEY, JSON.stringify(trails)),
-  // Open page ('home' | 'files' | 'graph' | 'settings' | 'links'), null when unset
+  // Open page ('home' | 'files' | 'graph' | 'settings' | 'links' | 'docs'), null when unset
   getPage: () => read(sessionStorage, PAGE_KEY),
   setPage: (page) => write(sessionStorage, PAGE_KEY, page),
   // Folders open in the file tree

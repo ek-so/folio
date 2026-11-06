@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { List, SidebarSimple, MagnifyingGlass, LinkBreak, Gear, SignOut, TreeView, Plus } from '@phosphor-icons/react'
+import { List, SidebarSimple, MagnifyingGlass, LinkBreak, BookOpen, Gear, SignOut, TreeView, Plus } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils.js'
 import { Button } from './ui/button.jsx'
 import { Separator } from './ui/separator.jsx'
@@ -99,6 +99,9 @@ export function NavRail({ page, pages, viewActions, onPage, onSearch, renderSync
         {menu.brokenCount > 0 && (collapsed
           ? <span className="absolute right-1.5 top-1.5 size-2 rounded-full bg-muted-foreground" aria-label={`${menu.brokenCount} broken`} />
           : <span className="ml-auto text-muted-foreground">{menu.brokenCount}</span>)}
+      </Button>
+      <Button variant="ghost" tooltip={hint('Documentation')} tooltipSide="right" aria-current={page === PAGE.DOCS ? 'page' : undefined} className={item(PAGE.DOCS)} onClick={() => onPage(PAGE.DOCS)}>
+        <BookOpen /> {label('Documentation')}
       </Button>
       <Button variant="ghost" tooltip={hint('Settings')} tooltipSide="right" aria-current={page === PAGE.SETTINGS ? 'page' : undefined} className={item(PAGE.SETTINGS)} onClick={() => onPage(PAGE.SETTINGS)}>
         <Gear /> {label('Settings')}

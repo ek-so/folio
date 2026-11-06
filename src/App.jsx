@@ -16,6 +16,7 @@ import UploadErrorsModal from './components/UploadErrorsModal.jsx'
 import { blobShaOf, toBase64 } from './lib/github.js'
 import SyncErrorModal from './components/SyncErrorModal.jsx'
 import BrokenLinks from './components/BrokenLinks.jsx'
+import Documentation from './components/Documentation.jsx'
 import SyncCheckModal from './components/SyncCheckModal.jsx'
 import { useLinkIndex, LinksContext } from './hooks/useLinkIndex.js'
 import { useSymlinks } from './hooks/useSymlinks.js'
@@ -57,7 +58,7 @@ const deepLink = (() => {
   const found = pageForUrl(BASE, window.location.pathname, window.location.search)
   return found && (found.page !== PAGE.FILES || found.view.file || found.view.folder) ? found : null
 })()
-// A reload keeps the page you were on (Settings and Broken links aren't in the address); otherwise the address picks it
+// A reload keeps the page you were on (Settings, Broken links and Documentation aren't in the address); otherwise the address picks it
 const reloaded = performance.getEntriesByType('navigation')[0]?.type === 'reload'
 
 export default function App() {
@@ -78,9 +79,9 @@ export default function App() {
   const { theme, setTheme } = useTheme()
   const [openPage, setPage] = useState(() => (reloaded && storage.getPage()) || (deepLink ? deepLink.page : storage.getPage() || PAGE.HOME))
   // A view that's gone (deleted here or on another device) falls back to the first page; until the config is read, the remembered page stays
-  const fixedPage = openPage === PAGE.SETTINGS || openPage === PAGE.LINKS
+  const fixedPage = openPage === PAGE.SETTINGS || openPage === PAGE.LINKS || openPage === PAGE.DOCS
   const page = fixedPage || !viewsFile.ready || pages.some(p => p.id === openPage) ? openPage : pages[0].id
-  // The main page files and folders open in (File manager when Settings / Broken links is open)
+  // The main page files and folders open in (File manager when Settings / Broken links / Documentation is open)
   const mainPage = fixedPage ? PAGE.FILES : page
   // Each main page has its own trail of views (lib/views.js); files and folders open in the page you're on
   const [trails, setTrails] = useState(() => {
@@ -155,7 +156,7 @@ export default function App() {
   // Keep the browser URL in sync with the main page you're on and its view:
   // each new page, folder or file is a history entry, so Back and Forward move
   // between them. Changes that only follow a rename or delete replace the
-  // entry instead. Settings and Broken links leave the address as it is.
+  // entry instead. Settings, Broken links and Documentation leave the address as it is.
   // Each entry remembers the address before it (`prev`), for ←.
   const url = page === mainPage ? urlForPage(BASE, page, view) : null
   useEffect(() => {
@@ -357,7 +358,7 @@ export default function App() {
     ?.map(w => widgetType(w.type)?.fileMoves?.(w.id, selectedFile, widgetServices)).find(Boolean)
 
   // Every page's trail after a rename, delete or discard (`next`); the address
-  // is replaced, not added to history (only when it shows: not on Settings / Broken links)
+  // is replaced, not added to history (only when it shows: not on Settings / Broken links / Documentation)
   function followTrails(next) {
     if (page === mainPage && urlForPage(BASE, page, currentView(page, next[page])) !== url) replaceNext.current = true
     setTrails(next)
@@ -610,6 +611,8 @@ export default function App() {
           <TopBar host={mainRef} resetKey={`${page}|${selectedFile}|${folder}`} tree={page === mainPage} page={page} pages={pages} viewActions={viewActions} onPage={choosePage} onSearch={() => setSearchOpen(true)} renderSync={renderSync} menu={menu} />
           {page === PAGE.SETTINGS ? (
             <Settings login={auth.user.login} repo={auth.repo} theme={theme} onTheme={setTheme} />
+          ) : page === PAGE.DOCS ? (
+            <Documentation />
           ) : !view && page === PAGE.GRAPH ? (
             <EmptyPage page={page} />
           ) : !view ? (

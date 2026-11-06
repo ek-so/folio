@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Check, Gear, SignOut, LinkBreak, Plus } from '@phosphor-icons/react'
+import { Check, Gear, SignOut, LinkBreak, BookOpen, Plus } from '@phosphor-icons/react'
 import { cn } from '../lib/utils.js'
 import { PAGE } from '../lib/pages.js'
 import ViewMenu from './ViewMenu.jsx'
@@ -45,6 +45,7 @@ export default function AccountMenu({ trigger, current, pages, viewActions, onNa
           {brokenCount > 0 && <span className="ml-auto pl-4 text-muted-foreground">{brokenCount}</span>}
           {current === PAGE.LINKS && !brokenCount && mark(PAGE.LINKS)}
         </DropdownMenuItem>
+        <DropdownMenuItem className={current === PAGE.DOCS ? ACTIVE : undefined} onSelect={() => onNavigate(PAGE.DOCS)}><BookOpen /> Documentation{mark(PAGE.DOCS)}</DropdownMenuItem>
         <DropdownMenuItem className={current === PAGE.SETTINGS ? ACTIVE : undefined} onSelect={() => onNavigate(PAGE.SETTINGS)}><Gear /> Settings{mark(PAGE.SETTINGS)}</DropdownMenuItem>
         <DropdownMenuItem variant="destructive" onSelect={onSignOut}><SignOut /> Sign out</DropdownMenuItem>
       </DropdownMenuContent>
