@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Check, Gear, SignOut, LinkBreak, Plus } from '@phosphor-icons/react'
+import { cn } from '../lib/utils.js'
 import { PAGE } from '../lib/pages.js'
 import ViewMenu from './ViewMenu.jsx'
 import PageTitle from './PageTitle.jsx'
@@ -26,7 +27,7 @@ export default function AccountMenu({ trigger, current, pages, viewActions, onNa
         {pages.filter(p => p.view).map(p => (
           <DropdownMenuItem key={p.id} className={current === p.id ? ACTIVE : undefined} onSelect={() => onNavigate(p.id)}>
             <p.icon /> <span className="min-w-0 truncate"><PageTitle page={p} /></span>{mark(p.id)}
-            <span className={current === p.id ? '' : 'ml-auto'} {...own}>
+            <span className={cn('-my-1 -mr-2', current !== p.id && 'ml-auto')} {...own}>
               <ViewMenu sub view={p} disabled={!viewActions.canEdit} onRename={v => { setOpen(false); viewActions.onRename(v) }} onDelete={v => { setOpen(false); viewActions.onDelete(v) }} />
             </span>
           </DropdownMenuItem>
