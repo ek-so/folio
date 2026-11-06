@@ -6,8 +6,8 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuIte
 // ⋯ menu of a view in the navigation rail: Rename / Remove. `onRename(view)`
 // and `onDelete(view)` open App's dialogs; `disabled` while the views can't
 // be changed (not read yet). With a mouse it shows only while the row (`group`) is hovered, focused or its
-// menu is open; always on touch.
-export default function ViewMenu({ view, onRename, onDelete, disabled }) {
+// menu is open; always on touch. `sub`: it's a sub popover (inside the ☰ menu): opens on the side of its row.
+export default function ViewMenu({ view, onRename, onDelete, disabled, sub }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -23,7 +23,7 @@ export default function ViewMenu({ view, onRename, onDelete, disabled }) {
           <DotsThree weight="bold" size={16} />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" onCloseAutoFocus={e => e.preventDefault()}>
+      <DropdownMenuContent align="start" {...(sub ? { side: 'right', sideOffset: 8, collisionPadding: 8, className: 'min-w-0' } : {})} onCloseAutoFocus={e => e.preventDefault()}>
         <DropdownMenuItem disabled={disabled} onSelect={() => onRename(view)}><PencilSimple /> Rename</DropdownMenuItem>
         <DropdownMenuItem variant="destructive" disabled={disabled} onSelect={() => onDelete(view)}><Trash /> Remove</DropdownMenuItem>
       </DropdownMenuContent>

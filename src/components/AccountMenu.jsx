@@ -21,12 +21,12 @@ export default function AccountMenu({ trigger, current, pages, viewActions, onNa
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>{trigger}</DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-64" onCloseAutoFocus={e => e.preventDefault()}>
+      <DropdownMenuContent align="start" className="w-60" onCloseAutoFocus={e => e.preventDefault()}>
         {pages.filter(p => p.view).map(p => (
           <DropdownMenuItem key={p.id} className={current === p.id ? ACTIVE : undefined} onSelect={() => onNavigate(p.id)}>
             <p.icon /> <span className="min-w-0 truncate">{p.title}</span>{mark(p.id)}
             <span className={current === p.id ? '' : 'ml-auto'} {...own}>
-              <ViewMenu view={p} disabled={!viewActions.canEdit} onRename={v => { setOpen(false); viewActions.onRename(v) }} onDelete={v => { setOpen(false); viewActions.onDelete(v) }} />
+              <ViewMenu sub view={p} disabled={!viewActions.canEdit} onRename={v => { setOpen(false); viewActions.onRename(v) }} onDelete={v => { setOpen(false); viewActions.onDelete(v) }} />
             </span>
           </DropdownMenuItem>
         ))}
