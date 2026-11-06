@@ -19,19 +19,19 @@ function Favicon({ href }) {
 
 // A link in the note preview: a badge with the site's favicon (or what it points to in the repo,
 // grey when it's missing) and its text, opening it on a tap (MarkdownPreview's link handler), and
-// a ⋯ with Copy link address, Edit link and Remove (the last two only with `onEdit` / `onRemove`).
+// its text a bit softer than the note's (grey when missing); a ⋯ split off from it by a 1px gap, with Copy link address, Edit link and Remove (the last two only with `onEdit` / `onRemove`).
 export default function LinkBadge({ href, text, kind, onCopy, onEdit, onRemove }) {
   const [open, setOpen] = useSingleOpen()
   const Icon = REPO_ICONS[kind]
   return (
-    <Badge className={cn('link-badge gap-0 py-0 pr-0 align-middle', kind === 'missing' && 'text-muted-foreground')}>
-      <a href={href} data-badge className="flex min-w-0 items-center gap-1.5">
+    <span className="link-badge inline-flex max-w-full gap-px align-middle">
+      <Badge as="a" href={href} data-badge className={cn('gap-1.5 rounded-r-none py-0 pl-2', kind === 'missing' ? 'text-muted-foreground' : 'text-foreground/75')}>
         {Icon ? <Icon className={cn('size-4 shrink-0', kind === 'missing' ? 'text-muted-foreground' : 'text-primary')} /> : <Favicon href={href} />}
         <span className="truncate">{text}</span>
-      </a>
+      </Badge>
       <DropdownMenu open={open} onOpenChange={setOpen}>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" aria-label="Link actions" className="size-control-sm shrink-0 text-muted-foreground hover:bg-muted-foreground/10 data-[state=open]:bg-muted-foreground/10">
+          <Button variant="secondary" size="icon" aria-label="Link actions" className="size-control-sm shrink-0 rounded-l-none text-muted-foreground shadow-none">
             <DotsThree weight="bold" />
           </Button>
         </DropdownMenuTrigger>
@@ -41,6 +41,6 @@ export default function LinkBadge({ href, text, kind, onCopy, onEdit, onRemove }
           {onRemove && <DropdownMenuItem variant="destructive" onSelect={onRemove}><Trash /> Remove</DropdownMenuItem>}
         </DropdownMenuContent>
       </DropdownMenu>
-    </Badge>
+    </span>
   )
 }
