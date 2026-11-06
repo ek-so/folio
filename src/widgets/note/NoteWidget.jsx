@@ -11,7 +11,7 @@ import { displayName } from '@/lib/files.js'
 import { noteTitle } from '@/lib/frontmatter.js'
 import { notePath, parseNote } from './note.js'
 
-// A note widget (note.js): the note's title, Edit (✓ when done), Open full screen and ⋯ on top,
+// A note widget (note.js): the note's title, Edit (✓ when done) and ⋯ (Open full screen, Remove) on top,
 // then its text in a box of fixed height that scrolls inside. Edits save on their own, like on
 // the note's own page; opening it full screen is opening the note, as a board's card does.
 export default function NoteWidget({ id, services, onRemove }) {
@@ -58,16 +58,15 @@ function NoteBox({ path, found, services, frame }) {
   return frame(title, <div data-no-pull className="flex h-80 flex-col overflow-hidden rounded-lg border border-border bg-card">{body}</div>, actions)
 }
 
-// The widget's title row over `children`: tapping the title opens the note full screen (`onOpen`)
+// The widget's title row over `children`; ⋯ opens the note full screen (`onOpen`)
 function Frame({ title, onOpen, actions, canRemove, onRemove, children }) {
   return (
     <section className="flex shrink-0 flex-col gap-space-sm">
       <div className="flex min-h-control items-center gap-space-sm">
         <h2 className="min-w-0 flex-1 truncate px-space-xs text-base font-bold">
-          {onOpen ? <button type="button" className="max-w-full truncate text-left hover:underline" onClick={onOpen}>{title}</button> : title}
+          {title}
         </h2>
         {actions}
-        {onOpen && <Button variant="ghost-outline" size="icon" aria-label="Open full screen" tooltip="Open full screen" className="shrink-0 border-muted-foreground/50" onClick={onOpen}><ArrowsOut /></Button>}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost-outline" size="icon" aria-label="Note actions" className="shrink-0 border-muted-foreground/50">
@@ -77,7 +76,7 @@ function Frame({ title, onOpen, actions, canRemove, onRemove, children }) {
           <DropdownMenuContent align="end" onCloseAutoFocus={e => e.preventDefault()}>
             <DropdownMenuItem disabled={!onOpen} onSelect={onOpen}><ArrowsOut /> Open full screen</DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem variant="destructive" disabled={!canRemove} onSelect={onRemove}><Trash /> Remove note widget</DropdownMenuItem>
+            <DropdownMenuItem variant="destructive" disabled={!canRemove} onSelect={onRemove}><Trash /> Remove</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
