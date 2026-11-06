@@ -10,7 +10,7 @@
 .editor-preview ul:has(> .task-item) { padding-left: 0; }
 /* A plain item among tasks: its bullet in the checkbox's place, its text in line with theirs */
 .editor-preview ul:has(> .task-item) > li:not(.task-item) { list-style: none; position: relative; padding-left: 24px; }
-.editor-preview ul:has(> .task-item) > li:not(.task-item)::before { content: '•'; position: absolute; left: 0; width: 16px; text-align: center; }
+.editor-preview ul:has(> .task-item) > li:not(.task-item)::before { content: ''; position: absolute; left: 5px; top: calc((1lh - 6px) / 2); width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
 /* Checkbox in the item's left margin, centred on its first line; the text
    (bold, links, sub-lists) flows normally beside it */
 .editor-preview li.task-item { list-style: none; position: relative; padding-left: 24px; }
