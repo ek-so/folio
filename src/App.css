@@ -7,7 +7,10 @@
 .editor-preview ul { list-style-type: disc; padding-left: 20px; margin: 0 0 14px; }
 .editor-preview ol { list-style-type: decimal; padding-left: 20px; margin: 0 0 14px; }
 .editor-preview li { margin: 4px 0; }
-.editor-preview ul:has(.task-item) { padding-left: 4px; }
+.editor-preview ul:has(> .task-item) { padding-left: 0; }
+/* A plain item among tasks: its bullet in the checkbox's place, its text in line with theirs */
+.editor-preview ul:has(> .task-item) > li:not(.task-item) { list-style: none; position: relative; padding-left: 24px; }
+.editor-preview ul:has(> .task-item) > li:not(.task-item)::before { content: '•'; position: absolute; left: 0; width: 16px; text-align: center; }
 /* Checkbox in the item's left margin, centred on its first line; the text
    (bold, links, sub-lists) flows normally beside it */
 .editor-preview li.task-item { list-style: none; position: relative; padding-left: 24px; }
