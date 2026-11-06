@@ -163,9 +163,31 @@ export function withoutValue(text, key, value) {
 // `text` with `from` renamed `to` in the property `key` (in its list, once, when
 // the note already has `to`), or as it is when it doesn't have `from`
 export function renameValue(text, key, from, to) {
+  if (from === to) return text
   const have = properties(text)[key]
   if (Array.isArray(have)) return have.includes(from) ? withValue(text, key, [...new Set(have.map(v => v === from ? to : v))]) : text
   return have === from ? withValue(text, key, to) : text
+}
+
+// `text` with `title` as its title property; an empty one takes the property out (the heading or file name shows again)
+export const withTitle = (text, title) => title.trim() ? withValue(text, 'title', title) : withoutKeys(text, ['title'])
+
+// What a property's values can do in a set of notes (`texts`: the scope, a folder or a board), the
+// same for the note preview and the board: `options(key)` the values to choose from, `count(key,
+// value)` how many notes have it, `removeValue` and `editValue` (rename and recolor) edits through
+// `editAll(edit, first)`, which applies `edit(text)` to every note of the scope after the change
+// `first` (ch => ch), in one step. `setColor(key, value, color)`: the color change (useTagColors).
+export function valueActions(texts, editAll, setColor) {
+  const cache = new Map() // every badge asks for its property's values
+  return {
+    options: key => {
+      if (!cache.has(key)) cache.set(key, valuesOf(texts, key))
+      return cache.get(key)
+    },
+    count: (key, value) => countValue(texts, key, value),
+    removeValue: (key, value) => editAll(t => withoutValue(t, key, value)),
+    editValue: (key, from, to, color) => editAll(t => renameValue(t, key, from, to), setColor(key, to, color)),
+  }
 }
 
 // How many of `texts` (notes) have `value` as the property `key`

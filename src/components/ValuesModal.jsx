@@ -12,9 +12,10 @@ import ColorPicker from './ColorPicker.jsx'
 // (`onRemove(value)`). The swatch opens a sub popover with the colors (`ColorPicker`): choosing one recolors that
 // value at once (`onEdit(from, to, color)` with the same name). The pencil turns the row into a field for
 // its name (only ✓ and ✕ show on it until you accept or dismiss): Save (✓) renames that value, keeping its color, everywhere in the same scope
-// (`scopeName`; `count(value)`: in how many notes); a name another value has merges them. Save with
+// (`scopeName`; `count(value)`: in how many notes); a name another value has merges them, in that one's color.
+// `replaces`: the value Add replaces on this note (a single-value property), said under the field. Save with
 // nothing changed saves nothing.
-export default function ValuesModal({ name, values, colors, count, scopeName, onAdd, onEdit, onRemove, onClose }) {
+export default function ValuesModal({ name, values, colors, count, scopeName, replaces, onAdd, onEdit, onRemove, onClose }) {
   const [editing, setEditing] = useState(null) // { value, name } while a row is edited
   const [typed, setTyped] = useState('')
   const query = typed.trim()
@@ -30,7 +31,9 @@ export default function ValuesModal({ name, values, colors, count, scopeName, on
     e.preventDefault()
     const next = editing.name.trim()
     if (!next) return
-    if (next !== editing.value) onEdit(editing.value, next, colors.get(editing.value) ?? 0)
+    // Merged into another value: that one keeps its color
+    const kept = values.includes(next) ? next : editing.value
+    if (next !== editing.value) onEdit(editing.value, next, colors.get(kept) ?? 0)
     setEditing(null)
   }
 
@@ -53,6 +56,7 @@ export default function ValuesModal({ name, values, colors, count, scopeName, on
           />
           <Button type="submit" variant="success" size="icon" aria-label="Add" tooltip="Add" disabled={!query} className="shrink-0"><Check /></Button>
         </form>
+        {replaces && query && query !== replaces && <p className="-mt-1 px-1 text-xs text-muted-foreground">Adding it replaces “{replaces}” on this note.</p>}
         <ul className="-mx-1 flex max-h-64 flex-col gap-0.5 overflow-y-auto" data-no-pull>
           {values.map(v => editing?.value === v ? (
             <li key={v}>

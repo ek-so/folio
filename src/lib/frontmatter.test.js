@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { frontMatter, properties, withKeys, blankFrontMatter, valueList, noteTitle, withoutKeys, renameKey, keyNameError, withValue, valuesOf, valueColors, withoutValue, countValue, renameValue } from './frontmatter.js'
+import { frontMatter, properties, withKeys, blankFrontMatter, valueList, noteTitle, withoutKeys, renameKey, keyNameError, withValue, valuesOf, valueColors, withoutValue, countValue, renameValue, withTitle, valueActions } from './frontmatter.js'
 
 describe('front matter', () => {
   it('reads flat keys, lists and quoted values', () => {
@@ -106,5 +106,21 @@ describe('front matter', () => {
     expect(renameValue('---\ntags: [a, b]\n---\n', 'tags', 'a', 'c')).toBe('---\ntags: [c, b]\n---\n')
     expect(renameValue('---\ntags: [a, b]\n---\n', 'tags', 'a', 'b')).toBe('---\ntags: [b]\n---\n')
     expect(renameValue('# Note', 'type', 'a', 'b')).toBe('# Note')
+  })
+
+  it('leaves a note alone when a value keeps its name', () => {
+    expect(renameValue('---\ntype: "x"\ntags: [a,b]\n---\n', 'type', 'x', 'x')).toBe('---\ntype: "x"\ntags: [a,b]\n---\n')
+    const edits = []
+    const values = valueActions(['---\ntype: x\n---\n'], (edit, first) => edits.push([edit('---\ntype: "x"\n---\n'), first]), (k, v, c) => `color ${k} ${v} ${c}`)
+    values.editValue('type', 'x', 'x', 3)
+    expect(edits).toEqual([['---\ntype: "x"\n---\n', 'color type x 3']])
+    expect(values.options('type')).toEqual(['x'])
+    expect(values.count('type', 'x')).toBe(1)
+  })
+
+  it('sets a title, or takes it out when empty', () => {
+    expect(withTitle('# A\n', 'Card')).toBe('---\ntitle: Card\n---\n# A\n')
+    expect(withTitle('---\ntitle: Card\n---\n# A\n', ' ')).toBe('# A\n')
+    expect(withTitle('# A\n', '')).toBe('# A\n')
   })
 })

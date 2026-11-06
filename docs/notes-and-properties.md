@@ -18,11 +18,11 @@
 - An outside click or Esc closes it.
 
 ## Values dialog (`ValuesModal`, from Edit values)
-- One dialog with every value of the property, a field to add one (it's set on this note, like choosing it), and on each row a color swatch, a pencil and a red trash.
-- **Swatch:** a sub popover on its side with the ten colors (`ColorPicker`); choosing one recolors that value at once.
-- **Pencil:** the row becomes a name field with only ✓ / ✕ until you accept or dismiss. Save renames the value, keeping its color, in every note in scope. A name another value has merges them (the row says so).
+- One dialog with every value of the property, a field to add one (it's set on this note, like choosing it; on a single-value property a line under the field says which value it replaces), and on each row a color swatch, a pencil and a red trash.
+- **Swatch:** a sub popover on its side with the ten colors (`ColorPicker`); choosing one recolors that value at once, without touching any note.
+- **Pencil:** the row becomes a name field with only ✓ / ✕ until you accept or dismiss. Save renames the value, keeping its color, in every note in scope. A name another value has merges them (the row says so), in that value's color. Old names keep their picked colors: colors are repo-wide, and the old name may still be used elsewhere.
 - **Trash:** closes the dialog, asks first (`ConfirmModal`, with the number of notes), then empties that value in scope.
-- **Scope:** the note's folder, or the board on a card. This note changes through `change`, the others through `editNote` (`renameValue`, `withoutValue`: empty for a single value, out of the list for a list).
+- **Scope:** the note's folder, or the board on a card. The same actions for both (`valueActions` in `lib/frontmatter.js`): this note changes through `change`, the others through `editNote` (`renameValue`, unchanged when the name is; `withoutValue`: empty for a single value, out of the list for a list).
 
 ## Colors
 - Each value has its own badge color within its property, `--tag-0`…`--tag-9` tinted by `--tag-tint` against `--card`, stronger on hover; an empty one is grey.

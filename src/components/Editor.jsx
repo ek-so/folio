@@ -9,7 +9,7 @@ import Backlinks from './Backlinks.jsx'
 import MarkdownEditor from './MarkdownEditor.jsx'
 import { useNote } from '../hooks/useNote.js'
 import { displayName } from '../lib/files.js'
-import { frontMatter, withValue, withoutValue, renameValue, valuesOf, countValue } from '../lib/frontmatter.js'
+import { frontMatter, withValue, valueActions } from '../lib/frontmatter.js'
 import PropertyBadges from './PropertyBadges.jsx'
 
 // A note: its file name in the TitleBar (editing it renames the file), the
@@ -43,18 +43,13 @@ export default function Editor({ linkedBy, onOpenLink, path, entry, files, notes
   const dir = path.slice(0, path.lastIndexOf('/') + 1)
   const nearby = Object.keys(notes).filter(p => p.startsWith(dir) && !p.slice(dir.length).includes('/'))
   const nearbyTexts = nearby.map(p => p === path ? content : notes[p])
-  // `value` out of the property in all of them: this one as an edit, the others through the app
-  const removeValue = (key, value) => {
-    change(withoutValue(content, key, value))
-    onEditNotes(nearby.filter(p => p !== path), t => withoutValue(t, key, value))
-  }
-
-  // `from` renamed `to` in all of them, and given `color`: this one as an edit (its text may have
-  // typing not saved yet), the others and the color in one step
-  const editValue = (key, from, to, color) => {
-    if (to !== from) change(renameValue(content, key, from, to))
-    onEditNotes(to === from ? [] : nearby.filter(p => p !== path), t => renameValue(t, key, from, to), tagColors.set(key, to, color))
-  }
+  // Their values' actions (lib/frontmatter.js `valueActions`): this note as an edit (its text may have typing
+  // not saved yet), the others and the color through the app in one step
+  const values = valueActions(nearbyTexts, (edit, first) => {
+    const edited = edit(content)
+    if (edited !== content) change(edited)
+    onEditNotes(nearby.filter(p => p !== path), edit, first)
+  }, tagColors.set)
 
   const fileName = displayName(path)
   const ready = !loading && !loadError
@@ -100,7 +95,7 @@ export default function Editor({ linkedBy, onOpenLink, path, entry, files, notes
           onDoubleTap={startEditing} onChange={change} onOpenFile={onOpenFile} onNavigate={onNavigate}
           footer={<Backlinks links={backlinks} onOpen={onOpenFile} />}
         >
-          <PropertyBadges props={frontMatter(content)?.props ?? []} path={path} files={files} title="Properties" onChange={(key, value) => change(withValue(content, key, value))} options={key => valuesOf(nearbyTexts, key)} onRemoveValue={removeValue} valueCount={(key, value) => countValue(nearbyTexts, key, value)} scopeName="this folder" chosen={tagColors.colors} onEditValue={tagColors.canEdit ? editValue : undefined} className="px-space pt-space" />
+          <PropertyBadges props={frontMatter(content)?.props ?? []} path={path} files={files} title="Properties" onChange={(key, value) => change(withValue(content, key, value))} options={values.options} onRemoveValue={values.removeValue} valueCount={values.count} scopeName="this folder" chosen={tagColors.colors} onEditValue={tagColors.canEdit ? values.editValue : undefined} className="px-space pt-space" />
         </MarkdownPreview>
       )}
     </FilePage>

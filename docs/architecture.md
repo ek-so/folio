@@ -8,7 +8,7 @@ App flow: **Auth → RepoSetup → FileBrowser / Editor / FileViewer**. `App.jsx
 - `changes.js` — the model of local changes (edits, uploads, renames, deletes, new files) layered over the remote tree; `editNote` applies an edit to one note. Tested.
 - `markdown.js` — preview rendering (blocks tagged with their source range, accordions, date chips in tables), tap-to-source, task checkboxes, editor highlighting, image paths.
 - `previewLinks.js` — links in rendered markdown: `decorateLinks`, `inlineHtml`, `openLink`.
-- `frontmatter.js` — a note's properties (read, add and remove keys, set, rename and remove values, colors of values, title). Tested.
+- `frontmatter.js` — a note's properties (read, add and remove keys, set, rename and remove values, colors of values, title, and `valueActions`: what a values dialog does over a set of notes, shared by the preview and the board). Tested.
 - `tagColors.js` — picked value colors in `.folio/colors.json`. Tested.
 - `links.js` — internal links: backlink and broken-link index, rewriting links on moves, Fix suggestions, `resolveSymlink`. Tested.
 - `viewsConfig.js` — views and their widgets in `.folio/views.json`, `isConfigPath`. Tested.

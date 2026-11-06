@@ -9,7 +9,7 @@ import DeleteModal from '@/components/DeleteModal.jsx'
 import { own } from '@/components/PropertyBadges.jsx'
 
 // A card's ⋯ menu (hidden until the card is hovered with a mouse, always shown on touch):
-// Edit title (the card's title, not the file's name), Move to column (a submenu of the
+// Edit title (the card's title, not the file's name; only with `onTitle`: a note on this device), Move to column (a submenu of the
 // board's columns, then Edit columns… that opens the board's Columns dialog), Delete (the file, confirmed like any delete). `columns`: [{ key, name }] shown,
 // `column`: the card's key. Its dialogs are in a `contents` div so a click in them stays
 // theirs, never the card's.
@@ -30,7 +30,7 @@ export default function CardMenu({ path, title, columns, column, onTitle, onMove
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" onCloseAutoFocus={e => e.preventDefault()}>
-          <DropdownMenuItem onSelect={() => setEditing(true)}><PencilSimple /> Edit title</DropdownMenuItem>
+          {onTitle && <DropdownMenuItem onSelect={() => setEditing(true)}><PencilSimple /> Edit title</DropdownMenuItem>}
           <ColumnSubmenu columns={columns} column={column} onSelect={onMove}>
             <DropdownMenuSeparator />
             <DropdownMenuItem onSelect={onEditColumns}><Columns /> Edit columns…</DropdownMenuItem>

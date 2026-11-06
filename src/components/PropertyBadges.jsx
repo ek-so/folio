@@ -91,6 +91,7 @@ export default function PropertyBadges({ props, path, files, clamp, title, class
         colors={colors[managing]}
         count={value => valueCount(managing, value)}
         scopeName={scopeName}
+        replaces={!Array.isArray(managed.value) && managed.value ? managed.value : null}
         onAdd={value => onChange(managing, addedValue(managed.value, value))}
         onEdit={onEditValue && ((from, to, color) => onEditValue(managing, from, to, color))}
         onRemove={onRemoveValue && (value => { setManaging(null); setRemoving({ key: managing, value }) })}

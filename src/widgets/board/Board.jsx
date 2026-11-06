@@ -127,7 +127,7 @@ export default function Board({ id, services, onRemove }) {
         path={path}
         title={notes[path] === undefined ? displayName(path) : noteTitle(notes[path], displayName(path))}
         columns={columns} column={columnOf(path)}
-        onTitle={title => act.setProperty(path, 'title', title)}
+        onTitle={act.canTitle(path) ? title => act.setTitle(path, title) : undefined}
         onMove={key => moveToColumn(path, key)}
         onEditColumns={() => setChoosing('columns')}
         onDelete={() => act.deleteCard(path)}
