@@ -15,6 +15,10 @@ const buttonVariants = cva(
         outline: 'border border-input bg-transparent shadow-sm hover:bg-secondary hover:text-secondary-foreground',
         secondary: 'bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80',
         ghost: 'hover:bg-secondary hover:text-secondary-foreground',
+        // ✓ and ✕ icon buttons: green (success) and red; `*-light` where a ✓ and a ✕ stand together (and for an overlay's ✕)
+        success: 'bg-success text-success-foreground shadow-sm hover:bg-success/90',
+        'success-light': 'bg-success/15 text-success hover:bg-success/25',
+        'destructive-light': 'bg-destructive/15 text-destructive hover:bg-destructive/25',
         // Trash and other destructive icon buttons: red, a light red fill on hover
         'ghost-destructive': 'text-destructive hover:bg-destructive/10',
         'ghost-outline': 'bg-secondary text-muted-foreground hover:bg-secondary/80 hover:text-foreground',

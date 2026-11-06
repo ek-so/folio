@@ -51,7 +51,7 @@ export default function ValuesModal({ name, values, colors, count, scopeName, on
             autoCorrect="off"
             className="bg-background border-border"
           />
-          <Button type="submit" variant="secondary" size="icon" aria-label="Add" tooltip="Add" disabled={!query} className="shrink-0"><Check /></Button>
+          <Button type="submit" variant="success" size="icon" aria-label="Add" tooltip="Add" disabled={!query} className="shrink-0"><Check /></Button>
         </form>
         <ul className="-mx-1 flex max-h-64 flex-col gap-0.5 overflow-y-auto" data-no-pull>
           {values.map(v => editing?.value === v ? (
@@ -68,8 +68,8 @@ export default function ValuesModal({ name, values, colors, count, scopeName, on
                     className="bg-background border-border"
                   />
                   {onEdit && <ColorPicker label={`Color of ${v}`} color={colors.get(v) ?? 0} onChange={color => onEdit(v, v, color)} />}
-                  <Button type="submit" variant="ghost" size="icon" aria-label="Save" tooltip="Save" disabled={!editing.name.trim()} className="shrink-0"><Check /></Button>
-                  <Button type="button" variant="ghost" size="icon" aria-label="Cancel" tooltip="Cancel" className="shrink-0" onClick={() => setEditing(null)}><X /></Button>
+                  <Button type="submit" variant="success-light" size="icon" aria-label="Save" tooltip="Save" disabled={!editing.name.trim()} className="shrink-0"><Check /></Button>
+                  <Button type="button" variant="destructive-light" size="icon" aria-label="Cancel" tooltip="Cancel" className="shrink-0" onClick={() => setEditing(null)}><X /></Button>
                   {onRemove && <Button type="button" variant="ghost-destructive" size="icon" aria-label={`Remove ${v}`} tooltip="Remove" className="shrink-0" onClick={() => onRemove(v)}><Trash /></Button>}
                 </div>
                 <p className="px-1 text-xs text-muted-foreground">

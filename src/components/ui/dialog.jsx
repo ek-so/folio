@@ -50,7 +50,7 @@ function DialogContent({ className, children, showCloseButton = true, ...props }
         {children}
         {showCloseButton && (
           <DialogPrimitive.Close asChild>
-            <Button variant="ghost" size="icon" aria-label="Close" className="absolute top-3 right-3 text-muted-foreground hover:text-foreground">
+            <Button variant="destructive-light" size="icon" aria-label="Close" className="absolute top-3 right-3">
               <X />
             </Button>
           </DialogPrimitive.Close>

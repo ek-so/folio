@@ -58,8 +58,8 @@ export default function CheckListModal({ title, description, items, selected, on
                     aria-label={`New name for ${item}`}
                     className="bg-background border-border"
                   />
-                  <Button type="submit" variant="ghost" size="icon" aria-label="Save" tooltip="Save" className="shrink-0"><Check /></Button>
-                  <Button type="button" variant="ghost" size="icon" aria-label="Cancel" tooltip="Cancel" className="shrink-0" onClick={() => setEditing(null)}><X /></Button>
+                  <Button type="submit" variant="success-light" size="icon" aria-label="Save" tooltip="Save" className="shrink-0"><Check /></Button>
+                  <Button type="button" variant="destructive-light" size="icon" aria-label="Cancel" tooltip="Cancel" className="shrink-0" onClick={() => setEditing(null)}><X /></Button>
                 </div>
                 {editing.error && <p className="text-destructive text-xs">{editing.error}</p>}
               </form>
@@ -103,7 +103,7 @@ export default function CheckListModal({ title, description, items, selected, on
                 autoCapitalize="none"
                 className="bg-background border-border"
               />
-              <Button type="submit" variant="secondary" size="icon" aria-label="Add" tooltip="Add" disabled={!name.trim()} className="shrink-0"><Check /></Button>
+              <Button type="submit" variant="success" size="icon" aria-label="Add" tooltip="Add" disabled={!name.trim()} className="shrink-0"><Check /></Button>
             </div>
             {error && <p className="text-destructive text-xs">{error}</p>}
           </form>
