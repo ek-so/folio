@@ -15,13 +15,13 @@ import { displayName } from '@/lib/files.js'
 import ResizeHandle from '@/components/ResizeHandle.jsx'
 import { Tray, TrayTitle, TRAY_BUTTON } from '@/components/ui/tray.jsx'
 import { NOTE_HEIGHT, clampSize } from '@/lib/resize.js'
-import { notePath, parseNotes, serializeNotes, noteHeight, resizedNote, addedNote, removedNote, reorderedNote } from './note.js'
+import { notePath, parseNotes, serializeNotes, notesHeight, resizedNotes, addedNote, removedNote, reorderedNote } from './note.js'
 import { NotePicker } from './NoteSetup.jsx'
 
 // The notes widget (note.js): "Notes" and its ⋯ (Add note…, Edit notes…: order them and take them out, Remove widget)
 // on top, then each note in a grey tray like a board's column, side by side, at least 320px wide (narrower, they wrap
 // onto the next line): its name, Edit (✓ when done) and its own ⋯ (Open full screen, Rename note, Remove from widget),
-// then its text in a box that scrolls inside, as tall as its settings say (resizable on desktop by its bottom edge).
+// then its text in a box that scrolls inside; all boxes are one height (resizable on desktop by any box's bottom edge).
 // A double tap edits at the tapped word. Edits save on their own, like on the note's own page; opening one full
 // screen is opening the note, as a board's card does. Taking a note out of the widget keeps the note.
 export default function NoteWidget({ id, services, onRemove }) {
@@ -32,6 +32,15 @@ export default function NoteWidget({ id, services, onRemove }) {
   const [adding, setAdding] = useState(false)
   const [listing, setListing] = useState(false) // Edit notes is open
   const [removing, setRemoving] = useState(null) // the index of the note whose removal is being confirmed
+  const [dragged, setDragged] = useState(null) // the boxes' height while an edge is dragged, until it's saved
+  const height = settings ? notesHeight(settings) : NOTE_HEIGHT.default
+  // Any box's bottom edge resizes them all (one height for the widget); null when it can't be saved
+  const resize = canEdit ? (px, done = true) => {
+    const next = clampSize(px, NOTE_HEIGHT)
+    if (!done) return setDragged(next)
+    setDragged(null)
+    if (next !== height) save(resizedNotes(settings, next))
+  } : null
 
   const message = text => <p className="py-6 text-center text-sm text-muted-foreground">{text}</p>
   const body = !file.ready ? <div className="flex justify-center py-12"><Spinner /></div>
@@ -41,8 +50,8 @@ export default function NoteWidget({ id, services, onRemove }) {
       <div className="flex flex-wrap items-start gap-space-sm">
         {settings.notes.map((entry, i) => (
           <NoteTray
-            key={`${entry.file}:${services.discards}`} path={entry.file} services={services} height={noteHeight(entry)}
-            onResize={canEdit ? height => save(resizedNote(settings, i, height)) : null}
+            key={`${entry.file}:${services.discards}`} path={entry.file} services={services} height={dragged ?? height}
+            onResize={resize}
             onTakeOut={canEdit ? () => setRemoving(i) : null}
           />
         ))}
@@ -101,7 +110,8 @@ export default function NoteWidget({ id, services, onRemove }) {
   )
 }
 
-// One note's tray: its name, Edit and ⋯ over its box. `onTakeOut` (null: it can't be) asks to remove it from the widget
+// One note's tray: its name, Edit and ⋯ over its box, `height` tall on desktop (`onResize(px, done)` from its edge:
+// the widget's). `onTakeOut` (null: it can't be) asks to remove it from the widget
 function NoteTray({ path, services, height, onResize, onTakeOut }) {
   const found = services.noteFile(path)
   const [renaming, setRenaming] = useState(false)
@@ -145,11 +155,10 @@ function NoteTray({ path, services, height, onResize, onTakeOut }) {
 }
 
 // The note itself: read from GitHub (or this device's edits), shown or edited in the box
-// `height`: the box's, from the settings; `onResize(px)` saves a new one (null: it can't be)
+// `height`: the box's; `onResize(px, done)` while its edge is dragged and when it's let go (null: it can't be)
 function NoteBox({ path, found, services, tray, height, onResize }) {
   const { content, change, loading, loadError } = useNote(found.entry, found.edited, (text, original) => services.saveNote(path, text, original))
   const [editing, setEditing] = useState(false)
-  const [dragged, setDragged] = useState(null) // the height while its edge is dragged, until it's saved
   const textareaRef = useRef()
   const ready = !loading && !loadError
 
@@ -170,20 +179,14 @@ function NoteBox({ path, found, services, tray, height, onResize }) {
     : loadError ? <p className="px-6 py-12 text-center text-sm text-muted-foreground">Couldn't open this note. It isn't saved on this device yet — connect to the internet and pull to refresh.</p>
     : editing ? <MarkdownEditor ref={textareaRef} content={content} onChange={change} onDone={() => setEditing(false)} />
     : <MarkdownPreview content={content} path={path} files={services.virtual} onDoubleTap={startEditing} onChange={change} onOpenFile={services.openFile} onNavigate={services.openFolder} />
-  const shown = dragged ?? height
-  // Phones: the default height; desktop: the settings'
+  // Phones: the default height; desktop: the widget's
   return tray(actions, (
-    <div style={{ '--note-h': `${shown}px` }} className="relative h-80 md:h-(--note-h)">
+    <div style={{ '--note-h': `${height}px` }} className="relative h-80 md:h-(--note-h)">
       <div data-no-pull className="flex h-full flex-col overflow-hidden rounded-lg border border-border bg-card">{body}</div>
       {onResize && (
         <ResizeHandle
-          vertical label="Resize note" size={shown} limits={NOTE_HEIGHT} className="hidden md:flex"
-          onResize={(px, save = true) => {
-            const next = clampSize(px, NOTE_HEIGHT)
-            if (!save) return setDragged(next)
-            setDragged(null)
-            if (next !== height) onResize(next)
-          }}
+          vertical label="Resize notes" size={height} limits={NOTE_HEIGHT} className="hidden md:flex"
+          onResize={onResize}
         />
       )}
     </div>
