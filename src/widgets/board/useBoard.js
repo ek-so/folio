@@ -93,7 +93,7 @@ export function useBoard(id, services) {
     // A column named `name`, right away (an error message, or null)
     addColumn: name => services.createFolder(board.folder, name),
     // A new card starts with the board's properties, empty; the board stays open
-    newCard: folder => services.newNote(folder, { keys: [DESCRIPTION, ...board.properties], stay: true }),
+    newCard: folder => services.newNote(folder, { keys: [DESCRIPTION, ...board.properties], stay: true, titled: true }),
     renameColumn: (column, name) => services.rename({ name: column.name, path: column.path, type: 'dir' }, name),
     // With its files, or after moving them right into the board's folder (No status)
     deleteColumn(column, keepCards) {

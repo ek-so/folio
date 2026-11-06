@@ -107,6 +107,9 @@ function affected(virtual, path, isDir) {
   return Object.entries(virtual).filter(([p]) => p.startsWith(path + '/'))
 }
 
+// A file name from a note's title: "/" can't be in one
+export const nameFromTitle = title => title.replace(/\//g, '-').trim()
+
 // Problem with a new file or folder name, or null if it's fine.
 export function nameError(name) {
   if (!name) return 'Enter a name.'
