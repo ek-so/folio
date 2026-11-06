@@ -2,7 +2,7 @@ import { useState, useMemo, forwardRef } from 'react'
 import { DotsThree, Trash, Plus, PencilSimple, Tag, Columns } from '@phosphor-icons/react'
 import {
   DndContext, DragOverlay, MouseSensor, TouchSensor, useSensor, useSensors,
-  closestCenter, closestCorners, pointerWithin, MeasuringStrategy,
+  closestCenter, closestCorners, pointerWithin,
 } from '@dnd-kit/core'
 import { SortableContext, useSortable, arrayMove, horizontalListSortingStrategy, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
@@ -149,7 +149,6 @@ export default function Board({ id, services, onRemove }) {
         onDragOver={onDragOver}
         onDragEnd={onDragEnd}
         onDragCancel={() => setDrag(null)}
-        measuring={MEASURE_WHILE_DRAGGING}
       >
         <div data-no-pull className="-mx-space flex items-start gap-space-sm overflow-x-auto px-space pb-space-sm">
           <SortableContext items={columns.map(c => colId(c.key))} strategy={horizontalListSortingStrategy}>
@@ -298,10 +297,6 @@ function Column({ column, canEdit, onNewCard, onRename, onDelete, children }) {
   )
 }
 
-// A dragged card's place shows as an accent line (Card), so the cards are measured again once it's one:
-// the others then make room for the line, not for the card
-const MEASURE_WHILE_DRAGGING = { droppable: { strategy: MeasuringStrategy.Always } }
-
 // The drag's listeners, ignoring presses in a dialog opened from the card (React passes them up through the portal)
 const ownListeners = listeners => listeners && Object.fromEntries(Object.entries(listeners).map(([k, f]) => [k, e => { if (!isPortaled(e)) f(e) }]))
 
@@ -311,14 +306,13 @@ function Card({ menu, path, text, board, files, onOpen, onOpenFolder, onChange, 
     id: cardId(path),
     data: { type: 'card', path },
   })
-  // Where it lands while it's dragged (the card itself follows the pointer in the DragOverlay)
-  if (isDragging) return <div ref={setNodeRef} style={{ transform: CSS.Translate.toString(transform), transition }} className="h-0.5 shrink-0 rounded-full bg-primary" />
   return (
     <CardBody
       ref={setNodeRef}
       path={path} text={text} board={board} files={files} menu={menu}
       onChange={onChange && ((key, value) => onChange(path, key, value))} options={options} onRemoveValue={onRemoveValue} valueCount={valueCount} chosen={chosen} onEditValue={onEditValue}
       style={{ transform: CSS.Translate.toString(transform), transition }}
+      className={cn(isDragging && 'opacity-40')}
       onClick={e => {
         if (isPortaled(e)) return // a click in a dialog opened from the card
         const link = e.target.closest('a[href]')
