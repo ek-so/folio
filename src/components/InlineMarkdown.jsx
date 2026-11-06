@@ -30,7 +30,7 @@ export default function InlineMarkdown({ text, path, files, onChange, className 
         const { href, text: label, kind, path: target } = spot.dataset
         return createPortal(<LinkBadge href={href} text={label} kind={kind} path={target} {...linkEdits.actions(spans[spot.dataset.span], label)} />, spot, i)
       })}
-      {dates.map((spot, i) => createPortal(<DateField label={spot.dataset.label} {...dateProps(spot, i)} />, spot, `date-${i}`))}
+      {dates.map((spot, i) => createPortal(<DateField inline label={spot.dataset.label} {...dateProps(spot, i)} />, spot, `date-${i}`))}
       {linkEdits.dialogs}
     </>
   )

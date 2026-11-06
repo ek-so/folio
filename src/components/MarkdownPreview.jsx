@@ -279,7 +279,7 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
         return createPortal(
           <LinkBadge href={href} text={text} kind={kind} path={target} {...linkEdits.actions(span, text)} />, spot, `link-${i}`)
       })}
-      {dates.map((spot, i) => createPortal(<DateField label={spot.dataset.label} onClick={handleClick} {...dateProps(spot, i)} />, spot, `date-${i}`))}
+      {dates.map((spot, i) => createPortal(<DateField inline label={spot.dataset.label} onClick={handleClick} {...dateProps(spot, i)} />, spot, `date-${i}`))}
       <DndContext
         sensors={sensors}
         collisionDetection={ownList}
