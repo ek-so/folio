@@ -73,7 +73,7 @@ export default function Editor({ linkedBy, onOpenLink, path, entry, files, notes
       columns={columns}
       actions={<>
         {mode === 'edit' ? (
-          <Button size="icon" onClick={finishEditing} aria-label="Done" className="shrink-0">
+          <Button variant="success" size="icon" onClick={finishEditing} aria-label="Done" className="shrink-0">
             <Check />
           </Button>
         ) : ready && (
