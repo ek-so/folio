@@ -11,7 +11,7 @@
 - `moved(ch, id, from, to, isDir, services)` follows renames and moves; `removed(ch, id, services)` drops its settings. Optional `fileMoves(id, path, services)` gives the columns an open file can move to; optional `valueScope(id, path, services)` the notes whose property values an open note offers (a board: all its cards, in every column, from any view; else the note's folder).
 
 ## Board (`widgets/board/`)
-- **Title:** Board, then its folder's path from the repo's root, muted (the repo's name for the root). Edit widgets names it by its folder.
+- **Title:** Board, with its folder's path from the repo's root above it, muted (the repo's name for the root). Edit widgets names it by its folder.
 - **Settings:** `.folio/boards/<id>.json`: `folder`, `properties` shown on cards, `hidden` columns, `columns` order, `cards` order per column. Pure logic in `board.js` (tested): `boardColumns`, `movedBoard`, `placeCard`, `moveColumn`, `editNotes`, `withBoardKeys`, `emptyColumn`.
 - **Width:** columns share the board's width equally, none narrower than 320px (`min-w-80 flex-1`); below that they keep 320px and the board scrolls sideways. On phones each column is 85% of the board's width, at least 280px (`min-w-70`), so the next one peeks in from the right, and a swipe snaps to a column.
 - **Structure:** a folder whose direct subfolders are columns and whose files, at any depth inside a column, are cards. Files right in the folder show in a No status column first, only while there are any. Technical files and folders (a name starting with `.` or `_`, anywhere in the path) stay off the board, and its property changes leave them and symlinks alone.

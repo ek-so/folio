@@ -184,10 +184,10 @@ export default function Board({ id, services, onRemove }) {
   return (
     <section className="flex shrink-0 flex-col gap-space-sm">
       <div className="flex min-h-control items-center gap-space-sm">
-        {/* "Board", then its folder from the repo's root, muted */}
-        <h2 className="flex min-w-0 flex-1 items-baseline gap-space-sm px-space-xs">
-          <span className="shrink-0 text-base font-bold">Board</span>
+        {/* Its folder from the repo's root, muted, above "Board" */}
+        <h2 className="flex min-w-0 flex-1 flex-col px-space-xs">
           {board && <span className="truncate text-sm text-muted-foreground">{board.folder || services.repoName}</span>}
+          <span className="text-base font-bold">Board</span>
         </h2>
         {menu}
       </div>
