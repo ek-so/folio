@@ -37,7 +37,7 @@ import { useTheme } from './hooks/useTheme.js'
 import { storage } from './lib/storage.js'
 import { PAGE, mainPages } from './lib/pages.js'
 import { isConfigPath, addView, renameView, removeView, VIEWS_PATH, DEFAULT_VIEWS, parseViews, serializeViews, addWidget, removeWidget, moveWidget } from './lib/viewsConfig.js'
-import { withKeys, copyTitled } from './lib/frontmatter.js'
+import { withKeys, withValue, copyTitled } from './lib/frontmatter.js'
 import { widgetType } from './widgets/index.js'
 import { urlForPage, pageForUrl, existingView } from './lib/url.js'
 import { fileView, folderView, startTrails, currentView, openView, trailTo, movedTrails, keptTrails } from './lib/views.js'
@@ -115,7 +115,7 @@ export default function App() {
     if (history.state?.prev === urlForPage(BASE, mainPage, currentView(mainPage, rest))) history.back()
     else setTrails(o => ({ ...o, [mainPage]: rest }))
   }
-  const [newFile, setNewFile] = useState(null) // { folder, kind, keys?, stay?, titled? } while the sheet is open (keys: a new note's properties; stay: don't open it; titled: asks for its title too)
+  const [newFile, setNewFile] = useState(null) // { folder, kind, keys?, values?, stay?, titled? } while the sheet is open (keys: a new note's properties; stay: don't open it; titled: asks for its title too)
   const [viewDialog, setViewDialog] = useState(null) // { kind: 'add' } or { kind: 'rename' | 'delete', view } while a view's dialog is open
   const [adding, setAdding] = useState(null) // { viewId, type } while a new widget's Setup is open
   const [confirmSignOut, setConfirmSignOut] = useState(false)
@@ -337,7 +337,7 @@ export default function App() {
     remove: item => handleDelete(item),
     createFolder: (parent, name) => createFolder(parent, name),
     // `keys`: the properties it starts with, empty; `stay`: don't open it
-    newNote: (folder, { keys, stay, titled } = {}) => setNewFile({ folder, kind: 'note', keys, stay, titled }),
+    newNote: (folder, { keys, values, stay, titled } = {}) => setNewFile({ folder, kind: 'note', keys, values, stay, titled }),
     // A note widget's note: its new note, made in one step with the widget (noteToAdd); its file
     // ({ entry, edited: this device's text, if edited }, or null when it's gone) and its typing saved
     addNote: (folder, name) => noteToAdd(folder, name),
@@ -392,15 +392,15 @@ export default function App() {
     return null
   }
 
-  // A new note `name` in `folder`, starting with the properties `keys`, empty: { path, change }
+  // A new note `name` in `folder`, starting with the properties `keys`, empty, or with `values` ({ key: value }): { path, change }
   // (ch => ch that adds it), or { error }
   // `title`: its first heading when it isn't the file's name (a board's new card)
-  function noteToAdd(folder, name, keys = [], title = '') {
+  function noteToAdd(folder, name, keys = [], title = '', values = {}) {
     if (!repo.remote) return { error: 'Files are still loading.' }
     const path = `${folder ? `${folder}/${name}` : name}.md`
     const error = nameError(name) || createError(changes, virtual, [path])
     if (error) return { error }
-    return { path, change: ch => add(ch, repo.remote.files, path, withKeys(`# ${title || name}\n\n`, keys)) }
+    return { path, change: ch => add(ch, repo.remote.files, path, Object.entries(values).reduce((t, [k, v]) => withValue(t, k, v), withKeys(`# ${title || name}\n\n`, keys))) }
   }
 
   function handleCreate(name, title) {
@@ -412,7 +412,7 @@ export default function App() {
       if (err) return err
     } else {
       // A note can start with properties, empty (a board's new card)
-      const made = noteToAdd(newFile.folder, name, newFile.keys, title)
+      const made = noteToAdd(newFile.folder, name, newFile.keys, title, newFile.values)
       if (made.error) return made.error
       update(made.change)
       if (!newFile.stay) setSelectedFile(made.path)

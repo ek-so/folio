@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useCallback, useLayoutEffect } from 'react'
-import { DotsThree, Trash, Tag, CalendarBlank } from '@phosphor-icons/react'
+import { DotsThree, X, Tag, CalendarBlank, Plus } from '@phosphor-icons/react'
 import { DndContext, DragOverlay, MouseSensor, TouchSensor, useSensor, useSensors, useDraggable, useDroppable, pointerWithin, closestCenter } from '@dnd-kit/core'
 import { cn } from '@/lib/utils.js'
 import { Button } from '@/components/ui/button.jsx'
@@ -94,7 +94,7 @@ export default function Planner({ id, services, onRemove }) {
         <DropdownMenuContent align="end" onCloseAutoFocus={e => e.preventDefault()}>
           <DropdownMenuItem disabled={off} onSelect={() => setChoosing(true)}><Tag /> Properties</DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem variant="destructive" disabled={!canEdit} onSelect={onRemove}><Trash /> Remove planner</DropdownMenuItem>
+          <DropdownMenuItem variant="destructive" disabled={!canEdit} onSelect={onRemove}><X /> Remove planner</DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     </div>
@@ -158,6 +158,9 @@ export default function Planner({ id, services, onRemove }) {
             ))}
           </div>
         ) : <p className="px-space-xs py-space-sm text-sm text-muted-foreground">Nothing planned for this day.</p>}
+        <Button variant="ghost" disabled={off} className="justify-start gap-2 px-3 text-sm font-normal text-muted-foreground hover:bg-muted-foreground/10" onClick={() => act.newCard(selected)}>
+          <Plus /> New card
+        </Button>
         <DragOverlay>
           {dragged && <NoteCard {...cardProps(dragged)} className="rotate-2 border-lift-edge shadow-lg" />}
         </DragOverlay>

@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { DotsThree, Trash, Plus, PencilSimple, Tag, Columns, CaretDown } from '@phosphor-icons/react'
+import { DotsThree, Trash, X, Plus, PencilSimple, Tag, Columns, CaretDown } from '@phosphor-icons/react'
 import {
   DndContext, DragOverlay, MouseSensor, TouchSensor, useSensor, useSensors,
   closestCenter, closestCorners, pointerWithin,
@@ -73,7 +73,7 @@ export default function Board({ id, services, onRemove }) {
         <DropdownMenuItem disabled={off} onSelect={() => setChoosing('columns')}><Columns /> Columns</DropdownMenuItem>
         <DropdownMenuItem disabled={off} onSelect={() => setChoosing('properties')}><Tag /> Properties</DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem variant="destructive" disabled={!canEdit} onSelect={onRemove}><Trash /> Remove board</DropdownMenuItem>
+        <DropdownMenuItem variant="destructive" disabled={!canEdit} onSelect={onRemove}><X /> Remove board</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   )

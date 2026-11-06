@@ -50,7 +50,7 @@ Never hardcode colors; use the semantic tokens (light and dark values in `src/in
 `--safe-top` / `--safe-bottom` hold the iOS safe-area insets.
 
 ## Buttons
-- Variants: `default`, `secondary`, `ghost`, `ghost-outline`, `outline`, `link`, and the colored ones: `destructive`, `ghost-destructive` (trash), `success`, `success-light`, `destructive-light`.
+- Variants: `default`, `secondary`, `ghost`, `ghost-outline`, `outline`, `link`, and the colored ones: `destructive`, `ghost-destructive` (trash to delete, ✕ to take out: see the AGENTS rule), `success`, `success-light`, `destructive-light`.
 - Confirm and dismiss icon buttons: `success` / `destructive` alone, `success-light` / `destructive-light` side by side.
 
 ## Icons

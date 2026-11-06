@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Plus, Trash, DotsThree, PencilSimple, SquaresFour } from '@phosphor-icons/react'
+import { Plus, X, DotsThree, PencilSimple, SquaresFour } from '@phosphor-icons/react'
 import PageLayout from './PageLayout.jsx'
 import Surface from './Surface.jsx'
 import ConfirmModal from './ConfirmModal.jsx'
@@ -39,7 +39,7 @@ export default function ViewPage({ page, widgets = [], error, services, onAdd, o
         <DropdownMenuItem disabled={!canEdit} onSelect={() => setEditing(true)}><SquaresFour /> Edit widgets</DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem disabled={!canEditView} onSelect={onRename}><PencilSimple /> Rename</DropdownMenuItem>
-        <DropdownMenuItem variant="destructive" disabled={!canEditView} onSelect={onRemoveView}><Trash /> Remove</DropdownMenuItem>
+        <DropdownMenuItem variant="destructive" disabled={!canEditView} onSelect={onRemoveView}><X /> Remove</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   )
@@ -107,7 +107,7 @@ function UnknownWidget({ type, canEdit, onRemove }) {
   return (
     <section className="flex items-center gap-space-sm rounded-lg border border-border p-space-sm">
       <p className="min-w-0 flex-1 px-space-xs text-sm text-muted-foreground">This widget (“{type}”) needs a newer version of Folio.</p>
-      <Button variant="ghost-destructive" size="icon" aria-label="Remove widget" tooltip="Remove widget" disabled={!canEdit} onClick={onRemove}><Trash /></Button>
+      <Button variant="ghost-destructive" size="icon" aria-label="Remove widget" tooltip="Remove widget" disabled={!canEdit} onClick={onRemove}><X /></Button>
     </section>
   )
 }

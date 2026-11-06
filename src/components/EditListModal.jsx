@@ -1,4 +1,4 @@
-import { DotsSixVertical, Trash } from '@phosphor-icons/react'
+import { DotsSixVertical, X } from '@phosphor-icons/react'
 import { DndContext, MouseSensor, TouchSensor, useSensor, useSensors, closestCenter } from '@dnd-kit/core'
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
@@ -9,7 +9,7 @@ import BottomSheet from './BottomSheet.jsx'
 
 // A sheet to edit a list of `items` ([{ id, icon, title }]; a view's widgets): drag them into
 // order (with a mouse right away, on touch after holding 0.25s, like a board's cards; each drop
-// calls `onMove(from, to)`, indexes, at once), remove one with its trash (`onRemove(item)`, confirmed
+// calls `onMove(from, to)`, indexes, at once), remove one with its ✕ (`onRemove(item)`, confirmed
 // by the caller). `empty`: the text when there's nothing.
 export default function EditListModal({ title, description, items, onMove, onRemove, empty, onClose }) {
   const sensors = useSensors(
@@ -52,7 +52,7 @@ function Row({ item, onRemove }) {
         rowProps={listeners}
         trailing={
           <Button variant="ghost-destructive" size="icon" aria-label={`Remove ${item.title}`} tooltip="Remove" className="size-control-md" onPointerDown={e => e.stopPropagation()} onClick={() => onRemove(item)}>
-            <Trash />
+            <X />
           </Button>
         }
       />

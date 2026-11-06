@@ -1,4 +1,4 @@
-import { DotsThree, PencilSimple, Trash } from '@phosphor-icons/react'
+import { DotsThree, PencilSimple, X } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils.js'
 import { Button } from './ui/button.jsx'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from './ui/dropdown-menu.jsx'
@@ -25,7 +25,7 @@ export default function ViewMenu({ view, onRename, onDelete, disabled, sub }) {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" {...(sub ? { side: 'right', sideOffset: 8, collisionPadding: 8, className: 'min-w-0' } : {})} onCloseAutoFocus={e => e.preventDefault()}>
         <DropdownMenuItem disabled={disabled} onSelect={() => onRename(view)}><PencilSimple /> Rename</DropdownMenuItem>
-        <DropdownMenuItem variant="destructive" disabled={disabled} onSelect={() => onDelete(view)}><Trash /> Remove</DropdownMenuItem>
+        <DropdownMenuItem variant="destructive" disabled={disabled} onSelect={() => onDelete(view)}><X /> Remove</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   )

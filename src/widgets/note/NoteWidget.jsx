@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react'
 import { flushSync } from 'react-dom'
-import { DotsThree, Trash, PencilSimple, Check, ArrowsOut, Plus, ListBullets, X } from '@phosphor-icons/react'
+import { DotsThree, PencilSimple, Check, ArrowsOut, Plus, ListBullets, X } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button.jsx'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu.jsx'
 import Spinner from '@/components/Spinner.jsx'
@@ -73,7 +73,7 @@ export default function NoteWidget({ id, services, onRemove }) {
             <DropdownMenuItem disabled={!canEdit} onSelect={() => setAdding(true)}><Plus /> Add note…</DropdownMenuItem>
             <DropdownMenuItem disabled={!canEdit || !settings.notes.length} onSelect={() => setListing(true)}><ListBullets /> Edit notes…</DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem variant="destructive" disabled={!services.canEdit} onSelect={onRemove}><Trash /> Remove widget</DropdownMenuItem>
+            <DropdownMenuItem variant="destructive" disabled={!services.canEdit} onSelect={onRemove}><X /> Remove widget</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
