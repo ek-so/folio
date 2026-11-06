@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { DotsThree, PencilSimple, Trash, Columns, Copy, TextT, TextAlignLeft } from '@phosphor-icons/react'
+import { DotsThree, PencilSimple, Trash, Columns, Copy, TextT, TextAlignLeft, LinkSimple } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button.jsx'
 import { Input } from '@/components/ui/input.jsx'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu.jsx'
@@ -7,12 +7,14 @@ import ColumnSubmenu from '@/components/ColumnSubmenu.jsx'
 import BottomSheet from '@/components/BottomSheet.jsx'
 import DeleteModal from '@/components/DeleteModal.jsx'
 import RenameModal from '@/components/RenameModal.jsx'
+import { copyText } from '@/lib/clipboard.js'
+import { repoLink } from '@/lib/markdown.js'
 import { own } from '@/lib/utils.js'
 
 // A card's ⋯ menu (hidden until the card is hovered with a mouse, always shown on touch):
 // Edit title (the card's title, not the file's name; only with `onTitle`: a note on this device), Add / Edit
 // description (`description`, its text; only with `onDescription`, a note on this device), Rename file (its file's
-// name, `RenameModal`; `onRename(name)` returns an error or null), Duplicate (a copy of the file next to it), Move to column (a submenu of the
+// name, `RenameModal`; `onRename(name)` returns an error or null), Duplicate (a copy of the file next to it), Copy link (`repoLink`), Move to column (a submenu of the
 // board's columns, then Edit columns… that opens the board's Columns dialog), Delete (the file, confirmed like any delete). `columns`: [{ key, name }] shown,
 // `column`: the card's key. Its dialogs are in a `contents` div so a click in them stays
 // theirs, never the card's.
@@ -39,6 +41,7 @@ export default function CardMenu({ path, title, description, columns, column, on
           {onDescription && <DropdownMenuItem onSelect={() => setEditing('description')}><TextAlignLeft /> {description ? 'Edit' : 'Add'} description</DropdownMenuItem>}
           <DropdownMenuItem onSelect={() => setRenaming(true)}><PencilSimple /> Rename file</DropdownMenuItem>
           <DropdownMenuItem onSelect={onDuplicate}><Copy /> Duplicate</DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => copyText(repoLink(path), 'Link copied')}><LinkSimple /> Copy link</DropdownMenuItem>
           <ColumnSubmenu columns={columns} column={column} onSelect={onMove}>
             <DropdownMenuSeparator />
             <DropdownMenuItem onSelect={onEditColumns}><Columns /> Edit columns…</DropdownMenuItem>

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { renderBlocks, tapOffset, taskOffsets, taskProgress, linkSpans, linkMarkdown, replaceLink, listsIn, moveListItem, highlightMarkdown, parseIsoDate } from './markdown.js'
+import { renderBlocks, tapOffset, taskOffsets, taskProgress, linkSpans, linkMarkdown, replaceLink, repoLink, listsIn, moveListItem, highlightMarkdown, parseIsoDate } from './markdown.js'
 
 describe('markdown', () => {
   it('tags each block with its source range', () => {
@@ -51,6 +51,8 @@ describe('markdown', () => {
     expect(linkMarkdown('', 'https://a.io', true)).toBe('https://a.io')
     expect(linkMarkdown('', 'https://a.io', false)).toBe('[https://a.io](https://a.io)')
     expect(linkMarkdown('My note', 'notes/my note.md')).toBe('[My note](<notes/my note.md>)')
+    expect(repoLink('notes/My note.md')).toBe('[My note](</notes/My note.md>)')
+    expect(repoLink('docs')).toBe('[docs](/docs)')
     const md = 'See [a](https://a.io) here'
     const [span] = linkSpans(md)
     expect(replaceLink(md, span, '[b](https://b.io)')).toBe('See [b](https://b.io) here')

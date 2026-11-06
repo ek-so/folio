@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { DotsThree, Globe, FileText, File, Folder, LinkBreak, LinkSimple, PencilSimple, Trash } from '@phosphor-icons/react'
-import { toast } from 'sonner'
+import { copyText } from '../lib/clipboard.js'
 import { cn, own } from '@/lib/utils.js'
 import { Badge } from './ui/badge.jsx'
 import { Button } from './ui/button.jsx'
@@ -40,7 +40,7 @@ function Favicon({ href }) {
 export default function LinkBadge({ href, text, kind, path, onEdit, onRemove }) {
   // A link into the repo is copied as the app's address of what it points to (in File manager)
   const address = path ? location.origin + urlForView(import.meta.env.BASE_URL, kind === 'folder' ? { folder: path } : { file: path }) : href
-  const copy = () => navigator.clipboard.writeText(address).then(() => toast.success('Link address copied'), () => toast.error("Couldn't copy the link address"))
+  const copy = () => copyText(address, 'Link address copied')
   const [open, setOpen] = useSingleOpen()
   const Icon = REPO_ICONS[kind]
   return (

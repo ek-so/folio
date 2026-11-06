@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { DotsThree, PencilSimple, Trash, Folder, Rows, SquaresFour, Copy } from '@phosphor-icons/react'
+import { DotsThree, PencilSimple, Trash, Folder, Rows, SquaresFour, Copy, LinkSimple } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils.js'
 import { Button } from './ui/button.jsx'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from './ui/dropdown-menu.jsx'
@@ -8,11 +8,14 @@ import RenameModal from './RenameModal.jsx'
 import DeleteModal from './DeleteModal.jsx'
 import MoveModal from './MoveModal.jsx'
 import ColumnSubmenu from './ColumnSubmenu.jsx'
+import { copyText } from '../lib/clipboard.js'
+import { repoLink } from '../lib/markdown.js'
 
 // ⋯ menu with Rename / Move / Delete for a file or folder ({ name, path, type }).
 // onRename(item, name) returns an error message or null.
 // onMove(item, targetFolder) returns an error message or null.
 // onDuplicate(item): a copy of a file next to it (not offered for a folder).
+// Copy link: a markdown link to the item from the repo's root (`repoLink`), to paste in another note.
 // inList: inside a file-browser row — medium (32px), ghost (no border), smaller icon, with its own
 // lighter fill on hover over the row's highlight
 // default (title bar of the open folder or file): ghost-outline with a more visible border
@@ -55,6 +58,7 @@ export default function ItemMenu({ item, onRename, onDuplicate, onDelete, onMove
             {columns && <ColumnSubmenu columns={columns.columns} column={columns.column} onSelect={columns.onSelect} />}
             {onMove && <DropdownMenuItem onSelect={() => setMoving(true)}><Folder /> Move to…</DropdownMenuItem>}
             {onDuplicate && item.type !== 'dir' && <DropdownMenuItem onSelect={() => onDuplicate(item)}><Copy /> Duplicate</DropdownMenuItem>}
+            <DropdownMenuItem onSelect={() => copyText(repoLink(item.path), 'Link copied')}><LinkSimple /> Copy link</DropdownMenuItem>
             <DropdownMenuItem variant="destructive" onSelect={() => setDeleting(true)}><Trash /> Remove</DropdownMenuItem>
           </>}
         </DropdownMenuContent>

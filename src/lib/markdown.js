@@ -1,5 +1,6 @@
 import { marked } from 'marked'
 import { blankFrontMatter } from './frontmatter.js'
+import { displayName } from './files.js'
 
 marked.setOptions({ breaks: true, gfm: true })
 
@@ -166,6 +167,10 @@ export function linkMarkdown(name, url, bare) {
   if (bare && dest === u && (!n || n === u)) return u
   return `[${n || u}](${dest})`
 }
+
+// A markdown link to `path` in the repo, from its root ("/notes/a.md"), so it works pasted in any note
+// (and follows renames like any link), named after it
+export const repoLink = path => linkMarkdown(displayName(path), '/' + path)
 
 // `text` with the link at `span` replaced by `markdown`; '' takes the link out with
 // one of the spaces around it
