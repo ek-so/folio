@@ -76,7 +76,7 @@ export default function PropertyBadges({ props, path, files, clamp, title, class
   const confirm = removing && (
     <div className="contents" {...own}>
       <ConfirmModal
-        title={`Delete “${removing.value}” from ${removing.key}?`}
+        title={`Remove “${removing.value}” from ${removing.key}?`}
         description={`It becomes empty in ${valueCount(removing.key, removing.value)} note${valueCount(removing.key, removing.value) === 1 ? '' : 's'} in ${scopeName}. It changes on GitHub when you sync.`}
         onConfirm={() => { onRemoveValue(removing.key, removing.value); setRemoving(null) }}
         onClose={() => setRemoving(null)}

@@ -581,7 +581,7 @@ export default function App() {
             <ViewPage
               page={page}
               widgets={views.find(v => v.id === page)?.widgets}
-              error={viewsBroken ? `The views file (${VIEWS_PATH}) can't be read, so views can't be changed here. Fix or delete it on GitHub, then Pull.` : null}
+              error={viewsBroken ? `The views file (${VIEWS_PATH}) can't be read, so views can't be changed here. Fix or remove it on GitHub, then Pull.` : null}
               services={widgetServices}
               onAdd={type => startWidget(page, type)}
               onRemove={id => removeWidgetOf(page, id)}
@@ -682,7 +682,7 @@ export default function App() {
         {confirmDiscard && (
           <ConfirmModal
             title={`Discard ${repo.changeCount} change${repo.changeCount === 1 ? '' : 's'}?`}
-            description="They're deleted from this device and can't be recovered."
+            description="They're removed from this device and can't be recovered."
             confirm="Discard"
             onConfirm={discardChanges}
             onClose={() => setConfirmDiscard(false)}
@@ -693,7 +693,7 @@ export default function App() {
           <ConfirmModal
             title="Sign out?"
             description={repo.changeCount
-              ? `You have ${repo.changeCount} unsynced change${repo.changeCount === 1 ? '' : 's'}. Signing out deletes them from this device.`
+              ? `You have ${repo.changeCount} unsynced change${repo.changeCount === 1 ? '' : 's'}. Signing out removes them from this device.`
               : 'The offline copies of your notes are removed from this device, and you\'ll need your token to sign in again.'}
             confirm="Sign out"
             onConfirm={signOut}

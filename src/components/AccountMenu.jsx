@@ -27,7 +27,7 @@ export default function AccountMenu({ trigger, current, pages, viewActions, onNa
             <DropdownMenuItem onSelect={e => { e.preventDefault(); setEditing(null) }}><ArrowLeft /> <span className="min-w-0 truncate">{editing.title}</span></DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem disabled={!viewActions.canEdit} onSelect={() => viewActions.onRename(editing)}><PencilSimple /> Rename</DropdownMenuItem>
-            <DropdownMenuItem variant="destructive" disabled={!viewActions.canEdit} onSelect={() => viewActions.onDelete(editing)}><Trash /> Delete</DropdownMenuItem>
+            <DropdownMenuItem variant="destructive" disabled={!viewActions.canEdit} onSelect={() => viewActions.onDelete(editing)}><Trash /> Remove</DropdownMenuItem>
           </>
         ) : (
           <>

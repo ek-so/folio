@@ -25,7 +25,7 @@ export default function ViewMenu({ view, onRename, onDelete, disabled }) {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" onCloseAutoFocus={e => e.preventDefault()}>
         <DropdownMenuItem disabled={disabled} onSelect={() => onRename(view)}><PencilSimple /> Rename</DropdownMenuItem>
-        <DropdownMenuItem variant="destructive" disabled={disabled} onSelect={() => onDelete(view)}><Trash /> Delete</DropdownMenuItem>
+        <DropdownMenuItem variant="destructive" disabled={disabled} onSelect={() => onDelete(view)}><Trash /> Remove</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   )

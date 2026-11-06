@@ -56,8 +56,8 @@ export default function Board({ id, services, onRemove }) {
     useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 8 } }),
   )
   const [drag, setDrag] = useState(null) // { id, type, items } while dragging: each column's cards as shown meanwhile
-  const [renaming, setRenaming] = useState(null) // the column whose Rename / Delete sheet is open
-  const [deleting, setDeleting] = useState(null) // the column whose Delete is being confirmed
+  const [renaming, setRenaming] = useState(null) // the column whose Rename / Remove sheet is open
+  const [deleting, setDeleting] = useState(null) // the column whose Remove is being confirmed
   const [dropping, setDropping] = useState(null) // the property whose removal is being confirmed
   const [choosing, setChoosing] = useState(null) // the open checklist: 'columns' | 'properties'
   const off = !canEdit || !board || data?.missing
@@ -193,7 +193,7 @@ export default function Board({ id, services, onRemove }) {
       {choosing === 'columns' && board && (
         <CheckListModal
           title="Columns"
-          description="Tick the columns to show. Each one's folder can be opened or deleted here."
+          description="Tick the columns to show. Each one's folder can be opened or removed here."
           items={data.columns.map(c => c.name)}
           onOpen={name => { setChoosing(null); act.openColumn(data.columns.find(c => c.name === name)) }}
           openLabel="Open folder"
@@ -237,11 +237,11 @@ export default function Board({ id, services, onRemove }) {
       )}
       {deleting && (
         <ConfirmModal
-          title={`Delete column “${deleting.name}”?`}
+          title={`Remove column “${deleting.name}”?`}
           description={deleting.cards.length
-            ? `It has ${deleting.cards.length} card${deleting.cards.length === 1 ? '' : 's'}. Delete them too, or move them to No status? It's removed from GitHub when you sync.`
+            ? `It has ${deleting.cards.length} card${deleting.cards.length === 1 ? '' : 's'}. Remove them too, or move them to No status? It's removed from GitHub when you sync.`
             : 'Its folder is removed from GitHub when you sync.'}
-          confirm={deleting.cards.length ? 'Delete with cards' : 'Delete'}
+          confirm={deleting.cards.length ? 'Remove with cards' : 'Remove'}
           onConfirm={() => { setDeleting(null); act.deleteColumn(deleting, false) }}
           alternative={deleting.cards.length ? { label: 'Move to No status', onSelect: () => { setDeleting(null); act.deleteColumn(deleting, true) } } : undefined}
           onClose={() => setDeleting(null)}
@@ -288,7 +288,7 @@ function Column({ column, canEdit, onNewCard, onRename, onDelete, children }) {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" onCloseAutoFocus={e => e.preventDefault()}>
               <DropdownMenuItem onSelect={onRename}><PencilSimple /> Rename</DropdownMenuItem>
-              <DropdownMenuItem variant="destructive" onSelect={onDelete}><Trash /> Delete</DropdownMenuItem>
+              <DropdownMenuItem variant="destructive" onSelect={onDelete}><Trash /> Remove</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

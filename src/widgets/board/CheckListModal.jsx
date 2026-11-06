@@ -82,7 +82,7 @@ export default function CheckListModal({ title, description, items, selected, on
                     </Button>
                   )}
                   {onDelete && (
-                    <Button variant="ghost-destructive" size="icon" aria-label={`Delete ${item}`} tooltip="Delete" className="size-control-md" onClick={() => onDelete(item)}>
+                    <Button variant="ghost-destructive" size="icon" aria-label={`Remove ${item}`} tooltip="Remove" className="size-control-md" onClick={() => onDelete(item)}>
                       <Trash />
                     </Button>
                   )}

@@ -8,7 +8,7 @@ import { PROPERTY_COLORS } from '../lib/frontmatter.js'
 // The form that edits one value of a property: its name and its color (`color`: 0 …
 // PROPERTY_COLORS - 1, the --tag-N of index.css); `others`: the property's other
 // values (a name taken by one merges them). Save calls `onSave(name, color)`, Cancel `onCancel`,
-// and the red Delete (when `onDelete` is given) `onDelete`.
+// and the red Remove (when `onDelete` is given) `onDelete`.
 export default function ValueEditForm({ value, others, color, onSave, onCancel, onDelete }) {
   const [name, setName] = useState(value)
   const [picked, setPicked] = useState(color)
@@ -54,7 +54,7 @@ export default function ValueEditForm({ value, others, color, onSave, onCancel, 
         ))}
       </div>
       <div className="flex gap-2">
-        {onDelete && <Button type="button" variant="ghost-destructive" className="mr-auto" onClick={onDelete}><Trash /> Delete</Button>}
+        {onDelete && <Button type="button" variant="ghost-destructive" className="mr-auto" onClick={onDelete}><Trash /> Remove</Button>}
         <Button type="button" variant="secondary" onClick={onCancel}>Cancel</Button>
         <Button type="submit" disabled={!trimmed}>Save</Button>
       </div>

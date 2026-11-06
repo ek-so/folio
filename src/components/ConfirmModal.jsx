@@ -3,9 +3,9 @@ import BottomSheet from './BottomSheet.jsx'
 
 // The one confirmation for every destructive action (delete, discard, sign
 // out, remove): `title`, `description`, Cancel and the red `confirm` button
-// (default Delete) that calls `onConfirm`. `alternative`: { label, onSelect },
+// (default Remove) that calls `onConfirm`. `alternative`: { label, onSelect },
 // a milder second way out (a column's "Move to No status").
-export default function ConfirmModal({ title, description, confirm = 'Delete', onConfirm, alternative, onClose }) {
+export default function ConfirmModal({ title, description, confirm = 'Remove', onConfirm, alternative, onClose }) {
   return (
     <BottomSheet title={title} description={description} onClose={onClose}>
       <div className="flex flex-wrap justify-end gap-2">

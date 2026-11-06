@@ -36,7 +36,7 @@ export default function CardMenu({ path, title, columns, column, onTitle, onMove
             <DropdownMenuItem onSelect={onEditColumns}><Columns /> Edit columns…</DropdownMenuItem>
           </ColumnSubmenu>
           <DropdownMenuSeparator />
-          <DropdownMenuItem variant="destructive" onSelect={() => setDeleting(true)}><Trash /> Delete</DropdownMenuItem>
+          <DropdownMenuItem variant="destructive" onSelect={() => setDeleting(true)}><Trash /> Remove</DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
       {editing && <TitleModal title={title} onSave={value => { setEditing(false); onTitle(value) }} onClose={() => setEditing(false)} />}
