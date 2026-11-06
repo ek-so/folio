@@ -8,7 +8,7 @@ import { SortableContext, useSortable, arrayMove, horizontalListSortingStrategy,
 import { CSS } from '@dnd-kit/utilities'
 import { cn } from '@/lib/utils.js'
 import { Button } from '@/components/ui/button.jsx'
-import { Tray, TrayTitle } from '@/components/ui/tray.jsx'
+import { Tray, TrayTitle, TRAY_BUTTON } from '@/components/ui/tray.jsx'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu.jsx'
 import PropertyBadges from '@/components/PropertyBadges.jsx'
 import Spinner from '@/components/Spinner.jsx'
@@ -273,7 +273,7 @@ function Column({ column, canEdit, onNewCard, onRename, onDelete, children }) {
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" aria-label={`Actions for ${column.name}`} disabled={!canEdit} className="size-control-md shrink-0 text-muted-foreground hover:bg-muted-foreground/10 data-[state=open]:bg-muted-foreground/10">
+              <Button variant="ghost" size="icon" aria-label={`Actions for ${column.name}`} disabled={!canEdit} className={TRAY_BUTTON}>
                 <DotsThree weight="bold" size={16} />
               </Button>
             </DropdownMenuTrigger>
