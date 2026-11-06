@@ -1,10 +1,14 @@
 import * as React from 'react'
 import * as PopoverPrimitive from '@radix-ui/react-popover'
 import { cn } from '@/lib/utils'
+import { useOverlayOpen } from '@/hooks/useOverlayOpen.js'
 
 // The app's popovers (shadcn/ui, Radix): a small floating panel next to what
-// opened it; closes on an outside click or Esc.
-const Popover = PopoverPrimitive.Root
+// opened it; closes on an outside click, Esc, or a scroll by touch (useOverlayOpen).
+function Popover({ open, defaultOpen, onOpenChange, ...props }) {
+  const [isOpen, setOpen] = useOverlayOpen({ open, defaultOpen, onOpenChange })
+  return <PopoverPrimitive.Root open={isOpen} onOpenChange={setOpen} {...props} />
+}
 const PopoverTrigger = PopoverPrimitive.Trigger
 
 const PopoverContent = React.forwardRef(function PopoverContent({ className, align = 'start', sideOffset = 6, ...props }, ref) {

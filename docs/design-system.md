@@ -64,7 +64,8 @@ shadcn's (`ui/tooltip.jsx`): dark on light, text-sm, after 300ms (`TooltipProvid
 ## Overlays
 - **`ConfirmModal`:** one confirmation for every destructive action (title, description, Cancel, a red confirm button, an optional milder `alternative`). `DeleteModal` is its wording for files, folders and views.
 - **`BottomSheet`:** every prompt: a sheet on mobile, a centered Dialog from 768px. It clears a stale page lock on close. On iOS `lib/viewport.js` scrolls the page back after the keyboard closes.
-- **Dropdown menus are non-modal** (`ui/dropdown-menu`): a modal menu that opens a dialog can leave the page locked and freeze every button. An item lights up only under a mouse or with the keyboard, never left lit by a tap.
+- **Dropdown menus are non-modal** (`ui/dropdown-menu`): a modal menu that opens a dialog can leave the page locked and freeze every button. An item lights up only under a mouse or with the keyboard, never left lit by a tap. On touch a menu opens on the tap, not when the finger lands, so starting a scroll on ⋯ doesn't open it.
+- **A scroll by touch closes popovers and menus** (`useOverlayOpen`, in `ui/popover` and `ui/dropdown-menu`): a finger moving outside the open panels closes them, since radix only closes on a tap outside.
 - **Sub popovers:** `Popover` (`ui/popover.jsx`) or a nested `DropdownMenu`, opened on the side of the item. Content inside a popover that opens a modal wraps it in a `contents` div with the `own` handlers so clicks stay its own.
 - Loading uses `Spinner`. `PullToRefresh` wraps every screen; `data-no-pull` areas opt out.
 - Toasts: `ui/sonner`, bottom center, filled emerald, 20px icon and text, 16px padding; full width on phones.

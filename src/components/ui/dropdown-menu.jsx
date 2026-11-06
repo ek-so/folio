@@ -2,15 +2,46 @@ import * as React from 'react'
 import * as DropdownMenuPrimitive from '@radix-ui/react-dropdown-menu'
 import { CaretRight } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
+import { useOverlayOpen } from '@/hooks/useOverlayOpen.js'
+
+// The menu's [open, setOpen], for its trigger
+const OpenCtx = React.createContext(null)
 
 // Non-modal: a modal menu locks the page (pointer-events: none on body), and
-// when it opens a dialog that lock can be left behind, freezing every button
-function DropdownMenu({ modal = false, ...props }) {
-  return <DropdownMenuPrimitive.Root data-slot="dropdown-menu" modal={modal} {...props} />
+// when it opens a dialog that lock can be left behind, freezing every button.
+// A scroll by touch closes it (useOverlayOpen).
+function DropdownMenu({ modal = false, open, defaultOpen, onOpenChange, ...props }) {
+  const state = useOverlayOpen({ open, defaultOpen, onOpenChange })
+  return (
+    <OpenCtx.Provider value={state}>
+      <DropdownMenuPrimitive.Root data-slot="dropdown-menu" modal={modal} open={state[0]} onOpenChange={state[1]} {...props} />
+    </OpenCtx.Provider>
+  )
 }
 
-function DropdownMenuTrigger(props) {
-  return <DropdownMenuPrimitive.Trigger data-slot="dropdown-menu-trigger" {...props} />
+// Radix opens a menu as soon as a pointer goes down. With a mouse that stays; on touch it waits for
+// the tap, so a finger landing on ⋯ to scroll the page doesn't open it
+function DropdownMenuTrigger({ onPointerDown, onClick, ...props }) {
+  const [open, setOpen] = React.useContext(OpenCtx)
+  const touched = React.useRef(false)
+  return (
+    <DropdownMenuPrimitive.Trigger
+      data-slot="dropdown-menu-trigger"
+      onPointerDown={e => {
+        onPointerDown?.(e)
+        touched.current = e.pointerType !== 'mouse'
+        if (touched.current) e.preventDefault() // skips radix's own opening
+      }}
+      onClick={e => {
+        onClick?.(e)
+        const tap = touched.current && e.detail > 0 // not Enter / Space, which radix handles
+        touched.current = false
+        if (!tap || e.defaultPrevented) return
+        setOpen(!open)
+      }}
+      {...props}
+    />
+  )
 }
 
 function DropdownMenuContent({ className, sideOffset = 4, ...props }) {
