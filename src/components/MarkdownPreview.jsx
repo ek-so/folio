@@ -1,15 +1,13 @@
 import { useMemo, useEffect, useLayoutEffect, useRef, useState, forwardRef, useImperativeHandle } from 'react'
 import DOMPurify from 'dompurify'
-import { renderBlocks, tapOffset, taskOffsets, resolveImage, linkSpans, linkMarkdown, replaceLink, listsIn, moveListItem, firstWord } from '../lib/markdown.js'
+import { renderBlocks, tapOffset, taskOffsets, resolveImage, linkSpans, listsIn, moveListItem, firstWord } from '../lib/markdown.js'
 import { useRepoImages } from '../hooks/useRepoImages.js'
 import { linkSpots, openLink } from '../lib/previewLinks.js'
 import { isPortaled } from '../lib/utils.js'
 import { CaretRight } from '@phosphor-icons/react'
 import { createPortal } from 'react-dom'
-import { toast } from 'sonner'
 import LinkBadge from './LinkBadge.jsx'
-import LinkModal from './LinkModal.jsx'
-import ConfirmModal from './ConfirmModal.jsx'
+import { useLinkEdits } from '../hooks/useLinkEdits.jsx'
 import ListGrip from './ListGrip.jsx'
 import { DndContext, MouseSensor, TouchSensor, useSensor, useSensors, closestCenter } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
@@ -107,14 +105,6 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
     useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 8 } }),
   )
-  const [editing, setEditing] = useState(null) // the link span in the Edit link dialog
-  const [removing, setRemoving] = useState(null) // the link span being confirmed
-  // A link's span (`raw`: its markdown when the dialog opened) changed to `markdown`, unless the note changed
-  // there since: then nothing is written, and a toast says so
-  const changeLink = (span, markdown) => {
-    if (content.slice(span.start, span.end) !== span.raw) return toast.error('The note changed. Try again.')
-    onChange(replaceLink(content, span, markdown))
-  }
 
   useImperativeHandle(handle, () => ({
     visibleOffset() {
@@ -128,6 +118,7 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
   const linkHandlerRef = useRef()
 
   const spans = useMemo(() => linkSpans(content), [content])
+  const linkEdits = useLinkEdits(content, onChange)
   const [html, imagePaths, lists] = useMemo(() => {
     const sanitized = DOMPurify.sanitize(renderBlocks(content))
     const tpl = document.createElement('template')
@@ -275,11 +266,7 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
         const { href, text, kind, path: target } = spot.dataset
         const span = spans[spot.dataset.span]
         return createPortal(
-          <LinkBadge
-            href={href} text={text} kind={kind} path={target}
-            onEdit={onChange && span ? () => setEditing({ ...span, raw: content.slice(span.start, span.end) }) : undefined}
-            onRemove={onChange && span ? () => setRemoving({ ...span, text, raw: content.slice(span.start, span.end) }) : undefined}
-          />, spot, `link-${i}`)
+          <LinkBadge href={href} text={text} kind={kind} path={target} {...linkEdits.actions(span, text)} />, spot, `link-${i}`)
       })}
       <DndContext
         sensors={sensors}
@@ -296,21 +283,7 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
           </SortableContext>
         ))}
       </DndContext>
-      {editing && (
-        <LinkModal
-          name={editing.bare ? '' : editing.label} url={editing.href}
-          onSave={(name, url) => { changeLink(editing, linkMarkdown(name, url, editing.bare)); setEditing(null) }}
-          onClose={() => setEditing(null)}
-        />
-      )}
-      {removing && (
-        <ConfirmModal
-          title="Remove link?"
-          description={`“${removing.text}” is removed from the note.`}
-          onConfirm={() => { changeLink(removing, ''); setRemoving(null) }}
-          onClose={() => setRemoving(null)}
-        />
-      )}
+      {linkEdits.dialogs}
       {footer}
       {brokenTip && (
         <div

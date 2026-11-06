@@ -1,6 +1,6 @@
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
-import { resolveImage } from './markdown.js'
+import { resolveImage, linkSpans } from './markdown.js'
 import { linkTarget } from './links.js'
 
 // `a` swapped for a link spot (below), which it returns
@@ -38,15 +38,19 @@ export function linkSpots(root, notePath, files, spans) {
   }
 }
 
-// HTML for one line of markdown (a property's value): safe, with its links as link spots
-// (InlineMarkdown renders a LinkBadge in each, without Edit link or Remove)
+// HTML for one line of markdown (a property's value): safe, with its links as link spots, `data-span`
+// as in the preview (InlineMarkdown renders a LinkBadge in each)
 export function inlineHtml(text, notePath, files) {
   const tpl = document.createElement('template')
   tpl.innerHTML = DOMPurify.sanitize(marked.parseInline(text))
-  for (const a of tpl.content.querySelectorAll('a[href]')) {
+  const anchors = [...tpl.content.querySelectorAll('a[href]')]
+  const lined = anchors.length === linkSpans(text).length // `data-span` as in the preview
+  anchors.forEach((a, i) => {
     const href = a.getAttribute('href')
-    if (href && !href.startsWith('#') && !a.querySelector('img')) linkSpot(a, notePath, files)
-  }
+    if (!href || href.startsWith('#') || a.querySelector('img')) return
+    const spot = linkSpot(a, notePath, files)
+    if (lined) spot.dataset.span = String(i)
+  })
   return tpl.innerHTML
 }
 
