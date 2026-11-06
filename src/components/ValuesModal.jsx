@@ -11,7 +11,7 @@ import ColorPicker from './ColorPicker.jsx'
 // (`onAdd(value)`), and on the right of each row its color swatch, a pencil and a red trash
 // (`onRemove(value)`). The swatch opens a sub popover with the colors (`ColorPicker`): choosing one recolors that
 // value at once (`onEdit(from, to, color)` with the same name). The pencil turns the row into a field for
-// its name: Save (✓) renames that value, keeping its color, everywhere in the same scope
+// its name (the swatch and the trash stay on it): Save (✓) renames that value, keeping its color, everywhere in the same scope
 // (`scopeName`; `count(value)`: in how many notes); a name another value has merges them. Save with
 // nothing changed saves nothing.
 export default function ValuesModal({ name, values, colors, count, scopeName, onAdd, onEdit, onRemove, onClose }) {
@@ -67,8 +67,10 @@ export default function ValuesModal({ name, values, colors, count, scopeName, on
                     aria-label={`New name for ${v}`}
                     className="bg-background border-border"
                   />
+                  {onEdit && <ColorPicker label={`Color of ${v}`} color={colors.get(v) ?? 0} onChange={color => onEdit(v, v, color)} />}
                   <Button type="submit" variant="ghost" size="icon" aria-label="Save" tooltip="Save" disabled={!editing.name.trim()} className="shrink-0"><Check /></Button>
                   <Button type="button" variant="ghost" size="icon" aria-label="Cancel" tooltip="Cancel" className="shrink-0" onClick={() => setEditing(null)}><X /></Button>
+                  {onRemove && <Button type="button" variant="ghost-destructive" size="icon" aria-label={`Remove ${v}`} tooltip="Remove" className="shrink-0" onClick={() => onRemove(v)}><Trash /></Button>}
                 </div>
                 <p className="px-1 text-xs text-muted-foreground">
                   {values.some(o => o !== v && o === editing.name.trim()) ? `“${editing.name.trim()}” already exists. They become one value. ` : ''}
