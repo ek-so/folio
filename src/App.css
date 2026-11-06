@@ -50,21 +50,7 @@
 .editor-preview .callout-important { --c: var(--callout-important); }
 .editor-preview .callout-warning { --c: var(--callout-warning); }
 .editor-preview .callout-caution { --c: var(--callout-caution); }
-:is(.editor-preview, .md-inline) a:not([data-badge]) { color: var(--accent); text-decoration: none; }
-/* Websites: accent text, accent ↗ after */
-.md-inline a.link-external .link-arrow { margin-left: 2px; font-size: 0.85em; color: var(--primary); }
-/* Notes/folders in the repo: normal text, dashed accent underline, accent note/file/folder icon before */
-.md-inline a.link-internal {
-  color: var(--foreground);
-  text-decoration: underline dashed var(--primary);
-  text-decoration-thickness: 1px;
-  text-underline-offset: 3px;
-}
-.md-inline a.link-internal .link-icon {
-  display: inline-block; width: 1em; height: 1em; margin-right: 3px; vertical-align: -0.15em; color: var(--primary);
-}
-.md-inline a.link-broken { text-decoration-color: var(--muted-foreground); }
-.md-inline a.link-broken .link-icon { color: var(--muted-foreground); }
+.editor-preview a:not([data-badge]) { color: var(--accent); text-decoration: none; }
 .editor-preview hr { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
 .editor-preview strong { font-weight: 600; }
 .editor-preview em { font-style: italic; }

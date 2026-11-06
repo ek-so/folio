@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { CaretDown, Check, PencilSimple } from '@phosphor-icons/react'
-import { cn } from '@/lib/utils'
+import { cn, own } from '@/lib/utils'
 import { PLACEHOLDER } from './ui/placeholder.jsx'
 import { Badge } from './ui/badge.jsx'
 import { Input } from './ui/input.jsx'
@@ -10,14 +10,8 @@ import ConfirmModal from './ConfirmModal.jsx'
 import ValuesModal from './ValuesModal.jsx'
 import { useSingleOpen } from '../hooks/useSingleOpen.jsx'
 import { valueList, valueColors, DESCRIPTION } from '../lib/frontmatter.js'
-import { inlineHtml } from '../lib/previewLinks.js'
+import InlineMarkdown from './InlineMarkdown.jsx'
 
-// A click or press inside a badge or its popover is the property's, never the
-// note's or the card's (open it, start a drag, double tap to edit): React
-// events pass through portals to the parent. Not on its dialogs: a press or click in them must reach the page,
-// or a popover in them (a value's colors) doesn't close on a click beside it; the note and the card ignore
-// events from portals instead (`isPortaled`)
-export const own = { onClick: e => e.stopPropagation(), onMouseDown: e => e.stopPropagation(), onTouchStart: e => e.stopPropagation() }
 
 // A badge's color: its value's hue within its property (--tag-N, index.css), grey when empty; tinted against the card, a bit
 // stronger on hover. Its text and ▾ are the same hue, mixed toward the text color so they read (--tag-ink)
@@ -61,11 +55,7 @@ export default function PropertyBadges({ props, path, files, clamp, title, class
   const colors = Object.fromEntries([...new Set(props.map(p => p.key))].map(key =>
     [key, valueColors(key, [...(options?.(key) ?? []), ...valueList(props.find(p => p.key === key).value)], chosen?.[key])]))
   const body = parts.map((part, i) => part.text
-    ? <p
-        key={i}
-        className={cn('md-inline break-words text-sm text-muted-foreground', clamp && 'line-clamp-3')}
-        dangerouslySetInnerHTML={{ __html: inlineHtml(part.text, path, files) }}
-      />
+    ? <InlineMarkdown key={i} text={part.text} path={path} files={files} className={cn('break-words text-sm text-muted-foreground', clamp && 'line-clamp-3')} />
     : (
       <div key={i} className="flex flex-wrap gap-space-xs">
         {part.badges.map(({ id, prop, label }) => onChange

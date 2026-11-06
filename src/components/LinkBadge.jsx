@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { DotsThree, Globe, FileText, File, Folder, LinkBreak, LinkSimple, PencilSimple, Trash } from '@phosphor-icons/react'
-import { cn } from '@/lib/utils.js'
+import { toast } from 'sonner'
+import { cn, own } from '@/lib/utils.js'
 import { Badge } from './ui/badge.jsx'
 import { Button } from './ui/button.jsx'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from './ui/dropdown-menu.jsx'
@@ -19,8 +20,9 @@ function Favicon({ href }) {
 
 // A link in the note preview: a badge with the site's favicon (or what it points to in the repo,
 // grey when it's missing) and its text, opening it on a tap (MarkdownPreview's link handler), and
-// its text a bit softer than the note's (grey when missing); a ⋯ split off from it by a 1px gap, with Copy link address, Edit link and Remove (the last two only with `onEdit` / `onRemove`).
-export default function LinkBadge({ href, text, kind, onCopy, onEdit, onRemove }) {
+// its ⋯ its own (`own`: a click on it doesn't open a board card); its text a bit softer than the note's (grey when missing); a ⋯ split off from it by a 1px gap, with Copy link address, Edit link and Remove (the last two only with `onEdit` / `onRemove`).
+export default function LinkBadge({ href, text, kind, onEdit, onRemove }) {
+  const copy = () => navigator.clipboard.writeText(href).then(() => toast.success('Link address copied'), () => toast.error("Couldn't copy the link address"))
   const [open, setOpen] = useSingleOpen()
   const Icon = REPO_ICONS[kind]
   return (
@@ -31,12 +33,12 @@ export default function LinkBadge({ href, text, kind, onCopy, onEdit, onRemove }
       </Badge>
       <DropdownMenu open={open} onOpenChange={setOpen}>
         <DropdownMenuTrigger asChild>
-          <Button variant="secondary" size="icon" aria-label="Link actions" className="size-control-sm shrink-0 rounded-l-none text-muted-foreground shadow-none">
+          <Button variant="secondary" size="icon" aria-label="Link actions" {...own} className="size-control-sm shrink-0 rounded-l-none text-muted-foreground shadow-none">
             <DotsThree weight="bold" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" onCloseAutoFocus={e => e.preventDefault()}>
-          <DropdownMenuItem onSelect={onCopy}><LinkSimple /> Copy link address</DropdownMenuItem>
+          <DropdownMenuItem onSelect={copy}><LinkSimple /> Copy link address</DropdownMenuItem>
           {onEdit && <DropdownMenuItem onSelect={onEdit}><PencilSimple /> Edit link</DropdownMenuItem>}
           {onRemove && <DropdownMenuItem variant="destructive" onSelect={onRemove}><Trash /> Remove</DropdownMenuItem>}
         </DropdownMenuContent>

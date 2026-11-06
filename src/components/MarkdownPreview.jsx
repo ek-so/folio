@@ -6,7 +6,6 @@ import { linkSpots, openLink } from '../lib/previewLinks.js'
 import { isPortaled } from '../lib/utils.js'
 import { CaretRight } from '@phosphor-icons/react'
 import { createPortal } from 'react-dom'
-import { toast } from 'sonner'
 import LinkBadge from './LinkBadge.jsx'
 import LinkModal from './LinkModal.jsx'
 import ConfirmModal from './ConfirmModal.jsx'
@@ -183,7 +182,7 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
   // Always up-to-date handler without re-attaching the listener
   linkHandlerRef.current = (e) => {
     const link = e.target.closest('a')
-    if (!link?.closest('.editor-preview, .md-inline')) return // the note, or its properties' descriptions
+    if (!link?.closest('.editor-preview, .md-inline')) return // the note, or its properties' descriptions (InlineMarkdown)
     const href = link.getAttribute('href')
     if (!href || href.startsWith('#')) return
     e.preventDefault()
@@ -262,7 +261,6 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
         return createPortal(
           <LinkBadge
             href={href} text={text} kind={kind}
-            onCopy={() => navigator.clipboard.writeText(href).then(() => toast.success('Link address copied'), () => toast.error("Couldn't copy the link address"))}
             onEdit={onChange && span ? () => setEditing(span) : undefined}
             onRemove={onChange && span ? () => setRemoving({ ...span, text }) : undefined}
           />, spot, `link-${i}`)

@@ -7,7 +7,7 @@ import ColumnSubmenu from '@/components/ColumnSubmenu.jsx'
 import BottomSheet from '@/components/BottomSheet.jsx'
 import DeleteModal from '@/components/DeleteModal.jsx'
 import RenameModal from '@/components/RenameModal.jsx'
-import { own } from '@/components/PropertyBadges.jsx'
+import { own } from '@/lib/utils.js'
 
 // A card's ⋯ menu (hidden until the card is hovered with a mouse, always shown on touch):
 // Edit title (the card's title, not the file's name; only with `onTitle`: a note on this device), Rename file (its file's
