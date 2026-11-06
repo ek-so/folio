@@ -16,7 +16,7 @@ import PropertyBadges from './PropertyBadges.jsx'
 // whole markdown shown as preview; ✏️ in the title bar edits the markdown,
 // starting where you were reading, and a double tap starts at the tapped
 // word. Edits save on their own; ✓ (same spot) only switches back to preview.
-export default function Editor({ linkedBy, onOpenLink, path, entry, files, notes, onEditNotes, tagColors, edited, onEdit, onNavigate, onOpenFile, onRename, onDelete, onMove, folders, backlinks }) {
+export default function Editor({ linkedBy, onOpenLink, path, entry, files, notes, onEditNotes, tagColors, edited, onEdit, onNavigate, onOpenFile, onRename, onDelete, onMove, folders, columns, backlinks }) {
   const { content, change, loading, loadError } = useNote(entry, edited, onEdit)
   const [mode, setMode] = useState('preview')
   const [editedAt, setEditedAt] = useState(null) // offset to show when back in preview
@@ -70,6 +70,7 @@ export default function Editor({ linkedBy, onOpenLink, path, entry, files, notes
       onDelete={onDelete}
       onMove={onMove}
       folders={folders}
+      columns={columns}
       actions={<>
         {mode === 'edit' ? (
           <Button size="icon" onClick={finishEditing} aria-label="Done" className="shrink-0">

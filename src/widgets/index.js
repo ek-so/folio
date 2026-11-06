@@ -8,6 +8,8 @@ import board from './board/index.js'
 //                             onCreate(id => change) with the changes that set it up (ch => ch)
 //   moved(ch, id, from, to, isDir, services)  `ch` after a file or folder moved (renames and moves anywhere)
 //   removed(ch, id, services)                 `ch` after the widget is removed (its settings go)
+//   fileMoves(id, path, services)             optional: for the file open on this widget's view, the columns it can move
+//                                             to ({ columns: [{ key, name }], column, onSelect(key) }) or null; the file's ⋯ shows them
 // `services` is all a widget gets from the app (App's `widgetServices`): what the repo holds,
 // its settings files (`config`) and the app's own ways to change files and open them.
 // A view keeps widgets of a kind this version doesn't know; they show as such and can be removed.

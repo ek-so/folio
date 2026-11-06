@@ -339,6 +339,10 @@ export default function App() {
     newNote: (folder, { keys, stay } = {}) => setNewFile({ folder, kind: 'note', keys, stay }),
   }
 
+  // The note open on a view that has a board it's a card of: the columns it can move to (widgets/index.js)
+  const fileMoves = selectedFile && views.find(v => v.id === page)?.widgets
+    ?.map(w => widgetType(w.type)?.fileMoves?.(w.id, selectedFile, widgetServices)).find(Boolean)
+
   // Every page's trail after a rename, delete or discard (`next`); the address
   // is replaced, not added to history (only when it shows: not on Settings / Broken links)
   function followTrails(next) {
@@ -622,6 +626,7 @@ export default function App() {
               onDelete={handleDelete}
               onMove={handleMove}
               folders={allFolders}
+              columns={fileMoves}
               backlinks={links.index.backlinks[selectedFile]}
             />
           ) : (

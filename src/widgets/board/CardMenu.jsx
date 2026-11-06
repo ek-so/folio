@@ -1,19 +1,16 @@
 import { useState } from 'react'
-import { DotsThree, PencilSimple, Trash, Columns, Check } from '@phosphor-icons/react'
+import { DotsThree, PencilSimple, Trash, Columns } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button.jsx'
 import { Input } from '@/components/ui/input.jsx'
-import {
-  DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator,
-  DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent,
-} from '@/components/ui/dropdown-menu.jsx'
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu.jsx'
+import ColumnSubmenu from '@/components/ColumnSubmenu.jsx'
 import BottomSheet from '@/components/BottomSheet.jsx'
 import DeleteModal from '@/components/DeleteModal.jsx'
 import { own } from '@/components/PropertyBadges.jsx'
 
 // A card's ⋯ menu (hidden until the card is hovered with a mouse, always shown on touch):
-// Edit title (the card's title, not the file's name), Edit column (a submenu: the other
-// columns to move the card to, then Edit columns… that opens the board's Columns
-// dialog), Delete (the file, confirmed like any delete). `columns`: [{ key, name }] shown,
+// Edit title (the card's title, not the file's name), Move to column (a submenu of the
+// board's columns, then Edit columns… that opens the board's Columns dialog), Delete (the file, confirmed like any delete). `columns`: [{ key, name }] shown,
 // `column`: the card's key. Its dialogs are in a `contents` div so a click in them stays
 // theirs, never the card's.
 export default function CardMenu({ path, title, columns, column, onTitle, onMove, onEditColumns, onDelete }) {
@@ -34,18 +31,10 @@ export default function CardMenu({ path, title, columns, column, onTitle, onMove
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" onCloseAutoFocus={e => e.preventDefault()}>
           <DropdownMenuItem onSelect={() => setEditing(true)}><PencilSimple /> Edit title</DropdownMenuItem>
-          <DropdownMenuSub>
-            <DropdownMenuSubTrigger><Columns /> Edit column</DropdownMenuSubTrigger>
-            <DropdownMenuSubContent>
-              {columns.map(c => (
-                <DropdownMenuItem key={c.key} disabled={c.key === column} onSelect={() => onMove(c.key)}>
-                  {c.key === column ? <Check /> : <span className="size-4" />} {c.name}
-                </DropdownMenuItem>
-              ))}
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onSelect={onEditColumns}><Columns /> Edit columns…</DropdownMenuItem>
-            </DropdownMenuSubContent>
-          </DropdownMenuSub>
+          <ColumnSubmenu columns={columns} column={column} onSelect={onMove}>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onSelect={onEditColumns}><Columns /> Edit columns…</DropdownMenuItem>
+          </ColumnSubmenu>
           <DropdownMenuSeparator />
           <DropdownMenuItem variant="destructive" onSelect={() => setDeleting(true)}><Trash /> Delete</DropdownMenuItem>
         </DropdownMenuContent>

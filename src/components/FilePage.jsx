@@ -7,7 +7,7 @@ import TitleBar from './TitleBar.jsx'
 // Screen for one open file (note, image or PDF):
 // the content box: TitleBar (← and name) with ⋯ and
 // `actions`, and the file's content.
-export default function FilePage({ linkedBy, onOpenLink, path, name, changed, onRename, onDelete, onMove, folders, actions, children }) {
+export default function FilePage({ linkedBy, onOpenLink, path, name, changed, onRename, onDelete, onMove, folders, columns, actions, children }) {
   return (
     <PageLayout>
       <Surface tree title={
@@ -16,7 +16,7 @@ export default function FilePage({ linkedBy, onOpenLink, path, name, changed, on
           changed={changed}
           badge={<SymlinkedBy links={linkedBy} onOpen={onOpenLink} />}
         >
-          <ItemMenu item={{ name: path.split('/').pop(), path, type: 'file' }} onRename={onRename} onDelete={onDelete} onMove={onMove} folders={folders} />
+          <ItemMenu item={{ name: path.split('/').pop(), path, type: 'file' }} onRename={onRename} onDelete={onDelete} onMove={onMove} folders={folders} columns={columns} />
           {actions}
         </TitleBar>
       }>

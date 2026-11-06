@@ -3,6 +3,15 @@ import { boardPath, parseBoard, serializeBoard, boardColumns, placeCard, moveCol
 import { editNote } from '@/lib/changes.js'
 import { DESCRIPTION, frontMatter, withoutKeys, renameKey, keyNameError, withValue, withoutValue, renameValue, valuesOf, countValue } from '@/lib/frontmatter.js'
 
+// A card dropped at `index` in `column`: the order is saved, and a card dropped in
+// another column moves its file there (a taken name is refused, as a toast). Used by the
+// board's drops and its menus, and by an open card's file menu (index.js).
+export function placeCardVia(services, id, board, data, path, column, index) {
+  const { board: next, to } = placeCard(board, data, path, column, index)
+  if (to && !services.move({ path, name: path.slice(path.lastIndexOf('/') + 1), type: 'file' }, to.slice(0, Math.max(to.lastIndexOf('/'), 0)))) return
+  services.update(services.config.write(boardPath(id), serializeBoard(next)))
+}
+
 // Board `id` as its widget shows and changes it, through the app's `services`:
 // `ready` (its settings are read), `board` (null when they can't be), `data`
 // (boardColumns), `title`, and what the board can do. Every change goes through
@@ -13,7 +22,6 @@ export function useBoard(id, services) {
   const board = file.ready && file.text !== undefined ? parseBoard(file.text) : null
   const data = board && boardColumns(board, files)
   const save = next => update(config.write(boardPath(id), serializeBoard(next)))
-  const folderOf = path => path.slice(0, Math.max(path.lastIndexOf('/'), 0))
   // Every note of the board (on this device; no technical files), and its properties as [key, …] per note
   const prefix = board?.folder ? board.folder + '/' : ''
   const texts = useMemo(() => board ? Object.entries(services.notes)
@@ -32,11 +40,7 @@ export function useBoard(id, services) {
     title: board ? board.folder.split('/').pop() || repoName : 'Board',
     // A card dropped at `index` in `column`: the order is saved, and a card dropped in
     // another column moves its file there (a taken name is refused, as a toast)
-    placeCard(path, column, index) {
-      const { board: next, to } = placeCard(board, data, path, column, index)
-      if (to && !services.move(fileItem(path), folderOf(to))) return
-      save(next)
-    },
+    placeCard: (path, column, index) => placeCardVia(services, id, board, data, path, column, index),
     moveColumn: (name, index) => save(moveColumn(board, data, name, index)),
     // The properties cards show; a newly chosen one is added, empty, to the board's notes that lack it
     setProperties(keys) {
