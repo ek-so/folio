@@ -42,7 +42,8 @@ const TINT_HOVER = 'hover:bg-[color-mix(in_oklab,var(--tag)_calc(var(--tag-tint)
 // scope) or remove it (a 🗑 that asks first, then empties that value everywhere it's used);
 // `valueCount(key, value)`: in how many notes; `scopeName`: where, "this folder";
 // `chosen` ({ key: { value: color } }, lib/tagColors.js) are the colors picked so far.
-export default function PropertyBadges({ props, path, files, clamp, title, className, onChange, options, onRemoveValue, valueCount, scopeName, onEditValue, chosen }) {
+// `dateKeys`: properties that are always dates (a planner's date), a calendar even while none has a value yet.
+export default function PropertyBadges({ props, path, files, clamp, title, className, onChange, options, onRemoveValue, valueCount, scopeName, onEditValue, chosen, dateKeys }) {
   const [removing, setRemoving] = useState(null) // { key, value } being confirmed
   const [managing, setManaging] = useState(null) // the key whose values are in the dialog
   const parts = [] // [{ text }] or [{ badges: [{ id, prop, label }] }], in order
@@ -62,7 +63,7 @@ export default function PropertyBadges({ props, path, files, clamp, title, class
     ? <InlineMarkdown key={i} text={part.text} path={path} files={files} onChange={onChange && (text => onChange(DESCRIPTION, text))} className={cn('break-words text-sm text-muted-foreground', clamp && 'line-clamp-3')} />
     : (
       <div key={i} className="flex flex-wrap gap-space-xs">
-        {part.badges.map(({ id, prop, label }) => isDateProp(prop, options)
+        {part.badges.map(({ id, prop, label }) => isDateProp(prop, options, dateKeys)
           ? <DateValue key={id} prop={prop} onChange={onChange} />
           : onChange
           ? <EditableBadge key={id} prop={prop} label={label} color={colors[prop.key].get(label)} options={options} onChange={onChange} onManage={(onEditValue || onRemoveValue) && (() => setManaging(prop.key))} />
@@ -119,8 +120,9 @@ const keepFocusInOtherPopover = e => {
 }
 
 // A date property: its value one date ("17 Oct 2026"), or, while empty, every value the notes nearby have one
-function isDateProp(prop, options) {
+function isDateProp(prop, options, dateKeys) {
   if (Array.isArray(prop.value)) return false
+  if (dateKeys?.includes(prop.key) && (!prop.value || valueDate(prop.value))) return true // a planner's date, even while no note has one
   if (prop.value) return !!valueDate(prop.value)
   const known = options?.(prop.key) ?? []
   return known.length > 0 && known.every(v => valueDate(v))

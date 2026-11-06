@@ -7,14 +7,14 @@ import { Checkbox } from '@/components/ui/checkbox.jsx'
 import BottomSheet from '@/components/BottomSheet.jsx'
 
 // A sheet of names to tick (a board's columns to show, the properties its cards show):
-// `items` in the order listed, `selected` the ticked ones; ticking calls
+// `items` in the order listed (`locked`: names listed first, ticked and not to be changed, like a planner's date), `selected` the ticked ones; ticking calls
 // `onChange(selected)`, in the order they were ticked. `addLabel` and `onAdd(name)`:
 // a field to add a name (returns an error message, or null). At the end of each
 // row: `onOpen(item)` a folder button (`openLabel` its label), `onRename(item,
 // name)` a pencil that turns the row into a name field (returns an error message,
 // or null), `onDelete(item)` a trash button (confirmed by the caller). `empty`:
 // the text when there's nothing to list.
-export default function CheckListModal({ title, description, items, selected, onChange, addLabel, onAdd, onOpen, openLabel, onRename, onDelete, empty, onClose }) {
+export default function CheckListModal({ title, description, items, locked = [], selected, onChange, addLabel, onAdd, onOpen, openLabel, onRename, onDelete, empty, onClose }) {
   const [name, setName] = useState('')
   const [error, setError] = useState('')
   const [editing, setEditing] = useState(null) // { item, name, error } while a row is renamed
@@ -44,6 +44,11 @@ export default function CheckListModal({ title, description, items, selected, on
     <BottomSheet title={title} description={description} onClose={onClose} onOpenAutoFocus={e => { e.preventDefault(); e.currentTarget?.focus() }}>
       <div className="flex flex-col gap-3">
         <ul className="-mx-1 flex max-h-64 flex-col gap-0.5 overflow-y-auto" data-no-pull>
+          {locked.map(item => (
+            <li key={item}>
+              <ListRow icon={<Checkbox checked disabled />} title={item} disabled />
+            </li>
+          ))}
           {items.map(item => editing?.item === item ? (
             <li key={item}>
               <form onSubmit={saveName} className="flex flex-col gap-1 px-1 py-1">
@@ -90,7 +95,7 @@ export default function CheckListModal({ title, description, items, selected, on
               />
             </li>
           ))}
-          {!items.length && <p className="py-4 text-center text-sm text-muted-foreground">{empty}</p>}
+          {!items.length && !locked.length && <p className="py-4 text-center text-sm text-muted-foreground">{empty}</p>}
         </ul>
         {onAdd && (
           <form onSubmit={addItem} className="flex flex-col gap-2">

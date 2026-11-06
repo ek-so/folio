@@ -1,6 +1,4 @@
-import { virtualFiles, editNote } from '@/lib/changes.js'
-import { withKeys } from '@/lib/frontmatter.js'
-import { SYMLINK_MODE } from '@/lib/links.js'
+import { isTechnical } from '@/lib/folderNotes.js'
 
 // A board widget (Kanban): a folder whose direct subfolders are its columns
 // and whose files are its cards (a column holds every file inside its folder,
@@ -39,13 +37,6 @@ export const boardTitle = (board, repoName) => board.folder.split('/').pop() || 
 export const newBoard = folder => ({ folder, properties: [], hidden: [], columns: [], cards: {} })
 
 const nameOf = path => path.slice(path.lastIndexOf('/') + 1)
-// A file as the app's file actions take it ({ name, path, type })
-export const fileItem = path => ({ path, name: nameOf(path), type: 'file' })
-// Technical files and folders (".assets", "_attachments", ".gitkeep"…): a name starting with "." or "_"
-// anywhere in the path keeps it off the board
-const technical = part => /^[._]/.test(part)
-export const isTechnical = rest => rest.split('/').some(technical)
-
 // `items` in the saved order (`saved`: keys), then the rest by name
 function ordered(items, saved = []) {
   const at = new Map(saved.map((k, i) => [k, i]))
@@ -109,21 +100,6 @@ export function movedBoard(board, from, to, isDir) {
   return { ...board, cards: { ...board.cards, [was[0]]: (board.cards[was[0]] ?? []).map(follow) } }
 }
 
-// `ch` with `edit(text)` applied to every note of the board in `folder` (in `ch`'s files):
-// technical files and symlinks (whose text is the path they point to) are left alone.
-export function editNotes(ch, files, folder, edit, remoteText) {
-  const prefix = folder ? folder + '/' : ''
-  let next = ch
-  for (const [path, entry] of Object.entries(virtualFiles(files, ch))) {
-    if (!path.startsWith(prefix) || !path.endsWith('.md') || entry.mode === SYMLINK_MODE || isTechnical(path.slice(prefix.length))) continue
-    next = editNote(next, files, path, edit, remoteText)
-  }
-  return next
-}
-
-// `ch` with every note in `folder` given the `keys` it lacks, empty (lib/frontmatter.js)
-export const withBoardKeys = (ch, files, folder, keys, remoteText) => editNotes(ch, files, folder, t => withKeys(t, keys), remoteText)
-
 // Where a card goes when dropped in `column` (a column's name, or LOOSE) at
 // `index` among that column's other cards, from what the board shows (`data`,
 // boardColumns): `board` with the new order, and `to`, the file's new path
@@ -151,7 +127,7 @@ export function emptyColumn(board, column, files) {
   const prefix = board.folder ? board.folder + '/' : ''
   return files.filter(p => p.startsWith(column + '/') && !p.endsWith('/.gitkeep')).map(path => {
     const parts = path.slice(column.length + 1).split('/')
-    const at = parts.findIndex(technical)
+    const at = parts.findIndex(isTechnical)
     return [path, at === -1 || at === parts.length - 1 ? board.folder : prefix + parts.slice(at, -1).join('/')]
   })
 }

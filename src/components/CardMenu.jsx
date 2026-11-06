@@ -11,10 +11,10 @@ import { copyText } from '@/lib/clipboard.js'
 import { repoLink } from '@/lib/markdown.js'
 import { own } from '@/lib/utils.js'
 
-// A card's ⋯ menu (hidden until the card is hovered with a mouse, always shown on touch):
+// A card's ⋯ menu, a board's and a planner's (hidden until the card is hovered with a mouse, always shown on touch):
 // Edit title (the card's title, not the file's name; only with `onTitle`: a note on this device), Add / Edit
 // description (`description`, its text; only with `onDescription`, a note on this device), Rename file (its file's
-// name, `RenameModal`; `onRename(name)` returns an error or null), Duplicate (a copy of the file next to it), Copy link (`repoLink`), Move to column (a submenu of the
+// name, `RenameModal`; `onRename(name)` returns an error or null), Duplicate (a copy of the file next to it), Copy link (`repoLink`), Move to column (only with `columns`: a submenu of the
 // board's columns, then Edit columns… that opens the board's Columns dialog), Delete (the file, confirmed like any delete). `columns`: [{ key, name }] shown,
 // `column`: the card's key. Its dialogs are in a `contents` div so a click in them stays
 // theirs, never the card's.
@@ -42,10 +42,12 @@ export default function CardMenu({ path, title, description, columns, column, on
           <DropdownMenuItem onSelect={() => setRenaming(true)}><PencilSimple /> Rename file</DropdownMenuItem>
           <DropdownMenuItem onSelect={onDuplicate}><Copy /> Duplicate</DropdownMenuItem>
           <DropdownMenuItem onSelect={() => copyText(repoLink(path), 'Link copied')}><LinkSimple /> Copy link</DropdownMenuItem>
-          <ColumnSubmenu columns={columns} column={column} onSelect={onMove}>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onSelect={onEditColumns}><Columns /> Edit columns…</DropdownMenuItem>
-          </ColumnSubmenu>
+          {columns && (
+            <ColumnSubmenu columns={columns} column={column} onSelect={onMove}>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onSelect={onEditColumns}><Columns /> Edit columns…</DropdownMenuItem>
+            </ColumnSubmenu>
+          )}
           <DropdownMenuSeparator />
           <DropdownMenuItem variant="destructive" onSelect={() => setDeleting(true)}><Trash /> Remove</DropdownMenuItem>
         </DropdownMenuContent>

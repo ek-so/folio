@@ -1,7 +1,8 @@
 import { Kanban } from '@phosphor-icons/react'
 import Board from './Board.jsx'
 import BoardSetup from './BoardSetup.jsx'
-import { boardPath, boardTitle, parseBoard, serializeBoard, movedBoard, boardColumns, isTechnical, LOOSE } from './board.js'
+import { boardPath, boardTitle, parseBoard, serializeBoard, movedBoard, boardColumns, LOOSE } from './board.js'
+import { isTechnical } from '@/lib/folderNotes.js'
 import { placeCardVia } from './useBoard.js'
 
 // The board widget (Kanban): see board.js. Its settings are .folio/boards/<id>.json.

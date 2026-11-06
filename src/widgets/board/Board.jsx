@@ -1,4 +1,4 @@
-import { useState, useMemo, forwardRef } from 'react'
+import { useState, useMemo } from 'react'
 import { DotsThree, Trash, Plus, PencilSimple, Tag, Columns, CaretDown } from '@phosphor-icons/react'
 import {
   DndContext, DragOverlay, MouseSensor, TouchSensor, useSensor, useSensors,
@@ -11,24 +11,21 @@ import { Button } from '@/components/ui/button.jsx'
 import { Separator } from '@/components/ui/separator.jsx'
 import { Tray, TrayTitle, TRAY_BUTTON } from '@/components/ui/tray.jsx'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu.jsx'
-import PropertyBadges from '@/components/PropertyBadges.jsx'
 import Spinner from '@/components/Spinner.jsx'
 import RenameModal from '@/components/RenameModal.jsx'
 import ConfirmModal from '@/components/ConfirmModal.jsx'
-import CheckListModal from './CheckListModal.jsx'
-import CardMenu from './CardMenu.jsx'
+import CheckListModal from '@/components/CheckListModal.jsx'
+import CardMenu from '@/components/CardMenu.jsx'
+import NoteCard, { NO_CALLOUT } from '@/components/NoteCard.jsx'
 import { displayName } from '@/lib/files.js'
 import { openLink } from '@/lib/previewLinks.js'
-import { frontMatter, noteTitle, properties, valueList, DESCRIPTION } from '@/lib/frontmatter.js'
-import { taskProgress } from '@/lib/markdown.js'
+import { noteTitle, properties, valueList, DESCRIPTION } from '@/lib/frontmatter.js'
 import { LOOSE } from './board.js'
 import { useBoard } from './useBoard.js'
 
 // Drag ids: a column's and a card's
 const colId = key => 'col:' + key
 const cardId = path => 'card:' + path
-// A long press on iPhones mustn't open the text or link callout instead of the drag
-const NO_CALLOUT = '[-webkit-touch-callout:none]'
 const isCol = id => String(id).startsWith('col:')
 
 // While a column is dragged only the other columns are targets (not No
@@ -171,7 +168,7 @@ export default function Board({ id, services, onRemove }) {
           {!columns.length && <p className="py-6 text-sm text-muted-foreground">No columns yet: its subfolders become columns.</p>}
         </div>
         <DragOverlay>
-          {dragged && drag.type === 'card' && byPath[dragged] && <CardBody path={dragged} text={notes[dragged]} board={board} files={files} chosen={services.tagColors.colors} className="rotate-2 border-lift-edge shadow-lg" />}
+          {dragged && drag.type === 'card' && byPath[dragged] && <NoteCard path={dragged} text={notes[dragged]} properties={board.properties} scopeName="this board" files={files} chosen={services.tagColors.colors} className="rotate-2 border-lift-edge shadow-lg" />}
           {dragged && drag.type === 'column' && (
             <Tray className="w-80 rotate-1 bg-secondary shadow-lg">
               <TrayTitle grip>{dragged.name}</TrayTitle>
@@ -337,9 +334,9 @@ function Card({ menu, path, text, board, files, onOpen, onOpenFolder, onChange, 
     data: { type: 'card', path },
   })
   return (
-    <CardBody
+    <NoteCard
       ref={setNodeRef}
-      path={path} text={text} board={board} files={files} menu={menu}
+      path={path} text={text} properties={board.properties} scopeName="this board" files={files} menu={menu}
       onChange={onChange && ((key, value) => onChange(path, key, value))} options={options} onRemoveValue={onRemoveValue} valueCount={valueCount} chosen={chosen} onEditValue={onEditValue}
       style={{ transform: CSS.Translate.toString(transform), transition }}
       className={cn(isDragging && 'opacity-40')}
@@ -352,42 +349,5 @@ function Card({ menu, path, text, board, files, onOpen, onOpenFolder, onChange, 
       }}
       {...attributes} {...ownListeners(listeners)}
     />
-  )
-}
-
-// What a card shows: the note's title, its description, the board's chosen properties' values. A div, not a button:
-// the badges in it are buttons
-const CardBody = forwardRef(function CardBody({ path, text, board, files, menu, onChange, options, onRemoveValue, valueCount, chosen, onEditValue, className, ...props }, ref) {
-  const fm = text === undefined ? [] : frontMatter(text)?.props ?? []
-  const shown = fm.filter(p => p.key === DESCRIPTION || board.properties.includes(p.key)) // in the file's order
-  return (
-    <div
-      ref={ref}
-      role="button"
-      tabIndex={0}
-      onKeyDown={e => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); props.onClick?.(e) } }}
-      className={cn('group flex w-full cursor-pointer touch-manipulation select-none flex-col gap-1 rounded-lg border border-border bg-card p-space text-left outline-none transition-[box-shadow,border-color] hover:border-lift-edge hover:shadow-md focus-visible:ring-1 focus-visible:ring-ring', NO_CALLOUT, className)}
-      {...props}
-    >
-      <div className="flex items-start gap-1">
-        <span className="min-w-0 flex-1 break-words text-sm font-medium">{text === undefined ? displayName(path) : noteTitle(text, displayName(path))}</span>
-        {menu}
-      </div>
-      <PropertyBadges props={shown} path={path} files={files} clamp className="pt-1" onChange={onChange} options={options} onRemoveValue={onRemoveValue} valueCount={valueCount} scopeName="this board" chosen={chosen} onEditValue={onEditValue} />
-      {text !== undefined && <TaskProgress {...taskProgress(text)} />}
-    </div>
-  )
-})
-
-// How many of the note's checklist items are ticked: a thin bar and "N/X", green once all are; nothing without any
-function TaskProgress({ done, total }) {
-  if (!total) return null
-  return (
-    <div className="flex items-center gap-2 pt-1" aria-label={`${done} of ${total} tasks done`}>
-      <div className="h-1 flex-1 overflow-hidden rounded-full bg-muted">
-        <div className={cn('h-full rounded-full transition-[width]', done === total ? 'bg-success' : 'bg-primary')} style={{ width: `${(done / total) * 100}%` }} />
-      </div>
-      <span className="text-xs tabular-nums text-muted-foreground">{done}/{total}</span>
-    </div>
   )
 }
