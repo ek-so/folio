@@ -130,6 +130,7 @@ export default function Board({ id, services, onRemove }) {
         title={notes[path] === undefined ? displayName(path) : noteTitle(notes[path], displayName(path))}
         columns={columns} column={columnOf(path)}
         onTitle={act.canTitle(path) ? title => act.setTitle(path, title) : undefined}
+        onRename={name => services.rename({ name: path.slice(path.lastIndexOf('/') + 1), path, type: 'file' }, name)}
         onMove={key => moveToColumn(path, key)}
         onEditColumns={() => setChoosing('columns')}
         onDelete={() => act.deleteCard(path)}
