@@ -270,7 +270,7 @@ function Column({ column, canEdit, onNewCard, onRename, onDelete, children }) {
     <Tray
       ref={setNodeRef}
       style={{ transform: CSS.Translate.toString(transform), transition }}
-      className={cn('w-80 shrink-0', isDragging && 'opacity-40')}
+      className={cn('min-w-80 flex-1', isDragging && 'opacity-40')}
     >
       {column.key === LOOSE ? <TrayTitle>{column.name}</TrayTitle> : (
         <div className="flex items-center gap-1">

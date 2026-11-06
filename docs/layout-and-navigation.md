@@ -2,7 +2,7 @@
 
 ## Structure
 - **No header.** `AppNav` is the primary navigation.
-- **`Surface`** holds the open folder's or file's content: a `bg-card` box next to the rail down to the bottom (on phones under the top bar), scrolling inside, with 16px gutters from 768px. The content (not the title bar) is a centered column of at most 1000px, except Home's (`wide`: the full width; files opened from it keep the limit).
+- **`Surface`** holds the open folder's or file's content: a `bg-card` box next to the rail down to the bottom (on phones under the top bar), scrolling inside, with 16px gutters from 768px. The content (not the title bar) is a centered column of at most 1000px, a view's of at most 1500px (`wide`; files opened from it keep the 1000px limit).
 - **`TitleBar`** starts every `Surface`: ← (when there's a step back) and the item's name in bold (a note's without `.md`; the repo's at the root; pages show their title from `lib/pages.js`; no icons). Actions on the right: ⋯ (`ItemMenu`), then + (folders), ✏️ Edit or ✓ (notes). At least base height with 8px padding, so every title bar is the same height; a bottom border separates it from the content. The title isn't editable: rename from ⋯. There is no bottom bar.
 
 ## Rail (from 768px, `NavRail`)
