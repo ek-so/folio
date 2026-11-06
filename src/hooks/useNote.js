@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { toast } from 'sonner'
 import { getBlob } from '../lib/github.js'
 import { withFixedDates } from '../lib/markdown.js'
 
@@ -79,10 +80,18 @@ export function useNote(entry, edited, onEdit) {
     show(value)
   }
 
-  // The text with the dates typed since editing began written in one form
+  // The text with the dates typed since editing began written in one form. If that fails, the text as
+  // typed (saved as it is) and a message: leaving the editor must never get stuck on it
   function fixed() {
     const latest = latestRef.current
-    return baseRef.current === null || latest === null ? latest : withFixedDates(latest, baseRef.current)
+    if (baseRef.current === null || latest === null) return latest
+    try {
+      return withFixedDates(latest, baseRef.current)
+    } catch (error) {
+      console.error(error)
+      toast.error("The dates couldn't be formatted. The note is saved as typed.")
+      return latest
+    }
   }
 
   function beginEdit() { baseRef.current = latestRef.current }
