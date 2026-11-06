@@ -14,6 +14,7 @@ import Spinner from '@/components/Spinner.jsx'
 import RenameModal from '@/components/RenameModal.jsx'
 import ConfirmModal from '@/components/ConfirmModal.jsx'
 import CheckListModal from './CheckListModal.jsx'
+import CardMenu from './CardMenu.jsx'
 import { displayName } from '@/lib/files.js'
 import { openLink } from '@/lib/previewLinks.js'
 import { frontMatter, noteTitle, DESCRIPTION } from '@/lib/frontmatter.js'
@@ -119,6 +120,19 @@ export default function Board({ id, services, onRemove }) {
       act.placeCard(path, column, list.indexOf(path))
     }
 
+    // The card moved to the end of another column
+    const moveToColumn = (path, key) => act.placeCard(path, key, items[key].filter(p => p !== path).length)
+    const cardMenu = path => off ? undefined : (
+      <CardMenu
+        path={path}
+        title={notes[path] === undefined ? displayName(path) : noteTitle(notes[path], displayName(path))}
+        columns={columns} column={columnOf(path)}
+        onTitle={title => act.setProperty(path, 'title', title)}
+        onMove={key => moveToColumn(path, key)}
+        onEditColumns={() => setChoosing('columns')}
+        onDelete={() => act.deleteCard(path)}
+      />
+    )
     const byPath = Object.fromEntries(columns.flatMap(c => c.cards.map(card => [card.path, card])))
     const dragged = drag && (drag.type === 'card' ? drag.path : columns.find(c => c.key === drag.key))
     body = (
@@ -139,7 +153,7 @@ export default function Board({ id, services, onRemove }) {
                 onRename={() => setRenaming(c)} onDelete={() => setDeleting(c)}
               >
                 <SortableContext items={items[c.key].map(cardId)} strategy={verticalListSortingStrategy}>
-                  {items[c.key].map(path => <Card key={path} path={path} text={notes[path]} board={board} files={files} onOpen={openFile} onOpenFolder={openFolder} onChange={off ? undefined : act.setProperty} options={act.valuesOf} onRemoveValue={off ? undefined : act.removeValue} valueCount={act.valueCount} chosen={services.tagColors.colors} onEditValue={off || !services.tagColors.canEdit ? undefined : act.editValue} />)}
+                  {items[c.key].map(path => <Card key={path} path={path} menu={cardMenu(path)} text={notes[path]} board={board} files={files} onOpen={openFile} onOpenFolder={openFolder} onChange={off ? undefined : act.setProperty} options={act.valuesOf} onRemoveValue={off ? undefined : act.removeValue} valueCount={act.valueCount} chosen={services.tagColors.colors} onEditValue={off || !services.tagColors.canEdit ? undefined : act.editValue} />)}
                 </SortableContext>
               </Column>
             ))}
@@ -288,7 +302,7 @@ function Column({ column, canEdit, onNewCard, onRename, onDelete, children }) {
 }
 
 // A click on a link in the card's description opens what it points to, any other opens the card
-function Card({ path, text, board, files, onOpen, onOpenFolder, onChange, options, onRemoveValue, valueCount, chosen, onEditValue }) {
+function Card({ menu, path, text, board, files, onOpen, onOpenFolder, onChange, options, onRemoveValue, valueCount, chosen, onEditValue }) {
   const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
     id: cardId(path),
     data: { type: 'card', path },
@@ -296,7 +310,7 @@ function Card({ path, text, board, files, onOpen, onOpenFolder, onChange, option
   return (
     <CardBody
       ref={setNodeRef}
-      path={path} text={text} board={board} files={files}
+      path={path} text={text} board={board} files={files} menu={menu}
       onChange={onChange && ((key, value) => onChange(path, key, value))} options={options} onRemoveValue={onRemoveValue} valueCount={valueCount} chosen={chosen} onEditValue={onEditValue}
       style={{ transform: CSS.Translate.toString(transform), transition }}
       className={cn(isDragging && 'opacity-40')}
@@ -313,7 +327,7 @@ function Card({ path, text, board, files, onOpen, onOpenFolder, onChange, option
 
 // What a card shows: the note's title, its description, the board's chosen properties' values. A div, not a button:
 // the badges in it are buttons
-const CardBody = forwardRef(function CardBody({ path, text, board, files, onChange, options, onRemoveValue, valueCount, chosen, onEditValue, className, ...props }, ref) {
+const CardBody = forwardRef(function CardBody({ path, text, board, files, menu, onChange, options, onRemoveValue, valueCount, chosen, onEditValue, className, ...props }, ref) {
   const fm = text === undefined ? [] : frontMatter(text)?.props ?? []
   const shown = fm.filter(p => p.key === DESCRIPTION || board.properties.includes(p.key)) // in the file's order
   return (
@@ -322,10 +336,13 @@ const CardBody = forwardRef(function CardBody({ path, text, board, files, onChan
       role="button"
       tabIndex={0}
       onKeyDown={e => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); props.onClick?.(e) } }}
-      className={cn('flex w-full cursor-pointer touch-manipulation select-none flex-col gap-1 rounded-lg border border-border bg-card p-3 text-left shadow-sm outline-none transition-colors hover:bg-secondary/40 focus-visible:ring-1 focus-visible:ring-ring', NO_CALLOUT, className)}
+      className={cn('group flex w-full cursor-pointer touch-manipulation select-none flex-col gap-1 rounded-lg border border-border bg-card p-3 text-left shadow-sm outline-none transition-colors hover:bg-secondary/40 focus-visible:ring-1 focus-visible:ring-ring', NO_CALLOUT, className)}
       {...props}
     >
-      <span className="break-words text-sm font-medium">{text === undefined ? displayName(path) : noteTitle(text, displayName(path))}</span>
+      <div className="flex items-start gap-1">
+        <span className="min-w-0 flex-1 break-words text-sm font-medium">{text === undefined ? displayName(path) : noteTitle(text, displayName(path))}</span>
+        {menu}
+      </div>
       <PropertyBadges props={shown} path={path} files={files} clamp className="pt-1" onChange={onChange} options={options} onRemoveValue={onRemoveValue} valueCount={valueCount} scopeName="this board" chosen={chosen} onEditValue={onEditValue} />
     </div>
   )

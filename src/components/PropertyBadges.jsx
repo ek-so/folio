@@ -15,7 +15,7 @@ import { inlineHtml } from '../lib/previewLinks.js'
 // A click or press inside a badge or its popover is the property's, never the
 // note's or the card's (open it, start a drag, double tap to edit): React
 // events pass through portals to the parent
-const own = { onClick: e => e.stopPropagation(), onMouseDown: e => e.stopPropagation(), onTouchStart: e => e.stopPropagation() }
+export const own = { onClick: e => e.stopPropagation(), onMouseDown: e => e.stopPropagation(), onTouchStart: e => e.stopPropagation() }
 
 // A badge's color: its value's hue within its property (--tag-N, index.css), grey when empty; tinted against the card, a bit stronger on hover
 const tint = color => ({

@@ -65,6 +65,8 @@ export function useBoard(id, services) {
       update(ch => editNote(ch, services.remoteFiles, path, t => withValue(t, key, value), services.remoteText)),
     // How many of the board's notes have `value` as the property `key`
     valueCount: (key, value) => countValue(texts, key, value),
+    // The card's note deleted, like any delete (the app's: links and trails follow)
+    deleteCard: path => services.remove(fileItem(path)),
     // `from` renamed `to` in the property `key` in every note of the board, and given `color`
     editValue: (key, from, to, color) =>
       update(ch => editNotes(services.tagColors.set(key, to, color)(ch), services.remoteFiles, board.folder,
