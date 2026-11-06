@@ -10,14 +10,14 @@ import MarkdownEditor from '@/components/MarkdownEditor.jsx'
 import { useNote } from '@/hooks/useNote.js'
 import { displayName } from '@/lib/files.js'
 import ResizeHandle from '@/components/ResizeHandle.jsx'
-import { Tray, TrayTitle, TRAY_BUTTON } from '@/components/ui/tray.jsx'
+import { Tray, TrayTitle, TrayTitleInput, TRAY_BUTTON } from '@/components/ui/tray.jsx'
 import { Placeholder } from '@/components/ui/placeholder.jsx'
-import { noteTitle } from '@/lib/frontmatter.js'
+import { noteTitle, withTitle } from '@/lib/frontmatter.js'
 import { NOTE_HEIGHT, clampSize } from '@/lib/resize.js'
 import { notePath, parseNote, serializeNote, noteHeight } from './note.js'
 
 // A note widget (note.js): the note's file name and ⋯ (Rename note: renames the file, Remove note) on top, then a
-// tray titled with the note's title (Untitled, light, without one), with Edit (✓ when done) and Open full screen, around its
+// tray titled with the note's title (Untitled, light, without one; a tap edits it in place: its `title` property), with Edit (✓ when done) and Open full screen, around its
 // text in a box that scrolls inside, as tall as its settings say (resizable on desktop by its bottom edge);
 // a double tap edits at the tapped word. Edits save on their own, like on
 // the note's own page; opening it full screen is opening the note, as a board's card does.
@@ -58,6 +58,7 @@ export default function NoteWidget({ id, services, onRemove }) {
 function NoteBox({ path, found, services, frame, onOpen, height, onResize }) {
   const { content, change, loading, loadError } = useNote(found.entry, found.edited, (text, original) => services.saveNote(path, text, original))
   const [editing, setEditing] = useState(false)
+  const [editingTitle, setEditingTitle] = useState(false)
   const [dragged, setDragged] = useState(null) // the height while its edge is dragged, until it's saved
   const textareaRef = useRef()
   const ready = !loading && !loadError
@@ -85,7 +86,11 @@ function NoteBox({ path, found, services, frame, onOpen, height, onResize }) {
   return frame(displayName(path), (
     <Tray>
       <div className="flex items-center gap-1">
-        <div className="min-w-0 flex-1"><TrayTitle>{title ?? (ready && <Placeholder>Untitled</Placeholder>)}</TrayTitle></div>
+        <div className="min-w-0 flex-1">
+          {editingTitle
+            ? <TrayTitleInput value={title ?? ''} label="Title" onCancel={() => setEditingTitle(false)} onSave={t => { setEditingTitle(false); if (t !== (title ?? '')) change(withTitle(content, t)) }} />
+            : <TrayTitle onClick={() => setEditingTitle(true)} disabled={!ready} tooltip="Edit title">{title ?? (ready && <Placeholder>Untitled</Placeholder>)}</TrayTitle>}
+        </div>
         {actions}
       </div>
       {/* Phones: the default height; desktop: the settings' */}
