@@ -148,9 +148,12 @@ export default function Planner({ id, services, onRemove }) {
         onDragEnd={onDragEnd}
         onDragCancel={() => setDragged(null)}
       >
-        <div ref={setScroller} onScroll={onScroll} data-no-pull className="-mx-space overflow-x-auto px-space pb-space-sm">
-          <Ribbon days={days} today={today} selected={selected} count={arranged.count} onSelect={setPicked} />
-        </div>
+        {/* The ribbon in a tray like the cards' below; it scrolls sideways to the tray's edges */}
+        <Tray>
+          <div ref={setScroller} onScroll={onScroll} data-no-pull className="-mx-space-sm overflow-x-auto px-space-sm">
+            <Ribbon days={days} today={today} selected={selected} count={arranged.count} onSelect={setPicked} />
+          </div>
+        </Tray>
         {/* The selected day's cards in a tray like a board's column: its first cards, Show N more, New card */}
         <Tray>
           <div className="flex items-center gap-1">
