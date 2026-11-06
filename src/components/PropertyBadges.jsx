@@ -126,10 +126,10 @@ function isDateProp(prop, options) {
 }
 
 // A date property's badge, like a date in the text (DateField: a calendar icon on the left, no ▾): with `onChange`
-// it opens a calendar to pick another day (its time kept; the same day again empties it). While empty, its name
+// it opens a calendar and a time field to change it (the same day again empties it). While empty, its name
 function DateValue({ prop, onChange }) {
   const date = valueDate(prop.value)
-  const pick = day => onChange(prop.key, day ? formatDate({ ...date, ...day }) : '')
+  const pick = picked => onChange(prop.key, picked ? formatDate(picked) : '')
   return (
     <DateField
       label={date ? formatDate(date) : prop.key} date={date} onPick={onChange && pick}

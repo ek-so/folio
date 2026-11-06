@@ -18,8 +18,8 @@ const DateBadge = forwardRef(function DateBadge({ label, inline, className, ...p
 })
 export default DateBadge
 
-// A date badge (`inline`: in a line of text) that, with `onPick(day)` (DatePopover's), opens a calendar to move it
-// to another day; without, plain
+// A date badge (`inline`: in a line of text) that, with `onPick(date)` (DatePopover's), opens a calendar and a time
+// field to change it; without, plain
 export function DateField({ label, date, onPick, className, ...props }) {
   if (!onPick) return <DateBadge label={label} className={className} {...props} />
   return (

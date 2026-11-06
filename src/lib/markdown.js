@@ -133,8 +133,8 @@ function withFixedText(markdown, now) {
 export const dateSpans = (markdown, now = new Date()) => textRanges(markdown).flatMap(([from, to]) =>
   findDates(markdown.slice(from, to), now).map(d => ({ ...d, start: from + d.start, end: from + d.end })))
 
-// `text` with the date at `span` (from dateSpans) moved to the day `day` ({ year, month, day }), its time kept
-export const withDay = (text, span, day) => text.slice(0, span.start) + formatDate({ ...span.date, ...day }) + text.slice(span.end)
+// `text` with the date at `span` (from dateSpans) written as `date` ({ year, month, day, hour?, minute? })
+export const withDate = (text, span, date) => text.slice(0, span.start) + formatDate(date) + text.slice(span.end)
 
 // A property's value as one date ({ year, month, day, hour?, minute? }) when that's all it is, else null
 export function valueDate(value, now = new Date()) {
