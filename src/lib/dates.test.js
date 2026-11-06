@@ -70,4 +70,8 @@ describe('dates', () => {
     expect(findDates('17 Oct 2026, 14:30', now)).toHaveLength(1)
     expect(valueDate('14:30', now)).toEqual({ hour: 14, minute: 30 })
   })
+
+  it('reads a one-digit hour from 1 to 6 as the afternoon', () => {
+    expect(fixed('call 2:30, then 6:59, 7:30, 02:30, 2:30am, 17 Oct 2026 3:15')).toBe('call 14:30, then 18:59, 07:30, 02:30, 02:30, 17 Oct 2026, 15:15')
+  })
 })

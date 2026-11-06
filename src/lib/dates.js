@@ -3,7 +3,8 @@
 // 17 Oct, 17th of October 2026, Oct 17, 2026; each optionally followed by a time on the same line:
 // 14:30, 2:30pm, 2pm, "at 14:30", "T14:30". A missing year is the current one; a year has 4 digits.
 // A time on its own, not next to a date, is one too: 14:30, 9:05, 2:30pm, 2pm, 9 a.m. (minutes have 2 digits, an
-// hour is 0–23 or 1–12 with am/pm), written "14:30".
+// hour is 0–23 or 1–12 with am/pm), written "14:30". Without am/pm a one-digit hour from 1 to 6 is the afternoon
+// ("2:30" is 14:30; "02:30" and "9:05" are as written).
 // A month starts with a capital letter ("march" is a word), except right after its day ("5 oct"). Words like
 // "tomorrow" aren't dates, and
 // nothing reaches across a line break or into a file name (2026-10-17.md).
@@ -53,7 +54,7 @@ function timeAt(text, at) {
   if (half) {
     if (hour < 1 || hour > 12) return null
     hour = hour % 12 + (half === 'p' ? 12 : 0)
-  }
+  } else if (m[1]?.length === 1 && hour >= 1 && hour <= 6) hour += 12 // "2:30" is the afternoon; "02:30" is as written
   return hour < 24 && minute < 60 ? { hour, minute, end: at + m[0].length } : null
 }
 
