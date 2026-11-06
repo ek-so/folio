@@ -120,9 +120,9 @@ function Frame({ title, onOpen, onRename, actions, canRemove, onRemove, children
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" onCloseAutoFocus={e => e.preventDefault()}>
             <DropdownMenuItem disabled={!onOpen} onSelect={onOpen}><ArrowsOut /> Open full screen</DropdownMenuItem>
-            <DropdownMenuItem disabled={!onRename} onSelect={onRename}><PencilSimple /> Rename</DropdownMenuItem>
+            <DropdownMenuItem disabled={!onRename} onSelect={onRename}><PencilSimple /> Rename note</DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem variant="destructive" disabled={!canRemove} onSelect={onRemove}><Trash /> Remove</DropdownMenuItem>
+            <DropdownMenuItem variant="destructive" disabled={!canRemove} onSelect={onRemove}><Trash /> Remove note</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
