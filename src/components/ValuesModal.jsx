@@ -8,13 +8,14 @@ import ColorPicker from './ColorPicker.jsx'
 
 // The dialog behind a property popover's Edit values: every value of the property `name`
 // (`values`, each with its color in `colors`, a Map) in one list, a field to add a new one
-// (`onAdd(value)`), and on each row a pencil and a red trash (`onRemove(value)`). The pencil turns the
-// row into a field for its name with a color picker beside it (`onEdit(from, to, color)`): Save
-// (✓) renames that value and gives it the color, everywhere in the same scope (`scopeName`;
-// `count(value)`: in how many notes); a name another value has merges them. Save with nothing
-// changed saves nothing (that would pin the automatic color).
+// (`onAdd(value)`), and on the right of each row its color swatch, a pencil and a red trash
+// (`onRemove(value)`). The swatch opens a sub popover with the colors (`ColorPicker`): choosing one recolors that
+// value at once (`onEdit(from, to, color)` with the same name). The pencil turns the row into a field for
+// its name: Save (✓) renames that value, keeping its color, everywhere in the same scope
+// (`scopeName`; `count(value)`: in how many notes); a name another value has merges them. Save with
+// nothing changed saves nothing.
 export default function ValuesModal({ name, values, colors, count, scopeName, onAdd, onEdit, onRemove, onClose }) {
-  const [editing, setEditing] = useState(null) // { value, name, color } while a row is edited
+  const [editing, setEditing] = useState(null) // { value, name } while a row is edited
   const [typed, setTyped] = useState('')
   const query = typed.trim()
 
@@ -29,7 +30,7 @@ export default function ValuesModal({ name, values, colors, count, scopeName, on
     e.preventDefault()
     const next = editing.name.trim()
     if (!next) return
-    if (next !== editing.value || editing.color !== (colors.get(editing.value) ?? 0)) onEdit(editing.value, next, editing.color)
+    if (next !== editing.value) onEdit(editing.value, next, colors.get(editing.value) ?? 0)
     setEditing(null)
   }
 
@@ -57,7 +58,6 @@ export default function ValuesModal({ name, values, colors, count, scopeName, on
             <li key={v}>
               <form onSubmit={save} className="flex flex-col gap-1 px-1 py-1">
                 <div className="flex items-center gap-1">
-                  <ColorPicker color={editing.color} onChange={color => setEditing({ ...editing, color })} />
                   <Input
                     autoFocus
                     value={editing.name}
@@ -80,10 +80,10 @@ export default function ValuesModal({ name, values, colors, count, scopeName, on
             <li key={v}>
               <ListRow
                 disabled
-                icon={<span className="size-3 shrink-0 rounded-full" style={{ background: `var(--tag-${colors.get(v) ?? 0})` }} />}
                 title={v}
                 trailing={<>
-                  {onEdit && <Button variant="ghost" size="icon" aria-label={`Edit ${v}`} tooltip="Edit" onClick={() => setEditing({ value: v, name: v, color: colors.get(v) ?? 0 })}><PencilSimple /></Button>}
+                  {onEdit && <ColorPicker label={`Color of ${v}`} color={colors.get(v) ?? 0} onChange={color => onEdit(v, v, color)} />}
+                  {onEdit && <Button variant="ghost" size="icon" aria-label={`Edit ${v}`} tooltip="Edit" onClick={() => setEditing({ value: v, name: v })}><PencilSimple /></Button>}
                   {onRemove && <Button variant="ghost-destructive" size="icon" aria-label={`Remove ${v}`} tooltip="Remove" onClick={() => onRemove(v)}><Trash /></Button>}
                 </>}
               />
