@@ -69,8 +69,8 @@ export const droppedDate = (text, key) => {
 }
 
 // `cards` ([{ path, text }]) arranged by day, as of `today` (a key): `on(key)` is what a day lists,
-// [{ path, faded }] by time, then title: the cards dated that day, and under today also the cards
-// without a date and, faded, those dated before today (they also stay on their own day);
+// [{ path, overdue }] by time, then title: the cards dated that day, and under today also the cards
+// without a date and those dated before today, flagged `overdue` (they also stay on their own day);
 // `count(key)` is how many that is
 export function plan(cards, today) {
   const dated = new Map() // key → [{ path, time, title }]
@@ -87,10 +87,10 @@ export function plan(cards, today) {
   }
   const order = (a, b) => a.time.localeCompare(b.time) || a.title.localeCompare(b.title)
   const on = key => {
-    const own = (dated.get(key) ?? []).map(e => ({ ...e, faded: false }))
-    if (key !== today) return own.sort(order).map(({ path, faded }) => ({ path, faded }))
-    const extra = [...loose.map(e => ({ ...e, faded: false })), ...past.map(e => ({ ...e, faded: true }))]
-    return [...own, ...extra].sort(order).map(({ path, faded }) => ({ path, faded }))
+    const own = (dated.get(key) ?? []).map(e => ({ ...e, overdue: false }))
+    if (key !== today) return own.sort(order).map(({ path, overdue }) => ({ path, overdue }))
+    const extra = [...loose.map(e => ({ ...e, overdue: false })), ...past.map(e => ({ ...e, overdue: true }))]
+    return [...own, ...extra].sort(order).map(({ path, overdue }) => ({ path, overdue }))
   }
   return { on, count: key => on(key).length }
 }

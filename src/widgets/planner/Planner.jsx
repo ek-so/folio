@@ -34,7 +34,7 @@ const collide = args => {
 // sideways (the month on top, today marked, the selected day filled, how many cards each day has),
 // and under it the cards of the selected day. A card is dragged onto a day to change its date; its
 // date badge opens a calendar. Cards without a date always show under today, and cards dated before
-// today also, faded. Everything it does is in usePlanner; `services` come from the app (widgets/index.js).
+// today also, with a dashed outline. Everything it does is in usePlanner; `services` come from the app (widgets/index.js).
 export default function Planner({ id, services, onRemove }) {
   const { ready, planner, missing, cards, ...act } = usePlanner(id, services)
   const { notes, canEdit, openFile, openFolder } = services
@@ -153,8 +153,8 @@ export default function Planner({ id, services, onRemove }) {
         </h3>
         {list.length ? (
           <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,18rem),1fr))] items-start gap-space-sm">
-            {list.map(({ path, faded }) => (
-              <PlannerCard key={path} {...cardProps(path)} menu={cardMenu(path)} faded={faded} onOpen={openFile} onOpenFolder={openFolder} />
+            {list.map(({ path, overdue }) => (
+              <PlannerCard key={path} {...cardProps(path)} menu={cardMenu(path)} overdue={overdue} onOpen={openFile} onOpenFolder={openFolder} />
             ))}
           </div>
         ) : <p className="px-space-xs py-space-sm text-sm text-muted-foreground">Nothing planned for this day.</p>}
@@ -269,14 +269,14 @@ function Day({ dayKey: key, today, selected, count, onSelect }) {
 }
 
 // A card of the selected day, dragged by a press on it (dropped on a day of the ribbon); a card that's only
-// there because it's late (`faded`: dated before today) is lighter
-function PlannerCard({ path, faded, onOpen, onOpenFolder, files, ...props }) {
+// there because it's late (`overdue`: dated before today) has a dashed outline
+function PlannerCard({ path, overdue, onOpen, onOpenFolder, files, ...props }) {
   const { setNodeRef, attributes, listeners, isDragging } = useDraggable({ id: dayCardId(path), data: { path } })
   return (
     <NoteCard
       ref={setNodeRef}
       path={path} files={files} {...props}
-      className={cn(NO_CALLOUT, faded && 'opacity-50 hover:opacity-100', isDragging && 'opacity-40')}
+      className={cn(NO_CALLOUT, overdue && 'border-dashed border-muted-foreground/50', isDragging && 'opacity-40')}
       onClick={cardClick(path, files, onOpen, onOpenFolder)}
       {...attributes} {...ownListeners(listeners)}
     />

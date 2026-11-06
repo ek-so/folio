@@ -39,16 +39,16 @@ describe('planner', () => {
     expect(droppedDate(undefined, '2026-11-02')).toEqual({ year: 2026, month: 11, day: 2 })
   })
 
-  it('lists a card on its day; today also has the undated and, faded, the overdue', () => {
+  it('lists a card on its day; today also has the undated and, overdue, the overdue', () => {
     const cards = [
       { path: 'T/b.md', text: note('2026-11-06', 'title: B\n') }, { path: 'T/a.md', text: note('2026-11-06, 9:00', 'title: A\n') },
       { path: 'T/none.md', text: note(null) }, { path: 'T/old.md', text: note('2026-11-01') }, { path: 'T/next.md', text: note('2026-11-07') },
     ]
     const { on, count } = plan(cards, '2026-11-06')
     expect(on('2026-11-06').map(c => c.path)).toEqual(['T/a.md', 'T/b.md', 'T/none.md', 'T/old.md'])
-    expect(on('2026-11-06').find(c => c.path === 'T/old.md').faded).toBe(true)
-    expect(on('2026-11-01')).toEqual([{ path: 'T/old.md', faded: false }])
-    expect(on('2026-11-07')).toEqual([{ path: 'T/next.md', faded: false }])
+    expect(on('2026-11-06').find(c => c.path === 'T/old.md').overdue).toBe(true)
+    expect(on('2026-11-01')).toEqual([{ path: 'T/old.md', overdue: false }])
+    expect(on('2026-11-07')).toEqual([{ path: 'T/next.md', overdue: false }])
     expect(on('2026-11-08')).toEqual([])
     expect(count('2026-11-06')).toBe(4)
   })
