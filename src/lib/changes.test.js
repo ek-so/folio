@@ -113,10 +113,9 @@ describe('changes', () => {
 })
 
 describe('duplicate', () => {
-  it('copies an edited note\'s text, else points at the same bytes', () => {
+  it('copies the text it\'s given, else points at the same bytes', () => {
     const files = { 'a.md': { sha: 'A' }, 'p.png': { sha: 'P' } }
-    let ch = setEdit(empty(), virtualFiles(files, empty())['a.md'], 'new text', 'old')
-    ch = duplicate(ch, files, virtualFiles(files, ch)['a.md'], 'a 2.md')
+    let ch = duplicate(empty(), files, virtualFiles(files, empty())['a.md'], 'a 2.md', 'new text')
     ch = duplicate(ch, files, virtualFiles(files, ch)['p.png'], 'p 2.png')
     expect(ch.edits['a 2.md']).toBe('new text')
     expect(ch.uploads['p 2.png']).toBe('P')

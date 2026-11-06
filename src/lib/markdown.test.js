@@ -67,6 +67,8 @@ describe('markdown', () => {
       ['* d\n'],
     ])
     expect(listsIn('3) x\n4) y').map(l => [l.ordered, l.first, l.items.length])).toEqual([[true, 3, 2]])
+    expect(lists[0].items.map(i => i.word)).toEqual(['a', 'b', 'c'])
+    expect(listsIn('- [ ] **Fix** [the docs](u)\n')[0].items[0].word).toBe('Fix')
   })
 
   it('moves a list item with its sub-items, renumbering an ordered list', () => {

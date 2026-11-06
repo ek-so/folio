@@ -14,7 +14,7 @@ export default function InlineMarkdown({ text, path, files, className }) {
   return (
     <>
       <p ref={ref} className={cn('md-inline', className)} dangerouslySetInnerHTML={{ __html: html }} />
-      {spots.map((spot, i) => createPortal(<LinkBadge href={spot.dataset.href} text={spot.dataset.text} kind={spot.dataset.kind} />, spot, i))}
+      {spots.map((spot, i) => createPortal(<LinkBadge href={spot.dataset.href} text={spot.dataset.text} kind={spot.dataset.kind} path={spot.dataset.path} />, spot, i))}
     </>
   )
 }

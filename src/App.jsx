@@ -37,7 +37,7 @@ import { useTheme } from './hooks/useTheme.js'
 import { storage } from './lib/storage.js'
 import { PAGE, mainPages } from './lib/pages.js'
 import { isConfigPath, addView, renameView, removeView, VIEWS_PATH, DEFAULT_VIEWS, parseViews, serializeViews, addWidget, removeWidget, moveWidget } from './lib/viewsConfig.js'
-import { withKeys } from './lib/frontmatter.js'
+import { withKeys, copyTitled } from './lib/frontmatter.js'
 import { widgetType } from './widgets/index.js'
 import { urlForPage, pageForUrl, existingView } from './lib/url.js'
 import { fileView, folderView, startTrails, currentView, openView, trailTo, movedTrails, keptTrails } from './lib/views.js'
@@ -361,13 +361,17 @@ export default function App() {
     setTrails(next)
   }
 
-  // A copy of the file `item` next to it ("x 2.md"); a symlink isn't copied (a toast says so)
+  // A copy of the file `item` next to it ("x 2.md"; a note's title gets " (copy)"); a symlink isn't copied (a toast says so)
   function handleDuplicate(item) {
     const entry = virtual[item.path]
     if (!entry) return
     if (entry.mode === SYMLINK_MODE) return toast.error("A symlink can't be duplicated.")
     window.dispatchEvent(new Event('folio:flush')) // typing in an open note first
-    update(ch => duplicate(ch, repo.remote?.files ?? {}, virtualFiles(repo.remote?.files ?? {}, ch)[item.path], freePath(ch, filesOf(ch), item.path)))
+    update(ch => {
+      const from = virtualFiles(repo.remote?.files ?? {}, ch)[item.path]
+      const text = item.path.endsWith('.md') ? ch.edits[from.orig] ?? links.remoteText(from.sha) : undefined // a note not on this device: the same bytes
+      return duplicate(ch, repo.remote?.files ?? {}, from, freePath(ch, filesOf(ch), item.path), text === undefined ? undefined : copyTitled(text))
+    })
   }
 
   function handleDelete(item) {

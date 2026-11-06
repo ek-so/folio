@@ -176,8 +176,12 @@ export function replaceLink(text, span, markdown) {
   return text.slice(0, start) + markdown + text.slice(end)
 }
 
+// The first word (letters and digits) of a piece of text, rendered or markdown alike ("**Fix** it" and
+// "Fix it" both give "Fix"): to check that rendered list items are the ones found in the markdown
+export const firstWord = text => text.match(/[\p{L}\p{N}]+/u)?.[0] ?? ''
+
 // The lists in a list block's markdown `raw`, nested ones too, in the order the preview
-// renders them: [{ ordered, first, items: [{ start, end }] }]. An item runs from its marker
+// renders them: [{ ordered, first, items: [{ start, end, word }] }] (`word`: its text's first, `firstWord`). An item runs from its marker
 // line to the next marker that isn't nested in it (its sub-lists and blank lines are in it).
 // A change of marker (- to *, 1. to 1)) starts another list, as in markdown.
 const LIST_MARKER = /^([ \t]*)([-*+]|(\d{1,9})([.)]))(?:[ \t]+|$)/
@@ -201,7 +205,7 @@ export function listsIn(raw) {
         stack.push(top)
       }
       top.content = indent + Math.max(m[0].length - m[1].length, m[2].length + 1) // where its text starts
-      const item = { start: at, end: raw.length }
+      const item = { start: at, end: raw.length, word: firstWord(line.slice(m[0].length).replace(/^\[[ xX]\][ \t]*/, '')) }
       top.list.items.push(item)
       for (const prev of marks) if (prev.item.end === raw.length && prev.item !== item && indent < prev.content) prev.item.end = at
       marks.push({ item, content: top.content })

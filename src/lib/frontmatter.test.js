@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { frontMatter, properties, withKeys, blankFrontMatter, valueList, noteTitle, withoutKeys, renameKey, keyNameError, withValue, valuesOf, valueColors, withoutValue, countValue, renameValue, withTitle, valueActions } from './frontmatter.js'
+import { frontMatter, properties, withKeys, blankFrontMatter, valueList, noteTitle, withoutKeys, renameKey, keyNameError, withValue, valuesOf, valueColors, withoutValue, countValue, renameValue, withTitle, valueActions, copyTitled } from './frontmatter.js'
 
 describe('front matter', () => {
   it('reads flat keys, lists and quoted values', () => {
@@ -122,5 +122,11 @@ describe('front matter', () => {
     expect(withTitle('# A\n', 'Card')).toBe('---\ntitle: Card\n---\n# A\n')
     expect(withTitle('---\ntitle: Card\n---\n# A\n', ' ')).toBe('# A\n')
     expect(withTitle('# A\n', '')).toBe('# A\n')
+  })
+
+  it('marks a copy\'s title', () => {
+    expect(copyTitled('---\ntitle: Plan\n---\n# Head\n')).toBe('---\ntitle: Plan (copy)\n---\n# Head\n')
+    expect(copyTitled('Intro\n# Head #\n## Sub\n')).toBe('Intro\n# Head (copy) #\n## Sub\n')
+    expect(copyTitled('no title')).toBe('no title')
   })
 })

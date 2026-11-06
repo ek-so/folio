@@ -194,10 +194,10 @@ export function add(ch, files, path, content) {
   return next
 }
 
-// A copy of the file `entry` (from virtualFiles) at `to`: its text when edited on this device,
-// else the same bytes (a blob GitHub or this device already has, so nothing is downloaded)
-export function duplicate(ch, files, entry, to) {
-  return entry.orig in ch.edits ? add(ch, files, to, ch.edits[entry.orig]) : upload(ch, files, to, entry.sha)
+// A copy of the file `entry` (from virtualFiles) at `to`: `text` when given (a note's, changed for
+// the copy), else the same bytes (a blob GitHub or this device already has, so nothing is downloaded)
+export function duplicate(ch, files, entry, to, text) {
+  return text !== undefined ? add(ch, files, to, text) : upload(ch, files, to, entry.sha)
 }
 
 // Adds a file from the device whose bytes are cached under `sha`. Like add(),

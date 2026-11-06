@@ -1,11 +1,12 @@
 import { useMemo, useEffect, useLayoutEffect, useRef, useState, forwardRef, useImperativeHandle } from 'react'
 import DOMPurify from 'dompurify'
-import { renderBlocks, tapOffset, taskOffsets, resolveImage, linkSpans, linkMarkdown, replaceLink, listsIn, moveListItem } from '../lib/markdown.js'
+import { renderBlocks, tapOffset, taskOffsets, resolveImage, linkSpans, linkMarkdown, replaceLink, listsIn, moveListItem, firstWord } from '../lib/markdown.js'
 import { useRepoImages } from '../hooks/useRepoImages.js'
 import { linkSpots, openLink } from '../lib/previewLinks.js'
 import { isPortaled } from '../lib/utils.js'
 import { CaretRight } from '@phosphor-icons/react'
 import { createPortal } from 'react-dom'
+import { toast } from 'sonner'
 import LinkBadge from './LinkBadge.jsx'
 import LinkModal from './LinkModal.jsx'
 import ConfirmModal from './ConfirmModal.jsx'
@@ -51,16 +52,25 @@ function breakLongWords(root) {
   }
 }
 
+// A rendered list item's first word: its link badges' spots count as their links' text, its sub-lists don't
+function itemWord(li) {
+  const copy = li.cloneNode(true)
+  copy.querySelectorAll('ul, ol').forEach(l => l.remove())
+  copy.querySelectorAll('.link-spot').forEach(s => s.replaceWith(s.dataset.text))
+  return firstWord(copy.textContent)
+}
+
 // List items get a `.list-grip` spot to drag them by (ListGrip): `data-list` (its list's index in
 // the returned lists, offsets into the note) and `data-item`. Only where the block's lists line up
-// with its markdown (listsIn): not in a quote, for one
+// with its markdown (listsIn: as many lists and items, each starting with the same word): not in a
+// quote, for one
 function listGrips(root, content) {
   const lists = []
   for (const block of root.querySelectorAll('[data-src]')) {
     const start = Number(block.dataset.src)
     const found = listsIn(content.slice(start, start + Number(block.dataset.len)))
     const rendered = [...block.querySelectorAll('ul, ol')].map(l => l.querySelectorAll(':scope > li'))
-    if (!found.length || found.length !== rendered.length || found.some((l, i) => l.items.length !== rendered[i].length)) continue
+    if (!found.length || found.length !== rendered.length || found.some((l, i) => l.items.length !== rendered[i].length || l.items.some((it, j) => it.word !== itemWord(rendered[i][j])))) continue
     found.forEach((list, i) => {
       const key = lists.push({ ...list, items: list.items.map(it => ({ start: start + it.start, end: start + it.end })) }) - 1
       rendered[i].forEach((li, j) => li.insertAdjacentHTML('afterbegin', `<span class="list-grip" data-list="${key}" data-item="${j}"></span>`))
@@ -99,6 +109,12 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
   )
   const [editing, setEditing] = useState(null) // the link span in the Edit link dialog
   const [removing, setRemoving] = useState(null) // the link span being confirmed
+  // A link's span (`raw`: its markdown when the dialog opened) changed to `markdown`, unless the note changed
+  // there since: then nothing is written, and a toast says so
+  const changeLink = (span, markdown) => {
+    if (content.slice(span.start, span.end) !== span.raw) return toast.error('The note changed. Try again.')
+    onChange(replaceLink(content, span, markdown))
+  }
 
   useImperativeHandle(handle, () => ({
     visibleOffset() {
@@ -256,13 +272,13 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
       />
       {carets.map((spot, i) => createPortal(<CaretRight />, spot, i))}
       {links.map((spot, i) => {
-        const { href, text, kind } = spot.dataset
+        const { href, text, kind, path: target } = spot.dataset
         const span = spans[spot.dataset.span]
         return createPortal(
           <LinkBadge
-            href={href} text={text} kind={kind}
-            onEdit={onChange && span ? () => setEditing(span) : undefined}
-            onRemove={onChange && span ? () => setRemoving({ ...span, text }) : undefined}
+            href={href} text={text} kind={kind} path={target}
+            onEdit={onChange && span ? () => setEditing({ ...span, raw: content.slice(span.start, span.end) }) : undefined}
+            onRemove={onChange && span ? () => setRemoving({ ...span, text, raw: content.slice(span.start, span.end) }) : undefined}
           />, spot, `link-${i}`)
       })}
       <DndContext
@@ -283,7 +299,7 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
       {editing && (
         <LinkModal
           name={editing.bare ? '' : editing.label} url={editing.href}
-          onSave={(name, url) => { onChange(replaceLink(content, editing, linkMarkdown(name, url, editing.bare))); setEditing(null) }}
+          onSave={(name, url) => { changeLink(editing, linkMarkdown(name, url, editing.bare)); setEditing(null) }}
           onClose={() => setEditing(null)}
         />
       )}
@@ -291,7 +307,7 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
         <ConfirmModal
           title="Remove link?"
           description={`“${removing.text}” is removed from the note.`}
-          onConfirm={() => { onChange(replaceLink(content, removing, '')); setRemoving(null) }}
+          onConfirm={() => { changeLink(removing, ''); setRemoving(null) }}
           onClose={() => setRemoving(null)}
         />
       )}

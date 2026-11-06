@@ -223,6 +223,16 @@ export function blankFrontMatter(text) {
   return fm ? text.slice(0, fm.end).replace(/[^\n]/g, ' ') + text.slice(fm.end) : text
 }
 
+// A copy's text: its title (the `title` property, else its first "# heading") with " (copy)" after
+// it, so the two tell apart; a note with neither is left as it is (its file name differs)
+export function copyTitled(text) {
+  const fm = frontMatter(text)
+  const title = fm?.props.find(p => p.key === 'title')?.value
+  if (typeof title === 'string' && title.trim()) return withValue(text, 'title', `${title.trim()} (copy)`)
+  const end = fm?.end ?? 0
+  return text.slice(0, end) + text.slice(end).replace(/^( {0,3}#[ \t]+)(.+?)([ \t#]*)$/m, '$1$2 (copy)$3')
+}
+
 // A note's title: its `title` property, else its first "# heading" (outside
 // the front matter), else `fallback` (its file name)
 export function noteTitle(text, fallback) {

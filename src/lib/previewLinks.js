@@ -11,14 +11,16 @@ function linkSpot(a, notePath, files) {
   spot.className = 'link-spot'
   spot.dataset.href = href
   spot.dataset.text = a.textContent.trim() || href
-  spot.dataset.kind = repoPath ? linkTarget(repoPath, files)?.kind ?? 'missing' : 'web'
+  const target = repoPath && linkTarget(repoPath, files)
+  spot.dataset.kind = repoPath ? target?.kind ?? 'missing' : 'web'
+  if (target) spot.dataset.path = target.path
   a.replaceWith(spot)
   return spot
 }
 
 // The note preview's links, swapped for spots where MarkdownPreview renders a LinkBadge:
 // <span class="link-spot"> with `data-href`, `data-text` (what the link shows), `data-kind`
-// (`web`, or `note` / `file` / `folder` / `missing` in the repo) and `data-span`, the link's
+// (`web`, or `note` / `file` / `folder` / `missing` in the repo), `data-path` (where it points in the repo, when it's there) and `data-span`, the link's
 // index in `spans` (lib/markdown.js linkSpans) when the block's links line up with them (else
 // it can only be opened and copied). Links to a heading (#…) and around an image stay as they are.
 export function linkSpots(root, notePath, files, spans) {

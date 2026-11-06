@@ -6,6 +6,7 @@ import { Badge } from './ui/badge.jsx'
 import { Button } from './ui/button.jsx'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from './ui/dropdown-menu.jsx'
 import { useSingleOpen } from '../hooks/useSingleOpen.jsx'
+import { urlForView } from '../lib/url.js'
 
 const REPO_ICONS = { note: FileText, file: File, folder: Folder, missing: LinkBreak }
 
@@ -18,11 +19,15 @@ function Favicon({ href }) {
   return <img src={`https://www.google.com/s2/favicons?domain=${encodeURIComponent(host)}&sz=32`} alt="" className="size-4 shrink-0 rounded-[3px]" onError={() => setFailed(true)} />
 }
 
-// A link in the note preview: a badge with the site's favicon (or what it points to in the repo,
-// grey when it's missing) and its text, opening it on a tap (MarkdownPreview's link handler), and
-// its ⋯ its own (`own`: a click on it doesn't open a board card); its text a bit softer than the note's (grey when missing); a ⋯ split off from it by a 1px gap, with Copy link address, Edit link and Remove (the last two only with `onEdit` / `onRemove`).
-export default function LinkBadge({ href, text, kind, onEdit, onRemove }) {
-  const copy = () => navigator.clipboard.writeText(href).then(() => toast.success('Link address copied'), () => toast.error("Couldn't copy the link address"))
+// A link in the note preview or a description (InlineMarkdown): a badge with the site's favicon, or what
+// it points to in the repo (grey when it's missing), and its text, a bit softer than the note's. A tap
+// opens it (whoever shows it handles that). Beside it, split off by a 1px gap, a ⋯ of its own (`own`: a
+// click on it never opens a board card) with Copy link address, Edit link and Remove (the last two only
+// with `onEdit` / `onRemove`).
+export default function LinkBadge({ href, text, kind, path, onEdit, onRemove }) {
+  // A link into the repo is copied as the app's address of what it points to (in File manager)
+  const address = path ? location.origin + urlForView(import.meta.env.BASE_URL, kind === 'folder' ? { folder: path } : { file: path }) : href
+  const copy = () => navigator.clipboard.writeText(address).then(() => toast.success('Link address copied'), () => toast.error("Couldn't copy the link address"))
   const [open, setOpen] = useSingleOpen()
   const Icon = REPO_ICONS[kind]
   return (
