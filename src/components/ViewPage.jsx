@@ -6,12 +6,11 @@ import ConfirmModal from './ConfirmModal.jsx'
 import TitleBar from './TitleBar.jsx'
 import RearrangeModal from './RearrangeModal.jsx'
 import { Button } from './ui/button.jsx'
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent } from './ui/dropdown-menu.jsx'
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from './ui/dropdown-menu.jsx'
 import { WIDGET_TYPES, widgetType } from '../widgets/index.js'
 
 // A view (Home…): its title bar with + (Add widget: every kind in widgets/index.js) and ⋯
-// (Add widget, Rearrange widgets, Rename, Remove: everything a view can do; the navigation's ⋯
-// keeps only Rename and Remove), over its widgets ({ id, type }), stacked full width (a dashboard),
+// (Rearrange widgets, Rename, Remove; the navigation's ⋯ keeps only Rename and Remove), over its widgets ({ id, type }), stacked full width (a dashboard),
 // and Add widget under them. Each widget is its kind's own component, given the app's `services`;
 // `onAdd(type)`, `onRemove(id)` (always confirmed first: a widget's own Remove asks here),
 // `onMove(from, to)` (Rearrange widgets), `onRename()` and `onRemoveView()` (App's view dialogs).
@@ -37,10 +36,6 @@ export default function ViewPage({ page, widgets = [], error, services, onAdd, o
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" onCloseAutoFocus={e => e.preventDefault()}>
-        <DropdownMenuSub>
-          <DropdownMenuSubTrigger disabled={!canEdit}><Plus /> Add widget</DropdownMenuSubTrigger>
-          <DropdownMenuSubContent>{kinds}</DropdownMenuSubContent>
-        </DropdownMenuSub>
         <DropdownMenuItem disabled={!canEdit || widgets.length < 2} onSelect={() => setRearranging(true)}><ArrowsDownUp /> Rearrange widgets</DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem disabled={!canEditView} onSelect={onRename}><PencilSimple /> Rename</DropdownMenuItem>
