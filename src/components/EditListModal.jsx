@@ -10,8 +10,8 @@ import BottomSheet from './BottomSheet.jsx'
 // A sheet to edit a list of `items` ([{ id, icon, title }]; a view's widgets): drag them into
 // order (with a mouse right away, on touch after holding 0.25s, like a board's cards; each drop
 // calls `onMove(from, to)`, indexes, at once), remove one with its trash (`onRemove(item)`, confirmed
-// by the caller). `add`: what sits left of Done (Add widget). `empty`: the text when there's nothing.
-export default function EditListModal({ title, description, items, onMove, onRemove, add, empty, onClose }) {
+// by the caller). `empty`: the text when there's nothing.
+export default function EditListModal({ title, description, items, onMove, onRemove, empty, onClose }) {
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 8 } }),
@@ -31,8 +31,7 @@ export default function EditListModal({ title, description, items, onMove, onRem
             </ul>
           </SortableContext>
         </DndContext>
-        <div className="flex items-center justify-between gap-2">
-          <div>{add}</div>
+        <div className="flex justify-end">
           <Button onClick={onClose}>Done</Button>
         </div>
       </div>

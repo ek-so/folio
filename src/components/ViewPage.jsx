@@ -13,7 +13,7 @@ import { WIDGET_TYPES, widgetType } from '../widgets/index.js'
 // (Edit widgets, Rename, Remove; the navigation's ⋯ keeps only Rename and Remove), over its widgets ({ id, type }), stacked full width (a dashboard),
 // and Add widget under them. Each widget is its kind's own component, given the app's `services`;
 // `onAdd(type)`, `onRemove(id)` (always confirmed first: a widget's own Remove asks here),
-// `onMove(from, to)` (Edit widgets: order, remove and add them in one sheet), `onRename()` and `onRemoveView()` (App's view dialogs).
+// `onMove(from, to)` (Edit widgets: order and remove them in one sheet), `onRename()` and `onRemoveView()` (App's view dialogs).
 // Until the settings are read (`services.canEdit` false) nothing can be added.
 // `error`: why the views can't be changed (shown on top), or null.
 export default function ViewPage({ page, widgets = [], error, services, onAdd, onRemove, onMove, onRename, onRemoveView, canEditView }) {
@@ -85,15 +85,6 @@ export default function ViewPage({ page, widgets = [], error, services, onAdd, o
           })}
           onMove={onMove}
           onRemove={setRemoving}
-          // A new widget's setup takes this sheet's place
-          add={(
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild><Button variant="secondary"><Plus /> Add widget</Button></DropdownMenuTrigger>
-              <DropdownMenuContent align="start" onCloseAutoFocus={e => e.preventDefault()}>
-                {WIDGET_TYPES.map(t => <DropdownMenuItem key={t.type} onSelect={() => { setEditing(false); onAdd(t.type) }}><t.icon /> {t.label}</DropdownMenuItem>)}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
           empty="No widgets on this view yet."
           onClose={() => setEditing(false)}
         />
