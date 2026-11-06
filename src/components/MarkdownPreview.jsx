@@ -91,7 +91,7 @@ const repoImages = (root, notePath) => [...root.querySelectorAll('img')]
 // Rendered note, read-only apart from task checkboxes, links' Edit link / Remove and dragging
 // list items into another order (with `onChange`). Double-tapping (or
 // double-clicking) text calls onDoubleTap with the markdown offset of the
-// tapped word. On mount, scrolls the block holding `scrollTo` (a markdown
+// tapped word (empty space: the end of the note). On mount, scrolls the block holding `scrollTo` (a markdown
 // offset) into view. The ref's
 // visibleOffset() is the markdown offset of the first block on screen, where
 // editing starts. `children` render above the note (a double tap there edits
@@ -263,7 +263,11 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
   }
 
   return (
-    <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
+    <div
+      ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden"
+      // The empty space under a short note: a double tap edits from its end
+      onClick={e => { if (e.target === e.currentTarget && isDoubleTap(e)) onDoubleTap?.(content.length) }}
+    >
       {/* What's above the note (its properties, from the front matter at the top of the file): a double tap edits from the start */}
       {children && <div onClick={e => { if (!isPortaled(e) && !e.target.closest('a') && isDoubleTap(e)) onDoubleTap?.(0) }}>{children}</div>}
       <div
