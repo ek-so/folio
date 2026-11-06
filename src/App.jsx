@@ -741,7 +741,7 @@ export default function App() {
         {viewDialog?.kind === 'rename' && (
           <RenameModal
             kind="view"
-            item={{ name: viewDialog.view.title, type: 'dir' }}
+            item={{ name: viewDialog.view.untitled ? '' : viewDialog.view.title, type: 'dir' }}
             onRename={name => {
               if (!name.trim()) return 'Enter a name.'
               saveViews(renameView(views, viewDialog.view.id, name))

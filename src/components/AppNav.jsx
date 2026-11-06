@@ -12,6 +12,7 @@ import ResizeHandle from './ResizeHandle.jsx'
 import { useHideOnScroll } from '../hooks/useHideOnScroll.js'
 import AppLogo from './AppLogo.jsx'
 import ViewMenu from './ViewMenu.jsx'
+import PageTitle from './PageTitle.jsx'
 
 // The open page's button: light accent fill, accent text
 const ACTIVE = 'bg-primary/15 text-primary hover:bg-primary/20 hover:text-primary'
@@ -42,7 +43,7 @@ export function NavRail({ page, pages, viewActions, onPage, onSearch, renderSync
   )
   const pageButton = p => (
     <Button variant="ghost" tooltip={hint(p.title)} tooltipSide="right" aria-current={page === p.id ? 'page' : undefined} className={cn(item(p.id), !collapsed && 'w-full', !collapsed && p.view && 'pr-10')} onClick={() => onPage(p.id)}>
-      <p.icon /> {collapsed ? label(p.title) : <span className="min-w-0 truncate">{p.title}</span>}
+      <p.icon /> {collapsed ? label(p.title) : <span className="min-w-0 truncate"><PageTitle page={p} /></span>}
     </Button>
   )
   // Items in a group touch (no gap); a separator has 16px (--space) on both sides

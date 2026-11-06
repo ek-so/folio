@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { parseNote, serializeNote, movedNote, folderNotes, noteHeight } from './note.js'
+import { parseNote, serializeNote, movedNote, folderNotes, noteHeight, resizedNote } from './note.js'
 
 describe('note widget', () => {
   it('reads its settings, or nothing from bad text', () => {
@@ -15,6 +15,8 @@ describe('note widget', () => {
     expect(parseNote('{"file":"a.md","height":"tall"}')).toEqual({ file: 'a.md' })
     expect(noteHeight({ file: 'a.md' })).toBe(320)
     expect(movedNote({ file: 'a.md', height: 480 }, 'a.md', 'b.md', false)).toEqual({ file: 'b.md', height: 480 })
+    expect(resizedNote({ file: 'a.md' }, 480)).toEqual({ file: 'a.md', height: 480 })
+    expect(resizedNote({ file: 'a.md', height: 480 }, 320)).toEqual({ file: 'a.md' })
   })
 
   it('follows its file when it or a folder above it moves', () => {

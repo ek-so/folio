@@ -13,9 +13,15 @@ const FIXED = [
   { id: PAGE.LINKS, title: 'Broken links', icon: LinkBreak },
 ]
 
-// Title and icon of a page; `views` are the configured views (an unknown id has no title)
-export const pageInfo = (id, views = []) =>
-  FIXED.find(p => p.id === id) ?? { id, title: views.find(v => v.id === id)?.name ?? '', icon: File, view: true }
+// Title and icon of a page; `views` are the configured views (an unknown id has no title). A view with no name
+// is titled Untitled (`untitled`: shown light, a `Placeholder`)
+export function pageInfo(id, views = []) {
+  const fixed = FIXED.find(p => p.id === id)
+  if (fixed) return fixed
+  const view = views.find(v => v.id === id)
+  const name = view?.name.trim()
+  return { id, title: view ? name || 'Untitled' : '', untitled: !!view && !name, icon: File, view: true }
+}
 
 // The main pages, in the navigation's order: the views, File manager, Graph
 export const mainPages = views => [...views.map(v => pageInfo(v.id, views)), pageInfo(PAGE.FILES), pageInfo(PAGE.GRAPH)]

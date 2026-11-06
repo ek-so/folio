@@ -1,7 +1,7 @@
-import { Placeholder } from '@/components/ui/placeholder.jsx'
 import { useState } from 'react'
 import { CaretDown, Check, PencilSimple } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
+import { PLACEHOLDER } from './ui/placeholder.jsx'
 import { Badge } from './ui/badge.jsx'
 import { Input } from './ui/input.jsx'
 import { ListRow } from './ui/list-row.jsx'
@@ -135,10 +135,10 @@ function EditableBadge({ prop, label, color, options, onChange, onManage }) {
           as="button"
           type="button"
           style={tint(color).style}
-          className={cn('cursor-pointer outline-none focus-visible:ring-1 focus-visible:ring-ring', tint(color).className, TINT_HOVER, label === null && 'text-muted-foreground')}
+          className={cn('cursor-pointer outline-none focus-visible:ring-1 focus-visible:ring-ring', tint(color).className, TINT_HOVER, label === null && PLACEHOLDER)}
           {...own}
         >
-          {label === null ? <Placeholder className="truncate">{prop.key}</Placeholder> : <span className="truncate">{label}</span>}
+          <span className="truncate">{label ?? prop.key}</span>
           <CaretDown className="size-3 shrink-0" />
         </Badge>
       </PopoverTrigger>

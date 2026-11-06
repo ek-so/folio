@@ -11,7 +11,7 @@ import { useNote } from '@/hooks/useNote.js'
 import { displayName } from '@/lib/files.js'
 import ResizeHandle from '@/components/ResizeHandle.jsx'
 import { NOTE_HEIGHT, clampSize } from '@/lib/resize.js'
-import { notePath, parseNote, serializeNote, noteHeight } from './note.js'
+import { notePath, parseNote, serializeNote, noteHeight, resizedNote } from './note.js'
 
 // A note widget (note.js): the note's file name, Edit (✓ when done) and ⋯ (Open full screen, Rename note: renames
 // the file, Remove note) on top, then its text in a box that scrolls inside, as tall as its settings say (resizable on desktop by its bottom edge);
@@ -45,7 +45,7 @@ export default function NoteWidget({ id, services, onRemove }) {
   if (!file.ready) return frame('Note', <div className="flex justify-center py-12"><Spinner /></div>)
   if (!note) return frame('Note', message("This note widget's settings can't be read."))
   if (!found) return frame(displayName(path), message(`Its note “${path}” is gone.`))
-  const resize = services.canEdit ? height => services.update(services.config.write(notePath(id), serializeNote({ ...note, height }))) : null
+  const resize = services.canEdit ? height => services.update(services.config.write(notePath(id), serializeNote(resizedNote(note, height)))) : null
   return <NoteBox key={`${path}:${services.discards}`} path={path} found={found} services={services} frame={frame} height={noteHeight(note)} onResize={resize} />
 }
 

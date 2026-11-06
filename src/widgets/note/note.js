@@ -1,4 +1,4 @@
-// A note widget: one markdown file shown in a box of fixed height on a view, where it can be
+// A note widget: one markdown file shown in a box on a view (resizable in height on desktop), where it can be
 // read, edited (its Edit button) and opened full screen. Its settings live in the repo,
 // beside the views: `.folio/notes/<id>.json`, { "file": "path/to/note.md", "height": 480 } (`height`: its box's
 // height on desktop, px, when it was resized; NOTE_HEIGHT's default otherwise).
@@ -19,6 +19,12 @@ export function parseNote(text) {
 
 // The height its box shows at on desktop
 export const noteHeight = note => note.height ?? NOTE_HEIGHT.default
+
+// The settings with its box resized to `height`; the default isn't stored
+export function resizedNote(note, height) {
+  const { file } = note
+  return height === NOTE_HEIGHT.default ? { file } : { file, height }
+}
 
 export const serializeNote = note => JSON.stringify(note, null, 2) + '\n'
 

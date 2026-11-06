@@ -40,6 +40,7 @@ Never hardcode colors; use the semantic tokens (light and dark values in `src/in
 | `--callout-*` | GitHub alert callouts in the preview |
 | `--radius` | `0.75rem` base radius |
 | `shadow-sm`…`shadow-lg` | Redefined in `src/index.css` (`@theme`): close under the element, a small drop and mostly spread |
+| `border-lift-edge` | Outline of a box lifted by a shadow (hovered or dragged card): none on light, faint on dark |
 
 `--safe-top` / `--safe-bottom` hold the iOS safe-area insets.
 

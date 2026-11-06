@@ -4,7 +4,7 @@ import { Input } from './ui/input.jsx'
 import BottomSheet from './BottomSheet.jsx'
 
 // Creates the note or folder locally; it reaches GitHub on the next sync.
-// kind 'view': a new view in the navigation; an empty name is fine (it's called Untitled).
+// kind 'view': a new view in the navigation; an empty name is fine (it shows as a light Untitled).
 export default function NewFileModal({ folder, kind, onCreate, onClose }) {
   const isFolder = kind === 'folder'
   const isView = kind === 'view'

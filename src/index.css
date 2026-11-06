@@ -70,6 +70,9 @@
     --tag-8: oklch(0.6 0.17 305);
     --tag-9: oklch(0.65 0.17 350);
     --tag-tint: 20%;
+    /* The outline of a box lifted by a shadow (a hovered or dragged card): none on light, where the shadow shows
+       its edge; faint on dark, where a shadow barely shows */
+    --lift-edge: transparent;
     /* Image file icons in lists (folders use primary, PDFs destructive) */
     --file-image: oklch(0.62 0.15 150);
     /* Folder icons: yellowish (files are blue, the primary) */
@@ -130,6 +133,7 @@
       --code-bg: oklch(0.26 0.04 240);
       --callout-tint: 24%;
       --tag-tint: 30%;
+      --lift-edge: rgb(255 255 255 / 0.12);
     }
   }
 
@@ -173,6 +177,7 @@
     --code-bg: oklch(0.26 0.04 240);
     --callout-tint: 24%;
     --tag-tint: 30%;
+    --lift-edge: rgb(255 255 255 / 0.12);
   }
 }
 
@@ -182,6 +187,7 @@
   --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.08), 0 0 1px 0 rgb(0 0 0 / 0.08);
   --shadow-md: 0 1px 8px 0 rgb(0 0 0 / 0.1), 0 0 2px 0 rgb(0 0 0 / 0.06);
   --shadow-lg: 0 2px 16px 0 rgb(0 0 0 / 0.12), 0 0 3px 0 rgb(0 0 0 / 0.06);
+  --color-lift-edge: var(--lift-edge);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);

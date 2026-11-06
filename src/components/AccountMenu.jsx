@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Check, Gear, SignOut, LinkBreak, Plus } from '@phosphor-icons/react'
 import { PAGE } from '../lib/pages.js'
 import ViewMenu from './ViewMenu.jsx'
+import PageTitle from './PageTitle.jsx'
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator,
 } from './ui/dropdown-menu.jsx'
@@ -24,7 +25,7 @@ export default function AccountMenu({ trigger, current, pages, viewActions, onNa
       <DropdownMenuContent align="start" className="w-60" onCloseAutoFocus={e => e.preventDefault()}>
         {pages.filter(p => p.view).map(p => (
           <DropdownMenuItem key={p.id} className={current === p.id ? ACTIVE : undefined} onSelect={() => onNavigate(p.id)}>
-            <p.icon /> <span className="min-w-0 truncate">{p.title}</span>{mark(p.id)}
+            <p.icon /> <span className="min-w-0 truncate"><PageTitle page={p} /></span>{mark(p.id)}
             <span className={current === p.id ? '' : 'ml-auto'} {...own}>
               <ViewMenu sub view={p} disabled={!viewActions.canEdit} onRename={v => { setOpen(false); viewActions.onRename(v) }} onDelete={v => { setOpen(false); viewActions.onDelete(v) }} />
             </span>
@@ -34,7 +35,7 @@ export default function AccountMenu({ trigger, current, pages, viewActions, onNa
         <DropdownMenuSeparator />
         {pages.filter(p => !p.view).map(p => (
           <DropdownMenuItem key={p.id} className={current === p.id ? ACTIVE : undefined} onSelect={() => onNavigate(p.id)}>
-            <p.icon /> {p.title}{mark(p.id)}
+            <p.icon /> <PageTitle page={p} />{mark(p.id)}
           </DropdownMenuItem>
         ))}
         <DropdownMenuSeparator />

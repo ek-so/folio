@@ -17,7 +17,7 @@
 - The bar slides away while the content scrolls down and returns on scrolling up (`useHideOnScroll`), leaving only the title bar fixed.
 
 ## File tree (`NavTree.jsx`)
-- Every main page's `Surface` (`tree`) has the repo's folders and files in its own `bg-card` box to its left from 768px: 300px by default, a drag handle in the 16px gap (also ←/→ keys; double click resets), 200–480px, remembered in `storage` (`ResizeHandle`, `useResizableWidth`, limits in `lib/resize.js`; at most 35% of the window, the rail 25%).
+- Every main page's `Surface` (`tree`) has the repo's folders and files in its own `bg-card` box to its left from 768px: 300px by default, a drag handle in the 16px gap (also ←/→ keys, saved when let go; double click resets), 200–480px, remembered in `storage` (`ResizeHandle`, `useResizableWidth`, limits in `lib/resize.js`; at most 35% of the window, the rail 25%).
 - Titled with the repo's name as a menu (`RepoMenu`): the repos used on this device (the open one checked; another opens the app there, keeping the page and starting its trails and recent files afresh), Switch repository… (disabled while a sync runs), Open on GitHub. Collapse all sits at the right of the title; on desktop the rail's collapse icon hides the panel (`treeCollapsed`, remembered).
 - Below 768px the tree opens in a left `Sheet` (✕ at the right of the title) that floats like a popover, 8px from the screen's edges.
 - The chevron only expands and collapses; the name opens the folder in the page you're on and expands it; choosing a file opens it there (a symlink opens its source). Each row has the same ⋯ (`ItemMenu`, `inList`) as file manager, shown only on hover with a mouse. The open item is highlighted and revealed (`foldersToOpen`).

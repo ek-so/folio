@@ -3,6 +3,7 @@ import { ArrowLeft } from '@phosphor-icons/react'
 import { pageInfo } from '../lib/pages.js'
 import { NavContext } from './NavTree.jsx'
 import { Button } from './ui/button.jsx'
+import PageTitle from './PageTitle.jsx'
 
 // Top of the content box: for a file or folder, ← when its page has a step to go back to (`onBack`
 // from App), and the name in bold (`changed`: unsaved dot). An app page
@@ -20,7 +21,7 @@ export default function TitleBar({ page, name, changed, badge, children }) {
           </Button>
         )}
         <div className="flex min-w-0 flex-1 items-center gap-2 px-space-xs">
-          <h1 className="min-w-0 truncate text-base font-bold">{page ? pageInfo(page, views).title : name}</h1>
+          <h1 className="min-w-0 truncate text-base font-bold">{page ? <PageTitle page={pageInfo(page, views)} /> : name}</h1>
           {changed && <span className="size-1.5 shrink-0 rounded-full bg-primary" />}
           {badge}
         </div>

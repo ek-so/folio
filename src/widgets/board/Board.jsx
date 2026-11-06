@@ -162,7 +162,7 @@ export default function Board({ id, services, onRemove }) {
           {!columns.length && <p className="py-6 text-sm text-muted-foreground">No columns yet: its subfolders become columns.</p>}
         </div>
         <DragOverlay>
-          {dragged && drag.type === 'card' && byPath[dragged] && <CardBody path={dragged} text={notes[dragged]} board={board} files={files} chosen={services.tagColors.colors} className="rotate-2 border-transparent shadow-lg" />}
+          {dragged && drag.type === 'card' && byPath[dragged] && <CardBody path={dragged} text={notes[dragged]} board={board} files={files} chosen={services.tagColors.colors} className="rotate-2 border-lift-edge shadow-lg" />}
           {dragged && drag.type === 'column' && (
             <Tray className="w-80 rotate-1 bg-secondary shadow-lg">
               <TrayTitle grip>{dragged.name}</TrayTitle>
@@ -327,7 +327,7 @@ const CardBody = forwardRef(function CardBody({ path, text, board, files, menu, 
       role="button"
       tabIndex={0}
       onKeyDown={e => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); props.onClick?.(e) } }}
-      className={cn('group flex w-full cursor-pointer touch-manipulation select-none flex-col gap-1 rounded-lg border border-border bg-card p-3 text-left outline-none transition-[box-shadow,border-color] hover:border-transparent hover:shadow-md focus-visible:ring-1 focus-visible:ring-ring', NO_CALLOUT, className)}
+      className={cn('group flex w-full cursor-pointer touch-manipulation select-none flex-col gap-1 rounded-lg border border-border bg-card p-3 text-left outline-none transition-[box-shadow,border-color] hover:border-lift-edge hover:shadow-md focus-visible:ring-1 focus-visible:ring-ring', NO_CALLOUT, className)}
       {...props}
     >
       <div className="flex items-start gap-1">

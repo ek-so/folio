@@ -8,16 +8,16 @@ describe('viewsConfig', () => {
     expect(parseViews('{"views": 3}')).toBeNull()
   })
 
-  it('keeps an emptied list empty, and drops bad or reserved entries', () => {
+  it('keeps an emptied list empty and unnamed views, and drops bad or reserved entries', () => {
     expect(parseViews(serializeViews([]))).toEqual([])
-    const text = JSON.stringify({ views: [{ id: 'a', name: 'A' }, { id: 'a', name: 'again' }, { id: 'files', name: 'X' }, { id: 'b', name: ' ' }, 4] })
-    expect(parseViews(text)).toEqual([{ id: 'a', name: 'A' }])
+    const text = JSON.stringify({ views: [{ id: 'a', name: 'A' }, { id: 'a', name: 'again' }, { id: 'files', name: 'X' }, { id: 'b', name: '' }, { id: 'c' }, 4] })
+    expect(parseViews(text)).toEqual([{ id: 'a', name: 'A' }, { id: 'b', name: '' }])
   })
 
   it('round-trips, adds, renames and removes', () => {
     const { views, id } = addView(DEFAULT_VIEWS)
     expect(views).toHaveLength(2)
-    expect(views[1]).toEqual({ id, name: 'Untitled' })
+    expect(views[1]).toEqual({ id, name: '' })
     expect(addView(DEFAULT_VIEWS, '  Work ').views[1].name).toBe('Work')
     expect(parseViews(serializeViews(views))).toEqual(views)
     expect(renameView(views, id, '  Work ')[1].name).toBe('Work')

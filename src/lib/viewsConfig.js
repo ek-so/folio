@@ -24,7 +24,7 @@ export function parseViews(text) {
     const seen = new Set(RESERVED)
     const views = []
     for (const v of list) {
-      if (typeof v?.id !== 'string' || typeof v?.name !== 'string' || !v.name.trim() || seen.has(v.id)) continue
+      if (typeof v?.id !== 'string' || typeof v?.name !== 'string' || seen.has(v.id)) continue
       seen.add(v.id)
       const widgets = Array.isArray(v.widgets)
         ? v.widgets.filter(w => typeof w?.id === 'string' && typeof w.type === 'string').map(w => ({ id: w.id, type: w.type }))
@@ -47,11 +47,11 @@ const newId = (views, letter = 'v') => {
   return id
 }
 
-// `views` with one more at the end, and its id; no name is called Untitled. Names have no
+// `views` with one more at the end, and its id; it can have no name (shown as a light Untitled). Names have no
 // length limit: the interface cuts what doesn't fit.
 export function addView(views, name = '') {
   const id = newId(views)
-  return { views: [...views, { id, name: name.trim() || 'Untitled' }], id }
+  return { views: [...views, { id, name: name.trim() }], id }
 }
 
 export const renameView = (views, id, name) => views.map(v => v.id === id ? { ...v, name: name.trim() } : v)
