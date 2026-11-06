@@ -10,6 +10,18 @@ import { urlForView } from '../lib/url.js'
 
 const REPO_ICONS = { note: FileText, file: File, folder: Folder, missing: LinkBreak }
 
+// A link's text cut in the middle when it doesn't fit: its end (the last TAIL characters) always shows
+const TAIL = 14
+function MiddleCut({ text }) {
+  if (text.length <= TAIL * 2) return <span className="truncate">{text}</span>
+  return (
+    <span className="flex min-w-0">
+      <span className="truncate">{text.slice(0, -TAIL)}</span>
+      <span className="shrink-0 whitespace-pre">{text.slice(-TAIL)}</span>
+    </span>
+  )
+}
+
 // A website's favicon (Google's favicon service), a globe while offline or when it has none
 function Favicon({ href }) {
   const [failed, setFailed] = useState(false)
@@ -20,7 +32,8 @@ function Favicon({ href }) {
 }
 
 // A link in the note preview or a description (InlineMarkdown): a badge with the site's favicon, or what
-// it points to in the repo (grey when it's missing), and its text, a bit softer than the note's. A tap
+// it points to in the repo (grey when it's missing), and its text, a bit softer than the note's; at most 420px wide (less where its container is), a longer text cut
+// in the middle (`MiddleCut`). A tap
 // opens it (whoever shows it handles that). Beside it, split off by a 1px gap, a ⋯ of its own (`own`: a
 // click on it never opens a board card) with Copy link address, Edit link and Remove (the last two only
 // with `onEdit` / `onRemove`).
@@ -31,10 +44,10 @@ export default function LinkBadge({ href, text, kind, path, onEdit, onRemove }) 
   const [open, setOpen] = useSingleOpen()
   const Icon = REPO_ICONS[kind]
   return (
-    <span className="link-badge inline-flex max-w-full gap-px align-middle">
+    <span className="link-badge inline-flex max-w-[min(420px,100%)] gap-px align-middle">
       <Badge as="a" href={href} data-badge className={cn('gap-1.5 rounded-r-none py-0 pl-2', kind === 'missing' ? 'text-muted-foreground' : 'text-foreground/75')}>
         {Icon ? <Icon className={cn('size-4 shrink-0', kind === 'missing' ? 'text-muted-foreground' : 'text-primary')} /> : <Favicon href={href} />}
-        <span className="truncate">{text}</span>
+        <MiddleCut text={text} />
       </Badge>
       <DropdownMenu open={open} onOpenChange={setOpen}>
         <DropdownMenuTrigger asChild>
