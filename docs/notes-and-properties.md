@@ -7,7 +7,7 @@
 - Images and PDFs open read-only in `FileViewer` (`useBlob`); PDFs use pdf.js (`PdfView`, loaded on first use) and draw only pages near the screen, for iOS memory. `Editor` and `FileViewer` share `FilePage`.
 
 ## Properties (front matter)
-- Shown on top of the preview in a light grey box (`bg-secondary/50`) titled Properties (`PropertyBadges` with `title`; a double tap opens the editor at the start of the file; board cards use it bare), in the file's order.
+- Shown on top of the preview in a light grey box (`bg-secondary/50`, 16px padding, 16px under its title) titled Properties (`PropertyBadges` with `title`; a double tap opens the editor at the start of the file; board cards use it bare), in the file's order.
 - The `description` (`DESCRIPTION`) is muted text whose markdown links work like the note's own; never a badge. Every other value is a badge (no property name, no tooltip). Badges listed before the description show above it, the rest below.
 - Each badge has a ▾ and opens a popover to change that property, through `useNote`'s `change` in a note and `setProperty` on a board card (both `withValue`).
 - A click, press or touch inside a badge or its popover doesn't reach the note or card (`own`). The editor shows the raw block.

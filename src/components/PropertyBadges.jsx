@@ -101,9 +101,9 @@ export default function PropertyBadges({ props, path, files, clamp, title, class
   if (!title) return <div className={cn('flex flex-col gap-space-sm', className)}>{body}{confirm}{manage}</div>
   return (
     <div className={className}>
-      <section className="flex flex-col gap-space-sm rounded-lg bg-secondary/50 p-space-sm">
+      <section className="flex flex-col gap-space rounded-lg bg-secondary/50 p-space">
         <h2 className="text-xs font-medium text-muted-foreground">{title}</h2>
-        {body}
+        <div className="flex flex-col gap-space-sm">{body}</div>
       </section>
       {confirm}{manage}
     </div>
