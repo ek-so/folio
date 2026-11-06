@@ -54,7 +54,7 @@ Never hardcode colors; use the semantic tokens (light and dark values in `src/in
 ## List rows and cards
 - **`ListRow`** (`ui/list-row.jsx`) is every list's row: file manager, tree, search, move, backlinks, popover lists. Icon left, title (with the changed dot), optional muted description, `trailing` slot (⋯), `leading` before the button (tree indent and chevron). Base height, rounded, highlighted on hover or while its ⋯ is open. States: `active`, `dimmed` (hidden files, symlinks), `disabled`. Lists don't build their own rows.
 - **`CardTile`** (`ui/card-tile.jsx`, same props): file manager's cards. A 24px icon in a 48px tinted square over the name; outlined, `rounded-lg`; names up to two lines (tiles two lines tall only when some name in the folder wraps, measured in `FileBrowser`); ⋯ in the corner on hover.
-- **`Tray`** / **`TrayTitle`** (`ui/tray.jsx`): a tinted, rounded box grouping what's in it under a small title (`grip`: the drag dots; `onClick`: a tappable title, which `TrayTitleInput` edits in place): a board's column, a note widget's note. What sits in it is `bg-card`.
+- **`Tray`** / **`TrayTitle`** (`ui/tray.jsx`): a tinted, rounded box grouping what's in it under a small title (`grip`: the drag dots): a board's column. What sits in it is `bg-card`.
 - **`Placeholder`** (`ui/placeholder.jsx`): light text for what isn't filled in yet (Untitled, No value).
 
 ## Tooltips
