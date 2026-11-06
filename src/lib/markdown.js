@@ -100,46 +100,33 @@ function textRanges(markdown) {
   return ranges
 }
 
-// Dates in `markdown`'s text (as the preview shows them), each with its line up to it: the same date with
-// the same text before it is the same date
-function datesIn(markdown, now) {
-  return textRanges(markdown).flatMap(([from, to]) => findDates(markdown.slice(from, to), now).map(d => {
-    const start = from + d.start
-    const end = from + d.end
-    return { start, end, date: d.date, key: markdown.slice(markdown.lastIndexOf('\n', start - 1) + 1, end) }
-  }))
+// The markdown with every date written as "17 Oct 2026, 14:30", in its text and in its properties'
+// values. Anything that isn't text in the preview (code, links, HTML) or in a value stays as it is
+export function withFixedDates(markdown, now = new Date()) {
+  return withFixedValues(withFixedText(markdown, now), now)
 }
 
-// The markdown with the dates typed since `before` (the text when editing started) written as
-// "17 Oct 2026, 14:30", in its text and in its properties' values. Dates already there are left as
-// they are, and so is anything that isn't text in the preview (code, links, HTML) or in a value
-export function withFixedDates(markdown, before = '', now = new Date()) {
-  return withFixedValues(withFixedText(markdown, before, now), before, now)
-}
-
-// The properties' values that are new since `before` (not that value of that key then) with their
-// dates written in one form, as text (`withValue`: a list item that gets a "," moves onto its own line)
-function withFixedValues(markdown, before, now) {
-  const old = (frontMatter(before)?.props ?? []).flatMap(p => (Array.isArray(p.value) ? p.value : [p.value]).map(v => `${p.key}\n${v}`))
+// The properties' values with their dates written in one form, as text (`withValue`: a list item
+// that gets a "," moves its list onto `- item` lines, so it stays one value)
+function withFixedValues(markdown, now) {
   let text = markdown
   for (const { key, value } of frontMatter(markdown)?.props ?? []) {
-    const fix = v => !v || old.includes(`${key}\n${v}`) ? v : withFixedText(v, '', now)
+    const fix = v => v ? withFixedText(v, now) : v
     const next = Array.isArray(value) ? value.map(fix) : fix(value)
     if ([next].flat().some((v, i) => v !== [value].flat()[i])) text = withValue(text, key, next)
   }
   return text
 }
 
-// The text's (not the front matter's) new dates written in one form
-function withFixedText(markdown, before, now) {
-  const old = datesIn(before, now).map(d => d.key)
+// The text's (not the front matter's) dates written in one form, where the preview shows them
+function withFixedText(markdown, now) {
   let out = ''
   let last = 0
-  for (const { start, end, date, key } of datesIn(markdown, now)) {
-    const i = old.indexOf(key)
-    if (i !== -1) { old.splice(i, 1); continue }
-    out += markdown.slice(last, start) + formatDate(date)
-    last = end
+  for (const [from, to] of textRanges(markdown)) {
+    for (const { start, end, date } of findDates(markdown.slice(from, to), now)) {
+      out += markdown.slice(last, from + start) + formatDate(date)
+      last = from + end
+    }
   }
   return out + markdown.slice(last)
 }

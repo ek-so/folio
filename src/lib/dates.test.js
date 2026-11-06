@@ -3,7 +3,7 @@ import { findDates, formatDate } from './dates.js'
 import { withFixedDates } from './markdown.js'
 
 const now = new Date(2026, 5, 1)
-const fixed = (text, before = '') => withFixedDates(text, before, now)
+const fixed = text => withFixedDates(text, now)
 
 describe('dates', () => {
   it('writes every clear format the same way, day first', () => {
@@ -35,20 +35,11 @@ describe('dates', () => {
     expect(fixed(text)).toBe(text.replace(/2026-10-17\n$/, '17 Oct 2026\n').replace('due: 2026-10-17', 'due: 17 Oct 2026'))
   })
 
-  it('rewrites only the dates typed since editing started', () => {
-    const before = '| 2025-03-18 | Pay rnet |\n\nCall 2025-03-18\n'
-    expect(fixed(before, before)).toBe(before)
-    expect(fixed('| 2025-03-18 | Pay rent |\n\nCall 2025-03-18 and 2025-03-18\n', before)).toBe('| 2025-03-18 | Pay rent |\n\nCall 2025-03-18 and 18 Mar 2025\n')
-    expect(fixed('- 2025-03-19 standup\n- 2026-10-17\n', '- 2025-03-18 standup\n')).toBe('- 19 Mar 2025 standup\n- 17 Oct 2026\n')
-    expect(fixed('Call 2025-03-18\n\nnew 17.10.2026\n', 'Call 2025-03-18\n')).toBe('Call 2025-03-18\n\nnew 17 Oct 2026\n')
-  })
-
-  it('writes the new dates of properties too, as text', () => {
-    const before = '---\ndue: 2025-03-18\nstatus: Done\n---\nText\n'
-    expect(fixed('---\ndue: 2025-03-18\nstatus: Done\nstart: 17.10.2026 2pm\nfrom: [2026-10-17, x]\nwhen: [2026-10-17 9am, x]\nnote: Call on Oct 17, 2026 about [2026-10-18](a.md)\n---\nText\n', before))
-      .toBe('---\ndue: 2025-03-18\nstatus: Done\nstart: 17 Oct 2026, 14:00\nfrom: [17 Oct 2026, x]\nwhen:\n  - 17 Oct 2026, 09:00\n  - x\n---\nText\n'.replace('---\nText', 'note: Call on 17 Oct 2026 about [2026-10-18](a.md)\n---\nText'))
-    expect(fixed('---\ndue: 2025-03-19\n---\n', before)).toBe('---\ndue: 19 Mar 2025\n---\n')
-    expect(fixed(before, before)).toBe(before)
+  it('writes the dates of properties too, as text', () => {
+    expect(fixed('---\ndue: 2025-03-18\nstatus: Done\nstart: 17.10.2026 2pm\nfrom: [2026-10-17, x]\nwhen: [2026-10-17 9am, x]\nnote: Call on Oct 17, 2026 about [2026-10-18](a.md)\n---\nText 2025-03-18\n'))
+      .toBe('---\ndue: 18 Mar 2025\nstatus: Done\nstart: 17 Oct 2026, 14:00\nfrom: [17 Oct 2026, x]\nwhen:\n  - 17 Oct 2026, 09:00\n  - x\nnote: Call on 17 Oct 2026 about [2026-10-18](a.md)\n---\nText 18 Mar 2025\n')
+    const done = '---\ndue: 18 Mar 2025\n---\n| 17 Oct 2026, 14:00 | Pay |\n'
+    expect(fixed(done)).toBe(done)
   })
 
   it('formats with or without a time', () => {

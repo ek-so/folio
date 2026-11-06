@@ -6,7 +6,7 @@ App flow: **Auth → RepoSetup → FileBrowser / Editor / FileViewer**. `App.jsx
 **`lib/` (pure logic, tested where noted)**
 - `github.js` — every GitHub API call (`init(token)`, `setRepo`); blob reads go through the offline cache; failures are tagged with the step they happened at.
 - `changes.js` — the model of local changes (edits, uploads, renames, deletes, new files) layered over the remote tree; `editNote` applies an edit to one note. Tested.
-- `markdown.js` — preview rendering (blocks tagged with their source range, accordions, date spots), the dates typed while editing rewritten, in the text and the properties (`withFixedDates`), tap-to-source, task checkboxes, editor highlighting, image paths.
+- `markdown.js` — preview rendering (blocks tagged with their source range, accordions, date spots), every date rewritten after editing, in the text and the properties (`withFixedDates`), tap-to-source, task checkboxes, editor highlighting, image paths.
 - `previewLinks.js` — links in rendered markdown: `decorateLinks`, `inlineHtml`, `openLink`.
 - `dates.js` — dates typed in a note's text: finding them in any clear format (`findDates`) and their one written form "17 Oct 2026, 14:30" (`formatDate`). Tested; `markdown.js`'s `withFixedDates` rewrites a note with it.
 - `frontmatter.js` — a note's properties (read, add and remove keys, set, rename and remove values, colors of values, title, and `valueActions`: what a values dialog does over a set of notes, shared by the preview and the board). Tested.

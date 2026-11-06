@@ -10,9 +10,9 @@ const fetchOriginal = sha => sha === null ? Promise.resolve('') : getBlob(sha)
 
 // A note's text and GitHub's version of it. Typing is reported through
 // onEdit(content, original) after a pause, on close, before a reload and
-// before Sync. Mount once per note. `beginEdit()` and `endEdit()` frame a time in the editor: the
-// dates typed in it are written in one form (`withFixedDates`) when it ends, or when the note closes
-// before it does (closing the tab saves the typing as it is).
+// before Sync. Mount once per note. `beginEdit()` and `endEdit()` frame a time in the editor: when it
+// ends, or the note closes before it does, every date in the note is written in one form
+// (`withFixedDates`); closing the tab saves the typing as it is.
 export function useNote(entry, edited, onEdit) {
   const [content, setContent] = useState('')
   const [loading, setLoading] = useState(true)
@@ -21,7 +21,7 @@ export function useNote(entry, edited, onEdit) {
   const pendingRef = useRef(null)
   const onEditRef = useRef(onEdit)
   const latestRef = useRef(null) // the text as shown
-  const baseRef = useRef(null) // the text when editing began, while editing
+  const editingRef = useRef(false)
   const shaRef = useRef(entry.sha)
 
   useEffect(() => { onEditRef.current = onEdit }, [onEdit])
@@ -80,13 +80,13 @@ export function useNote(entry, edited, onEdit) {
     show(value)
   }
 
-  // The text with the dates typed since editing began written in one form. If that fails, the text as
-  // typed (saved as it is) and a message: leaving the editor must never get stuck on it
+  // The text with its dates written in one form, after editing. If that fails, the text as typed
+  // (saved as it is) and a message: leaving the editor must never get stuck on it
   function fixed() {
     const latest = latestRef.current
-    if (baseRef.current === null || latest === null) return latest
+    if (!editingRef.current || latest === null) return latest
     try {
-      return withFixedDates(latest, baseRef.current)
+      return withFixedDates(latest)
     } catch (error) {
       console.error(error)
       toast.error("The dates couldn't be formatted. The note is saved as typed.")
@@ -94,11 +94,11 @@ export function useNote(entry, edited, onEdit) {
     }
   }
 
-  function beginEdit() { baseRef.current = latestRef.current }
+  function beginEdit() { editingRef.current = true }
 
   function endEdit() {
     const done = fixed()
-    baseRef.current = null
+    editingRef.current = false
     if (done !== latestRef.current) change(done)
   }
 
