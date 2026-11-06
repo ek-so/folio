@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { renderBlocks, tapOffset, taskOffsets, taskProgress, linkSpans, linkMarkdown, replaceLink, repoLink, listsIn, moveListItem, highlightMarkdown, parseIsoDate } from './markdown.js'
+import { renderBlocks, tapOffset, taskOffsets, taskProgress, linkSpans, linkMarkdown, replaceLink, repoLink, listsIn, moveListItem, highlightMarkdown } from './markdown.js'
 
 describe('markdown', () => {
   it('tags each block with its source range', () => {
@@ -119,13 +119,9 @@ describe('highlightMarkdown', () => {
     expect(highlightMarkdown('[docs(a.md)')).not.toContain('text-primary')
   })
 
-  it('shows real ISO dates in table cells as date chips, nowhere else', () => {
-    expect(parseIsoDate('2024-02-29')).not.toBeNull()
-    expect(parseIsoDate('2025-02-29')).toBeNull()
-    expect(parseIsoDate('2025-13-01')).toBeNull()
-    const html = renderBlocks('| When | What |\n|---|---|\n| 2025-03-18 | due **2025-04-01**, not `2025-05-01` or 2025-02-30 or [2025-06-01](a.md) |\n\n2025-03-18\n')
-    const chips = [...html.matchAll(/<time class="date-chip" datetime="([\d-]+)"/g)].map(m => m[1])
-    expect(chips).toEqual(['2025-03-18', '2025-04-01'])
-    expect(html).toContain('<p>2025-03-18</p>')
+  it('shows dates as date spots, not in code or links', () => {
+    const html = renderBlocks('| When | What |\n|---|---|\n| 2025-03-18 | due **17.10.2026 2pm**, not `2025-05-01` or 2025-02-30 or [2025-06-01](a.md) |\n\n- Oct 17, 2026\n')
+    const spots = [...html.matchAll(/<time class="date-spot" datetime="([\dT:-]+)" data-label="([^"]+)"/g)].map(m => [m[1], m[2]])
+    expect(spots).toEqual([['2025-03-18', '18 Mar 2025'], ['2026-10-17T14:00', '17 Oct 2026, 14:00'], ['2026-10-17', '17 Oct 2026']])
   })
 })

@@ -58,5 +58,3 @@
 .editor-preview table { display: block; width: fit-content; max-width: 100%; overflow-x: auto; border-collapse: collapse; margin: 0 0 14px; font-size: 14px; }
 .editor-preview th, .editor-preview td { padding: 6px 8px; border: 1px solid var(--border); text-align: left; vertical-align: top; }
 .editor-preview th { background: var(--secondary); font-weight: 600; }
-/* Smart tables: an ISO date in a cell (lib/markdown.js) */
-.editor-preview .date-chip { display: inline-block; padding: 0 6px; border-radius: 6px; background: var(--secondary); white-space: nowrap; }

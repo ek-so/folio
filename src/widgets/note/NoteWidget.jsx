@@ -12,6 +12,7 @@ import MarkdownPreview from '@/components/MarkdownPreview.jsx'
 import MarkdownEditor from '@/components/MarkdownEditor.jsx'
 import { useNote } from '@/hooks/useNote.js'
 import { displayName } from '@/lib/files.js'
+import { withFixedDates } from '@/lib/dates.js'
 import ResizeHandle from '@/components/ResizeHandle.jsx'
 import { Tray, TrayTitle, TRAY_BUTTON } from '@/components/ui/tray.jsx'
 import { NOTE_HEIGHT, clampSize } from '@/lib/resize.js'
@@ -170,14 +171,21 @@ function NoteBox({ path, found, services, tray, height }) {
     textareaRef.current?.focus()
   }
 
+  // Dates typed in any format are written as "17 Oct 2026, 14:30" (lib/dates.js) on the way out
+  function finishEditing() {
+    const fixed = withFixedDates(content)
+    if (fixed !== content) change(fixed)
+    setEditing(false)
+  }
+
   const actions = editing ? (
-    <Button variant="success" size="icon" aria-label="Done" tooltip="Done" className="size-control-md shrink-0" onClick={() => setEditing(false)}><Check /></Button>
+    <Button variant="success" size="icon" aria-label="Done" tooltip="Done" className="size-control-md shrink-0" onClick={finishEditing}><Check /></Button>
   ) : (
     <Button variant="ghost" size="icon" aria-label="Edit" tooltip="Edit" disabled={!ready} className={TRAY_BUTTON} onClick={() => startEditing()}><PencilSimple /></Button>
   )
   const body = loading ? <div className="flex flex-1 items-center justify-center"><Spinner /></div>
     : loadError ? <p className="px-6 py-12 text-center text-sm text-muted-foreground">Couldn't open this note. It isn't saved on this device yet — connect to the internet and pull to refresh.</p>
-    : editing ? <MarkdownEditor ref={textareaRef} content={content} onChange={change} onDone={() => setEditing(false)} />
+    : editing ? <MarkdownEditor ref={textareaRef} content={content} onChange={change} onDone={finishEditing} />
     : <MarkdownPreview content={content} path={path} files={services.virtual} onDoubleTap={startEditing} onChange={change} onOpenFile={services.openFile} onNavigate={services.openFolder} />
   // Phones: the default height; desktop: the widget's
   return tray(actions, (

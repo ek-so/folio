@@ -9,13 +9,14 @@ import Backlinks from './Backlinks.jsx'
 import MarkdownEditor from './MarkdownEditor.jsx'
 import { useNote } from '../hooks/useNote.js'
 import { displayName } from '../lib/files.js'
+import { withFixedDates } from '../lib/dates.js'
 import { frontMatter, withValue, valueActions } from '../lib/frontmatter.js'
 import PropertyBadges from './PropertyBadges.jsx'
 
 // A note: its file name in the TitleBar (editing it renames the file), the
 // whole markdown shown as preview; ✏️ in the title bar edits the markdown,
 // starting where you were reading, and a double tap starts at the tapped
-// word. Edits save on their own; ✓ (same spot) only switches back to preview.
+// word. Edits save on their own; ✓ (same spot) switches back to preview, writing typed dates in one format.
 export default function Editor({ linkedBy, onOpenLink, path, entry, files, notes, onEditNotes, tagColors, edited, onEdit, onNavigate, onOpenFile, onRename, onDuplicate, onDelete, onMove, folders, columns, valueScope, backlinks }) {
   const { content, change, loading, loadError } = useNote(entry, edited, onEdit)
   const [mode, setMode] = useState('preview')
@@ -34,7 +35,10 @@ export default function Editor({ linkedBy, onOpenLink, path, entry, files, notes
     textarea.focus()
   }
 
+  // Dates typed in any format are written as "17 Oct 2026, 14:30" (lib/dates.js) on the way out
   function finishEditing() {
+    const fixed = withFixedDates(content)
+    if (fixed !== content) change(fixed)
     setEditedAt(textareaRef.current?.selectionStart ?? null)
     setMode('preview')
   }

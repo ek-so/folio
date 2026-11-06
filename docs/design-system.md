@@ -59,7 +59,7 @@ Never hardcode colors; use the semantic tokens (light and dark values in `src/in
 - **`Placeholder`** (`ui/placeholder.jsx`): light text for what isn't filled in yet (Untitled, No value).
 
 ## Tooltips
-shadcn's (`ui/tooltip.jsx`): dark on light, text-sm, after 300ms (`TooltipProvider` in App), on mouse hover and keyboard focus, never on a tap. The `tooltip` prop of `Button` (`tooltipSide`), `ListRow` and `CardTile` (on the whole row, so a row that can't be opened explains why), or wrap in `Tip`. The one exception is the rendered note preview (HTML, not React): a date chip keeps its `title`.
+shadcn's (`ui/tooltip.jsx`): dark on light, text-sm, after 300ms (`TooltipProvider` in App), on mouse hover and keyboard focus, never on a tap. The `tooltip` prop of `Button` (`tooltipSide`), `ListRow` and `CardTile` (on the whole row, so a row that can't be opened explains why), or wrap in `Tip`.
 
 ## Overlays
 - **`ConfirmModal`:** one confirmation for every destructive action (title, description, Cancel, a red confirm button, an optional milder `alternative`). `DeleteModal` is its wording for files, folders and views.

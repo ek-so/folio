@@ -1,6 +1,7 @@
 import { marked } from 'marked'
 import { blankFrontMatter } from './frontmatter.js'
 import { displayName } from './files.js'
+import { findDates, formatDate, isoDate } from './dates.js'
 
 marked.setOptions({ breaks: true, gfm: true })
 
@@ -45,32 +46,19 @@ marked.use({ useNewRenderer: true, renderer: {
   },
 } })
 
-// Smart tables: inside table cells (not in code or links), an ISO date
-// "2025-03-18" that is a real calendar day shows as a date chip. The markdown
-// stays a plain table any editor can read.
-const ISO_DATE = /(?<![\d-])(\d{4})-(\d{2})-(\d{2})(?![\d-])/g
-
-// The Date for "YYYY-MM-DD" (UTC midnight), or null if it isn't a real day
-export function parseIsoDate(text) {
-  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(text)
-  if (!m) return null
-  const date = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3]))
-  return date.getUTCMonth() === +m[2] - 1 && date.getUTCDate() === +m[3] ? date : null
-}
-
-// A text token split into text and date tokens
+// Dates in the text (lib/dates.js; not in code or links) become date spots: an empty
+// <time> the preview fills with a DateBadge, its label in `data-label`. The markdown stays as typed.
 function splitDates(token) {
   const parts = []
   let last = 0
-  for (const m of token.text.matchAll(ISO_DATE)) {
-    const date = parseIsoDate(m[0])
-    if (!date) continue
-    if (m.index > last) parts.push({ type: 'text', raw: token.text.slice(last, m.index), text: token.text.slice(last, m.index), escaped: token.escaped })
-    parts.push({ type: 'isoDate', raw: m[0], text: m[0], date })
-    last = m.index + m[0].length
+  const piece = text => ({ type: 'text', raw: text, text, escaped: token.escaped })
+  for (const { start, end, date } of findDates(token.text)) {
+    if (start > last) parts.push(piece(token.text.slice(last, start)))
+    parts.push({ type: 'date', raw: token.text.slice(start, end), date })
+    last = end
   }
   if (!parts.length) return [token]
-  if (last < token.text.length) parts.push({ type: 'text', raw: token.text.slice(last), text: token.text.slice(last), escaped: token.escaped })
+  if (last < token.text.length) parts.push(piece(token.text.slice(last)))
   return parts
 }
 
@@ -80,19 +68,17 @@ const withDates = tokens => tokens.flatMap(t =>
     : t.tokens && t.type !== 'link' ? [{ ...t, tokens: withDates(t.tokens) }]
       : [t])
 
-const dateLabel = date => date.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' })
-
 marked.use({
   extensions: [{
-    name: 'isoDate',
-    renderer: ({ text, date }) => `<time class="date-chip" datetime="${text}" title="${text}">${dateLabel(date)}</time>`,
+    name: 'date',
+    renderer: ({ date }) => `<time class="date-spot" datetime="${isoDate(date)}" data-label="${formatDate(date)}"></time>`,
   }],
 })
 
 // Run on the lexed tokens (renderBlocks lexes and parses separately, so marked's own walkTokens doesn't run)
 const addDates = token => {
-  if (token.type !== 'table') return
-  for (const cell of [...token.header, ...token.rows.flat()]) cell.tokens = withDates(cell.tokens)
+  if (token.type === 'table') for (const cell of [...token.header, ...token.rows.flat()]) cell.tokens = withDates(cell.tokens)
+  else if (token.tokens && ['paragraph', 'heading', 'text'].includes(token.type)) token.tokens = withDates(token.tokens)
 }
 
 // How many <details> a raw HTML token opens, minus how many it closes

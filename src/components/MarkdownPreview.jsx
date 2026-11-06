@@ -7,6 +7,7 @@ import { isPortaled } from '../lib/utils.js'
 import { CaretRight } from '@phosphor-icons/react'
 import { createPortal } from 'react-dom'
 import LinkBadge from './LinkBadge.jsx'
+import DateBadge from './DateBadge.jsx'
 import { useLinkEdits } from '../hooks/useLinkEdits.jsx'
 import ListGrip from './ListGrip.jsx'
 import { DndContext, MouseSensor, TouchSensor, useSensor, useSensors, closestCenter } from '@dnd-kit/core'
@@ -50,11 +51,12 @@ function breakLongWords(root) {
   }
 }
 
-// A rendered list item's first word: its link badges' spots count as their links' text, its sub-lists don't
+// A rendered list item's first word: its link and date badges' spots count as their text, its sub-lists don't
 function itemWord(li) {
   const copy = li.cloneNode(true)
   copy.querySelectorAll('ul, ol').forEach(l => l.remove())
   copy.querySelectorAll('.link-spot').forEach(s => s.replaceWith(s.dataset.text))
+  copy.querySelectorAll('.date-spot').forEach(s => s.replaceWith(s.dataset.label))
   return firstWord(copy.textContent)
 }
 
@@ -100,6 +102,7 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
   const openDetails = useRef(new Set()) // indexes of accordions opened by the reader
   const [carets, setCarets] = useState([]) // accordion title spots for CaretRight
   const [links, setLinks] = useState([]) // link spots for LinkBadge
+  const [dates, setDates] = useState([]) // date spots for DateBadge
   const [grips, setGrips] = useState([]) // list item spots for ListGrip
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
@@ -183,6 +186,7 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
     ref.current.querySelectorAll('details').forEach((d, i) => { if (openDetails.current.has(i)) d.open = true })
     setCarets([...ref.current.querySelectorAll('.summary-caret')])
     setLinks([...ref.current.querySelectorAll('.link-spot')])
+    setDates([...ref.current.querySelectorAll('.date-spot')])
     setGrips([...ref.current.querySelectorAll('.list-grip')])
   }, [withImages])
 
@@ -268,6 +272,7 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
         return createPortal(
           <LinkBadge href={href} text={text} kind={kind} path={target} {...linkEdits.actions(span, text)} />, spot, `link-${i}`)
       })}
+      {dates.map((spot, i) => createPortal(<DateBadge label={spot.dataset.label} />, spot, `date-${i}`))}
       <DndContext
         sensors={sensors}
         collisionDetection={ownList}
