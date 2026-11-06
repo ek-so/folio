@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { renderBlocks, tapOffset, taskOffsets, highlightMarkdown, parseIsoDate } from './markdown.js'
+import { renderBlocks, tapOffset, taskOffsets, taskProgress, highlightMarkdown, parseIsoDate } from './markdown.js'
 
 describe('markdown', () => {
   it('tags each block with its source range', () => {
@@ -31,6 +31,12 @@ describe('markdown', () => {
     const raw = '- [ ] see [x] here\n  1. [X] b\n> - [ ] c\n'
     expect(taskOffsets(raw).map(i => raw[i])).toEqual([' ', 'X', ' '])
     expect(taskOffsets(raw)[0]).toBe(3)
+  })
+
+  it('counts a note\'s ticked tasks, outside front matter and code', () => {
+    const md = '---\nlist:\n  - [x] no\n---\n- [x] a\n- [ ] b\n  - [X] c\n```\n- [x] code\n```\n'
+    expect(taskProgress(md)).toEqual({ done: 2, total: 3 })
+    expect(taskProgress('no tasks')).toEqual({ done: 0, total: 0 })
   })
 
   it('renders smart-punctuated dashes as a divider', () => {

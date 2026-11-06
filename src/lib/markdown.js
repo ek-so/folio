@@ -140,6 +140,13 @@ export function renderBlocks(source) {
 const TASK = /^[ \t>]*(?:[-*+]|\d+[.)])[ \t]+\[[ xX]\]/gm
 export const taskOffsets = raw => [...raw.matchAll(TASK)].map(m => m.index + m[0].length - 2)
 
+// { done, total } of a note's task checkboxes, outside its front matter and code fences
+const FENCE = /^ {0,3}(`{3,}|~{3,})[\s\S]*?(?:^ {0,3}\1[ \t]*$|(?![\s\S]))/gm
+export function taskProgress(text) {
+  const marks = [...blankFrontMatter(text).replace(FENCE, '').matchAll(TASK)].map(m => m[0].at(-2))
+  return { done: marks.filter(c => c !== ' ').length, total: marks.length }
+}
+
 const WORD_END = /[\p{L}\p{N}_'-]*$/u
 const WORD_START = /^[\p{L}\p{N}_'-]*/u
 

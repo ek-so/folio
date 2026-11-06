@@ -19,6 +19,7 @@ import CardMenu from './CardMenu.jsx'
 import { displayName } from '@/lib/files.js'
 import { openLink } from '@/lib/previewLinks.js'
 import { frontMatter, noteTitle, DESCRIPTION } from '@/lib/frontmatter.js'
+import { taskProgress } from '@/lib/markdown.js'
 import { LOOSE } from './board.js'
 import { useBoard } from './useBoard.js'
 
@@ -339,6 +340,20 @@ const CardBody = forwardRef(function CardBody({ path, text, board, files, menu, 
         {menu}
       </div>
       <PropertyBadges props={shown} path={path} files={files} clamp className="pt-1" onChange={onChange} options={options} onRemoveValue={onRemoveValue} valueCount={valueCount} scopeName="this board" chosen={chosen} onEditValue={onEditValue} />
+      {text !== undefined && <TaskProgress {...taskProgress(text)} />}
     </div>
   )
 })
+
+// How many of the note's checklist items are ticked: a thin bar and "N/X", green once all are; nothing without any
+function TaskProgress({ done, total }) {
+  if (!total) return null
+  return (
+    <div className="flex items-center gap-2 pt-1" aria-label={`${done} of ${total} tasks done`}>
+      <div className="h-1 flex-1 overflow-hidden rounded-full bg-muted">
+        <div className={cn('h-full rounded-full transition-[width]', done === total ? 'bg-success' : 'bg-primary')} style={{ width: `${(done / total) * 100}%` }} />
+      </div>
+      <span className="text-xs tabular-nums text-muted-foreground">{done}/{total}</span>
+    </div>
+  )
+}
