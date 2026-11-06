@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { CaretDown, Check, Trash, PencilSimple } from '@phosphor-icons/react'
+import { CaretDown, Check, PencilSimple } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
 import { Badge } from './ui/badge.jsx'
 import { Input } from './ui/input.jsx'
@@ -7,7 +7,7 @@ import { ListRow } from './ui/list-row.jsx'
 import { Popover, PopoverTrigger, PopoverContent } from './ui/popover.jsx'
 import { Button } from './ui/button.jsx'
 import ConfirmModal from './ConfirmModal.jsx'
-import ValueEditModal from './ValueEditModal.jsx'
+import ValuesModal from './ValuesModal.jsx'
 import { useSingleOpen } from '../hooks/useSingleOpen.jsx'
 import { valueList, valueColors, DESCRIPTION } from '../lib/frontmatter.js'
 import { inlineHtml } from '../lib/previewLinks.js'
@@ -35,15 +35,15 @@ const TINT_HOVER = 'hover:bg-[color-mix(in_oklab,var(--tag)_calc(var(--tag-tint)
 // With `onChange(key, value)` the badges open a popover to change the property
 // (`options(key)`: the values to choose from) and an empty property shows its
 // name as a badge to fill; without it they're plain and empty ones aren't shown.
-// With `onRemoveValue(key, value)` each value in the popover has a 🗑 that asks first, then
-// empties that value everywhere it's used (`valueCount(key, value)`: in how many notes;
-// `scopeName`: where, "this folder").
-// With `onEditValue(key, from, to, color)` each value in the popover has a pencil that opens
-// a modal to rename it and pick its color, for that value everywhere in the same scope;
+// With `onRemoveValue(key, value)` and `onEditValue(key, from, to, color)` the popover has a
+// pencil beside Done that opens a dialog (`ValuesModal`) with every value of the property:
+// to add one, rename one and pick its color, for that value everywhere in the same
+// scope, or delete it (a 🗑 that asks first, then empties that value everywhere it's used);
+// `valueCount(key, value)`: in how many notes; `scopeName`: where, "this folder";
 // `chosen` ({ key: { value: color } }, lib/tagColors.js) are the colors picked so far.
 export default function PropertyBadges({ props, path, files, clamp, title, className, onChange, options, onRemoveValue, valueCount, scopeName, onEditValue, chosen }) {
   const [removing, setRemoving] = useState(null) // { key, value } being confirmed
-  const [editing, setEditing] = useState(null) // { key, value } being edited
+  const [managing, setManaging] = useState(null) // the key whose values are in the dialog
   const parts = [] // [{ text }] or [{ badges: [{ id, prop, label }] }], in order
   for (const prop of props) {
     const values = valueList(prop.value)
@@ -66,7 +66,7 @@ export default function PropertyBadges({ props, path, files, clamp, title, class
     : (
       <div key={i} className="flex flex-wrap gap-space-xs">
         {part.badges.map(({ id, prop, label }) => onChange
-          ? <EditableBadge key={id} prop={prop} label={label} color={colors[prop.key].get(label)} options={options} onChange={onChange} onRemove={onRemoveValue && (value => setRemoving({ key: prop.key, value }))} onEdit={onEditValue && (value => setEditing({ key: prop.key, value }))} />
+          ? <EditableBadge key={id} prop={prop} label={label} color={colors[prop.key].get(label)} options={options} onChange={onChange} onManage={(onEditValue || onRemoveValue) && (() => setManaging(prop.key))} />
           : (
             <Badge key={id} {...tint(colors[prop.key].get(label))}><span className="truncate">{label}</span></Badge>
           ))}
@@ -83,33 +83,39 @@ export default function PropertyBadges({ props, path, files, clamp, title, class
       />
     </div>
   )
-  const edit = editing && (
+  const managed = managing && props.find(p => p.key === managing)
+  const manage = managed && (
     <div className="contents" {...own}>
-      <ValueEditModal
-        title={`Edit “${editing.value}”`}
-        description={`Applies to ${valueCount(editing.key, editing.value)} note${valueCount(editing.key, editing.value) === 1 ? '' : 's'} with it in ${scopeName}. It changes on GitHub when you sync.`}
-        value={editing.value}
-        others={(options?.(editing.key) ?? []).filter(v => v !== editing.value)}
-        color={colors[editing.key]?.get(editing.value) ?? 0}
-        onSave={(name, color) => {
-          // Unchanged: nothing is saved (that would pin the automatic color)
-          if (name !== editing.value || color !== (colors[editing.key]?.get(editing.value) ?? 0)) onEditValue(editing.key, editing.value, name, color)
-          setEditing(null)
-        }}
-        onClose={() => setEditing(null)}
+      <ValuesModal
+        name={managing}
+        values={[...new Set([...(options?.(managing) ?? []), ...valueList(managed.value)])]}
+        colors={colors[managing]}
+        count={value => valueCount(managing, value)}
+        scopeName={scopeName}
+        onAdd={value => onChange(managing, addedValue(managed.value, value))}
+        onEdit={onEditValue && ((from, to, color) => onEditValue(managing, from, to, color))}
+        onRemove={onRemoveValue && (value => { setManaging(null); setRemoving({ key: managing, value }) })}
+        onClose={() => setManaging(null)}
       />
     </div>
   )
-  if (!title) return <div className={cn('flex flex-col gap-space-sm', className)}>{body}{confirm}{edit}</div>
+  if (!title) return <div className={cn('flex flex-col gap-space-sm', className)}>{body}{confirm}{manage}</div>
   return (
     <div className={className}>
       <section className="flex flex-col gap-space-sm rounded-lg bg-secondary/50 p-space-sm">
         <h2 className="text-xs font-medium text-muted-foreground">{title}</h2>
         {body}
       </section>
-      {confirm}{edit}
+      {confirm}{manage}
     </div>
   )
+}
+
+// A property's value `current` with `value` added (a single value is replaced; one already there stays)
+const addedValue = (current, value) => {
+  const have = valueList(current)
+  if (!Array.isArray(current)) return value
+  return have.includes(value) ? have : [...have, value]
 }
 
 // Closing a popover gives the focus back to its badge; when another popover has just opened
@@ -120,7 +126,7 @@ const keepFocusInOtherPopover = e => {
 
 // One value of a property as a badge with a ▾ that opens the property's popover
 // (`label` null: the property is empty and shows its name)
-function EditableBadge({ prop, label, color, options, onChange, onRemove, onEdit }) {
+function EditableBadge({ prop, label, color, options, onChange, onManage }) {
   const [open, setOpen] = useSingleOpen()
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -138,7 +144,7 @@ function EditableBadge({ prop, label, color, options, onChange, onRemove, onEdit
       </PopoverTrigger>
       {/* Opening it doesn't focus the field (the keyboard on a phone): the panel takes the focus, a tap or Tab reaches the field */}
       <PopoverContent {...own} data-badge-popover tabIndex={-1} onOpenAutoFocus={e => { e.preventDefault(); e.currentTarget.focus() }} onCloseAutoFocus={keepFocusInOtherPopover}>
-        <ValueChooser prop={prop} options={options?.(prop.key) ?? []} onChange={onChange} onRemove={onRemove && (value => { setOpen(false); onRemove(value) })} onEdit={onEdit && (value => { setOpen(false); onEdit(value) })} close={() => setOpen(false)} />
+        <ValueChooser prop={prop} options={options?.(prop.key) ?? []} onChange={onChange} onManage={onManage && (() => { setOpen(false); onManage() })} close={() => setOpen(false)} />
       </PopoverContent>
     </Popover>
   )
@@ -148,7 +154,7 @@ function EditableBadge({ prop, label, color, options, onChange, onRemove, onEdit
 // has), a field to type a new one. A property with a list of values toggles them
 // and stays open; one with a single value takes the chosen one (choosing it
 // again empties it) and closes.
-function ValueChooser({ prop, options, onChange, onRemove, onEdit, close }) {
+function ValueChooser({ prop, options, onChange, onManage, close }) {
   const [typed, setTyped] = useState('')
   const isList = Array.isArray(prop.value)
   const current = valueList(prop.value)
@@ -183,15 +189,14 @@ function ValueChooser({ prop, options, onChange, onRemove, onEdit, close }) {
         {shown.map(v => (
           <ListRow
             key={v} title={v} icon={current.includes(v) ? <Check /> : <span className="size-4" />} onClick={() => choose(v)}
-            trailing={(onEdit || onRemove) && <>
-              {onEdit && <Button variant="ghost" size="md" aria-label={`Edit ${v}`} tooltip="Edit this value" onClick={() => onEdit(v)}><PencilSimple /></Button>}
-              {onRemove && <Button variant="ghost-destructive" size="md" aria-label={`Delete ${v}`} tooltip="Delete this value" onClick={() => onRemove(v)}><Trash /></Button>}
-            </>}
           />
         ))}
         {!isNew && !shown.length && <p className="px-3 py-2 text-sm text-muted-foreground">No values yet. Type one to add it.</p>}
       </div>
-      <Button onClick={close}>Done</Button>
+      <div className="flex gap-space-sm">
+        <Button className="flex-1" onClick={close}>Done</Button>
+        {onManage && <Button variant="secondary" size="icon" aria-label="Edit values" tooltip="Edit values" onClick={onManage}><PencilSimple /></Button>}
+      </div>
     </div>
   )
 }
