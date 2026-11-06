@@ -161,9 +161,9 @@ export default function Board({ id, services, onRemove }) {
           {!columns.length && <p className="py-6 text-sm text-muted-foreground">No columns yet: its subfolders become columns.</p>}
         </div>
         <DragOverlay>
-          {dragged && drag.type === 'card' && byPath[dragged] && <CardBody path={dragged} text={notes[dragged]} board={board} files={files} chosen={services.tagColors.colors} className="rotate-2 shadow-lg" />}
+          {dragged && drag.type === 'card' && byPath[dragged] && <CardBody path={dragged} text={notes[dragged]} board={board} files={files} chosen={services.tagColors.colors} className="rotate-2 border-transparent shadow-lg" />}
           {dragged && drag.type === 'column' && (
-            <div className="w-72 rotate-1 rounded-lg bg-secondary p-space-sm shadow-lg">
+            <div className="w-80 rotate-1 rounded-lg bg-secondary p-space-sm shadow-lg">
               <ColumnTitle column={dragged} grip />
             </div>
           )}
@@ -273,7 +273,7 @@ function Column({ column, canEdit, onNewCard, onRename, onDelete, children }) {
     <div
       ref={setNodeRef}
       style={{ transform: CSS.Translate.toString(transform), transition }}
-      className={cn('flex w-72 shrink-0 flex-col gap-space-sm rounded-lg bg-secondary/60 p-space-sm', isDragging && 'opacity-40')}
+      className={cn('flex w-80 shrink-0 flex-col gap-space-sm rounded-lg bg-secondary/60 p-space-sm', isDragging && 'opacity-40')}
     >
       {column.key === LOOSE ? <ColumnTitle column={column} /> : (
         <div className="flex items-center gap-1">
@@ -336,7 +336,7 @@ const CardBody = forwardRef(function CardBody({ path, text, board, files, menu, 
       role="button"
       tabIndex={0}
       onKeyDown={e => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); props.onClick?.(e) } }}
-      className={cn('group flex w-full cursor-pointer touch-manipulation select-none flex-col gap-1 rounded-lg border border-border bg-card p-3 text-left shadow-sm outline-none transition-colors hover:bg-secondary/40 focus-visible:ring-1 focus-visible:ring-ring', NO_CALLOUT, className)}
+      className={cn('group flex w-full cursor-pointer touch-manipulation select-none flex-col gap-1 rounded-lg border border-border bg-background p-3 text-left outline-none transition-[box-shadow,border-color] hover:border-transparent hover:shadow-md focus-visible:ring-1 focus-visible:ring-ring', NO_CALLOUT, className)}
       {...props}
     >
       <div className="flex items-start gap-1">
