@@ -12,7 +12,7 @@ import { noteTitle } from '@/lib/frontmatter.js'
 import { notePath, parseNote } from './note.js'
 
 // A note widget (note.js): the note's title, Edit (✓ when done) and ⋯ (Open full screen, Remove) on top,
-// then its text in a box of fixed height that scrolls inside. Edits save on their own, like on
+// then its text in a box of fixed height that scrolls inside; a double tap edits at the tapped word. Edits save on their own, like on
 // the note's own page; opening it full screen is opening the note, as a board's card does.
 export default function NoteWidget({ id, services, onRemove }) {
   const file = services.config.read(notePath(id))
@@ -38,10 +38,11 @@ function NoteBox({ path, found, services, frame }) {
   const textareaRef = useRef()
   const ready = !loading && !loadError
 
-  // Inside the tap, so the textarea gets focus and mobile keyboards open
-  function startEditing() {
+  // Inside the tap, so the textarea gets focus and mobile keyboards open. `pos`: markdown offset
+  // to put the cursor at (a double tap: the tapped word); Edit starts at the top
+  function startEditing(pos = 0) {
     flushSync(() => setEditing(true))
-    textareaRef.current?.setSelectionRange(0, 0)
+    textareaRef.current?.setSelectionRange(pos, pos)
     textareaRef.current?.focus()
   }
 
@@ -49,12 +50,12 @@ function NoteBox({ path, found, services, frame }) {
   const actions = editing ? (
     <Button variant="success" size="icon" aria-label="Done" tooltip="Done" className="shrink-0" onClick={() => setEditing(false)}><Check /></Button>
   ) : (
-    <Button variant="ghost-outline" size="icon" aria-label="Edit" tooltip="Edit" disabled={!ready} className="shrink-0 border-muted-foreground/50" onClick={startEditing}><PencilSimple /></Button>
+    <Button variant="ghost-outline" size="icon" aria-label="Edit" tooltip="Edit" disabled={!ready} className="shrink-0 border-muted-foreground/50" onClick={() => startEditing()}><PencilSimple /></Button>
   )
   const body = loading ? <div className="flex flex-1 items-center justify-center"><Spinner /></div>
     : loadError ? <p className="px-6 py-12 text-center text-sm text-muted-foreground">Couldn't open this note. It isn't saved on this device yet — connect to the internet and pull to refresh.</p>
     : editing ? <MarkdownEditor ref={textareaRef} content={content} onChange={change} onDone={() => setEditing(false)} />
-    : <MarkdownPreview content={content} path={path} files={services.virtual} onChange={change} onOpenFile={services.openFile} onNavigate={services.openFolder} />
+    : <MarkdownPreview content={content} path={path} files={services.virtual} onDoubleTap={startEditing} onChange={change} onOpenFile={services.openFile} onNavigate={services.openFolder} />
   return frame(title, <div data-no-pull className="flex h-80 flex-col overflow-hidden rounded-lg border border-border bg-card">{body}</div>, actions)
 }
 
