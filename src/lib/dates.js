@@ -2,6 +2,8 @@
 // ("17 Oct 2026" without a time). Recognized: 2026-10-17, 17.10.2026, 17/10/2026 (day first),
 // 17 Oct, 17th of October 2026, Oct 17, 2026; each optionally followed by a time on the same line:
 // 14:30, 2:30pm, 2pm, "at 14:30", "T14:30". A missing year is the current one; a year has 4 digits.
+// A time on its own, not next to a date, is one too: 14:30, 9:05, 2:30pm, 2pm, 9 a.m. (minutes have 2 digits, an
+// hour is 0–23 or 1–12 with am/pm), written "14:30".
 // A month starts with a capital letter ("march" is a word), except right after its day ("5 oct"). Words like
 // "tomorrow" aren't dates, and
 // nothing reaches across a line break or into a file name (2026-10-17.md).
@@ -37,6 +39,9 @@ function realDay({ year, month, day }, now) {
   return m >= 1 && m <= 12 && date.getUTCMonth() === m - 1 && date.getUTCDate() === d ? { year: y, month: m, day: d } : null
 }
 
+// Where a time on its own may start: digits not inside a word, number, path or version, then minutes or am/pm
+const TIME_START = /(?<![\w.:/-])(?=\d{1,2}(?::\d{2}|[ \t]*[ap]\.?m))/gi
+
 // The time at `at` in `text` as { hour, minute, end }, or null
 function timeAt(text, at) {
   TIME.lastIndex = at
@@ -52,7 +57,8 @@ function timeAt(text, at) {
   return hour < 24 && minute < 60 ? { hour, minute, end: at + m[0].length } : null
 }
 
-// Every date in `text`, in order: [{ start, end, date: { year, month, day, hour?, minute? } }]
+// Every date in `text`, in order: [{ start, end, date: { year, month, day, hour?, minute? } }], and every time
+// on its own: [{ start, end, date: { hour, minute } }]
 export function findDates(text, now = new Date()) {
   const found = []
   for (const [regex, parts] of PATTERNS) {
@@ -64,22 +70,28 @@ export function findDates(text, now = new Date()) {
       found.push({ start: m.index, end: time?.end ?? m.index + m[0].length, date: time ? { ...date, hour: time.hour, minute: time.minute } : date })
     }
   }
-  // Overlaps: the one starting first, then the longest
+  for (const m of text.matchAll(TIME_START)) {
+    const time = timeAt(text, m.index)
+    if (time) found.push({ start: m.index, end: time.end, date: { hour: time.hour, minute: time.minute } })
+  }
+  // Overlaps (a time after a date is in the date): the one starting first, then the longest
   found.sort((a, b) => a.start - b.start || b.end - a.end)
   return found.filter((d, i) => !found.slice(0, i).some(e => d.start < e.end))
 }
 
 const pad = n => String(n).padStart(2, '0')
 
-// "17 Oct 2026, 14:30", or "17 Oct 2026" without a time
+// "17 Oct 2026, 14:30", or "17 Oct 2026" without a time, or "14:30" without a day
 export function formatDate({ year, month, day, hour, minute }) {
+  if (year === undefined) return `${pad(hour)}:${pad(minute)}`
   const name = MONTHS[month - 1]
   const text = `${day} ${name[0].toUpperCase()}${name.slice(1)} ${year}`
   return hour === undefined ? text : `${text}, ${pad(hour)}:${pad(minute)}`
 }
 
-// For <time datetime>: "2026-10-17" or "2026-10-17T14:30"
+// For <time datetime>: "2026-10-17" or "2026-10-17T14:30", or "14:30"
 export function isoDate({ year, month, day, hour, minute }) {
+  if (year === undefined) return `${pad(hour)}:${pad(minute)}`
   const date = `${year}-${pad(month)}-${pad(day)}`
   return hour === undefined ? date : `${date}T${pad(hour)}:${pad(minute)}`
 }

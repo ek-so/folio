@@ -19,7 +19,7 @@ describe('dates', () => {
 
   it('leaves what is not a date', () => {
     for (const text of ['2025-02-29', '31.04.2026', '17.10.26', '12/05/95', 'v1.2.34', 'Release 1.2.26 out', '192.168.1.10', '3/4 cup',
-      'they march 3 miles', 'page 17 of 20', 'at 14:30', 'tomorrow', '1.2.3.2026', 'see 2026-10-17.md', 'notes/2026-10-17-standup']) {
+      'they march 3 miles', 'page 17 of 20', 'at 14:30', 'tomorrow', 'ratio 3:1', 'v1.10:30', '25:00', '12:5', '1.2.3.2026', 'see 2026-10-17.md', 'notes/2026-10-17-standup']) {
       expect(fixed(text)).toBe(text)
     }
     expect(findDates('17 Oct 2026 25:00', now)[0].date.hour).toBeUndefined()
@@ -62,5 +62,12 @@ describe('dates', () => {
     expect(valueDate('17 Oct 2026', now)).toEqual({ year: 2026, month: 10, day: 17 })
     expect(valueDate('due 17 Oct 2026', now)).toBeNull()
     expect(valueDate('', now)).toBeNull()
+  })
+
+  it('takes a time on its own, written 14:30', () => {
+    expect(fixed('Call at 2:30pm, lunch 1pm, gym 9 a.m.')).toBe('Call at 14:30, lunch 13:00, gym 09:00')
+    expect(findDates('Standup 9:05 then', now)).toEqual([{ start: 8, end: 12, date: { hour: 9, minute: 5 } }])
+    expect(findDates('17 Oct 2026, 14:30', now)).toHaveLength(1)
+    expect(valueDate('14:30', now)).toEqual({ hour: 14, minute: 30 })
   })
 })
