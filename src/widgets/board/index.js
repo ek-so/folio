@@ -1,7 +1,7 @@
 import { Kanban } from '@phosphor-icons/react'
 import Board from './Board.jsx'
 import BoardSetup from './BoardSetup.jsx'
-import { boardPath, boardTitle, parseBoard, serializeBoard, movedBoard, boardColumns, LOOSE } from './board.js'
+import { boardPath, boardTitle, parseBoard, serializeBoard, movedBoard, boardColumns, isTechnical, LOOSE } from './board.js'
 import { placeCardVia } from './useBoard.js'
 
 // The board widget (Kanban): see board.js. Its settings are .folio/boards/<id>.json.
@@ -39,6 +39,15 @@ export default {
       columns, column: current.key,
       onSelect: key => placeCardVia(services, id, board, data, path, key, all.find(c => c.key === key).cards.filter(c => c.path !== path).length),
     }
+  },
+  // Where a note's property values come from on its page when it's a card of this board: the whole board
+  // ({ name, includes(path) }), so a value used in one column is offered in every other; else null
+  valueScope(id, path, services) {
+    const file = services.config.read(boardPath(id))
+    const board = file.ready && file.text !== undefined ? parseBoard(file.text) : null
+    const prefix = board?.folder ? board.folder + '/' : ''
+    const inBoard = p => p.startsWith(prefix) && !isTechnical(p.slice(prefix.length))
+    return board && inBoard(path) ? { name: 'this board', includes: inBoard } : null
   },
   removed: (ch, id, { config }) => config.erase(boardPath(id))(ch),
 }

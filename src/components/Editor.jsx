@@ -16,7 +16,7 @@ import PropertyBadges from './PropertyBadges.jsx'
 // whole markdown shown as preview; ✏️ in the title bar edits the markdown,
 // starting where you were reading, and a double tap starts at the tapped
 // word. Edits save on their own; ✓ (same spot) only switches back to preview.
-export default function Editor({ linkedBy, onOpenLink, path, entry, files, notes, onEditNotes, tagColors, edited, onEdit, onNavigate, onOpenFile, onRename, onDuplicate, onDelete, onMove, folders, columns, backlinks }) {
+export default function Editor({ linkedBy, onOpenLink, path, entry, files, notes, onEditNotes, tagColors, edited, onEdit, onNavigate, onOpenFile, onRename, onDuplicate, onDelete, onMove, folders, columns, valueScope, backlinks }) {
   const { content, change, loading, loadError } = useNote(entry, edited, onEdit)
   const [mode, setMode] = useState('preview')
   const [editedAt, setEditedAt] = useState(null) // offset to show when back in preview
@@ -39,9 +39,11 @@ export default function Editor({ linkedBy, onOpenLink, path, entry, files, notes
     setMode('preview')
   }
 
-  // The notes right next to this one (this one as it is now): what they have as a property is what the badges offer
+  // The notes right next to this one, or all of `valueScope`'s ({ name, includes(path) }: a board it's a card of),
+  // this one as it is now: what they have as a property is what the badges offer
   const dir = path.slice(0, path.lastIndexOf('/') + 1)
-  const nearby = Object.keys(notes).filter(p => p.startsWith(dir) && !p.slice(dir.length).includes('/'))
+  const inScope = valueScope?.includes ?? (p => p.startsWith(dir) && !p.slice(dir.length).includes('/'))
+  const nearby = Object.keys(notes).filter(inScope)
   const nearbyTexts = nearby.map(p => p === path ? content : notes[p])
   // Their values' actions (lib/frontmatter.js `valueActions`): this note as an edit (its text may have typing
   // not saved yet), the others and the color through the app in one step
@@ -96,7 +98,7 @@ export default function Editor({ linkedBy, onOpenLink, path, entry, files, notes
           onDoubleTap={startEditing} onChange={change} onOpenFile={onOpenFile} onNavigate={onNavigate}
           footer={<Backlinks links={backlinks} onOpen={onOpenFile} />}
         >
-          <PropertyBadges props={frontMatter(content)?.props ?? []} path={path} files={files} title="Properties" onChange={(key, value) => change(withValue(content, key, value))} options={values.options} onRemoveValue={values.removeValue} valueCount={values.count} scopeName="this folder" chosen={tagColors.colors} onEditValue={tagColors.canEdit ? values.editValue : undefined} className="px-space pt-space" />
+          <PropertyBadges props={frontMatter(content)?.props ?? []} path={path} files={files} title="Properties" onChange={(key, value) => change(withValue(content, key, value))} options={values.options} onRemoveValue={values.removeValue} valueCount={values.count} scopeName={valueScope?.name ?? "this folder"} chosen={tagColors.colors} onEditValue={tagColors.canEdit ? values.editValue : undefined} className="px-space pt-space" />
         </MarkdownPreview>
       )}
     </FilePage>

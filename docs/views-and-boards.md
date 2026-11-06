@@ -8,7 +8,7 @@
 ## Widgets
 - Self-contained, one folder each, one line in `widgets/index.js`. A widget gets only `services`: `files`, `folders`, `notes`, `remoteFiles`, `remoteText`, `repoName`, `canEdit`, `config`, `tagColors`, `update`, `openFile`, `openFolder`, `move`, `moveAll`, `rename`, `duplicate`, `remove`, `createFolder`, `newNote`, `addNote`, `noteFile`, `saveNote`, `virtual`, `discards`.
 - Optional `title(id, services)` names it in Edit widgets (a board: its folder; a note: its file name), else its label.
-- `moved(ch, id, from, to, isDir, services)` follows renames and moves; `removed(ch, id, services)` drops its settings. Optional `fileMoves(id, path, services)` gives the columns an open file can move to.
+- `moved(ch, id, from, to, isDir, services)` follows renames and moves; `removed(ch, id, services)` drops its settings. Optional `fileMoves(id, path, services)` gives the columns an open file can move to; optional `valueScope(id, path, services)` the notes whose property values an open note offers (a board: all its cards, in every column, from any view; else the note's folder).
 
 ## Board (`widgets/board/`)
 - **Settings:** `.folio/boards/<id>.json`: `folder`, `properties` shown on cards, `hidden` columns, `columns` order, `cards` order per column. Pure logic in `board.js` (tested): `boardColumns`, `movedBoard`, `placeCard`, `moveColumn`, `editNotes`, `withBoardKeys`, `emptyColumn`.

@@ -351,6 +351,8 @@ export default function App() {
   }
 
   // The note open on a view that has a board it's a card of: the columns it can move to (widgets/index.js)
+  // Where the open note's property values come from: a widget's (a board it's a card of, in any view), else its folder (Editor)
+  const valueScope = selectedFile && widgets.map(w => widgetType(w.type)?.valueScope?.(w.id, selectedFile, widgetServices)).find(Boolean)
   const fileMoves = selectedFile && views.find(v => v.id === page)?.widgets
     ?.map(w => widgetType(w.type)?.fileMoves?.(w.id, selectedFile, widgetServices)).find(Boolean)
 
@@ -666,6 +668,7 @@ export default function App() {
               onMove={handleMove}
               folders={allFolders}
               columns={fileMoves}
+              valueScope={valueScope}
               backlinks={links.index.backlinks[selectedFile]}
             />
           ) : (

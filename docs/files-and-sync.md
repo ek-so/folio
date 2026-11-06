@@ -5,7 +5,7 @@ Rename / Move / Remove for any file or folder (the only way to rename) go throug
 
 ## Symlinks
 - Git mode `120000`. A link never opens itself: opening one (from the list, search or a note's link) opens its source. A link row is dimmed with "(symlink)" after its name (tooltip "Symlinked from <path>"). Links outside the repo, to nothing, or not on the device yet show the reason and can't be opened. Folder links sort with the folders.
-- A file or folder that links point to shows them in its title bar after the title (`SymlinkedBy`): a ↘ button that shows the link's name and opens it, or (↘ and a count) lists their paths.
+- A file or folder that links point to shows them in its title bar after the title (`SymlinkedBy`): a grey ↘ badge that shows the link's name and opens it, or (↘ and a count) lists their paths.
 
 ## Links
 - `useLinkIndex` indexes every note (local edit, else the offline copy) on the device; nothing is stored in the repo. Notes show `Backlinks` under the preview.

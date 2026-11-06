@@ -6,7 +6,7 @@ shadcn/ui (new-york) · Tailwind CSS v4 · Radix UI · Phosphor icons (`@phospho
 - Add components with `npx shadcn@latest add <component>`. Build controls from `Button` and `Input`, not raw elements; don't override heights.
 - Merge classes with `cn()` from `@/lib/utils`. It knows the spacing tokens (`control*`, `space*`), so a later `h-auto` replaces an earlier `h-control`. Add any new spacing token to its list.
 - No custom CSS for what Tailwind covers. `src/App.css` only styles the generated markdown preview, with the same tokens.
-- All controls share one radius, `rounded-sm` (8px).
+- All controls share one radius, `rounded-sm` (8px). Badges (`ui/badge.jsx`: properties, links, the symlink badge in a title bar) are pills (`rounded-full`).
 
 ## Spacing tokens (`src/index.css`)
 `--space-lg` 24px, `--space` 16px, `--space-sm` 8px, `--space-xs` 4px. Classes: `p-space`, `gap-space-sm`, `px-space-xs`, `inset-x-space`…
@@ -18,7 +18,7 @@ shadcn/ui (new-york) · Tailwind CSS v4 · Radix UI · Phosphor icons (`@phospho
 ## Control sizes (tokens in `src/index.css`)
 - **Base 40px** (`h-control`, `size-control`, `min-h-control`): every tappable or input element: `Button` default and `size="icon"`, `Input`, menu items, list rows, sheet and dialog close.
 - **Medium 32px** (`-md`): the tree's chevrons, and every button inside something that is itself hoverable or tappable: a list row's, tile's or card's ⋯, ✏️, 🗑 or color swatch (`ColorPicker` `className`).
-- **Small 24px** (`-sm`, `Button size="sm"`): secondary controls beside a title, such as the symlink button; a link badge's ⋯ in the note preview, to fit the line of text.
+- **Small 24px** (`-sm`, `Button size="sm"`): secondary controls beside a title; a link badge's ⋯ in the note preview, to fit the line of text.
 - Exceptions: segmented toggles (`ui/segmented.jsx`: a base-height track, `p-1`), and two-line result rows (search, backlinks), which grow from the base minimum.
 
 ## Colors

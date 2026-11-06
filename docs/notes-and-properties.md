@@ -15,7 +15,7 @@
 - A click, press or touch inside a badge or its popover doesn't reach the note or card (`own`). The editor shows the raw block.
 
 ## Value popover (`ValueChooser`)
-- A field to find or add a value, the values the notes next to it have for that key (the note's folder; on a card the whole board: `valuesOf`) with a ✓ on the current ones, then a separator and **Edit values**.
+- A field to find or add a value, the values the notes next to it have for that key (the note's folder; on a card, and on the page of a note that is a card of any board, the whole board: `valuesOf`, `valueScope`) with a ✓ on the current ones, then a separator and **Edit values**.
 - A property with a list toggles values and stays open; a single-value property takes the chosen one (choosing it again empties it) and closes. An empty property shows its name as a badge to fill. Without `onChange` (a card being dragged) badges are plain and empty ones aren't shown.
 - An outside click or Esc closes it.
 
@@ -24,7 +24,7 @@
 - **Swatch:** a sub popover on its side with the ten colors (`ColorPicker`); choosing one recolors that value at once, without touching any note.
 - **Pencil:** the row becomes a name field with only ✓ / ✕ until you accept or dismiss. Save renames the value, keeping its color, in every note in scope. A name another value has merges them (the row says so), in that value's color. Old names keep their picked colors: colors are repo-wide, and the old name may still be used elsewhere.
 - **Trash:** closes the dialog, asks first (`ConfirmModal`, with the number of notes), then empties that value in scope.
-- **Scope:** the note's folder, or the board on a card. The same actions for both (`valueActions` in `lib/frontmatter.js`): this note changes through `change`, the others through `editNote` (`renameValue`, unchanged when the name is; `withoutValue`: empty for a single value, out of the list for a list).
+- **Scope:** the note's folder, or the whole board for a board's card (on the card and on its page). The same actions for both (`valueActions` in `lib/frontmatter.js`): this note changes through `change`, the others through `editNote` (`renameValue`, unchanged when the name is; `withoutValue`: empty for a single value, out of the list for a list).
 
 ## Colors
 - Each value has its own badge color within its property, `--tag-0`…`--tag-9` tinted by `--tag-tint` against `--card`, stronger on hover; an empty one is grey.

@@ -38,7 +38,7 @@ export default function LinkBadge({ href, text, kind, path, onEdit, onRemove }) 
       </Badge>
       <DropdownMenu open={open} onOpenChange={setOpen}>
         <DropdownMenuTrigger asChild>
-          <Button variant="secondary" size="icon" aria-label="Link actions" {...own} className="size-control-sm shrink-0 rounded-l-none text-muted-foreground shadow-none">
+          <Button variant="secondary" size="icon" aria-label="Link actions" {...own} className="size-control-sm shrink-0 rounded-l-none rounded-r-full text-muted-foreground shadow-none">
             <DotsThree weight="bold" />
           </Button>
         </DropdownMenuTrigger>
