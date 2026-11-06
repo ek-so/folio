@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils'
 // A tinted, rounded box that groups what's inside it under a small title: a board's column, a note widget's note (no title).
 // `className` and other props go on the box (a column's drag and drop).
 export const Tray = forwardRef(function Tray({ className, ...props }, ref) {
-  return <div ref={ref} className={cn('flex flex-col gap-space-sm rounded-lg bg-secondary/60 p-space-sm', className)} {...props} />
+  return <div ref={ref} className={cn('flex flex-col gap-space-sm rounded-xl bg-secondary/60 p-space-sm', className)} {...props} />
 })
 
 // A medium icon button in a tray's title row (a column's ⋯)
