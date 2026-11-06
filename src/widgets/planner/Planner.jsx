@@ -1,19 +1,22 @@
 import { useState, useMemo, useRef, useCallback, useLayoutEffect } from 'react'
-import { DotsThree, X, Tag, CalendarBlank, Plus } from '@phosphor-icons/react'
-import { DndContext, DragOverlay, MouseSensor, TouchSensor, useSensor, useSensors, useDraggable, useDroppable, pointerWithin, closestCenter } from '@dnd-kit/core'
+import { DotsThree, X, Tag, CalendarBlank } from '@phosphor-icons/react'
+import { DndContext, DragOverlay, MouseSensor, TouchSensor, useSensor, useSensors, useDraggable, useDroppable, pointerWithin } from '@dnd-kit/core'
 import { cn } from '@/lib/utils.js'
 import { Button } from '@/components/ui/button.jsx'
+import { Tray, TrayTitle, TrayFooter } from '@/components/ui/tray.jsx'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu.jsx'
 import NoteCard, { NO_CALLOUT, ownListeners, cardClick } from '@/components/NoteCard.jsx'
 import CardMenu from '@/components/CardMenu.jsx'
 import CheckListModal from '@/components/CheckListModal.jsx'
 import ConfirmModal from '@/components/ConfirmModal.jsx'
 import Spinner from '@/components/Spinner.jsx'
+import { shownCards, hiddenCards } from '@/lib/trayCards.js'
 import { displayName } from '@/lib/files.js'
 import { formatDate } from '@/lib/dates.js'
 import { noteTitle, properties, valueList, DESCRIPTION } from '@/lib/frontmatter.js'
-import { DATE, plan, todayKey, addDays, keyDay, dayKey, cardDate, droppedDate, monthLabel } from './planner.js'
+import { DATE, plan, addDays, keyDay, dayKey, cardDate, droppedDate, unreadableDate, monthLabel } from './planner.js'
 import { usePlanner } from './usePlanner.js'
+import { useToday } from './useToday.js'
 
 // The ribbon: each day is DAY_WIDTH wide; it starts with a window of days around today and grows by
 // MORE_DAYS on either side as it's scrolled near an end (EDGE), so it never ends
@@ -24,11 +27,8 @@ const EDGE = DAY_WIDTH * 3
 const dayCardId = path => 'card:' + path
 const dayCellId = key => 'day:' + key
 
-// Days over a pointer are the targets (a card dropped between them goes to the nearest)
-const collide = args => {
-  const hits = pointerWithin(args)
-  return hits.length ? hits : closestCenter(args)
-}
+// Only a day under the pointer is a target: a card let go anywhere else is cancelled, never re-dated
+const collide = pointerWithin
 
 // A planner widget (planner.js): its folder's name and ⋯ on top, a ribbon of days that scrolls
 // sideways (the month on top, today marked, the selected day filled, how many cards each day has),
@@ -39,8 +39,12 @@ export default function Planner({ id, services, onRemove }) {
   const { ready, planner, missing, cards, ...act } = usePlanner(id, services)
   const { notes, canEdit, openFile, openFolder } = services
   const files = useMemo(() => Object.fromEntries(services.files.map(f => [f, true])), [services.files]) // as the preview's links want them
-  const today = todayKey()
-  const [selected, setSelected] = useState(today)
+  const today = useToday()
+  const [picked, setPicked] = useState(null) // the day chosen on the ribbon; none follows today
+  const selected = picked ?? today
+  const [anchor] = useState(today) // the ribbon's days are counted from where it started, so a new day doesn't shift them
+  const [expanded, setExpanded] = useState(() => new Set()) // keys of the days showing all their cards
+  const [replacing, setReplacing] = useState(null) // { path, key, old } while a drop that would replace an unreadable date is confirmed
   const [range, setRange] = useState({ before: MORE_DAYS, after: MORE_DAYS * 2 }) // days shown before and after today
   const [dragged, setDragged] = useState(null) // the path of the card being dragged
   const [choosing, setChoosing] = useState(false) // the Properties sheet
@@ -54,7 +58,7 @@ export default function Planner({ id, services, onRemove }) {
     useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 8 } }),
   )
 
-  const days = useMemo(() => Array.from({ length: range.before + range.after + 1 }, (_, i) => addDays(today, i - range.before)), [today, range])
+  const days = useMemo(() => Array.from({ length: range.before + range.after + 1 }, (_, i) => addDays(anchor, i - range.before)), [anchor, range])
   const arranged = useMemo(() => plan(cards, today), [cards, today])
 
   const scrollToDay = useCallback((key, behavior = 'smooth') => {
@@ -78,7 +82,7 @@ export default function Planner({ id, services, onRemove }) {
     else if (el.scrollWidth - el.scrollLeft - el.clientWidth < EDGE) setRange(r => ({ ...r, after: r.after + MORE_DAYS }))
   }
   function goToday() {
-    setSelected(today)
+    setPicked(null)
     scrollToDay(today)
   }
 
@@ -125,7 +129,9 @@ export default function Planner({ id, services, onRemove }) {
       onRemoveValue: off ? undefined : act.removeValue, valueCount: act.valueCount,
       chosen: services.tagColors.colors, onEditValue: off || !services.tagColors.canEdit ? undefined : act.editValue,
     })
-    // A card dropped on a day gets that day as its date (and keeps its time)
+    // A card's date set to the day `key` (its time is kept)
+    const setDay = (path, key) => act.setProperty(path, DATE, formatDate(droppedDate(notes[path], key)))
+    // A card dropped on a day gets that day as its date; one whose date isn't a day (a range, "soon") asks first
     const onDragEnd = ({ active, over }) => {
       setDragged(null)
       if (!over || !String(over.id).startsWith('day:')) return
@@ -133,8 +139,12 @@ export default function Planner({ id, services, onRemove }) {
       const key = over.id.slice(4)
       const old = notes[path] === undefined ? null : cardDate(notes[path])
       if (old && dayKey(old) === key) return // already dated that day
-      act.setProperty(path, DATE, formatDate(droppedDate(notes[path], key)))
+      const unreadable = unreadableDate(notes[path])
+      if (unreadable) setReplacing({ path, key, old: unreadable })
+      else setDay(path, key)
     }
+    const paths = list.map(c => c.path)
+    const visible = new Set(shownCards(paths, expanded.has(selected), dragged))
     body = (
       <DndContext
         sensors={canEdit ? sensors : []}
@@ -144,23 +154,27 @@ export default function Planner({ id, services, onRemove }) {
         onDragCancel={() => setDragged(null)}
       >
         <div ref={setScroller} onScroll={onScroll} data-no-pull className="-mx-space overflow-x-auto px-space pb-space-sm">
-          <Ribbon days={days} today={today} selected={selected} count={arranged.count} onSelect={setSelected} />
+          <Ribbon days={days} today={today} selected={selected} count={arranged.count} onSelect={setPicked} />
         </div>
-        <h3 className="flex items-baseline gap-2 px-space-xs text-sm font-semibold">
-          {dayTitle(selected)}
-          {selected === today && <span className="font-normal text-muted-foreground">Today</span>}
-          <span className="font-normal tabular-nums text-muted-foreground">{list.length}</span>
-        </h3>
-        {list.length ? (
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,18rem),1fr))] items-start gap-space-sm">
-            {list.map(({ path, overdue }) => (
-              <PlannerCard key={path} {...cardProps(path)} menu={cardMenu(path)} overdue={overdue} onOpen={openFile} onOpenFolder={openFolder} />
-            ))}
+        {/* The selected day's cards in a tray like a board's column: its first cards, Show N more, New card */}
+        <Tray>
+          <div className="flex items-center gap-1">
+            <div className="min-w-0 flex-1"><TrayTitle>{dayTitle(selected)}{selected === today && ' · Today'}</TrayTitle></div>
+            <span className="flex size-control-md shrink-0 items-center justify-center text-sm tabular-nums text-muted-foreground">{list.length}</span>
           </div>
-        ) : <p className="px-space-xs py-space-sm text-sm text-muted-foreground">Nothing planned for this day.</p>}
-        <Button variant="ghost" disabled={off} className="justify-start gap-2 px-3 text-sm font-normal text-muted-foreground hover:bg-muted-foreground/10" onClick={() => act.newCard(selected)}>
-          <Plus /> New card
-        </Button>
+          {list.length ? (
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,18rem),1fr))] items-start gap-space-sm">
+              {list.filter(c => visible.has(c.path)).map(({ path, overdue }) => (
+                <PlannerCard key={path} {...cardProps(path)} menu={cardMenu(path)} overdue={overdue} onOpen={openFile} onOpenFolder={openFolder} />
+              ))}
+            </div>
+          ) : <p className="px-space-sm py-space-sm text-sm text-muted-foreground">Nothing planned for this day.</p>}
+          <TrayFooter
+            more={expanded.has(selected) ? 0 : hiddenCards(paths, dragged).length}
+            onShowMore={() => setExpanded(e => new Set(e).add(selected))}
+            newLabel="New card" onNew={() => act.newCard(selected)} disabled={off}
+          />
+        </Tray>
         <DragOverlay>
           {dragged && <NoteCard {...cardProps(dragged)} className="rotate-2 border-lift-edge shadow-lg" />}
         </DragOverlay>
@@ -179,6 +193,15 @@ export default function Planner({ id, services, onRemove }) {
         {menu}
       </div>
       {body}
+      {replacing && (
+        <ConfirmModal
+          title={`Replace the date “${replacing.old}”?`}
+          description={`It isn't one day Folio can read, so it is replaced by ${formatDate(keyDay(replacing.key))}. It's changed on GitHub when you sync.`}
+          confirm="Replace"
+          onConfirm={() => { act.setProperty(replacing.path, DATE, formatDate(droppedDate(notes[replacing.path], replacing.key))); setReplacing(null) }}
+          onClose={() => setReplacing(null)}
+        />
+      )}
       {choosing && planner && (
         <CheckListModal
           title="Properties"

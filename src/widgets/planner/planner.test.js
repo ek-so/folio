@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { parsePlanner, serializePlanner, newPlanner, movedPlanner, addDays, dayKey, plan, cardDate, droppedDate, monthLabel } from './planner.js'
+import { parsePlanner, serializePlanner, newPlanner, movedPlanner, addDays, dayKey, plan, cardDate, droppedDate, monthLabel, unreadableDate } from './planner.js'
 
 const note = (date, extra = '') => `---\n${date === null ? '' : `date: ${date}\n`}${extra}---\n# T\n`
 
@@ -51,5 +51,14 @@ describe('planner', () => {
     expect(on('2026-11-07')).toEqual([{ path: 'T/next.md', overdue: false }])
     expect(on('2026-11-08')).toEqual([])
     expect(count('2026-11-06')).toBe(4)
+  })
+
+  it('tells a date that isn\'t one day, which a drop would replace', () => {
+    expect(unreadableDate(note('3 Nov – 5 Nov'))).toBe('3 Nov – 5 Nov')
+    expect(unreadableDate(note('soon'))).toBe('soon')
+    expect(unreadableDate(note('14:30'))).toBe('14:30')
+    expect(unreadableDate(note('2026-11-02'))).toBe('')
+    expect(unreadableDate(note(null))).toBe('')
+    expect(unreadableDate(undefined)).toBe('')
   })
 })

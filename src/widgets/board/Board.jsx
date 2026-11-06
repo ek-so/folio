@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { DotsThree, Trash, X, Plus, PencilSimple, Tag, Columns, CaretDown } from '@phosphor-icons/react'
+import { DotsThree, Trash, X, PencilSimple, Tag, Columns } from '@phosphor-icons/react'
 import {
   DndContext, DragOverlay, MouseSensor, TouchSensor, useSensor, useSensors,
   closestCenter, closestCorners, pointerWithin,
@@ -8,8 +8,8 @@ import { SortableContext, useSortable, arrayMove, horizontalListSortingStrategy,
 import { CSS } from '@dnd-kit/utilities'
 import { cn } from '@/lib/utils.js'
 import { Button } from '@/components/ui/button.jsx'
-import { Separator } from '@/components/ui/separator.jsx'
-import { Tray, TrayTitle, TRAY_BUTTON } from '@/components/ui/tray.jsx'
+import { Tray, TrayTitle, TrayFooter, TRAY_BUTTON } from '@/components/ui/tray.jsx'
+import { shownCards, hiddenCards } from '@/lib/trayCards.js'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu.jsx'
 import Spinner from '@/components/Spinner.jsx'
 import RenameModal from '@/components/RenameModal.jsx'
@@ -261,14 +261,6 @@ export default function Board({ id, services, onRemove }) {
   )
 }
 
-// A column's own text buttons under its cards (Show N more, New card)
-const TRAY_ROW = 'justify-start gap-2 px-3 text-sm font-normal text-muted-foreground hover:bg-muted-foreground/10'
-
-// A column shows its first SHOWN cards until Show N more (and the dragged card, wherever it is)
-const SHOWN = 7
-const shownCards = (paths, all, dragged) => all ? paths : paths.filter((p, i) => i < SHOWN || p === dragged)
-const hiddenCards = (paths, dragged) => paths.filter((p, i) => i >= SHOWN && p !== dragged)
-
 // A column: a drop target for cards; its title moves it (not No status, which stays first).
 // Beside the title its card `count`, which a mouse anywhere over the title row (its top padding too) swaps for ⋯ (Rename / Delete; not No status;
 // on phones and touch both show). Under its cards Show `more` more (`onShowMore`), then a separator and New card.
@@ -312,13 +304,7 @@ function Column({ column, canEdit, count, more, onShowMore, onNewCard, onRename,
         </div>
       )}
       {children}
-      {more > 0 && <>
-        <Button variant="ghost" className={TRAY_ROW} onClick={onShowMore}><CaretDown /> Show {more} more</Button>
-        <Separator className="mx-space-xs data-[orientation=horizontal]:w-auto" />
-      </>}
-      <Button variant="ghost" disabled={!canEdit} className={TRAY_ROW} onClick={onNewCard}>
-        <Plus /> New card
-      </Button>
+      <TrayFooter more={more} onShowMore={onShowMore} newLabel="New card" onNew={onNewCard} disabled={!canEdit} />
     </Tray>
   )
 }

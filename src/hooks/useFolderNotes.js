@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
-import { fileItem, isTechnical, editNotes } from '../lib/folderNotes.js'
-import { editNote } from '../lib/changes.js'
-import { DESCRIPTION, frontMatter, withoutKeys, renameKey, keyNameError, withValue, withTitle, valueActions } from '../lib/frontmatter.js'
+import { fileItem, isTechnical, editNotes } from '@/lib/folderNotes.js'
+import { editNote } from '@/lib/changes.js'
+import { DESCRIPTION, frontMatter, withoutKeys, renameKey, keyNameError, withValue, withTitle, valueActions } from '@/lib/frontmatter.js'
 
 // What a widget (board, planner) does with the notes of its `folder` (null: it
 // has none, e.g. its settings can't be read), through the app's `services`; every
@@ -15,11 +15,15 @@ export function useFolderNotes(services, folder) {
   const entries = useMemo(() => folder !== null ? Object.entries(services.notes)
     .filter(([p]) => p.startsWith(prefix) && !isTechnical(p.slice(prefix.length))) : [], [services.notes, prefix, folder === null])
   const texts = useMemo(() => entries.map(([, text]) => text), [entries])
-  const editAll = (edit, first = ch => ch) =>
+  // With no folder there are no notes to edit (never the whole repo)
+  const editAll = (edit, first = ch => ch) => {
+    if (folder === null) return
     update(ch => editNotes(first(ch), services.remoteFiles, folder, edit, services.remoteText))
+  }
   // Its values' actions (lib/frontmatter.js `valueActions`) over every note, in one step
-  const values = valueActions(texts, editAll, services.tagColors.set)
-  const noteKeys = texts.map(text => frontMatter(text)?.props.map(p => p.key) ?? [])
+  const valuesCache = useMemo(() => new Map(), [texts])
+  const values = valueActions(texts, editAll, services.tagColors.set, valuesCache)
+  const noteKeys = useMemo(() => texts.map(text => frontMatter(text)?.props.map(p => p.key) ?? []), [texts])
   // A name that can't be a property here: an error message, or null
   const keyError = key => keyNameError(key) ?? (key === DESCRIPTION ? 'The description is always shown.' : null)
   const editOne = (path, edit) => update(ch => editNote(ch, services.remoteFiles, path, edit, services.remoteText))

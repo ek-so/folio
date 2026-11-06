@@ -177,8 +177,9 @@ export const withTitle = (text, title) => title.trim() ? withValue(text, 'title'
 // value)` how many notes have it, `removeValue` and `editValue` (rename and recolor) edits through
 // `editAll(edit, first)`, which applies `edit(text)` to every note of the scope after the change
 // `first` (ch => ch), in one step. `setColor(key, value, color)`: the color change (useTagColors).
-export function valueActions(texts, editAll, setColor) {
-  const cache = new Map() // every badge asks for its property's values
+// `cache`: where `options` keeps each property's values (every badge asks for them), kept by the
+// caller while `texts` stay the same.
+export function valueActions(texts, editAll, setColor, cache = new Map()) {
   return {
     options: key => {
       if (!cache.has(key)) cache.set(key, valuesOf(texts, key))

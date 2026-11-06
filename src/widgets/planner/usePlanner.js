@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { plannerPath, parsePlanner, serializePlanner, keyDay, DATE } from './planner.js'
 import { formatDate } from '@/lib/dates.js'
 import { DESCRIPTION } from '@/lib/frontmatter.js'
@@ -13,6 +14,7 @@ export function usePlanner(id, services) {
   const file = config.read(plannerPath(id))
   const planner = file.ready && file.text !== undefined ? parsePlanner(file.text) : null
   const notes = useFolderNotes(services, planner ? planner.folder : null)
+  const cards = useMemo(() => notes.entries.map(([path, text]) => ({ path, text })), [notes.entries])
   const write = next => config.write(plannerPath(id), serializePlanner(next))
 
   return {
@@ -20,7 +22,7 @@ export function usePlanner(id, services) {
     planner,
     missing: !!planner && planner.folder !== '' && !folders.includes(planner.folder),
     ...notes,
-    cards: notes.entries.map(([path, text]) => ({ path, text })),
+    cards,
     // A new card on the day `key`: its date is that day and it starts with the planner's properties, empty; the planner stays open
     newCard: key => services.newNote(planner.folder, { keys: [DATE, DESCRIPTION, ...planner.properties], values: { [DATE]: formatDate(keyDay(key)) }, stay: true, titled: true }),
     // The properties cards show besides the date; a newly chosen one is added, empty, to the notes that lack it

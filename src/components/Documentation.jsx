@@ -24,7 +24,7 @@ const WIDGET_DOCS = {
     points: [
       'Pick the folder when you add it. Every note in it, at any depth, gets an empty date and description property.',
       'The ribbon scrolls sideways without end. Today has a ring, the selected day is filled, and a day with cards shows how many. The month is named above its days. The Today button jumps back.',
-      'Under the ribbon: the selected day\'s cards, by time and then title. Cards without a date always show under today. Cards dated before today show there too with a dashed outline, and also on their own day.',
+      'Under the ribbon: the selected day\'s cards in a box like a board column, by time and then title. It shows the first seven; Show more shows the rest. Cards without a date always show under today. Cards dated before today show there too with a dashed outline, and also on their own day.',
       'To change a card\'s day, drag it onto a day in the ribbon, or click its date badge and pick a day in the calendar. A time stays when you drag.',
       'New card under the list creates a note in the folder with the selected day as its date.',
       'The planner\'s ⋯: Properties (the date is always shown and locked; pick the others) and Remove planner. Removing the planner keeps its notes.',

@@ -68,10 +68,18 @@ export const droppedDate = (text, key) => {
   return old?.hour === undefined ? day : { ...day, hour: old.hour, minute: old.minute }
 }
 
+// A card's `date` text when it isn't one day (a range, "soon", a time alone), else '' (also when empty): dropping
+// the card on a day would replace it
+export const unreadableDate = text => {
+  const value = text === undefined ? '' : properties(text)[DATE]
+  const raw = (Array.isArray(value) ? value.join(', ') : value ?? '').trim()
+  return raw && !cardDate(text) ? raw : ''
+}
+
 // `cards` ([{ path, text }]) arranged by day, as of `today` (a key): `on(key)` is what a day lists,
 // [{ path, overdue }] by time, then title: the cards dated that day, and under today also the cards
 // without a date and those dated before today, flagged `overdue` (they also stay on their own day);
-// `count(key)` is how many that is
+// `count(key)` is how many that is. Each day is worked out once.
 export function plan(cards, today) {
   const dated = new Map() // key → [{ path, time, title }]
   const loose = [] // without a date
@@ -82,15 +90,19 @@ export function plan(cards, today) {
     const entry = { path, title, time: date?.hour === undefined ? '99:99' : `${pad(date.hour)}:${pad(date.minute)}` }
     if (!date) { loose.push(entry); continue }
     const key = dayKey(date)
-    dated.set(key, [...(dated.get(key) ?? []), entry])
+    if (dated.has(key)) dated.get(key).push(entry)
+    else dated.set(key, [entry])
     if (key < today) past.push(entry)
   }
   const order = (a, b) => a.time.localeCompare(b.time) || a.title.localeCompare(b.title)
+  const days = new Map()
   const on = key => {
-    const own = (dated.get(key) ?? []).map(e => ({ ...e, overdue: false }))
-    if (key !== today) return own.sort(order).map(({ path, overdue }) => ({ path, overdue }))
-    const extra = [...loose.map(e => ({ ...e, overdue: false })), ...past.map(e => ({ ...e, overdue: true }))]
-    return [...own, ...extra].sort(order).map(({ path, overdue }) => ({ path, overdue }))
+    if (!days.has(key)) {
+      const own = (dated.get(key) ?? []).map(e => ({ ...e, overdue: false }))
+      const extra = key === today ? [...loose.map(e => ({ ...e, overdue: false })), ...past.map(e => ({ ...e, overdue: true }))] : []
+      days.set(key, [...own, ...extra].sort(order).map(({ path, overdue }) => ({ path, overdue })))
+    }
+    return days.get(key)
   }
   return { on, count: key => on(key).length }
 }

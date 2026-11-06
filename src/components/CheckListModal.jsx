@@ -95,7 +95,7 @@ export default function CheckListModal({ title, description, items, locked = [],
               />
             </li>
           ))}
-          {!items.length && !locked.length && <p className="py-4 text-center text-sm text-muted-foreground">{empty}</p>}
+          {!items.length && <p className="py-4 text-center text-sm text-muted-foreground">{empty}</p>}
         </ul>
         {onAdd && (
           <form onSubmit={addItem} className="flex flex-col gap-2">
