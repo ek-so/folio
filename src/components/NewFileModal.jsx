@@ -6,7 +6,7 @@ import { nameFromTitle } from '../lib/changes.js'
 
 // Creates the note or folder locally; it reaches GitHub on the next sync.
 // kind 'view': a new view in the navigation; an empty name is fine (it shows as a light Untitled).
-// `titled` (a note, a board's new card): a Title field first, then the File name, which follows the
+// `titled` (a board's new card, titled New card): a Title field first, then the File name, which follows the
 // title until it's typed in; `onCreate(name, title)`.
 export default function NewFileModal({ folder, kind, titled, onCreate, onClose }) {
   const isFolder = kind === 'folder'
@@ -37,7 +37,7 @@ export default function NewFileModal({ folder, kind, titled, onCreate, onClose }
 
   return (
     <BottomSheet
-      title={isView ? 'New view' : isFolder ? 'New folder' : 'New note'}
+      title={isView ? 'New view' : isFolder ? 'New folder' : titled ? 'New card' : 'New note'}
       description={folder ? `in ${folder}` : undefined}
       onClose={onClose}
     >
