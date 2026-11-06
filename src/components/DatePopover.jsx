@@ -8,7 +8,7 @@ import { own } from '../lib/utils.js'
 const pad = n => String(n).padStart(2, '0')
 
 // A date to pick in a popover opened by `children` (its trigger: a date badge), as shadcn's date picker with time:
-// its Calendar, then a time field. `date`: { year, month, day, hour?, minute? } or null; `onPick(date)` gets the
+// its Calendar, then, for a date written with a time, a time field (a date alone gets the calendar alone). `date`: { year, month, day, hour?, minute? } or null; `onPick(date)` gets the
 // new one: a picked day keeps the time (and closes the popover); a time, saved on Enter, when the field is left or
 // with a picked day, keeps the day, and an emptied one takes it out; null when the selected day is tapped again.
 // (Saving rewrites the note, which draws its badges anew, so a time isn't saved on every keystroke.)
@@ -42,7 +42,7 @@ export default function DatePopover({ date, onPick, children }) {
             setOpen(false)
           }}
         />
-        {date && (
+        {date?.hour !== undefined && (
           <div className="flex items-center gap-space-sm border-t border-border p-3">
             <label htmlFor="date-popover-time" className="text-sm text-muted-foreground">Time</label>
             <Input
