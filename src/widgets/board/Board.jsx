@@ -285,7 +285,7 @@ function Column({ column, canEdit, count, more, onShowMore, onNewCard, onRename,
     <Tray
       ref={setNodeRef}
       style={{ transform: CSS.Translate.toString(transform), transition }}
-      className={cn('min-w-80 flex-1 max-md:min-w-0 max-md:flex-none max-md:basis-[92%] max-md:snap-start', isDragging && 'opacity-40')}
+      className={cn('min-w-80 flex-1 max-md:min-w-70 max-md:flex-none max-md:basis-[85%] max-md:snap-start', isDragging && 'opacity-40')}
     >
       {column.key === LOOSE ? (
         <div className="flex items-center gap-1">
