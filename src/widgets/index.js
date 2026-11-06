@@ -5,7 +5,7 @@ import note from './note/index.js'
 // A widget is self-contained in its own folder and is one object:
 //   type, label, icon         what Add widget lists
 //   Widget                    ({ id, services, onRemove }): the widget on its view
-//   title(id, services)        optional: its name in Rearrange widgets (else its label)
+//   title(id, services)        optional: its name in Edit widgets (else its label)
 //   Setup                     ({ services, onCreate, onClose }): asks what's needed before it exists, then
 //                             onCreate(id => change) with the changes that set it up (ch => ch)
 //   moved(ch, id, from, to, isDir, services)  `ch` after a file or folder moved (renames and moves anywhere)

@@ -1,4 +1,4 @@
-import { DotsSixVertical } from '@phosphor-icons/react'
+import { DotsSixVertical, Trash } from '@phosphor-icons/react'
 import { DndContext, MouseSensor, TouchSensor, useSensor, useSensors, closestCenter } from '@dnd-kit/core'
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
@@ -7,10 +7,11 @@ import { Button } from './ui/button.jsx'
 import { ListRow } from './ui/list-row.jsx'
 import BottomSheet from './BottomSheet.jsx'
 
-// A sheet to put `items` ([{ id, icon, title }]) in order by dragging them (a view's widgets):
-// with a mouse right away, on touch after holding 0.25s, like a board's cards. Each drop calls
-// `onMove(from, to)` (indexes) at once; Done only closes.
-export default function RearrangeModal({ title, description, items, onMove, onClose }) {
+// A sheet to edit a list of `items` ([{ id, icon, title }]; a view's widgets): drag them into
+// order (with a mouse right away, on touch after holding 0.25s, like a board's cards; each drop
+// calls `onMove(from, to)`, indexes, at once), remove one with its trash (`onRemove(item)`, confirmed
+// by the caller). `add`: what sits left of Done (Add widget). `empty`: the text when there's nothing.
+export default function EditListModal({ title, description, items, onMove, onRemove, add, empty, onClose }) {
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 8 } }),
@@ -25,11 +26,13 @@ export default function RearrangeModal({ title, description, items, onMove, onCl
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
           <SortableContext items={ids} strategy={verticalListSortingStrategy}>
             <ul className="-mx-1 flex max-h-64 flex-col gap-0.5 overflow-y-auto" data-no-pull>
-              {items.map(item => <Row key={item.id} item={item} />)}
+              {items.map(item => <Row key={item.id} item={item} onRemove={onRemove} />)}
+              {!items.length && <p className="py-4 text-center text-sm text-muted-foreground">{empty}</p>}
             </ul>
           </SortableContext>
         </DndContext>
-        <div className="flex justify-end">
+        <div className="flex items-center justify-between gap-2">
+          <div>{add}</div>
           <Button onClick={onClose}>Done</Button>
         </div>
       </div>
@@ -37,9 +40,9 @@ export default function RearrangeModal({ title, description, items, onMove, onCl
   )
 }
 
-// One row (`ListRow`): grip, icon and title; the whole row drags
-function Row({ item }) {
-  const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({ id: item.id })
+// One row (`ListRow`): grip, icon, title and trash; the whole row drags
+function Row({ item, onRemove }) {
+  const { setNodeRef, listeners, transform, transition, isDragging } = useSortable({ id: item.id })
   return (
     <li ref={setNodeRef} style={{ transform: CSS.Translate.toString(transform), transition }} className={cn(isDragging && 'relative z-10')}>
       <ListRow
@@ -47,7 +50,12 @@ function Row({ item }) {
         icon={item.icon}
         title={item.title}
         className={cn('cursor-grab touch-manipulation select-none [-webkit-touch-callout:none] [&_button]:cursor-grab', isDragging && 'bg-secondary shadow-md')}
-        rowProps={{ ...attributes, ...listeners }}
+        rowProps={listeners}
+        trailing={
+          <Button variant="ghost-destructive" size="icon" aria-label={`Remove ${item.title}`} tooltip="Remove" className="size-control-md" onPointerDown={e => e.stopPropagation()} onClick={() => onRemove(item)}>
+            <Trash />
+          </Button>
+        }
       />
     </li>
   )

@@ -1,25 +1,25 @@
 import { useState } from 'react'
-import { Plus, Trash, DotsThree, PencilSimple, ArrowsDownUp } from '@phosphor-icons/react'
+import { Plus, Trash, DotsThree, PencilSimple, SquaresFour } from '@phosphor-icons/react'
 import PageLayout from './PageLayout.jsx'
 import Surface from './Surface.jsx'
 import ConfirmModal from './ConfirmModal.jsx'
 import TitleBar from './TitleBar.jsx'
-import RearrangeModal from './RearrangeModal.jsx'
+import EditListModal from './EditListModal.jsx'
 import { Button } from './ui/button.jsx'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from './ui/dropdown-menu.jsx'
 import { WIDGET_TYPES, widgetType } from '../widgets/index.js'
 
 // A view (Home…): its title bar with + (Add widget: every kind in widgets/index.js) and ⋯
-// (Rearrange widgets, Rename, Remove; the navigation's ⋯ keeps only Rename and Remove), over its widgets ({ id, type }), stacked full width (a dashboard),
+// (Edit widgets, Rename, Remove; the navigation's ⋯ keeps only Rename and Remove), over its widgets ({ id, type }), stacked full width (a dashboard),
 // and Add widget under them. Each widget is its kind's own component, given the app's `services`;
 // `onAdd(type)`, `onRemove(id)` (always confirmed first: a widget's own Remove asks here),
-// `onMove(from, to)` (Rearrange widgets), `onRename()` and `onRemoveView()` (App's view dialogs).
+// `onMove(from, to)` (Edit widgets: order, remove and add them in one sheet), `onRename()` and `onRemoveView()` (App's view dialogs).
 // Until the settings are read (`services.canEdit` false) nothing can be added.
 // `error`: why the views can't be changed (shown on top), or null.
 export default function ViewPage({ page, widgets = [], error, services, onAdd, onRemove, onMove, onRename, onRemoveView, canEditView }) {
   const { canEdit } = services
   const [removing, setRemoving] = useState(null) // the widget whose Remove is being confirmed
-  const [rearranging, setRearranging] = useState(false)
+  const [editing, setEditing] = useState(false) // Edit widgets is open
   const kinds = WIDGET_TYPES.map(t => <DropdownMenuItem key={t.type} onSelect={() => onAdd(t.type)}><t.icon /> {t.label}</DropdownMenuItem>)
   // Add widget: a menu of every kind, from `trigger`
   const addMenu = (trigger, align = 'end') => (
@@ -36,7 +36,7 @@ export default function ViewPage({ page, widgets = [], error, services, onAdd, o
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" onCloseAutoFocus={e => e.preventDefault()}>
-        <DropdownMenuItem disabled={!canEdit || widgets.length < 2} onSelect={() => setRearranging(true)}><ArrowsDownUp /> Rearrange widgets</DropdownMenuItem>
+        <DropdownMenuItem disabled={!canEdit} onSelect={() => setEditing(true)}><SquaresFour /> Edit widgets</DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem disabled={!canEditView} onSelect={onRename}><PencilSimple /> Rename</DropdownMenuItem>
         <DropdownMenuItem variant="destructive" disabled={!canEditView} onSelect={onRemoveView}><Trash /> Remove</DropdownMenuItem>
@@ -75,16 +75,27 @@ export default function ViewPage({ page, widgets = [], error, services, onAdd, o
           </>}
         </div>
       </Surface>
-      {rearranging && (
-        <RearrangeModal
-          title="Rearrange widgets"
+      {editing && (
+        <EditListModal
+          title="Edit widgets"
           description="Drag them into the order they show on this view."
           items={widgets.map(w => {
             const type = widgetType(w.type)
-            return { id: w.id, icon: type ? <type.icon /> : null, title: type?.title?.(w.id, services) ?? type?.label ?? w.type }
+            return { id: w.id, type: w.type, icon: type ? <type.icon /> : null, title: type?.title?.(w.id, services) ?? type?.label ?? w.type }
           })}
           onMove={onMove}
-          onClose={() => setRearranging(false)}
+          onRemove={setRemoving}
+          // A new widget's setup takes this sheet's place
+          add={(
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild><Button variant="secondary"><Plus /> Add widget</Button></DropdownMenuTrigger>
+              <DropdownMenuContent align="start" onCloseAutoFocus={e => e.preventDefault()}>
+                {WIDGET_TYPES.map(t => <DropdownMenuItem key={t.type} onSelect={() => { setEditing(false); onAdd(t.type) }}><t.icon /> {t.label}</DropdownMenuItem>)}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+          empty="No widgets on this view yet."
+          onClose={() => setEditing(false)}
         />
       )}
       {removing && (
