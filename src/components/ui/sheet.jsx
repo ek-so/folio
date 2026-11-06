@@ -55,7 +55,7 @@ function SheetContent({ className, children, side = 'right', ...props }) {
       >
         {children}
         <SheetPrimitive.Close asChild>
-          <Button variant="destructive-light" size="icon" aria-label="Close" className="absolute top-2 right-2">
+          <Button variant="ghost" size="icon" aria-label="Close" className="absolute top-2 right-2 text-muted-foreground hover:text-foreground">
             <X />
           </Button>
         </SheetPrimitive.Close>
