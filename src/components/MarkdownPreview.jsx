@@ -3,6 +3,7 @@ import DOMPurify from 'dompurify'
 import { renderBlocks, tapOffset, taskOffsets, resolveImage } from '../lib/markdown.js'
 import { useRepoImages } from '../hooks/useRepoImages.js'
 import { decorateLinks, openLink } from '../lib/previewLinks.js'
+import { isPortaled } from '../lib/utils.js'
 import { CaretRight } from '@phosphor-icons/react'
 import { createPortal } from 'react-dom'
 
@@ -206,7 +207,7 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
   return (
     <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
       {/* What's above the note (its properties, from the front matter at the top of the file): a double tap edits from the start */}
-      {children && <div onClick={e => { if (!e.target.closest('a') && isDoubleTap(e)) onDoubleTap?.(0) }}>{children}</div>}
+      {children && <div onClick={e => { if (!isPortaled(e) && !e.target.closest('a') && isDoubleTap(e)) onDoubleTap?.(0) }}>{children}</div>}
       <div
         ref={ref}
         className="editor-preview min-w-0 break-words p-space text-base leading-relaxed touch-manipulation [&_img]:max-w-full [&_img]:h-auto [&_img]:rounded-md"

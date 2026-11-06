@@ -7,7 +7,8 @@ import { PROPERTY_COLORS } from '../lib/frontmatter.js'
 
 // A swatch (the color now: 0 … PROPERTY_COLORS - 1, the --tag-N of index.css) that opens a sub
 // popover on its side with every color to pick from (`onChange(color)`, then it closes); arrow keys move between them.
-export default function ColorPicker({ color, onChange, label = 'Color' }) {
+// `className`: the swatch button's (medium inside a row)
+export default function ColorPicker({ color, onChange, label = 'Color', className }) {
   const [open, setOpen] = useState(false)
   function arrow(e) {
     const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key]
@@ -20,8 +21,8 @@ export default function ColorPicker({ color, onChange, label = 'Color' }) {
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button type="button" variant="ghost" size="icon" aria-label={label} tooltip="Color" className="shrink-0">
-          <span className="size-5 rounded-full" style={{ background: `var(--tag-${color})` }} />
+        <Button type="button" variant="ghost" size="icon" aria-label={label} tooltip="Color" className={cn('shrink-0', className)}>
+          <span className="size-4 rounded-full" style={{ background: `var(--tag-${color})` }} />
         </Button>
       </PopoverTrigger>
       <PopoverContent side="right" align="start" sideOffset={8} className="w-auto" onClick={e => e.stopPropagation()}>

@@ -70,6 +70,8 @@
     --tag-8: oklch(0.6 0.17 305);
     --tag-9: oklch(0.65 0.17 350);
     --tag-tint: 20%;
+    /* How much of a badge's hue its text keeps (the rest is the text color) */
+    --tag-ink: 75%;
     /* The outline of a box lifted by a shadow (a hovered or dragged card): none on light, where the shadow shows
        its edge; faint on dark, where a shadow barely shows */
     --lift-edge: transparent;

@@ -86,9 +86,9 @@ export default function ValuesModal({ name, values, colors, count, scopeName, re
                 disabled
                 title={v}
                 trailing={<>
-                  {onEdit && <ColorPicker label={`Color of ${v}`} color={colors.get(v) ?? 0} onChange={color => onEdit(v, v, color)} />}
-                  {onEdit && <Button variant="ghost" size="icon" aria-label={`Edit ${v}`} tooltip="Edit" onClick={() => setEditing({ value: v, name: v })}><PencilSimple /></Button>}
-                  {onRemove && <Button variant="ghost-destructive" size="icon" aria-label={`Remove ${v}`} tooltip="Remove" onClick={() => onRemove(v)}><Trash /></Button>}
+                  {onEdit && <ColorPicker label={`Color of ${v}`} color={colors.get(v) ?? 0} onChange={color => onEdit(v, v, color)} className="size-control-md" />}
+                  {onEdit && <Button variant="ghost" size="icon" aria-label={`Edit ${v}`} tooltip="Edit" className="size-control-md" onClick={() => setEditing({ value: v, name: v })}><PencilSimple /></Button>}
+                  {onRemove && <Button variant="ghost-destructive" size="icon" aria-label={`Remove ${v}`} tooltip="Remove" className="size-control-md" onClick={() => onRemove(v)}><Trash /></Button>}
                 </>}
               />
             </li>

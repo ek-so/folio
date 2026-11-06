@@ -10,11 +10,12 @@ import MarkdownEditor from '@/components/MarkdownEditor.jsx'
 import { useNote } from '@/hooks/useNote.js'
 import { displayName } from '@/lib/files.js'
 import ResizeHandle from '@/components/ResizeHandle.jsx'
+import { Tray } from '@/components/ui/tray.jsx'
 import { NOTE_HEIGHT, clampSize } from '@/lib/resize.js'
 import { notePath, parseNote, serializeNote, noteHeight, resizedNote } from './note.js'
 
 // A note widget (note.js): the note's file name, Edit (✓ when done) and ⋯ (Open full screen, Rename note: renames
-// the file, Remove note) on top, then its text in a box that scrolls inside, as tall as its settings say (resizable on desktop by its bottom edge);
+// the file, Remove note) on top, then its text in a box that scrolls inside, in a grey tray like a board's column, as tall as its settings say (resizable on desktop by its bottom edge);
 // a double tap edits at the tapped word. Edits save on their own, like on
 // the note's own page; opening it full screen is opening the note, as a board's card does.
 export default function NoteWidget({ id, services, onRemove }) {
@@ -78,20 +79,22 @@ function NoteBox({ path, found, services, frame, height, onResize }) {
   const shown = dragged ?? height
   // Phones: the default height; desktop: the settings'
   return frame(displayName(path), (
-    <div style={{ '--note-h': `${shown}px` }} className="relative h-80 md:h-(--note-h)">
-      <div data-no-pull className="flex h-full flex-col overflow-hidden rounded-lg border border-border bg-card">{body}</div>
-      {onResize && (
-        <ResizeHandle
-          vertical label="Resize note" size={shown} limits={NOTE_HEIGHT} className="hidden md:flex"
-          onResize={(px, save = true) => {
-            const next = clampSize(px, NOTE_HEIGHT)
-            if (!save) return setDragged(next)
-            setDragged(null)
-            if (next !== height) onResize(next)
-          }}
-        />
-      )}
-    </div>
+    <Tray>
+      <div style={{ '--note-h': `${shown}px` }} className="relative h-80 md:h-(--note-h)">
+        <div data-no-pull className="flex h-full flex-col overflow-hidden rounded-lg border border-border bg-card">{body}</div>
+        {onResize && (
+          <ResizeHandle
+            vertical label="Resize note" size={shown} limits={NOTE_HEIGHT} className="hidden md:flex"
+            onResize={(px, save = true) => {
+              const next = clampSize(px, NOTE_HEIGHT)
+              if (!save) return setDragged(next)
+              setDragged(null)
+              if (next !== height) onResize(next)
+            }}
+          />
+        )}
+      </div>
+    </Tray>
   ), actions)
 }
 

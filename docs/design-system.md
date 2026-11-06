@@ -17,7 +17,7 @@ shadcn/ui (new-york) · Tailwind CSS v4 · Radix UI · Phosphor icons (`@phospho
 
 ## Control sizes (tokens in `src/index.css`)
 - **Base 40px** (`h-control`, `size-control`, `min-h-control`): every tappable or input element: `Button` default and `size="icon"`, `Input`, menu items, list rows, sheet and dialog close.
-- **Medium 32px** (`-md`): the tree's chevrons, the ⋯ inside list rows (a 24px line with an invisible 40px tap area).
+- **Medium 32px** (`-md`): the tree's chevrons, and every button inside something that is itself hoverable or tappable: a list row's, tile's or card's ⋯, ✏️, 🗑 or color swatch (`ColorPicker` `className`).
 - **Small 24px** (`-sm`, `Button size="sm"`): secondary controls beside a title, such as the symlink button.
 - Exceptions: segmented toggles (`ui/segmented.jsx`: a base-height track, `p-1`), and two-line result rows (search, backlinks), which grow from the base minimum.
 
@@ -55,7 +55,7 @@ Never hardcode colors; use the semantic tokens (light and dark values in `src/in
 ## List rows and cards
 - **`ListRow`** (`ui/list-row.jsx`) is every list's row: file manager, tree, search, move, backlinks, popover lists. Icon left, title (with the changed dot), optional muted description, `trailing` slot (⋯), `leading` before the button (tree indent and chevron). Base height, rounded, highlighted on hover or while its ⋯ is open. States: `active`, `dimmed` (hidden files, symlinks), `disabled`. Lists don't build their own rows.
 - **`CardTile`** (`ui/card-tile.jsx`, same props): file manager's cards. A 24px icon in a 48px tinted square over the name; outlined, `rounded-lg`; names up to two lines (tiles two lines tall only when some name in the folder wraps, measured in `FileBrowser`); ⋯ in the corner on hover.
-- **`Tray`** / **`TrayTitle`** (`ui/tray.jsx`): a tinted, rounded box grouping what's in it under a small title (`grip`: the drag dots): a board's column. What sits in it is `bg-card`.
+- **`Tray`** / **`TrayTitle`** (`ui/tray.jsx`): a tinted, rounded box grouping what's in it under a small title (`grip`: the drag dots): a board's column, a note widget's note (no title). What sits in it is `bg-card`.
 - **`Placeholder`** (`ui/placeholder.jsx`): light text for what isn't filled in yet (Untitled, No value).
 
 ## Tooltips

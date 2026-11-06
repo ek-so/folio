@@ -14,13 +14,16 @@ import { inlineHtml } from '../lib/previewLinks.js'
 
 // A click or press inside a badge or its popover is the property's, never the
 // note's or the card's (open it, start a drag, double tap to edit): React
-// events pass through portals to the parent
+// events pass through portals to the parent. Not on its dialogs: a press or click in them must reach the page,
+// or a popover in them (a value's colors) doesn't close on a click beside it; the note and the card ignore
+// events from portals instead (`isPortaled`)
 export const own = { onClick: e => e.stopPropagation(), onMouseDown: e => e.stopPropagation(), onTouchStart: e => e.stopPropagation() }
 
-// A badge's color: its value's hue within its property (--tag-N, index.css), grey when empty; tinted against the card, a bit stronger on hover
+// A badge's color: its value's hue within its property (--tag-N, index.css), grey when empty; tinted against the card, a bit
+// stronger on hover. Its text and ▾ are the same hue, mixed toward the text color so they read (--tag-ink)
 const tint = color => ({
   style: { '--tag': color === undefined ? 'var(--muted-foreground)' : `var(--tag-${color})` },
-  className: 'bg-[color-mix(in_oklab,var(--tag)_var(--tag-tint),var(--card))]',
+  className: cn('bg-[color-mix(in_oklab,var(--tag)_var(--tag-tint),var(--card))]', color !== undefined && 'text-[color:color-mix(in_oklab,var(--tag)_var(--tag-ink),var(--foreground))]'),
 })
 const TINT_HOVER = 'hover:bg-[color-mix(in_oklab,var(--tag)_calc(var(--tag-tint)_*_1.7),var(--card))]'
 
@@ -72,33 +75,28 @@ export default function PropertyBadges({ props, path, files, clamp, title, class
           ))}
       </div>
     ))
-  // The confirmation is in a `contents` div so a click in it, like one in a popover, stays its own
   const confirm = removing && (
-    <div className="contents" {...own}>
-      <ConfirmModal
-        title={`Remove “${removing.value}” from ${removing.key}?`}
-        description={`It becomes empty in ${valueCount(removing.key, removing.value)} note${valueCount(removing.key, removing.value) === 1 ? '' : 's'} in ${scopeName}. It changes on GitHub when you sync.`}
-        onConfirm={() => { onRemoveValue(removing.key, removing.value); setRemoving(null) }}
-        onClose={() => setRemoving(null)}
-      />
-    </div>
+    <ConfirmModal
+      title={`Remove “${removing.value}” from ${removing.key}?`}
+      description={`It becomes empty in ${valueCount(removing.key, removing.value)} note${valueCount(removing.key, removing.value) === 1 ? '' : 's'} in ${scopeName}. It changes on GitHub when you sync.`}
+      onConfirm={() => { onRemoveValue(removing.key, removing.value); setRemoving(null) }}
+      onClose={() => setRemoving(null)}
+    />
   )
   const managed = managing && props.find(p => p.key === managing)
   const manage = managed && (
-    <div className="contents" {...own}>
-      <ValuesModal
-        name={managing}
-        values={[...new Set([...(options?.(managing) ?? []), ...valueList(managed.value)])]}
-        colors={colors[managing]}
-        count={value => valueCount(managing, value)}
-        scopeName={scopeName}
-        replaces={!Array.isArray(managed.value) && managed.value ? managed.value : null}
-        onAdd={value => onChange(managing, addedValue(managed.value, value))}
-        onEdit={onEditValue && ((from, to, color) => onEditValue(managing, from, to, color))}
-        onRemove={onRemoveValue && (value => { setManaging(null); setRemoving({ key: managing, value }) })}
-        onClose={() => setManaging(null)}
-      />
-    </div>
+    <ValuesModal
+      name={managing}
+      values={[...new Set([...(options?.(managing) ?? []), ...valueList(managed.value)])]}
+      colors={colors[managing]}
+      count={value => valueCount(managing, value)}
+      scopeName={scopeName}
+      replaces={!Array.isArray(managed.value) && managed.value ? managed.value : null}
+      onAdd={value => onChange(managing, addedValue(managed.value, value))}
+      onEdit={onEditValue && ((from, to, color) => onEditValue(managing, from, to, color))}
+      onRemove={onRemoveValue && (value => { setManaging(null); setRemoving({ key: managing, value }) })}
+      onClose={() => setManaging(null)}
+    />
   )
   if (!title) return <div className={cn('flex flex-col gap-space-sm', className)}>{body}{confirm}{manage}</div>
   return (

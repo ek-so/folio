@@ -6,7 +6,7 @@ import {
 } from '@dnd-kit/core'
 import { SortableContext, useSortable, arrayMove, horizontalListSortingStrategy, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { cn } from '@/lib/utils.js'
+import { cn, isPortaled } from '@/lib/utils.js'
 import { Button } from '@/components/ui/button.jsx'
 import { Tray, TrayTitle, TRAY_BUTTON } from '@/components/ui/tray.jsx'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu.jsx'
@@ -292,6 +292,9 @@ function Column({ column, canEdit, onNewCard, onRename, onDelete, children }) {
   )
 }
 
+// The drag's listeners, ignoring presses in a dialog opened from the card (React passes them up through the portal)
+const ownListeners = listeners => listeners && Object.fromEntries(Object.entries(listeners).map(([k, f]) => [k, e => { if (!isPortaled(e)) f(e) }]))
+
 // A click on a link in the card's description opens what it points to, any other opens the card
 function Card({ menu, path, text, board, files, onOpen, onOpenFolder, onChange, options, onRemoveValue, valueCount, chosen, onEditValue }) {
   const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
@@ -306,12 +309,13 @@ function Card({ menu, path, text, board, files, onOpen, onOpenFolder, onChange, 
       style={{ transform: CSS.Translate.toString(transform), transition }}
       className={cn(isDragging && 'opacity-40')}
       onClick={e => {
+        if (isPortaled(e)) return // a click in a dialog opened from the card
         const link = e.target.closest('a[href]')
         if (!link) return onOpen(path)
         e.preventDefault()
         openLink(link.getAttribute('href'), { path, files, onOpenFile: onOpen, onNavigate: onOpenFolder })
       }}
-      {...attributes} {...listeners}
+      {...attributes} {...ownListeners(listeners)}
     />
   )
 }
