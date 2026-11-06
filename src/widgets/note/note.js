@@ -62,10 +62,5 @@ export function movedNotes(settings, from, to, isDir) {
   return changed ? { ...settings, notes } : settings
 }
 
-// The notes a widget can show from `folder` ('' is the root): its markdown files right in it, by name
-export function folderNotes(files, folder) {
-  const prefix = folder ? folder + '/' : ''
-  return files
-    .filter(p => p.startsWith(prefix) && !p.slice(prefix.length).includes('/') && p.toLowerCase().endsWith('.md'))
-    .sort((a, b) => a.localeCompare(b))
-}
+// Whether a repo path is a note a widget can show: a markdown file, not one of the app's settings
+export const isNote = path => path.toLowerCase().endsWith('.md') && !path.startsWith('.folio/')

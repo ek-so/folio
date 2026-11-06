@@ -1,33 +1,44 @@
-import { useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { Plus } from '@phosphor-icons/react'
 import FolderSheet from '@/components/FolderSheet.jsx'
-import BottomSheet from '@/components/BottomSheet.jsx'
+import SearchSheet from '@/components/SearchSheet.jsx'
 import NewFileModal from '@/components/NewFileModal.jsx'
-import FileIcon from '@/components/FileIcon.jsx'
 import { ListRow } from '@/components/ui/list-row.jsx'
-import { displayName } from '@/lib/files.js'
-import { notePath, serializeNotes, folderNotes } from './note.js'
+import { notePath, serializeNotes, isNote } from './note.js'
 
-// Picks a note: its folder, then one of the notes right in it or a new one made there.
+// Picks a note: found by searching every note in the repo, or New note…, which asks for its folder and name.
 // `onPick(path, first)`: `first` (ch => ch) makes a new note, to apply in the same step.
 export function NotePicker({ services, onPick, onClose }) {
   const { folders, files } = services
-  const [folder, setFolder] = useState(null) // the picked folder ('' is the root), then the note's step
-  const [naming, setNaming] = useState(false) // the new note's name is asked
+  const [step, setStep] = useState('search') // 'search', then for a new note 'folder' and 'name'
+  const [folder, setFolder] = useState('') // the new note's folder ('' is the root)
   const picked = useRef(false) // the folder sheet closes after a pick: that's no cancel
+  const all = useMemo(() => Object.fromEntries(files.map(f => [f, true])), [files])
 
-  if (folder === null) return (
+  if (step === 'search') return (
+    <SearchSheet
+      title="Add note"
+      placeholder="Search notes…"
+      virtual={all}
+      only={isNote}
+      top={<ListRow icon={<Plus />} title="New note…" onClick={() => setStep('folder')} />}
+      onSelect={path => onPick(path)}
+      onClose={() => { if (!picked.current) onClose() }}
+    />
+  )
+
+  if (step === 'folder') return (
     <FolderSheet
-      title="Note from folder…"
+      title="New note in…"
       folders={['', ...folders]}
-      onPick={f => { picked.current = true; setFolder(f); return null }}
+      onPick={f => { picked.current = true; setFolder(f); setStep('name'); return null }}
       onClose={() => { if (!picked.current) onClose() }}
     >
-      <p className="text-muted-foreground text-xs">Next, pick one of its notes or make a new one.</p>
+      <p className="text-muted-foreground text-xs">Next, name the new note.</p>
     </FolderSheet>
   )
 
-  if (naming) return (
+  return (
     <NewFileModal
       folder={folder}
       kind="note"
@@ -39,19 +50,6 @@ export function NotePicker({ services, onPick, onClose }) {
       }}
       onClose={onClose}
     />
-  )
-
-  const notes = folderNotes(files, folder)
-  return (
-    <BottomSheet title="Pick a note" description={folder ? `in ${folder}` : 'in (root)'} onClose={onClose}>
-      <ul className="-mx-1 flex max-h-64 flex-col gap-0.5 overflow-y-auto">
-        <li><ListRow icon={<Plus />} title="New note…" onClick={() => setNaming(true)} /></li>
-        {notes.map(path => (
-          <li key={path}><ListRow icon={<FileIcon path={path} />} title={displayName(path)} onClick={() => onPick(path)} /></li>
-        ))}
-        {notes.length === 0 && <p className="py-4 text-center text-sm text-muted-foreground">No notes right in this folder</p>}
-      </ul>
-    </BottomSheet>
   )
 }
 

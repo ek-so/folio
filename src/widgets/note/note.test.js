@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { parseNotes, serializeNotes, movedNotes, folderNotes, noteHeight, resizedNote, addedNote, removedNote, reorderedNote } from './note.js'
+import { parseNotes, serializeNotes, movedNotes, isNote, noteHeight, resizedNote, addedNote, removedNote, reorderedNote } from './note.js'
 
 describe('notes widget', () => {
   it('reads its settings, an older one-note widget too, or nothing from bad text', () => {
@@ -30,9 +30,7 @@ describe('notes widget', () => {
     expect(movedNotes(s, 'a/c.md', 'a/d.md', false)).toBe(s)
   })
 
-  it('lists the markdown files right in a folder', () => {
-    const files = ['a/z.md', 'a/b.md', 'a/pic.png', 'a/sub/c.md', 'root.md', 'README.MD']
-    expect(folderNotes(files, 'a')).toEqual(['a/b.md', 'a/z.md'])
-    expect(folderNotes(files, '')).toEqual(['README.MD', 'root.md'])
+  it('tells notes from other files', () => {
+    expect(['a/b.md', 'README.MD', 'pic.png', '.folio/x.md'].filter(isNote)).toEqual(['a/b.md', 'README.MD'])
   })
 })
