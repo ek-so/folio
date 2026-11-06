@@ -18,7 +18,7 @@ import CheckListModal from './CheckListModal.jsx'
 import CardMenu from './CardMenu.jsx'
 import { displayName } from '@/lib/files.js'
 import { openLink } from '@/lib/previewLinks.js'
-import { frontMatter, noteTitle, DESCRIPTION } from '@/lib/frontmatter.js'
+import { frontMatter, noteTitle, properties, valueList, DESCRIPTION } from '@/lib/frontmatter.js'
 import { taskProgress } from '@/lib/markdown.js'
 import { LOOSE } from './board.js'
 import { useBoard } from './useBoard.js'
@@ -130,6 +130,8 @@ export default function Board({ id, services, onRemove }) {
         title={notes[path] === undefined ? displayName(path) : noteTitle(notes[path], displayName(path))}
         columns={columns} column={columnOf(path)}
         onTitle={act.canTitle(path) ? title => act.setTitle(path, title) : undefined}
+        description={notes[path] === undefined ? '' : valueList(properties(notes[path])[DESCRIPTION] ?? '').join(', ')}
+        onDescription={act.canTitle(path) ? text => act.setDescription(path, text) : undefined}
         onRename={name => services.rename({ name: path.slice(path.lastIndexOf('/') + 1), path, type: 'file' }, name)}
         onDuplicate={() => services.duplicate({ name: path.slice(path.lastIndexOf('/') + 1), path, type: 'file' })}
         onMove={key => moveToColumn(path, key)}

@@ -71,6 +71,9 @@ export function useBoard(id, services) {
     canTitle: path => services.notes[path] !== undefined,
     setTitle: (path, title) =>
       update(ch => editNote(ch, services.remoteFiles, path, t => withTitle(t, title), services.remoteText)),
+    // The card's description (kept, empty, when emptied: every note of a board has one)
+    setDescription: (path, text) =>
+      update(ch => editNote(ch, services.remoteFiles, path, t => withValue(t, DESCRIPTION, text), services.remoteText)),
     // The card's note deleted, like any delete (the app's: links and trails follow)
     deleteCard: path => services.remove(fileItem(path)),
     // `from` renamed `to` (and given `color`), or `value` taken out, in the property `key` in every note of the board
