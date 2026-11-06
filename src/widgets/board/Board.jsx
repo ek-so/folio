@@ -8,6 +8,7 @@ import { SortableContext, useSortable, arrayMove, horizontalListSortingStrategy,
 import { CSS } from '@dnd-kit/utilities'
 import { cn, isPortaled } from '@/lib/utils.js'
 import { Button } from '@/components/ui/button.jsx'
+import { Separator } from '@/components/ui/separator.jsx'
 import { Tray, TrayTitle, TRAY_BUTTON } from '@/components/ui/tray.jsx'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu.jsx'
 import PropertyBadges from '@/components/PropertyBadges.jsx'
@@ -317,7 +318,7 @@ function Column({ column, canEdit, count, more, onShowMore, onNewCard, onRename,
       {children}
       {more > 0 && <>
         <Button variant="ghost" className={TRAY_ROW} onClick={onShowMore}><CaretDown /> Show {more} more</Button>
-        <div className="mx-space-xs h-px bg-border" />
+        <Separator className="mx-space-xs data-[orientation=horizontal]:w-auto" />
       </>}
       <Button variant="ghost" disabled={!canEdit} className={TRAY_ROW} onClick={onNewCard}>
         <Plus /> New card

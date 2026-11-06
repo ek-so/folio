@@ -7,6 +7,7 @@ import { Input } from './ui/input.jsx'
 import { ListRow } from './ui/list-row.jsx'
 import { Popover, PopoverTrigger, PopoverContent } from './ui/popover.jsx'
 import ConfirmModal from './ConfirmModal.jsx'
+import { Separator } from './ui/separator.jsx'
 import ValuesModal from './ValuesModal.jsx'
 import { useSingleOpen } from '../hooks/useSingleOpen.jsx'
 import { valueList, valueColors, DESCRIPTION } from '../lib/frontmatter.js'
@@ -208,7 +209,7 @@ function ValueChooser({ prop, options, onChange, onManage, close }) {
         {!isNew && !shown.length && <p className="px-3 py-2 text-sm text-muted-foreground">No values yet. Type one to add it.</p>}
       </div>
       {onManage && <>
-        <div className="-mx-space-sm my-space-xs h-px bg-border" />
+        <Separator className="-mx-space-sm my-space-xs data-[orientation=horizontal]:w-auto" />
         <ListRow title="Edit values" icon={<PencilSimple />} onClick={onManage} />
       </>}
     </div>

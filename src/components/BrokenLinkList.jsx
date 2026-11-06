@@ -1,3 +1,4 @@
+import { ArrowRight } from '@phosphor-icons/react'
 import { Button } from './ui/button.jsx'
 import FileIcon from './FileIcon.jsx'
 import { displayName } from '../lib/files.js'
@@ -28,7 +29,7 @@ export default function BrokenLinkList({ broken, files, onOpen, onFix }) {
               </span>
               {fix && (
                 <Button variant="secondary" className="shrink-0" onClick={() => onFix(b, fix)}>
-                  Fix → {displayName(fix)}
+                  Fix <ArrowRight /> {displayName(fix)}
                 </Button>
               )}
             </li>

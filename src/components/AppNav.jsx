@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { List, SidebarSimple, MagnifyingGlass, LinkBreak, Gear, SignOut, TreeView, Plus } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils.js'
 import { Button } from './ui/button.jsx'
+import { Separator } from './ui/separator.jsx'
 import AccountMenu from './AccountMenu.jsx'
 import { NavDrawerButton } from './NavTree.jsx'
 import { PAGE } from '../lib/pages.js'
@@ -47,7 +48,7 @@ export function NavRail({ page, pages, viewActions, onPage, onSearch, renderSync
     </Button>
   )
   // Items in a group touch (no gap); a separator has 16px (--space) on both sides
-  const separator = <div role="separator" className="my-space h-px w-full shrink-0 bg-border" />
+  const separator = <Separator decorative={false} className="my-space" />
   const collapseButton = (
     <Button variant="ghost" size="icon" aria-label={collapsed ? 'Expand menu' : 'Collapse menu'} tooltip={collapsed ? 'Expand menu' : 'Collapse menu'} tooltipSide={collapsed ? 'right' : undefined} aria-expanded={!collapsed} className="group shrink-0 focus-visible:bg-secondary" onClick={toggle}>
       {/* Collapsed, the logo stands in for the button until it's hovered or focused */}

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Popover, PopoverTrigger, PopoverContent } from './ui/popover.jsx'
 import { Calendar } from './ui/calendar.jsx'
 import { Input } from './ui/input.jsx'
+import { Label } from './ui/label.jsx'
 import { useSingleOpen } from '../hooks/useSingleOpen.jsx'
 import { cn, own } from '../lib/utils.js'
 
@@ -49,7 +50,7 @@ export default function DatePopover({ date, onPick, children }) {
         />}
         {date?.hour !== undefined && (
           <div className={cn('flex items-center gap-space-sm p-3', hasDay && 'border-t border-border')}>
-            <label htmlFor="date-popover-time" className="text-sm text-muted-foreground">Time</label>
+            <Label htmlFor="date-popover-time" className="font-normal leading-5 text-muted-foreground">Time</Label>
             <Input
               id="date-popover-time" type="time" value={time}
               onChange={e => setTyped(e.target.value)}

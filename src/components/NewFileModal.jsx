@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Button } from './ui/button.jsx'
+import { Label } from './ui/label.jsx'
 import { Input } from './ui/input.jsx'
 import BottomSheet from './BottomSheet.jsx'
 import { nameFromTitle } from '../lib/changes.js'
@@ -43,14 +44,14 @@ export default function NewFileModal({ folder, kind, titled, onCreate, onClose }
     >
       <form onSubmit={handleCreate} className="flex flex-col gap-3">
         {titled ? <>
-          <label className="flex flex-col gap-1.5 text-sm font-medium">
+          <Label className="flex-col items-start gap-1.5 leading-5">
             Title
             <Input type="text" placeholder="Title" value={title} onChange={e => { setTitle(e.target.value); setError('') }} autoCorrect="off" autoCapitalize="sentences" className="bg-background border-border font-normal" />
-          </label>
-          <label className="flex flex-col gap-1.5 text-sm font-medium">
+          </Label>
+          <Label className="flex-col items-start gap-1.5 leading-5">
             File name
             {nameInput}
-          </label>
+          </Label>
         </> : nameInput}
         {error && <p className="text-destructive text-xs">{error}</p>}
         <div className="flex justify-end gap-2">

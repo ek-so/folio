@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useRef, useState } from 'react'
 import { ArrowsInLineVertical, CaretRight, SidebarSimple, TreeView } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils.js'
 import { Button } from './ui/button.jsx'
+import { Separator } from './ui/separator.jsx'
 import { Sheet, SheetContent, SheetTitle, SheetDescription } from './ui/sheet.jsx'
 import FileIcon from './FileIcon.jsx'
 import ItemMenu from './ItemMenu.jsx'
@@ -178,7 +179,7 @@ function TreePanel({ Title = 'h2', closable, dnd }) {
           <ArrowsInLineVertical />
         </Button>
         {closable
-          ? <div aria-hidden="true" className="h-6 w-px shrink-0 bg-border" />
+          ? <Separator orientation="vertical" className="data-[orientation=vertical]:h-6" />
           : (
             <Button variant="ghost" size="icon" className="shrink-0" aria-label="Hide file tree" tooltip="Hide file tree" onClick={nav.onToggleTree}>
               <SidebarSimple />
