@@ -5,7 +5,7 @@
 - Add view asks for a name first (`NewFileModal` `kind="view"`; no name = Untitled), then creates and opens it. Rename / Remove go through `RenameModal` / `DeleteModal` with `kind="view"`. Any view, Home too, can be removed (confirmed); with none left File manager is first.
 
 ## Widgets
-- Self-contained, one folder each, one line in `widgets/index.js`. A widget gets only `services`: `files`, `folders`, `notes`, `remoteFiles`, `remoteText`, `repoName`, `canEdit`, `config`, `tagColors`, `update`, `openFile`, `openFolder`, `move`, `moveAll`, `rename`, `remove`, `createFolder`, `newNote`.
+- Self-contained, one folder each, one line in `widgets/index.js`. A widget gets only `services`: `files`, `folders`, `notes`, `remoteFiles`, `remoteText`, `repoName`, `canEdit`, `config`, `tagColors`, `update`, `openFile`, `openFolder`, `move`, `moveAll`, `rename`, `remove`, `createFolder`, `newNote`, `addNote`, `noteFile`, `saveNote`, `virtual`, `discards`.
 - `moved(ch, id, from, to, isDir, services)` follows renames and moves; `removed(ch, id, services)` drops its settings. Optional `fileMoves(id, path, services)` gives the columns an open file can move to.
 
 ## Board (`widgets/board/`)
@@ -19,3 +19,9 @@
   - **Properties** (`CheckListModal`): tick the keys its notes have, or add a new name (`keyNameError`); a newly chosen key is added, empty, to every note of the board. A row's pencil renames the key in every note (refused if a note already has the new name); its red trash removes it from all of them, confirmed.
   - **Remove board:** confirmed; deletes its settings file (removing a view removes its boards).
 - **Column ⋯:** Rename, Remove (an empty one plainly; with cards: Remove with cards, or Move to No status, which moves every file in it into the board's folder, numbering taken names, then removes the folder). New card under each column creates a note there with the board's properties, empty, and stays on the board. Creating a board gives every note in its folder an empty `description`.
+
+## Note (`widgets/note/`)
+- **Settings:** `.folio/notes/<id>.json`: `file`, the note it shows. Pure logic in `note.js` (tested): `parseNote`, `movedNote` (the note follows renames and moves), `folderNotes`.
+- **Add:** pick a folder (`FolderSheet`), then one of the `.md` files right in it, or **New note…** (`NewFileModal`), which creates the note and the widget in one step (`addNote`, App's `noteToAdd`, shared with New note).
+- **Widget:** the note's title (`noteTitle`; tapping it opens the note full screen), ✏️ Edit (✓ when done), Open full screen and ⋯ (Open full screen, Remove note widget). Below, the note in a box of fixed height (`h-80`) that scrolls inside: `MarkdownPreview`, or `MarkdownEditor` while editing. Edits save on their own through `useNote` and `saveNote`, like on the note's page; ticking a checkbox in the preview edits too.
+- **Full screen** opens the note in the view, like a board's card (typing is saved first). A note that's gone shows as such; the widget can still be removed. Removing it keeps the note.

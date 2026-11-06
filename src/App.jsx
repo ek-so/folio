@@ -337,6 +337,16 @@ export default function App() {
     createFolder: (parent, name) => createFolder(parent, name),
     // `keys`: the properties it starts with, empty; `stay`: don't open it
     newNote: (folder, { keys, stay } = {}) => setNewFile({ folder, kind: 'note', keys, stay }),
+    // A note widget's note: its new note, made in one step with the widget (noteToAdd); its file
+    // ({ entry, edited: this device's text, if edited }, or null when it's gone) and its typing saved
+    addNote: (folder, name) => noteToAdd(folder, name),
+    noteFile: path => shown[path] ? { entry: shown[path], edited: changes.edits[shown[path].orig] } : null,
+    saveNote: (path, content, original) => update(ch => {
+      const entry = virtualFiles(repo.remote.files, ch)[path]
+      return entry ? setEdit(ch, entry, content, original) : ch
+    }),
+    virtual, // every file, as a note's preview wants them for its links and images
+    discards, // a discard reloads the notes widgets show
   }
 
   // The note open on a view that has a board it's a card of: the columns it can move to (widgets/index.js)
@@ -366,21 +376,29 @@ export default function App() {
     return null
   }
 
+  // A new note `name` in `folder`, starting with the properties `keys`, empty: { path, change }
+  // (ch => ch that adds it), or { error }
+  function noteToAdd(folder, name, keys = []) {
+    if (!repo.remote) return { error: 'Files are still loading.' }
+    const path = `${folder ? `${folder}/${name}` : name}.md`
+    const error = nameError(name) || createError(changes, virtual, [path])
+    if (error) return { error }
+    return { path, change: ch => add(ch, repo.remote.files, path, withKeys(`# ${name}\n\n`, keys)) }
+  }
+
   function handleCreate(name) {
     if (!repo.remote) return 'Files are still loading.'
     const error = nameError(name)
     if (error) return error
-    const base = newFile.folder ? `${newFile.folder}/${name}` : name
     if (newFile.kind === 'folder') {
       const err = createFolder(newFile.folder, name)
       if (err) return err
     } else {
-      const path = `${base}.md`
-      const err = createError(changes, virtual, [path])
-      if (err) return err
       // A note can start with properties, empty (a board's new card)
-      update(ch => add(ch, repo.remote.files, path, withKeys(`# ${name}\n\n`, newFile.keys ?? [])))
-      if (!newFile.stay) setSelectedFile(path)
+      const made = noteToAdd(newFile.folder, name, newFile.keys)
+      if (made.error) return made.error
+      update(made.change)
+      if (!newFile.stay) setSelectedFile(made.path)
     }
     setNewFile(null)
     return null
