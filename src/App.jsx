@@ -36,7 +36,7 @@ import DeleteModal from './components/DeleteModal.jsx'
 import { useTheme } from './hooks/useTheme.js'
 import { storage } from './lib/storage.js'
 import { PAGE, mainPages } from './lib/pages.js'
-import { isConfigPath, addView, renameView, removeView, VIEWS_PATH, DEFAULT_VIEWS, parseViews, serializeViews, addWidget, removeWidget } from './lib/viewsConfig.js'
+import { isConfigPath, addView, renameView, removeView, VIEWS_PATH, DEFAULT_VIEWS, parseViews, serializeViews, addWidget, removeWidget, moveWidget } from './lib/viewsConfig.js'
 import { withKeys } from './lib/frontmatter.js'
 import { widgetType } from './widgets/index.js'
 import { urlForPage, pageForUrl, existingView } from './lib/url.js'
@@ -603,6 +603,10 @@ export default function App() {
               services={widgetServices}
               onAdd={type => startWidget(page, type)}
               onRemove={id => removeWidgetOf(page, id)}
+              onMove={(from, to) => saveViews(moveWidget(views, page, from, to))}
+              canEditView={viewActions.canEdit}
+              onRename={() => viewActions.onRename(pages.find(p => p.id === page))}
+              onRemoveView={() => viewActions.onDelete(pages.find(p => p.id === page))}
             />
           ) : page === PAGE.LINKS ? (
             <BrokenLinks

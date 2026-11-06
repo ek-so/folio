@@ -1,7 +1,7 @@
 import { Kanban } from '@phosphor-icons/react'
 import Board from './Board.jsx'
 import BoardSetup from './BoardSetup.jsx'
-import { boardPath, parseBoard, serializeBoard, movedBoard, boardColumns, LOOSE } from './board.js'
+import { boardPath, boardTitle, parseBoard, serializeBoard, movedBoard, boardColumns, LOOSE } from './board.js'
 import { placeCardVia } from './useBoard.js'
 
 // The board widget (Kanban): see board.js. Its settings are .folio/boards/<id>.json.
@@ -11,6 +11,11 @@ export default {
   icon: Kanban,
   Widget: Board,
   Setup: BoardSetup,
+  title(id, { config, repoName }) {
+    const file = config.read(boardPath(id))
+    const board = file.ready && file.text !== undefined ? parseBoard(file.text) : null
+    return board ? boardTitle(board, repoName) : 'Board'
+  },
   // Its folder, columns and order follow renames and moves
   moved(ch, id, from, to, isDir, { config }) {
     const text = config.readIn(ch, boardPath(id))

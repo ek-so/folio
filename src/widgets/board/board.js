@@ -33,6 +33,9 @@ export function parseBoard(text) {
 
 export const serializeBoard = board => JSON.stringify(board, null, 2) + '\n'
 
+// A board's name: its folder's, or the repo's for the root
+export const boardTitle = (board, repoName) => board.folder.split('/').pop() || repoName
+
 export const newBoard = folder => ({ folder, properties: [], hidden: [], columns: [], cards: {} })
 
 const nameOf = path => path.slice(path.lastIndexOf('/') + 1)

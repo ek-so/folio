@@ -69,3 +69,13 @@ export const removeWidget = (views, viewId, widgetId) => views.map(v => {
   const widgets = (v.widgets ?? []).filter(w => w.id !== widgetId)
   return widgets.length ? { ...v, widgets } : { id: v.id, name: v.name }
 })
+
+// `views` with view `viewId`'s widget at index `from` moved to index `to`
+export function moveWidget(views, viewId, from, to) {
+  return views.map(v => {
+    if (v.id !== viewId || !v.widgets) return v
+    const widgets = [...v.widgets]
+    widgets.splice(to, 0, ...widgets.splice(from, 1))
+    return { ...v, widgets }
+  })
+}

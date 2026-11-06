@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { boardPath, parseBoard, serializeBoard, boardColumns, placeCard, moveColumn, withBoardKeys, editNotes, emptyColumn, isTechnical } from './board.js'
+import { boardPath, boardTitle, parseBoard, serializeBoard, boardColumns, placeCard, moveColumn, withBoardKeys, editNotes, emptyColumn, isTechnical } from './board.js'
 import { editNote } from '@/lib/changes.js'
 import { DESCRIPTION, frontMatter, withoutKeys, renameKey, keyNameError, withValue, withTitle, valueActions } from '@/lib/frontmatter.js'
 
@@ -39,7 +39,7 @@ export function useBoard(id, services) {
     ready: file.ready,
     board,
     data,
-    title: board ? board.folder.split('/').pop() || repoName : 'Board',
+    title: board ? boardTitle(board, repoName) : 'Board',
     // A card dropped at `index` in `column`: the order is saved, and a card dropped in
     // another column moves its file there (a taken name is refused, as a toast)
     placeCard: (path, column, index) => placeCardVia(services, id, board, data, path, column, index),
