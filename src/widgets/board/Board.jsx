@@ -1,5 +1,5 @@
 import { useState, useMemo, forwardRef } from 'react'
-import { DotsThree, Trash, Plus, PencilSimple, Tag, Columns } from '@phosphor-icons/react'
+import { DotsThree, Trash, Plus, PencilSimple, Tag, Columns, Check } from '@phosphor-icons/react'
 import {
   DndContext, DragOverlay, MouseSensor, TouchSensor, useSensor, useSensors,
   closestCenter, closestCorners, pointerWithin,
@@ -345,14 +345,22 @@ const CardBody = forwardRef(function CardBody({ path, text, board, files, menu, 
   )
 })
 
-// How many of the note's checklist items are ticked: a thin bar and "N/X", green once all are; nothing without any
+// How many of the note's checklist items are ticked: a ring filling up and "N/X"; once all are, a green
+// disc with a white ✓. Nothing without any
 function TaskProgress({ done, total }) {
   if (!total) return null
+  const r = 6.5
+  const length = 2 * Math.PI * r
   return (
-    <div className="flex items-center gap-2 pt-1" aria-label={`${done} of ${total} tasks done`}>
-      <div className="h-1 flex-1 overflow-hidden rounded-full bg-muted">
-        <div className={cn('h-full rounded-full transition-[width]', done === total ? 'bg-success' : 'bg-primary')} style={{ width: `${(done / total) * 100}%` }} />
-      </div>
+    <div className="flex items-center gap-1.5 pt-1" aria-label={`${done} of ${total} tasks done`}>
+      {done === total
+        ? <span className="flex size-4 items-center justify-center rounded-full bg-success text-success-foreground"><Check weight="bold" className="size-2.5" /></span>
+        : (
+          <svg viewBox="0 0 16 16" className="size-4 -rotate-90">
+            <circle cx="8" cy="8" r={r} fill="none" strokeWidth="2" className="stroke-muted" />
+            {done > 0 && <circle cx="8" cy="8" r={r} fill="none" strokeWidth="2" strokeLinecap="round" className="stroke-primary transition-[stroke-dashoffset]" strokeDasharray={length} strokeDashoffset={length * (1 - done / total)} />}
+          </svg>
+        )}
       <span className="text-xs tabular-nums text-muted-foreground">{done}/{total}</span>
     </div>
   )
