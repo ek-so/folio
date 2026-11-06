@@ -1,5 +1,5 @@
 import { marked } from 'marked'
-import { blankFrontMatter } from './frontmatter.js'
+import { blankFrontMatter, frontMatter, withValue } from './frontmatter.js'
 import { displayName } from './files.js'
 import { findDates, formatDate, isoDate } from './dates.js'
 
@@ -111,9 +111,27 @@ function datesIn(markdown, now) {
 }
 
 // The markdown with the dates typed since `before` (the text when editing started) written as
-// "17 Oct 2026, 14:30". Dates already there are left as they are, and so is anything that isn't text
-// in the preview: the front matter, code, links, HTML
+// "17 Oct 2026, 14:30", in its text and in its properties' values. Dates already there are left as
+// they are, and so is anything that isn't text in the preview (code, links, HTML) or in a value
 export function withFixedDates(markdown, before = '', now = new Date()) {
+  return withFixedValues(withFixedText(markdown, before, now), before, now)
+}
+
+// The properties' values that are new since `before` (not that value of that key then) with their
+// dates written in one form, as text (`withValue`: a list item that gets a "," moves onto its own line)
+function withFixedValues(markdown, before, now) {
+  const old = (frontMatter(before)?.props ?? []).flatMap(p => (Array.isArray(p.value) ? p.value : [p.value]).map(v => `${p.key}\n${v}`))
+  let text = markdown
+  for (const { key, value } of frontMatter(markdown)?.props ?? []) {
+    const fix = v => !v || old.includes(`${key}\n${v}`) ? v : withFixedText(v, '', now)
+    const next = Array.isArray(value) ? value.map(fix) : fix(value)
+    if ([next].flat().some((v, i) => v !== [value].flat()[i])) text = withValue(text, key, next)
+  }
+  return text
+}
+
+// The text's (not the front matter's) new dates written in one form
+function withFixedText(markdown, before, now) {
   const old = datesIn(before, now).map(d => d.key)
   let out = ''
   let last = 0
