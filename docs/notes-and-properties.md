@@ -20,7 +20,7 @@
 ## Values dialog (`ValuesModal`, from Edit values)
 - One dialog with every value of the property, a field to add one (it's set on this note, like choosing it), and on each row a color swatch, a pencil and a red trash.
 - **Swatch:** a sub popover on its side with the ten colors (`ColorPicker`); choosing one recolors that value at once.
-- **Pencil:** the row becomes a name field (swatch and trash stay on it) with ✓ / ✕. Save renames the value, keeping its color, in every note in scope. A name another value has merges them (the row says so).
+- **Pencil:** the row becomes a name field with only ✓ / ✕ until you accept or dismiss. Save renames the value, keeping its color, in every note in scope. A name another value has merges them (the row says so).
 - **Trash:** closes the dialog, asks first (`ConfirmModal`, with the number of notes), then empties that value in scope.
 - **Scope:** the note's folder, or the board on a card. This note changes through `change`, the others through `editNote` (`renameValue`, `withoutValue`: empty for a single value, out of the list for a list).
 
