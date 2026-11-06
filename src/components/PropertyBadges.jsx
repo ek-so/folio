@@ -11,6 +11,9 @@ import ValuesModal from './ValuesModal.jsx'
 import { useSingleOpen } from '../hooks/useSingleOpen.jsx'
 import { valueList, valueColors, DESCRIPTION } from '../lib/frontmatter.js'
 import InlineMarkdown from './InlineMarkdown.jsx'
+import { DateField } from './DateBadge.jsx'
+import { valueDate } from '../lib/markdown.js'
+import { formatDate } from '../lib/dates.js'
 
 
 // A badge's color: its value's hue within its property (--tag-N, index.css), grey when empty; tinted against the card, a bit
@@ -58,7 +61,9 @@ export default function PropertyBadges({ props, path, files, clamp, title, class
     ? <InlineMarkdown key={i} text={part.text} path={path} files={files} onChange={onChange && (text => onChange(DESCRIPTION, text))} className={cn('break-words text-sm text-muted-foreground', clamp && 'line-clamp-3')} />
     : (
       <div key={i} className="flex flex-wrap gap-space-xs">
-        {part.badges.map(({ id, prop, label }) => onChange
+        {part.badges.map(({ id, prop, label }) => isDateProp(prop, options)
+          ? <DateValue key={id} prop={prop} onChange={onChange} />
+          : onChange
           ? <EditableBadge key={id} prop={prop} label={label} color={colors[prop.key].get(label)} options={options} onChange={onChange} onManage={(onEditValue || onRemoveValue) && (() => setManaging(prop.key))} />
           : (
             <Badge key={id} {...tint(colors[prop.key].get(label))}><span className="truncate">{label}</span></Badge>
@@ -110,6 +115,27 @@ const addedValue = (current, value) => {
 // (it has the focus), that would pull the focus out of it and close it too
 const keepFocusInOtherPopover = e => {
   if (document.activeElement?.closest('[data-badge-popover]')) e.preventDefault()
+}
+
+// A date property: its value one date ("17 Oct 2026"), or, while empty, every value the notes nearby have one
+function isDateProp(prop, options) {
+  if (Array.isArray(prop.value)) return false
+  if (prop.value) return !!valueDate(prop.value)
+  const known = options?.(prop.key) ?? []
+  return known.length > 0 && known.every(v => valueDate(v))
+}
+
+// A date property's badge, like a date in the text (DateField: a calendar icon on the left, no ▾): with `onChange`
+// it opens a calendar to pick another day (its time kept; the same day again empties it). While empty, its name
+function DateValue({ prop, onChange }) {
+  const date = valueDate(prop.value)
+  const pick = day => onChange(prop.key, day ? formatDate({ ...date, ...day }) : '')
+  return (
+    <DateField
+      label={date ? formatDate(date) : prop.key} date={date} onPick={onChange && pick}
+      className={cn(!date && PLACEHOLDER)} {...(onChange ? own : {})}
+    />
+  )
 }
 
 // One value of a property as a badge with a ▾ that opens the property's popover

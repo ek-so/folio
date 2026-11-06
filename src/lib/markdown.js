@@ -122,13 +122,25 @@ function withFixedValues(markdown, now) {
 function withFixedText(markdown, now) {
   let out = ''
   let last = 0
-  for (const [from, to] of textRanges(markdown)) {
-    for (const { start, end, date } of findDates(markdown.slice(from, to), now)) {
-      out += markdown.slice(last, from + start) + formatDate(date)
-      last = from + end
-    }
+  for (const { start, end, date } of dateSpans(markdown, now)) {
+    out += markdown.slice(last, start) + formatDate(date)
+    last = end
   }
   return out + markdown.slice(last)
+}
+
+// The dates in `markdown`'s text where the preview shows them as badges, in order: [{ start, end, date }]
+export const dateSpans = (markdown, now = new Date()) => textRanges(markdown).flatMap(([from, to]) =>
+  findDates(markdown.slice(from, to), now).map(d => ({ ...d, start: from + d.start, end: from + d.end })))
+
+// `text` with the date at `span` (from dateSpans) moved to the day `day` ({ year, month, day }), its time kept
+export const withDay = (text, span, day) => text.slice(0, span.start) + formatDate({ ...span.date, ...day }) + text.slice(span.end)
+
+// A property's value as one date ({ year, month, day, hour?, minute? }) when that's all it is, else null
+export function valueDate(value, now = new Date()) {
+  const text = typeof value === 'string' ? value.trim() : ''
+  const [found] = findDates(text, now)
+  return found && found.start === 0 && found.end === text.length ? found.date : null
 }
 
 // One line of markdown as HTML (a property's value, such as a description), its dates as date spots

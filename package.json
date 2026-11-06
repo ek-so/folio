@@ -29,6 +29,7 @@
     "marked": "^13.0.0",
     "pdfjs-dist": "^6.4.299",
     "react": "^18.3.1",
+    "react-day-picker": "^9.14.0",
     "react-dom": "^18.3.1",
     "sonner": "^2.0.8",
     "tailwind-merge": "^3.7.0"

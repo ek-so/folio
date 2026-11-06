@@ -7,7 +7,8 @@ import { isPortaled } from '../lib/utils.js'
 import { CaretRight } from '@phosphor-icons/react'
 import { createPortal } from 'react-dom'
 import LinkBadge from './LinkBadge.jsx'
-import DateBadge from './DateBadge.jsx'
+import { DateField } from './DateBadge.jsx'
+import { useDateEdits } from '../hooks/useDateEdits.js'
 import { useLinkEdits } from '../hooks/useLinkEdits.jsx'
 import ListGrip from './ListGrip.jsx'
 import { DndContext, MouseSensor, TouchSensor, useSensor, useSensors, closestCenter } from '@dnd-kit/core'
@@ -122,6 +123,7 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
 
   const spans = useMemo(() => linkSpans(content), [content])
   const linkEdits = useLinkEdits(content, onChange)
+  const dateProps = useDateEdits(content, onChange)
   const [html, imagePaths, lists] = useMemo(() => {
     const sanitized = DOMPurify.sanitize(renderBlocks(content))
     const tpl = document.createElement('template')
@@ -277,7 +279,7 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
         return createPortal(
           <LinkBadge href={href} text={text} kind={kind} path={target} {...linkEdits.actions(span, text)} />, spot, `link-${i}`)
       })}
-      {dates.map((spot, i) => createPortal(<DateBadge label={spot.dataset.label} onClick={handleClick} />, spot, `date-${i}`))}
+      {dates.map((spot, i) => createPortal(<DateField label={spot.dataset.label} onClick={handleClick} {...dateProps(spot, i)} />, spot, `date-${i}`))}
       <DndContext
         sensors={sensors}
         collisionDetection={ownList}

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { findDates, formatDate } from './dates.js'
-import { withFixedDates } from './markdown.js'
+import { withFixedDates, dateSpans, withDay, valueDate } from './markdown.js'
 
 const now = new Date(2026, 5, 1)
 const fixed = text => withFixedDates(text, now)
@@ -45,5 +45,15 @@ describe('dates', () => {
   it('formats with or without a time', () => {
     expect(formatDate({ year: 2026, month: 1, day: 5 })).toBe('5 Jan 2026')
     expect(formatDate({ year: 2026, month: 12, day: 31, hour: 7, minute: 5 })).toBe('31 Dec 2026, 07:05')
+  })
+
+  it('finds the dates the preview shows, and moves one to another day', () => {
+    const md = '---\ndue: 2026-01-02\n---\nShip on 17 Oct 2026, 14:30 `2026-10-18` and [x](2026-10-19)\n'
+    const spans = dateSpans(md, now)
+    expect(spans.map(s => md.slice(s.start, s.end))).toEqual(['17 Oct 2026, 14:30'])
+    expect(withDay(md, spans[0], { year: 2026, month: 11, day: 3 })).toContain('Ship on 3 Nov 2026, 14:30 `')
+    expect(valueDate('17 Oct 2026', now)).toEqual({ year: 2026, month: 10, day: 17 })
+    expect(valueDate('due 17 Oct 2026', now)).toBeNull()
+    expect(valueDate('', now)).toBeNull()
   })
 })

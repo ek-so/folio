@@ -3,12 +3,13 @@ import { createPortal } from 'react-dom'
 import { inlineHtml } from '../lib/previewLinks.js'
 import { cn } from '../lib/utils.js'
 import LinkBadge from './LinkBadge.jsx'
-import DateBadge from './DateBadge.jsx'
+import { DateField } from './DateBadge.jsx'
+import { useDateEdits } from '../hooks/useDateEdits.js'
 import { useLinkEdits } from '../hooks/useLinkEdits.jsx'
 import { linkSpans } from '../lib/markdown.js'
 
-// One line of markdown (a property's value, such as a description) with its dates as DateBadges and its links as LinkBadges, with the
-// same menu as in the note (Edit link and Remove with `onChange(newText)`). Whoever shows it opens the links
+// One line of markdown (a property's value, such as a description) with its dates as DateBadges and its links as LinkBadges, as in the
+// note (with `onChange(newText)`: a date's calendar, a link's Edit link and Remove). Whoever shows it opens the links
 // (`openLink`): the note preview, a board card.
 export default function InlineMarkdown({ text, path, files, onChange, className }) {
   const ref = useRef()
@@ -17,6 +18,7 @@ export default function InlineMarkdown({ text, path, files, onChange, className 
   const [dates, setDates] = useState([])
   const spans = useMemo(() => linkSpans(text), [text])
   const linkEdits = useLinkEdits(text, onChange)
+  const dateProps = useDateEdits(text, onChange)
   useLayoutEffect(() => {
     setSpots([...ref.current.querySelectorAll('.link-spot')])
     setDates([...ref.current.querySelectorAll('.date-spot')])
@@ -28,7 +30,7 @@ export default function InlineMarkdown({ text, path, files, onChange, className 
         const { href, text: label, kind, path: target } = spot.dataset
         return createPortal(<LinkBadge href={href} text={label} kind={kind} path={target} {...linkEdits.actions(spans[spot.dataset.span], label)} />, spot, i)
       })}
-      {dates.map((spot, i) => createPortal(<DateBadge label={spot.dataset.label} />, spot, `date-${i}`))}
+      {dates.map((spot, i) => createPortal(<DateField label={spot.dataset.label} {...dateProps(spot, i)} />, spot, `date-${i}`))}
       {linkEdits.dialogs}
     </>
   )
