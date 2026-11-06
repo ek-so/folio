@@ -23,7 +23,7 @@ export default function ValuesModal({ name, values, colors, count, scopeName, re
   function add(e) {
     e.preventDefault()
     if (!query) return
-    onAdd(query)
+    onAdd(values.find(v => v.toLowerCase() === query.toLowerCase()) ?? query) // a value that exists is chosen as it's written
     setTyped('')
   }
 

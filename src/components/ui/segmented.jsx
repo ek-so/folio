@@ -9,6 +9,7 @@ export function Segmented({ value, onChange, options, label, iconOnly }) {
       type="single"
       value={value}
       onValueChange={v => v && onChange(v)} // the chosen one stays chosen
+      role="radiogroup"
       aria-label={label}
       className="h-control gap-1 rounded-sm bg-segment p-1"
     >

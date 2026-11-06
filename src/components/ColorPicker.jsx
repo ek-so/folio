@@ -22,7 +22,8 @@ export default function ColorPicker({ color, onChange, label = 'Color', classNam
         <ToggleGroup
           type="single"
           value={String(color)}
-          onValueChange={v => { if (v) { onChange(Number(v)); setOpen(false) } }}
+          onValueChange={v => { if (v) onChange(Number(v)); setOpen(false) }} // the chosen color again just closes it
+          role="radiogroup"
           aria-label="Color"
           className="grid grid-cols-5 gap-space-xs"
         >

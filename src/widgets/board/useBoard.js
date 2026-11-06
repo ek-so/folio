@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { boardPath, parseBoard, serializeBoard, boardColumns, placeCard, moveColumn, withBoardKeys, editNotes, emptyColumn, isTechnical } from './board.js'
+import { fileItem, boardPath, parseBoard, serializeBoard, boardColumns, placeCard, moveColumn, withBoardKeys, editNotes, emptyColumn, isTechnical } from './board.js'
 import { editNote } from '@/lib/changes.js'
 import { DESCRIPTION, frontMatter, withoutKeys, renameKey, keyNameError, withValue, withTitle, valueActions } from '@/lib/frontmatter.js'
 
@@ -8,7 +8,7 @@ import { DESCRIPTION, frontMatter, withoutKeys, renameKey, keyNameError, withVal
 // board's drops and its menus, and by an open card's file menu (index.js).
 export function placeCardVia(services, id, board, data, path, column, index) {
   const { board: next, to } = placeCard(board, data, path, column, index)
-  if (to && !services.move({ path, name: path.slice(path.lastIndexOf('/') + 1), type: 'file' }, to.slice(0, Math.max(to.lastIndexOf('/'), 0)))) return
+  if (to && !services.move(fileItem(path), to.slice(0, Math.max(to.lastIndexOf('/'), 0)))) return
   services.update(services.config.write(boardPath(id), serializeBoard(next)))
 }
 
@@ -33,7 +33,6 @@ export function useBoard(id, services) {
   const noteKeys = texts.map(text => frontMatter(text)?.props.map(p => p.key) ?? [])
   // A name that can't be a property here: an error message, or null
   const keyError = key => keyNameError(key) ?? (key === DESCRIPTION ? 'The description is always shown.' : null)
-  const fileItem = path => ({ path, name: path.slice(path.lastIndexOf('/') + 1), type: 'file' })
 
   return {
     ready: file.ready,

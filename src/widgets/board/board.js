@@ -39,6 +39,8 @@ export const boardTitle = (board, repoName) => board.folder.split('/').pop() || 
 export const newBoard = folder => ({ folder, properties: [], hidden: [], columns: [], cards: {} })
 
 const nameOf = path => path.slice(path.lastIndexOf('/') + 1)
+// A file as the app's file actions take it ({ name, path, type })
+export const fileItem = path => ({ path, name: nameOf(path), type: 'file' })
 // Technical files and folders (".assets", "_attachments", ".gitkeep"…): a name starting with "." or "_"
 // anywhere in the path keeps it off the board
 const technical = part => /^[._]/.test(part)

@@ -20,9 +20,11 @@ function DialogClose(props) {
   return <DialogPrimitive.Close data-slot="dialog-close" {...props} />
 }
 
-function DialogOverlay({ className, ...props }) {
+// Takes a ref: Radix's Portal hands one to its child
+const DialogOverlay = React.forwardRef(function DialogOverlay({ className, ...props }, ref) {
   return (
     <DialogPrimitive.Overlay
+      ref={ref}
       data-slot="dialog-overlay"
       className={cn(
         'fixed inset-0 z-50 bg-black/50 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:animate-in data-[state=open]:fade-in-0',
@@ -31,7 +33,7 @@ function DialogOverlay({ className, ...props }) {
       {...props}
     />
   )
-}
+})
 
 function DialogContent({ className, children, showCloseButton = true, ...props }) {
   return (
