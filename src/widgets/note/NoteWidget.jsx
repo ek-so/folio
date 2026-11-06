@@ -158,8 +158,9 @@ function NoteTray({ path, services, height, onTakeOut }) {
 // The note itself: read from GitHub (or this device's edits), shown or edited in the box
 // `height`: the box's
 function NoteBox({ path, found, services, tray, height }) {
-  const { content, change, loading, loadError } = useNote(found.entry, found.edited, (text, original) => services.saveNote(path, text, original))
   const [editing, setEditing] = useState(false)
+  // Leaving the view while editing writes the dates as Done does
+  const { content, change, loading, loadError } = useNote(found.entry, found.edited, (text, original) => services.saveNote(path, text, original), editing ? withFixedDates : undefined)
   const textareaRef = useRef()
   const ready = !loading && !loadError
 

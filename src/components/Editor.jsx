@@ -18,8 +18,9 @@ import PropertyBadges from './PropertyBadges.jsx'
 // starting where you were reading, and a double tap starts at the tapped
 // word. Edits save on their own; ✓ (same spot) switches back to preview, writing typed dates in one format.
 export default function Editor({ linkedBy, onOpenLink, path, entry, files, notes, onEditNotes, tagColors, edited, onEdit, onNavigate, onOpenFile, onRename, onDuplicate, onDelete, onMove, folders, columns, valueScope, backlinks }) {
-  const { content, change, loading, loadError } = useNote(entry, edited, onEdit)
   const [mode, setMode] = useState('preview')
+  // Leaving the page while editing writes the dates as ✓ does
+  const { content, change, loading, loadError } = useNote(entry, edited, onEdit, mode === 'edit' ? withFixedDates : undefined)
   const [editedAt, setEditedAt] = useState(null) // offset to show when back in preview
   const textareaRef = useRef()
   const previewRef = useRef()
