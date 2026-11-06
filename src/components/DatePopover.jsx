@@ -40,8 +40,6 @@ export default function DatePopover({ date, onPick, children }) {
           mode="single"
           selected={selected}
           defaultMonth={selected}
-          // Today is marked lightly: the theme's accent is its primary blue, the selected day's
-          classNames={{ today: 'rounded-md bg-secondary text-foreground data-[selected=true]:rounded-none' }}
           onSelect={d => {
             onPick(d ? at({ year: d.getFullYear(), month: d.getMonth() + 1, day: d.getDate() }) : null)
             setTyped(null)
@@ -49,14 +47,14 @@ export default function DatePopover({ date, onPick, children }) {
           }}
         />}
         {date?.hour !== undefined && (
-          <div className={cn('flex items-center gap-space-sm p-3', hasDay && 'border-t border-border')}>
+          <div className={cn('flex items-center gap-space-sm p-space-sm', hasDay && 'border-t border-border')}>
             <Label htmlFor="date-popover-time" className="font-normal leading-5 text-muted-foreground">Time</Label>
             <Input
               id="date-popover-time" type="time" value={time}
               onChange={e => setTyped(e.target.value)}
               onBlur={saveTime}
               onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); saveTime(); setOpen(false) } }}
-              className="flex-1 appearance-none bg-background [&::-webkit-calendar-picker-indicator]:hidden"
+              className="flex-1 appearance-none [&::-webkit-calendar-picker-indicator]:hidden"
             />
           </div>
         )}
