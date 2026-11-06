@@ -23,6 +23,7 @@ React + Vite PWA. Reads and writes markdown files from any GitHub repo through t
 Tokens, sizes and component details: [design-system](docs/design-system.md).
 
 - **Components and tokens only.** Interactive elements come from `src/components/ui/` (shadcn). Layout and spacing are Tailwind utilities with the spacing tokens. Never hardcode a color or a pixel height.
+- **shadcn and Phosphor first, custom only if really needed.** For any control or pattern, first look for a shadcn/ui component (`npx shadcn@latest add`) and a Phosphor icon. Adapt them through variants, props and tokens before writing anything of our own. Build a custom component only when neither fits, and say why in its header comment. No other icon library, no inline SVG, no text glyphs (→ ↗) used as icons.
 - **Three control sizes** (base 40px, medium 32px, small 24px). Every tappable or input element is base unless a rule says otherwise. Buttons inside something that is itself hoverable or tappable (a list row, a tile, a card) are medium (32px): ⋯, ✏️, 🗑, a color swatch. Icons are 16px.
 - **Tooltips** come from the `tooltip` prop of `Button`, `ListRow` and `CardTile`, or `Tip`; never the browser's `title`. Nothing essential may depend on one (none show on a tap).
 - **Destructive is always red:** trash icon buttons `ghost-destructive`, menu items and confirm buttons `destructive`. Every destructive action is confirmed by `ConfirmModal`.
