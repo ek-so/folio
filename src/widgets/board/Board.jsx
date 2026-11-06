@@ -361,7 +361,7 @@ const CardBody = forwardRef(function CardBody({ path, text, board, files, menu, 
       role="button"
       tabIndex={0}
       onKeyDown={e => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); props.onClick?.(e) } }}
-      className={cn('group flex w-full cursor-pointer touch-manipulation select-none flex-col gap-1 rounded-lg border border-border bg-card p-3 text-left outline-none transition-[box-shadow,border-color] hover:border-lift-edge hover:shadow-md focus-visible:ring-1 focus-visible:ring-ring', NO_CALLOUT, className)}
+      className={cn('group flex w-full cursor-pointer touch-manipulation select-none flex-col gap-1 rounded-lg border border-border bg-card p-space text-left outline-none transition-[box-shadow,border-color] hover:border-lift-edge hover:shadow-md focus-visible:ring-1 focus-visible:ring-ring', NO_CALLOUT, className)}
       {...props}
     >
       <div className="flex items-start gap-1">
