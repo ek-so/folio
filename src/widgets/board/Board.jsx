@@ -151,7 +151,7 @@ export default function Board({ id, services, onRemove }) {
         onDragEnd={onDragEnd}
         onDragCancel={() => setDrag(null)}
       >
-        <div data-no-pull className="-mx-space flex items-start gap-space-sm overflow-x-auto px-space pb-space-sm">
+        <div data-no-pull className="-mx-space flex items-start gap-space-sm overflow-x-auto px-space pb-space-sm max-md:snap-x max-md:snap-mandatory max-md:scroll-px-space">
           <SortableContext items={columns.map(c => colId(c.key))} strategy={horizontalListSortingStrategy}>
             {columns.map(c => (
               <Column
@@ -269,7 +269,7 @@ const shownCards = (paths, all, dragged) => all ? paths : paths.filter((p, i) =>
 const hiddenCards = (paths, dragged) => paths.filter((p, i) => i >= SHOWN && p !== dragged)
 
 // A column: a drop target for cards; its title moves it (not No status, which stays first).
-// Beside the title its card `count`, which a mouse over the title swaps for ⋯ (Rename / Delete; not No status;
+// Beside the title its card `count`, which a mouse anywhere over the title row (its top padding too) swaps for ⋯ (Rename / Delete; not No status;
 // on touch both show). Under its cards Show `more` more (`onShowMore`), then a separator and New card.
 function Column({ column, canEdit, count, more, onShowMore, onNewCard, onRename, onDelete, children }) {
   const { setNodeRef, setActivatorNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
@@ -281,7 +281,7 @@ function Column({ column, canEdit, count, more, onShowMore, onNewCard, onRename,
     <Tray
       ref={setNodeRef}
       style={{ transform: CSS.Translate.toString(transform), transition }}
-      className={cn('min-w-80 flex-1', isDragging && 'opacity-40')}
+      className={cn('min-w-80 flex-1 max-md:min-w-0 max-md:flex-none max-md:basis-[92%] max-md:snap-start', isDragging && 'opacity-40')}
     >
       {column.key === LOOSE ? (
         <div className="flex items-center gap-1">
@@ -289,7 +289,7 @@ function Column({ column, canEdit, count, more, onShowMore, onNewCard, onRename,
           <span className="flex size-control-md shrink-0 items-center justify-center text-sm tabular-nums text-muted-foreground">{count}</span>
         </div>
       ) : (
-        <div className="group/title flex items-center gap-1">
+        <div className="group/title -mx-space-sm -mt-space-sm flex items-center gap-1 px-space-sm pt-space-sm">
           <div ref={setActivatorNodeRef} {...attributes} {...listeners} className={cn('min-w-0 flex-1 cursor-grab touch-manipulation select-none', NO_CALLOUT)}>
             <TrayTitle grip>{column.name}</TrayTitle>
           </div>
