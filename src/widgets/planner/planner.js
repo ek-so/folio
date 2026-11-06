@@ -77,8 +77,8 @@ export const unreadableDate = text => {
 }
 
 // `cards` ([{ path, text }]) arranged by day, as of `today` (a key): `on(key)` is what a day lists,
-// [{ path, overdue }] by time, then title: the cards dated that day, and under today also the cards
-// without a date and those dated before today, flagged `overdue` (they also stay on their own day);
+// [{ path, overdue, undated }] by time, then title: the cards dated that day, and under today also the cards
+// without a date (`undated`) and those dated before today (`overdue`; they also stay on their own day);
 // `count(key)` is how many that is. Each day is worked out once.
 export function plan(cards, today) {
   const dated = new Map() // key → [{ path, time, title }]
@@ -98,9 +98,9 @@ export function plan(cards, today) {
   const days = new Map()
   const on = key => {
     if (!days.has(key)) {
-      const own = (dated.get(key) ?? []).map(e => ({ ...e, overdue: false }))
-      const extra = key === today ? [...loose.map(e => ({ ...e, overdue: false })), ...past.map(e => ({ ...e, overdue: true }))] : []
-      days.set(key, [...own, ...extra].sort(order).map(({ path, overdue }) => ({ path, overdue })))
+      const own = (dated.get(key) ?? []).map(e => ({ ...e, overdue: false, undated: false }))
+      const extra = key === today ? [...loose.map(e => ({ ...e, overdue: false, undated: true })), ...past.map(e => ({ ...e, overdue: true, undated: false }))] : []
+      days.set(key, [...own, ...extra].sort(order).map(({ path, overdue, undated }) => ({ path, overdue, undated })))
     }
     return days.get(key)
   }

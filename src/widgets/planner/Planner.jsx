@@ -164,8 +164,8 @@ export default function Planner({ id, services, onRemove }) {
           </div>
           {list.length ? (
             <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,18rem),1fr))] items-start gap-space-sm">
-              {list.filter(c => visible.has(c.path)).map(({ path, overdue }) => (
-                <PlannerCard key={path} {...cardProps(path)} menu={cardMenu(path)} overdue={overdue} onOpen={openFile} onOpenFolder={openFolder} />
+              {list.filter(c => visible.has(c.path)).map(({ path, overdue, undated }) => (
+                <PlannerCard key={path} {...cardProps(path)} menu={cardMenu(path)} dashed={overdue || undated} onOpen={openFile} onOpenFolder={openFolder} />
               ))}
             </div>
           ) : <p className="px-space-sm py-space-sm text-sm text-muted-foreground">Nothing planned for this day.</p>}
@@ -292,14 +292,14 @@ function Day({ dayKey: key, today, selected, count, onSelect }) {
 }
 
 // A card of the selected day, dragged by a press on it (dropped on a day of the ribbon); a card that's only
-// there because it's late (`overdue`: dated before today) has a dashed outline
-function PlannerCard({ path, overdue, onOpen, onOpenFolder, files, ...props }) {
+// there because it has no date or is late (`dashed`) has a dashed outline
+function PlannerCard({ path, dashed, onOpen, onOpenFolder, files, ...props }) {
   const { setNodeRef, attributes, listeners, isDragging } = useDraggable({ id: dayCardId(path), data: { path } })
   return (
     <NoteCard
       ref={setNodeRef}
       path={path} files={files} {...props}
-      className={cn(NO_CALLOUT, overdue && 'border-dashed border-muted-foreground/50', isDragging && 'opacity-40')}
+      className={cn(NO_CALLOUT, dashed && 'border-dashed border-muted-foreground/50', isDragging && 'opacity-40')}
       onClick={cardClick(path, files, onOpen, onOpenFolder)}
       {...attributes} {...ownListeners(listeners)}
     />

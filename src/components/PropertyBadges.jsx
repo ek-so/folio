@@ -42,7 +42,7 @@ const TINT_HOVER = 'hover:bg-[color-mix(in_oklab,var(--tag)_calc(var(--tag-tint)
 // scope) or remove it (a 🗑 that asks first, then empties that value everywhere it's used);
 // `valueCount(key, value)`: in how many notes; `scopeName`: where, "this folder";
 // `chosen` ({ key: { value: color } }, lib/tagColors.js) are the colors picked so far.
-// `dateKeys`: properties that are always dates (a planner's date), a calendar even while none has a value yet.
+// `dateKeys`: properties that are always dates (a planner's date), a calendar even while none has a value yet, reading "No date" while empty.
 export default function PropertyBadges({ props, path, files, clamp, title, className, onChange, options, onRemoveValue, valueCount, scopeName, onEditValue, chosen, dateKeys }) {
   const [removing, setRemoving] = useState(null) // { key, value } being confirmed
   const [managing, setManaging] = useState(null) // the key whose values are in the dialog
@@ -64,7 +64,7 @@ export default function PropertyBadges({ props, path, files, clamp, title, class
     : (
       <div key={i} className="flex flex-wrap gap-space-xs">
         {part.badges.map(({ id, prop, label }) => isDateProp(prop, options, dateKeys)
-          ? <DateValue key={id} prop={prop} onChange={onChange} />
+          ? <DateValue key={id} prop={prop} onChange={onChange} emptyLabel={dateKeys?.includes(prop.key) ? 'No date' : prop.key} />
           : onChange
           ? <EditableBadge key={id} prop={prop} label={label} color={colors[prop.key].get(label)} options={options} onChange={onChange} onManage={(onEditValue || onRemoveValue) && (() => setManaging(prop.key))} />
           : (
@@ -129,13 +129,13 @@ function isDateProp(prop, options, dateKeys) {
 }
 
 // A date property's badge, like a date in the text (DateField: a calendar icon on the left, no ▾): with `onChange`
-// it opens a calendar and a time field to change it (the same day again empties it). While empty, its name
-function DateValue({ prop, onChange }) {
+// it opens a calendar and a time field to change it (the same day again empties it). While empty, `emptyLabel` (its name, or "No date" for a planner's)
+function DateValue({ prop, onChange, emptyLabel }) {
   const date = valueDate(prop.value)
   const pick = picked => onChange(prop.key, picked ? formatDate(picked) : '')
   return (
     <DateField
-      label={date ? formatDate(date) : prop.key} date={date} onPick={onChange && pick}
+      label={date ? formatDate(date) : emptyLabel} date={date} onPick={onChange && pick}
       className={cn(!date && PLACEHOLDER)} {...(onChange ? own : {})}
     />
   )

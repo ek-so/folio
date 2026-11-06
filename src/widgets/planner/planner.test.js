@@ -46,9 +46,10 @@ describe('planner', () => {
     ]
     const { on, count } = plan(cards, '2026-11-06')
     expect(on('2026-11-06').map(c => c.path)).toEqual(['T/a.md', 'T/b.md', 'T/none.md', 'T/old.md'])
-    expect(on('2026-11-06').find(c => c.path === 'T/old.md').overdue).toBe(true)
-    expect(on('2026-11-01')).toEqual([{ path: 'T/old.md', overdue: false }])
-    expect(on('2026-11-07')).toEqual([{ path: 'T/next.md', overdue: false }])
+    expect(on('2026-11-06').find(c => c.path === 'T/old.md')).toMatchObject({ overdue: true, undated: false })
+    expect(on('2026-11-06').find(c => c.path === 'T/none.md')).toMatchObject({ overdue: false, undated: true })
+    expect(on('2026-11-01')).toEqual([{ path: 'T/old.md', overdue: false, undated: false }])
+    expect(on('2026-11-07')).toEqual([{ path: 'T/next.md', overdue: false, undated: false }])
     expect(on('2026-11-08')).toEqual([])
     expect(count('2026-11-06')).toBe(4)
   })
