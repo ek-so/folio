@@ -6,7 +6,7 @@ import {
 } from '@dnd-kit/core'
 import { SortableContext, useSortable, arrayMove, horizontalListSortingStrategy, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { cn, isPortaled } from '@/lib/utils.js'
+import { cn } from '@/lib/utils.js'
 import { Button } from '@/components/ui/button.jsx'
 import { Separator } from '@/components/ui/separator.jsx'
 import { Tray, TrayTitle, TRAY_BUTTON } from '@/components/ui/tray.jsx'
@@ -16,9 +16,8 @@ import RenameModal from '@/components/RenameModal.jsx'
 import ConfirmModal from '@/components/ConfirmModal.jsx'
 import CheckListModal from '@/components/CheckListModal.jsx'
 import CardMenu from '@/components/CardMenu.jsx'
-import NoteCard, { NO_CALLOUT } from '@/components/NoteCard.jsx'
+import NoteCard, { NO_CALLOUT, ownListeners, cardClick } from '@/components/NoteCard.jsx'
 import { displayName } from '@/lib/files.js'
-import { openLink } from '@/lib/previewLinks.js'
 import { noteTitle, properties, valueList, DESCRIPTION } from '@/lib/frontmatter.js'
 import { LOOSE } from './board.js'
 import { useBoard } from './useBoard.js'
@@ -324,10 +323,6 @@ function Column({ column, canEdit, count, more, onShowMore, onNewCard, onRename,
   )
 }
 
-// The drag's listeners, ignoring presses in a dialog opened from the card (React passes them up through the portal)
-const ownListeners = listeners => listeners && Object.fromEntries(Object.entries(listeners).map(([k, f]) => [k, e => { if (!isPortaled(e)) f(e) }]))
-
-// A click on a link in the card's description opens what it points to, any other opens the card
 function Card({ menu, path, text, board, files, onOpen, onOpenFolder, onChange, options, onRemoveValue, valueCount, chosen, onEditValue }) {
   const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
     id: cardId(path),
@@ -340,13 +335,7 @@ function Card({ menu, path, text, board, files, onOpen, onOpenFolder, onChange, 
       onChange={onChange && ((key, value) => onChange(path, key, value))} options={options} onRemoveValue={onRemoveValue} valueCount={valueCount} chosen={chosen} onEditValue={onEditValue}
       style={{ transform: CSS.Translate.toString(transform), transition }}
       className={cn(isDragging && 'opacity-40')}
-      onClick={e => {
-        if (isPortaled(e)) return // a click in a dialog opened from the card
-        const link = e.target.closest('a[href]')
-        if (!link) return onOpen(path)
-        e.preventDefault()
-        openLink(link.getAttribute('href'), { path, files, onOpenFile: onOpen, onNavigate: onOpenFolder })
-      }}
+      onClick={cardClick(path, files, onOpen, onOpenFolder)}
       {...attributes} {...ownListeners(listeners)}
     />
   )

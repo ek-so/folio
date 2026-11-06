@@ -1,5 +1,6 @@
 import board from './board/index.js'
 import note from './note/index.js'
+import planner from './planner/index.js'
 
 // Every kind of widget a view can hold, by its `type` in .folio/views.json.
 // A widget is self-contained in its own folder and is one object:
@@ -15,6 +16,6 @@ import note from './note/index.js'
 // `services` is all a widget gets from the app (App's `widgetServices`): what the repo holds,
 // its settings files (`config`) and the app's own ways to change files and open them.
 // A view keeps widgets of a kind this version doesn't know; they show as such and can be removed.
-export const WIDGET_TYPES = [board, note]
+export const WIDGET_TYPES = [board, planner, note]
 
 export const widgetType = type => WIDGET_TYPES.find(w => w.type === type)

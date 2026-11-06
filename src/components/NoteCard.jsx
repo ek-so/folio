@@ -1,5 +1,6 @@
 import { forwardRef } from 'react'
-import { cn } from '@/lib/utils.js'
+import { cn, isPortaled } from '@/lib/utils.js'
+import { openLink } from '@/lib/previewLinks.js'
 import PropertyBadges from '@/components/PropertyBadges.jsx'
 import { displayName } from '@/lib/files.js'
 import { frontMatter, noteTitle, DESCRIPTION } from '@/lib/frontmatter.js'
@@ -8,11 +9,25 @@ import { taskProgress } from '@/lib/markdown.js'
 // A long press on iPhones mustn't open the text or link callout instead of the drag
 export const NO_CALLOUT = '[-webkit-touch-callout:none]'
 
+// The drag's listeners, ignoring presses in a dialog opened from the card (React passes them up through the portal)
+export const ownListeners = listeners => listeners && Object.fromEntries(Object.entries(listeners).map(([k, f]) => [k, e => { if (!isPortaled(e)) f(e) }]))
+
+// A click on a card: a link in its description opens what it points to, anything else opens the card
+// (`files`: the repo's paths as keys); a click in a dialog opened from the card is the dialog's
+export const cardClick = (path, files, onOpen, onOpenFolder) => e => {
+  if (isPortaled(e)) return
+  const link = e.target.closest('a[href]')
+  if (!link) return onOpen(path)
+  e.preventDefault()
+  openLink(link.getAttribute('href'), { path, files, onOpenFile: onOpen, onNavigate: onOpenFolder })
+}
+
 // What a card of a board or a planner shows: the note's title, its description, the chosen `properties`' values. A div, not a button:
 // the badges in it are buttons
-const NoteCard = forwardRef(function NoteCard({ path, text, properties, scopeName, files, menu, onChange, options, onRemoveValue, valueCount, chosen, onEditValue, dateKeys, className, ...props }, ref) {
+const NoteCard = forwardRef(function NoteCard({ path, text, properties, always = [], scopeName, files, menu, onChange, options, onRemoveValue, valueCount, chosen, onEditValue, dateKeys, className, ...props }, ref) {
   const fm = text === undefined ? [] : frontMatter(text)?.props ?? []
   const shown = fm.filter(p => p.key === DESCRIPTION || properties.includes(p.key)) // in the file's order
+  for (const key of always) if (text !== undefined && !shown.some(p => p.key === key)) shown.push({ key, value: '' }) // `always`: shown empty when the note lacks it
   return (
     <div
       ref={ref}

@@ -11,10 +11,10 @@ import { DESCRIPTION, frontMatter, withoutKeys, renameKey, keyNameError, withVal
 export function useFolderNotes(services, folder) {
   const { update } = services
   const prefix = folder ? folder + '/' : ''
-  // Every note of the folder (on this device; no technical files)
-  const texts = useMemo(() => folder !== null ? Object.entries(services.notes)
-    .filter(([p]) => p.startsWith(prefix) && !isTechnical(p.slice(prefix.length)))
-    .map(([, text]) => text) : [], [services.notes, prefix, folder === null])
+  // Every note of the folder (on this device; no technical files), [path, text]
+  const entries = useMemo(() => folder !== null ? Object.entries(services.notes)
+    .filter(([p]) => p.startsWith(prefix) && !isTechnical(p.slice(prefix.length))) : [], [services.notes, prefix, folder === null])
+  const texts = useMemo(() => entries.map(([, text]) => text), [entries])
   const editAll = (edit, first = ch => ch) =>
     update(ch => editNotes(first(ch), services.remoteFiles, folder, edit, services.remoteText))
   // Its values' actions (lib/frontmatter.js `valueActions`) over every note, in one step
@@ -25,6 +25,7 @@ export function useFolderNotes(services, folder) {
   const editOne = (path, edit) => update(ch => editNote(ch, services.remoteFiles, path, edit, services.remoteText))
 
   return {
+    entries,
     // The keys its notes have, besides the description, by name
     propertyKeys: () => [...new Set(noteKeys.flat())].filter(k => k !== DESCRIPTION).sort(),
     // How many of its notes have the property `key`
