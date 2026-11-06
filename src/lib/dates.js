@@ -2,11 +2,14 @@
 // ("17 Oct 2026" without a time). Recognized: 2026-10-17, 17.10.2026, 17/10/2026 (day first),
 // 17 Oct, 17th of October 2026, Oct 17, 2026; each optionally followed by a time on the same line:
 // 14:30, 2:30pm, 2pm, "at 14:30", "T14:30". A missing year is the current one; a year has 4 digits.
-// Months start with a capital letter ("march" is a word). Words like "tomorrow" aren't dates, and
+// A month starts with a capital letter ("march" is a word), except right after its day ("5 oct"). Words like
+// "tomorrow" aren't dates, and
 // nothing reaches across a line break or into a file name (2026-10-17.md).
 
 const MONTHS = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec']
 const MONTH = '(Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|June?|July?|Aug(?:ust)?|Sept?(?:ember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)(?![a-z])'
+// The same, its first letter in either case: after a day number a month can't be a word ("5 oct")
+const ANY_CASE_MONTH = MONTH.replace(/\(([A-Z])|\|([A-Z])/g, (m, a, b) => m.replace(a ?? b, `[${a ?? b}${(a ?? b).toLowerCase()}]`))
 const DAY = '(\\d{1,2})(?:st|nd|rd|th)?'
 const SPACE = '[ \\t]+' // never a line break
 const START = '(?<![\\w./:-])' // not inside a word, a number, a path or a version
@@ -16,7 +19,7 @@ const END = '(?!(?!T\\d)\\w|[./:-]\\w)' // nor followed by more of one (a "T" ma
 const PATTERNS = [
   [`${START}(\\d{4})-(\\d{1,2})-(\\d{1,2})${END}`, m => ({ year: m[1], month: +m[2], day: m[3] })],
   [`${START}(\\d{1,2})([./-])(\\d{1,2})\\2(\\d{4})${END}`, m => ({ day: m[1], month: +m[3], year: m[4] })],
-  [`${START}${DAY}${SPACE}(?:of${SPACE})?${MONTH}(?:\\.?,?${SPACE}(\\d{4}))?${END}`, m => ({ day: m[1], month: m[2], year: m[3] })],
+  [`${START}${DAY}${SPACE}(?:of${SPACE})?${ANY_CASE_MONTH}(?:\\.?,?${SPACE}(\\d{4}))?${END}`, m => ({ day: m[1], month: m[2], year: m[3] })],
   [`${START}${MONTH}\\.?${SPACE}${DAY}(?:,?${SPACE}(\\d{4}))?${END}`, m => ({ month: m[1], day: m[2], year: m[3] })],
 ].map(([source, parts]) => [new RegExp(source, 'g'), parts])
 

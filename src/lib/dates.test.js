@@ -25,6 +25,12 @@ describe('dates', () => {
     expect(findDates('17 Oct 2026 25:00', now)[0].date.hour).toBeUndefined()
   })
 
+  it('takes a lowercase month right after its day, not before it', () => {
+    expect(fixed('Due 5 oct')).toBe('Due 5 Oct 2026')
+    expect(fixed('the 17th of october 2026, 9am')).toBe('the 17 Oct 2026, 09:00')
+    expect(fixed('oct 5')).toBe('oct 5')
+  })
+
   it('never reaches across a line', () => {
     expect(fixed('Payment due 5 Oct\n2500 EUR')).toBe('Payment due 5 Oct 2026\n2500 EUR')
     expect(fixed('Standup 2026-10-17\n10:00 breakfast')).toBe('Standup 17 Oct 2026\n10:00 breakfast')
