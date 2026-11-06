@@ -3,15 +3,17 @@ import { cn } from '@/lib/utils.js'
 
 // Drag handle on the right edge of a desktop panel, in the 16px gap to what
 // follows (also ←/→ keys, saved when let go; double click resets); `vertical`: on the bottom edge, for a height (↑/↓).
-// It resizes the box it sits in: `size` / `limits` ({ default, min, max }) / `onResize(px, save)`: `save` is
-// false while dragging and true when it ends, so it's stored once.
+// It resizes by how far it's dragged: `size` / `limits` ({ default, min, max }) / `onResize(px, save)`: `save` is
+// false while dragging and true when it ends, so it's stored once. So it can sit under several boxes of one size
+// (a Notes widget's) as well as on the edge of the one it resizes.
 export default function ResizeHandle({ label, size, limits, onResize, vertical, className }) {
   const last = useRef(size)
-  const onPointerDown = e => { last.current = size; e.currentTarget.setPointerCapture(e.pointerId); e.preventDefault() }
+  const start = useRef(null) // { at: the pointer's x or y, size } when the drag began
+  const at = e => vertical ? e.clientY : e.clientX
+  const onPointerDown = e => { last.current = size; start.current = { at: at(e), size }; e.currentTarget.setPointerCapture(e.pointerId); e.preventDefault() }
   const onPointerMove = e => {
     if (!e.currentTarget.hasPointerCapture(e.pointerId)) return
-    const box = e.currentTarget.parentElement.getBoundingClientRect()
-    last.current = vertical ? e.clientY - box.top : e.clientX - box.left
+    last.current = start.current.size + at(e) - start.current.at
     onResize(last.current, false)
   }
   const onPointerUp = e => { if (e.currentTarget.hasPointerCapture(e.pointerId)) onResize(last.current, true) }

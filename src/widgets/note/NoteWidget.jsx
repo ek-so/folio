@@ -21,7 +21,7 @@ import { NotePicker } from './NoteSetup.jsx'
 // The notes widget (note.js): "Notes" and its ⋯ (Add note…, Edit notes…: order them and take them out, Remove widget)
 // on top, then each note in a grey tray like a board's column, side by side, at least 320px wide (narrower, they wrap
 // onto the next line): its name, Edit (✓ when done) and its own ⋯ (Open full screen, Rename note, Remove from widget),
-// then its text in a box that scrolls inside; all boxes are one height (resizable on desktop by any box's bottom edge).
+// then its text in a box that scrolls inside; all boxes are one height (resizable on desktop by one handle under them, edge to edge).
 // A double tap edits at the tapped word. Edits save on their own, like on the note's own page; opening one full
 // screen is opening the note, as a board's card does. Taking a note out of the widget keeps the note.
 export default function NoteWidget({ id, services, onRemove }) {
@@ -47,14 +47,15 @@ export default function NoteWidget({ id, services, onRemove }) {
     : !settings ? message("This notes widget's settings can't be read.")
     : !settings.notes.length ? message('No notes yet. Add one from ⋯.')
     : (
-      <div className="flex flex-wrap items-start gap-space-sm">
-        {settings.notes.map((entry, i) => (
+      <div className="relative flex flex-wrap items-start gap-space-sm">
+        {settings.notes.map(entry => (
           <NoteTray
             key={`${entry.file}:${services.discards}`} path={entry.file} services={services} height={dragged ?? height}
-            onResize={resize}
-            onTakeOut={canEdit ? () => setRemoving(i) : null}
+            onTakeOut={canEdit ? () => setRemoving(settings.notes.indexOf(entry)) : null}
           />
         ))}
+        {/* One handle under them all, edge to edge: their one height */}
+        {resize && <ResizeHandle vertical label="Resize notes" size={dragged ?? height} limits={NOTE_HEIGHT} className="hidden md:flex" onResize={resize} />}
       </div>
     )
 
@@ -110,9 +111,8 @@ export default function NoteWidget({ id, services, onRemove }) {
   )
 }
 
-// One note's tray: its name, Edit and ⋯ over its box, `height` tall on desktop (`onResize(px, done)` from its edge:
-// the widget's). `onTakeOut` (null: it can't be) asks to remove it from the widget
-function NoteTray({ path, services, height, onResize, onTakeOut }) {
+// One note's tray: its name, Edit and ⋯ over its box, `height` tall on desktop (the widget's). `onTakeOut` (null: it can't be) asks to remove it from the widget
+function NoteTray({ path, services, height, onTakeOut }) {
   const found = services.noteFile(path)
   const [renaming, setRenaming] = useState(false)
   const item = { name: path.slice(path.lastIndexOf('/') + 1), path, type: 'file' }
@@ -151,12 +151,12 @@ function NoteTray({ path, services, height, onResize, onTakeOut }) {
     </Tray>
   )
   if (!found) return tray(null, <p className="py-6 text-center text-sm text-muted-foreground">This note is gone.</p>)
-  return <NoteBox path={path} found={found} services={services} tray={tray} height={height} onResize={onResize} />
+  return <NoteBox path={path} found={found} services={services} tray={tray} height={height} />
 }
 
 // The note itself: read from GitHub (or this device's edits), shown or edited in the box
-// `height`: the box's; `onResize(px, done)` while its edge is dragged and when it's let go (null: it can't be)
-function NoteBox({ path, found, services, tray, height, onResize }) {
+// `height`: the box's
+function NoteBox({ path, found, services, tray, height }) {
   const { content, change, loading, loadError } = useNote(found.entry, found.edited, (text, original) => services.saveNote(path, text, original))
   const [editing, setEditing] = useState(false)
   const textareaRef = useRef()
@@ -181,14 +181,8 @@ function NoteBox({ path, found, services, tray, height, onResize }) {
     : <MarkdownPreview content={content} path={path} files={services.virtual} onDoubleTap={startEditing} onChange={change} onOpenFile={services.openFile} onNavigate={services.openFolder} />
   // Phones: the default height; desktop: the widget's
   return tray(actions, (
-    <div style={{ '--note-h': `${height}px` }} className="relative h-80 md:h-(--note-h)">
+    <div style={{ '--note-h': `${height}px` }} className="h-80 md:h-(--note-h)">
       <div data-no-pull className="flex h-full flex-col overflow-hidden rounded-lg border border-border bg-card">{body}</div>
-      {onResize && (
-        <ResizeHandle
-          vertical label="Resize notes" size={height} limits={NOTE_HEIGHT} className="hidden md:flex"
-          onResize={onResize}
-        />
-      )}
     </div>
   ))
 }
