@@ -274,7 +274,7 @@ const hiddenCards = (paths, dragged) => paths.filter((p, i) => i >= SHOWN && p !
 
 // A column: a drop target for cards; its title moves it (not No status, which stays first).
 // Beside the title its card `count`, which a mouse anywhere over the title row (its top padding too) swaps for ⋯ (Rename / Delete; not No status;
-// on touch both show). Under its cards Show `more` more (`onShowMore`), then a separator and New card.
+// on phones and touch both show). Under its cards Show `more` more (`onShowMore`), then a separator and New card.
 function Column({ column, canEdit, count, more, onShowMore, onNewCard, onRename, onDelete, children }) {
   const { setNodeRef, setActivatorNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
     id: colId(column.key),
@@ -297,12 +297,12 @@ function Column({ column, canEdit, count, more, onShowMore, onNewCard, onRename,
           <div ref={setActivatorNodeRef} {...attributes} {...listeners} className={cn('min-w-0 flex-1 cursor-grab touch-manipulation select-none', NO_CALLOUT)}>
             <TrayTitle grip>{column.name}</TrayTitle>
           </div>
-          {/* With a mouse the count and ⋯ share one spot (a grid cell); on touch they sit side by side */}
-          <div className="flex shrink-0 items-center gap-1 pointer-fine:grid pointer-fine:*:[grid-area:1/1]">
-            <span className="pointer-events-none flex h-control-md min-w-control-md items-center justify-center text-sm tabular-nums text-muted-foreground pointer-fine:group-hover/title:opacity-0 pointer-fine:group-has-[[data-state=open]]/title:opacity-0 pointer-fine:group-has-[:focus-visible]/title:opacity-0">{count}</span>
+          {/* With a mouse on a wider screen the count and ⋯ share one spot (a grid cell); on phones and touch they sit side by side */}
+          <div className="flex shrink-0 items-center gap-1 md:pointer-fine:grid md:pointer-fine:*:[grid-area:1/1]">
+            <span className="pointer-events-none flex h-control-md min-w-control-md items-center justify-center text-sm tabular-nums text-muted-foreground md:pointer-fine:group-hover/title:opacity-0 md:pointer-fine:group-has-[[data-state=open]]/title:opacity-0 md:pointer-fine:group-has-[:focus-visible]/title:opacity-0">{count}</span>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" aria-label={`Actions for ${column.name}`} disabled={!canEdit} className={cn(TRAY_BUTTON, 'pointer-fine:opacity-0 pointer-fine:group-hover/title:opacity-100 pointer-fine:focus-visible:opacity-100 pointer-fine:data-[state=open]:opacity-100')}>
+                <Button variant="ghost" size="icon" aria-label={`Actions for ${column.name}`} disabled={!canEdit} className={cn(TRAY_BUTTON, 'md:pointer-fine:opacity-0 md:pointer-fine:group-hover/title:opacity-100 md:pointer-fine:focus-visible:opacity-100 md:pointer-fine:data-[state=open]:opacity-100')}>
                   <DotsThree weight="bold" size={16} />
                 </Button>
               </DropdownMenuTrigger>

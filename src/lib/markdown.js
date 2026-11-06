@@ -75,6 +75,9 @@ marked.use({
   }],
 })
 
+// One line of markdown as HTML (a property's value, such as a description), its dates as date spots
+export const renderInline = text => marked.Parser.parseInline(withDates(marked.Lexer.lexInline(text)))
+
 // Run on the lexed tokens (renderBlocks lexes and parses separately, so marked's own walkTokens doesn't run)
 const addDates = token => {
   if (token.type === 'table') for (const cell of [...token.header, ...token.rows.flat()]) cell.tokens = withDates(cell.tokens)

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { renderBlocks, tapOffset, taskOffsets, taskProgress, linkSpans, linkMarkdown, replaceLink, repoLink, listsIn, moveListItem, highlightMarkdown } from './markdown.js'
+import { renderBlocks, tapOffset, taskOffsets, taskProgress, linkSpans, linkMarkdown, replaceLink, repoLink, listsIn, moveListItem, highlightMarkdown, renderInline } from './markdown.js'
 
 describe('markdown', () => {
   it('tags each block with its source range', () => {
@@ -117,6 +117,10 @@ describe('highlightMarkdown', () => {
     expect(html).toContain('<span class="italic">*it*</span>')
     expect(html).not.toContain('<span class="italic">_case_</span>')
     expect(highlightMarkdown('[docs(a.md)')).not.toContain('text-primary')
+  })
+
+  it('shows the dates of one line as date spots, not in code', () => {
+    expect(renderInline('Call on **17.10.26 2pm**, not `2026-10-17`')).toBe('Call on <strong><time class="date-spot" datetime="2026-10-17T14:00" data-label="17 Oct 2026, 14:00"></time></strong>, not <code>2026-10-17</code>')
   })
 
   it('shows dates as date spots, not in code or links', () => {
