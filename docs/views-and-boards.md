@@ -21,6 +21,7 @@
   - **Columns** (`CheckListModal`): tick the columns to show; each row has a folder button (opens that column's folder, ← returns to the board) and a trash; a New column field creates one right away.
   - **Properties** (`CheckListModal`): tick the keys its notes have, or add a new name (`keyNameError`); a newly chosen key is added, empty, to every note of the board. A row's pencil renames the key in every note (refused if a note already has the new name); its red trash removes it from all of them, confirmed.
   - **Remove board:** confirmed; deletes its settings file (removing a view removes its boards).
+- **Column:** its card count beside the title, swapped for its ⋯ while a mouse is over the title (on touch both show). It shows its first 7 cards, then Show N more (shows them all until the board is opened again), a separator and New card.
 - **Column ⋯:** Rename, Remove (an empty one plainly; with cards: Remove with cards, or Move to No status, which moves every file in it into the board's folder, numbering taken names, then removes the folder). New card under each column asks for a Title, then a File name that follows the title until typed in (`NewFileModal` `titled`; the title becomes the note's first heading), creates the note there with the board's properties, empty, and stays on the board. Creating a board gives every note in its folder an empty `description`.
 
 ## Note (`widgets/note/`)

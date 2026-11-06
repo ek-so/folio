@@ -1,5 +1,5 @@
 import { useState, useMemo, forwardRef } from 'react'
-import { DotsThree, Trash, Plus, PencilSimple, Tag, Columns } from '@phosphor-icons/react'
+import { DotsThree, Trash, Plus, PencilSimple, Tag, Columns, CaretDown } from '@phosphor-icons/react'
 import {
   DndContext, DragOverlay, MouseSensor, TouchSensor, useSensor, useSensors,
   closestCenter, closestCorners, pointerWithin,
@@ -61,6 +61,7 @@ export default function Board({ id, services, onRemove }) {
   const [renaming, setRenaming] = useState(null) // the column whose Rename / Remove sheet is open
   const [deleting, setDeleting] = useState(null) // the column whose Remove is being confirmed
   const [dropping, setDropping] = useState(null) // the property whose removal is being confirmed
+  const [expanded, setExpanded] = useState(() => new Set()) // keys of the columns showing all their cards
   const [choosing, setChoosing] = useState(null) // the open checklist: 'columns' | 'properties'
   const off = !canEdit || !board || data?.missing
 
@@ -154,12 +155,14 @@ export default function Board({ id, services, onRemove }) {
           <SortableContext items={columns.map(c => colId(c.key))} strategy={horizontalListSortingStrategy}>
             {columns.map(c => (
               <Column
-                key={c.key} column={c} canEdit={canEdit}
+                key={c.key} column={c} canEdit={canEdit} count={items[c.key].length}
+                more={expanded.has(c.key) ? 0 : hiddenCards(items[c.key], drag?.path).length}
+                onShowMore={() => setExpanded(e => new Set(e).add(c.key))}
                 onNewCard={() => act.newCard(c.key === LOOSE ? board.folder : c.path)}
                 onRename={() => setRenaming(c)} onDelete={() => setDeleting(c)}
               >
-                <SortableContext items={items[c.key].map(cardId)} strategy={verticalListSortingStrategy}>
-                  {items[c.key].map(path => <Card key={path} path={path} menu={cardMenu(path)} text={notes[path]} board={board} files={files} onOpen={openFile} onOpenFolder={openFolder} onChange={off ? undefined : act.setProperty} options={act.valuesOf} onRemoveValue={off ? undefined : act.removeValue} valueCount={act.valueCount} chosen={services.tagColors.colors} onEditValue={off || !services.tagColors.canEdit ? undefined : act.editValue} />)}
+                <SortableContext items={shownCards(items[c.key], expanded.has(c.key), drag?.path).map(cardId)} strategy={verticalListSortingStrategy}>
+                  {shownCards(items[c.key], expanded.has(c.key), drag?.path).map(path => <Card key={path} path={path} menu={cardMenu(path)} text={notes[path]} board={board} files={files} onOpen={openFile} onOpenFolder={openFolder} onChange={off ? undefined : act.setProperty} options={act.valuesOf} onRemoveValue={off ? undefined : act.removeValue} valueCount={act.valueCount} chosen={services.tagColors.colors} onEditValue={off || !services.tagColors.canEdit ? undefined : act.editValue} />)}
                 </SortableContext>
               </Column>
             ))}
@@ -257,9 +260,18 @@ export default function Board({ id, services, onRemove }) {
   )
 }
 
+// A column's own text buttons under its cards (Show N more, New card)
+const TRAY_ROW = 'justify-start gap-2 px-3 text-sm font-normal text-muted-foreground hover:bg-muted-foreground/10'
+
+// A column shows its first SHOWN cards until Show N more (and the dragged card, wherever it is)
+const SHOWN = 7
+const shownCards = (paths, all, dragged) => all ? paths : paths.filter((p, i) => i < SHOWN || p === dragged)
+const hiddenCards = (paths, dragged) => paths.filter((p, i) => i >= SHOWN && p !== dragged)
+
 // A column: a drop target for cards; its title moves it (not No status, which stays first).
-// ⋯ beside the title: Rename / Delete (not No status); New card under its cards.
-function Column({ column, canEdit, onNewCard, onRename, onDelete, children }) {
+// Beside the title its card `count`, which a mouse over the title swaps for ⋯ (Rename / Delete; not No status;
+// on touch both show). Under its cards Show `more` more (`onShowMore`), then a separator and New card.
+function Column({ column, canEdit, count, more, onShowMore, onNewCard, onRename, onDelete, children }) {
   const { setNodeRef, setActivatorNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
     id: colId(column.key),
     data: { type: 'column', key: column.key },
@@ -271,26 +283,39 @@ function Column({ column, canEdit, onNewCard, onRename, onDelete, children }) {
       style={{ transform: CSS.Translate.toString(transform), transition }}
       className={cn('min-w-80 flex-1', isDragging && 'opacity-40')}
     >
-      {column.key === LOOSE ? <TrayTitle>{column.name}</TrayTitle> : (
+      {column.key === LOOSE ? (
         <div className="flex items-center gap-1">
+          <div className="min-w-0 flex-1"><TrayTitle>{column.name}</TrayTitle></div>
+          <span className="flex size-control-md shrink-0 items-center justify-center text-sm tabular-nums text-muted-foreground">{count}</span>
+        </div>
+      ) : (
+        <div className="group/title flex items-center gap-1">
           <div ref={setActivatorNodeRef} {...attributes} {...listeners} className={cn('min-w-0 flex-1 cursor-grab touch-manipulation select-none', NO_CALLOUT)}>
             <TrayTitle grip>{column.name}</TrayTitle>
           </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" aria-label={`Actions for ${column.name}`} disabled={!canEdit} className={TRAY_BUTTON}>
-                <DotsThree weight="bold" size={16} />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" onCloseAutoFocus={e => e.preventDefault()}>
-              <DropdownMenuItem onSelect={onRename}><PencilSimple /> Rename</DropdownMenuItem>
-              <DropdownMenuItem variant="destructive" onSelect={onDelete}><Trash /> Remove</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {/* With a mouse the count and ⋯ share one spot (a grid cell); on touch they sit side by side */}
+          <div className="flex shrink-0 items-center gap-1 pointer-fine:grid pointer-fine:*:[grid-area:1/1]">
+            <span className="pointer-events-none flex h-control-md min-w-control-md items-center justify-center text-sm tabular-nums text-muted-foreground pointer-fine:group-hover/title:opacity-0 pointer-fine:group-has-[[data-state=open]]/title:opacity-0 pointer-fine:group-has-[:focus-visible]/title:opacity-0">{count}</span>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" aria-label={`Actions for ${column.name}`} disabled={!canEdit} className={cn(TRAY_BUTTON, 'pointer-fine:opacity-0 pointer-fine:group-hover/title:opacity-100 pointer-fine:focus-visible:opacity-100 pointer-fine:data-[state=open]:opacity-100')}>
+                  <DotsThree weight="bold" size={16} />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" onCloseAutoFocus={e => e.preventDefault()}>
+                <DropdownMenuItem onSelect={onRename}><PencilSimple /> Rename</DropdownMenuItem>
+                <DropdownMenuItem variant="destructive" onSelect={onDelete}><Trash /> Remove</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
       )}
       {children}
-      <Button variant="ghost" disabled={!canEdit} className="justify-start gap-2 px-3 text-sm font-normal text-muted-foreground hover:bg-muted-foreground/10" onClick={onNewCard}>
+      {more > 0 && <>
+        <Button variant="ghost" className={TRAY_ROW} onClick={onShowMore}><CaretDown /> Show {more} more</Button>
+        <div className="mx-space-xs h-px bg-border" />
+      </>}
+      <Button variant="ghost" disabled={!canEdit} className={TRAY_ROW} onClick={onNewCard}>
         <Plus /> New card
       </Button>
     </Tray>
