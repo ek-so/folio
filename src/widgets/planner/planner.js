@@ -68,14 +68,6 @@ export const droppedDate = (text, key) => {
   return old?.hour === undefined ? day : { ...day, hour: old.hour, minute: old.minute }
 }
 
-// A card's `date` text when it isn't one day (a range, "soon", a time alone), else '' (also when empty): dropping
-// the card on a day would replace it
-export const unreadableDate = text => {
-  const value = text === undefined ? '' : properties(text)[DATE]
-  const raw = (Array.isArray(value) ? value.join(', ') : value ?? '').trim()
-  return raw && !cardDate(text) ? raw : ''
-}
-
 // `cards` ([{ path, text }]) arranged by day, as of `today` (a key): `on(key)` is what a day lists,
 // [{ path, overdue, undated }] by time, then title: the cards dated that day, and under today also the cards
 // without a date (`undated`) and those dated before today (`overdue`; they also stay on their own day);

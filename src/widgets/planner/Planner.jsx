@@ -14,7 +14,7 @@ import { shownCards, hiddenCards } from '@/lib/trayCards.js'
 import { displayName } from '@/lib/files.js'
 import { formatDate } from '@/lib/dates.js'
 import { noteTitle, properties, valueList, DESCRIPTION } from '@/lib/frontmatter.js'
-import { DATE, plan, addDays, keyDay, dayKey, cardDate, droppedDate, unreadableDate, monthLabel } from './planner.js'
+import { DATE, plan, addDays, keyDay, dayKey, cardDate, droppedDate, monthLabel } from './planner.js'
 import { usePlanner } from './usePlanner.js'
 import { useToday } from './useToday.js'
 
@@ -44,7 +44,6 @@ export default function Planner({ id, services, onRemove }) {
   const selected = picked ?? today
   const [anchor] = useState(today) // the ribbon's days are counted from where it started, so a new day doesn't shift them
   const [expanded, setExpanded] = useState(() => new Set()) // keys of the days showing all their cards
-  const [replacing, setReplacing] = useState(null) // { path, key, old } while a drop that would replace an unreadable date is confirmed
   const [range, setRange] = useState({ before: MORE_DAYS, after: MORE_DAYS * 2 }) // days shown before and after today
   const [dragged, setDragged] = useState(null) // the path of the card being dragged
   const [choosing, setChoosing] = useState(false) // the Properties sheet
@@ -129,9 +128,7 @@ export default function Planner({ id, services, onRemove }) {
       onRemoveValue: off ? undefined : act.removeValue, valueCount: act.valueCount,
       chosen: services.tagColors.colors, onEditValue: off || !services.tagColors.canEdit ? undefined : act.editValue,
     })
-    // A card's date set to the day `key` (its time is kept)
-    const setDay = (path, key) => act.setProperty(path, DATE, formatDate(droppedDate(notes[path], key)))
-    // A card dropped on a day gets that day as its date; one whose date isn't a day (a range, "soon") asks first
+    // A card dropped on a day gets that day as its date (its time is kept; text that isn't a day is replaced)
     const onDragEnd = ({ active, over }) => {
       setDragged(null)
       if (!over || !String(over.id).startsWith('day:')) return
@@ -139,9 +136,7 @@ export default function Planner({ id, services, onRemove }) {
       const key = over.id.slice(4)
       const old = notes[path] === undefined ? null : cardDate(notes[path])
       if (old && dayKey(old) === key) return // already dated that day
-      const unreadable = unreadableDate(notes[path])
-      if (unreadable) setReplacing({ path, key, old: unreadable })
-      else setDay(path, key)
+      act.setProperty(path, DATE, formatDate(droppedDate(notes[path], key)))
     }
     const paths = list.map(c => c.path)
     const visible = new Set(shownCards(paths, expanded.has(selected), dragged))
@@ -193,15 +188,6 @@ export default function Planner({ id, services, onRemove }) {
         {menu}
       </div>
       {body}
-      {replacing && (
-        <ConfirmModal
-          title={`Replace the date “${replacing.old}”?`}
-          description={`It isn't one day Folio can read, so it is replaced by ${formatDate(keyDay(replacing.key))}. It's changed on GitHub when you sync.`}
-          confirm="Replace"
-          onConfirm={() => { act.setProperty(replacing.path, DATE, formatDate(droppedDate(notes[replacing.path], replacing.key))); setReplacing(null) }}
-          onClose={() => setReplacing(null)}
-        />
-      )}
       {choosing && planner && (
         <CheckListModal
           title="Properties"
