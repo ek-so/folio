@@ -203,7 +203,8 @@ export function useRepo(repo, onDone) {
   async function push(latest) {
     const committed = changesRef.current
     if (!count(committed)) return
-    for (const sha of new Set(Object.values(committed.uploads))) await uploadBlob(sha)
+    const onGitHub = new Set(Object.values(latest.files).map(f => f.sha)) // a duplicate's bytes may be there already
+    for (const sha of new Set(Object.values(committed.uploads))) if (!onGitHub.has(sha)) await uploadBlob(sha)
     const { commitSha, treeSha } = await commitTree(latest, treeEntries(committed, latest.files), commitMessage(committed))
     const editShas = {}
     for (const [orig, text] of Object.entries(committed.edits)) {

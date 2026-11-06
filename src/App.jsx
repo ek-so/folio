@@ -19,7 +19,7 @@ import BrokenLinks from './components/BrokenLinks.jsx'
 import SyncCheckModal from './components/SyncCheckModal.jsx'
 import { useLinkIndex, LinksContext } from './hooks/useLinkIndex.js'
 import { useSymlinks } from './hooks/useSymlinks.js'
-import { rewriteLinks, retargetLink, extractLinks } from './lib/links.js'
+import { rewriteLinks, retargetLink, extractLinks, SYMLINK_MODE } from './lib/links.js'
 import { NavContext } from './components/NavTree.jsx'
 import { foldersToOpen } from './lib/tree.js'
 import { NavRail, TopBar } from './components/AppNav.jsx'
@@ -48,7 +48,7 @@ import { SingleOpenProvider } from './hooks/useSingleOpen.jsx'
 import { cache } from './lib/cache.js'
 import {
   listDir, nameError, renameTarget, renameError, createError, add, setEdit, rename, remove, getAllFolders,
-  upload, replaceUpload, freePath, virtualFiles, splitName, editNote, MAX_UPLOAD_BYTES,
+  upload, replaceUpload, freePath, virtualFiles, splitName, editNote, duplicate, MAX_UPLOAD_BYTES,
 } from './lib/changes.js'
 
 const BASE = import.meta.env.BASE_URL
@@ -333,6 +333,7 @@ export default function App() {
     move: (item, folder) => { const error = handleMove(item, folder); if (error) toast.error(error); return !error },
     moveAll,
     rename: (item, name) => handleRename(item, name),
+    duplicate: item => handleDuplicate(item),
     remove: item => handleDelete(item),
     createFolder: (parent, name) => createFolder(parent, name),
     // `keys`: the properties it starts with, empty; `stay`: don't open it
@@ -358,6 +359,15 @@ export default function App() {
   function followTrails(next) {
     if (page === mainPage && urlForPage(BASE, page, currentView(page, next[page])) !== url) replaceNext.current = true
     setTrails(next)
+  }
+
+  // A copy of the file `item` next to it ("x 2.md"); a symlink isn't copied (a toast says so)
+  function handleDuplicate(item) {
+    const entry = virtual[item.path]
+    if (!entry) return
+    if (entry.mode === SYMLINK_MODE) return toast.error("A symlink can't be duplicated.")
+    window.dispatchEvent(new Event('folio:flush')) // typing in an open note first
+    update(ch => duplicate(ch, repo.remote?.files ?? {}, virtualFiles(repo.remote?.files ?? {}, ch)[item.path], freePath(ch, filesOf(ch), item.path)))
   }
 
   function handleDelete(item) {
@@ -568,7 +578,7 @@ export default function App() {
         expanded,
         onToggle: toggleFolder,
         onCollapseAll: () => setExpanded(new Set()),
-        itemActions: { onRename: handleRename, onDelete: handleDelete, onMove: handleMove, folders: allFolders },
+        itemActions: { onRename: handleRename, onDuplicate: handleDuplicate, onDelete: handleDelete, onMove: handleMove, folders: allFolders },
         onOpenFolder: openFolder,
         onOpenFile: setSelectedFile,
         treeCollapsed,
@@ -624,6 +634,7 @@ export default function App() {
               path={selectedFile}
               entry={entry}
               onRename={handleRename}
+              onDuplicate={handleDuplicate}
               onDelete={handleDelete}
               onMove={handleMove}
               folders={allFolders}
@@ -645,6 +656,7 @@ export default function App() {
               onNavigate={openFolder}
               onOpenFile={setSelectedFile}
               onRename={handleRename}
+              onDuplicate={handleDuplicate}
               onDelete={handleDelete}
               onMove={handleMove}
               folders={allFolders}
@@ -660,6 +672,7 @@ export default function App() {
               error={repo.error}
               notice={repo.remote?.truncated ? 'This repo is too large to list in full; some files are missing.' : ''}
               onRename={handleRename}
+              onDuplicate={handleDuplicate}
               onDelete={handleDelete}
               onMove={handleMove}
               folders={allFolders}

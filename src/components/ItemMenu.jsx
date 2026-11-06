@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { DotsThree, PencilSimple, Trash, Folder, Rows, SquaresFour } from '@phosphor-icons/react'
+import { DotsThree, PencilSimple, Trash, Folder, Rows, SquaresFour, Copy } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils.js'
 import { Button } from './ui/button.jsx'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from './ui/dropdown-menu.jsx'
@@ -12,6 +12,7 @@ import ColumnSubmenu from './ColumnSubmenu.jsx'
 // ⋯ menu with Rename / Move / Delete for a file or folder ({ name, path, type }).
 // onRename(item, name) returns an error message or null.
 // onMove(item, targetFolder) returns an error message or null.
+// onDuplicate(item): a copy of a file next to it (not offered for a folder).
 // inList: inside a file-browser row — medium (32px), ghost (no border), smaller icon, with its own
 // lighter fill on hover over the row's highlight
 // default (title bar of the open folder or file): ghost-outline with a more visible border
@@ -21,7 +22,7 @@ import ColumnSubmenu from './ColumnSubmenu.jsx'
 // with no `item` (the root folder, which can't be renamed, moved or deleted) it's all the menu has
 const VIEWS = [['list', 'List', Rows], ['cards', 'Cards', SquaresFour]]
 
-export default function ItemMenu({ item, onRename, onDelete, onMove, folders, inList, hoverReveal, view, onView, columns }) {
+export default function ItemMenu({ item, onRename, onDuplicate, onDelete, onMove, folders, inList, hoverReveal, view, onView, columns }) {
   const [renaming, setRenaming] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [moving, setMoving] = useState(false)
@@ -53,6 +54,7 @@ export default function ItemMenu({ item, onRename, onDelete, onMove, folders, in
             <DropdownMenuItem onSelect={() => setRenaming(true)}><PencilSimple /> Rename</DropdownMenuItem>
             {columns && <ColumnSubmenu columns={columns.columns} column={columns.column} onSelect={columns.onSelect} />}
             {onMove && <DropdownMenuItem onSelect={() => setMoving(true)}><Folder /> Move to…</DropdownMenuItem>}
+            {onDuplicate && item.type !== 'dir' && <DropdownMenuItem onSelect={() => onDuplicate(item)}><Copy /> Duplicate</DropdownMenuItem>}
             <DropdownMenuItem variant="destructive" onSelect={() => setDeleting(true)}><Trash /> Remove</DropdownMenuItem>
           </>}
         </DropdownMenuContent>

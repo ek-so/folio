@@ -1,7 +1,7 @@
 # Files, links and sync
 
 ## Item actions
-Rename / Move / Remove for any file or folder (the only way to rename) go through `ItemMenu` (⋯) on list rows, tree rows and the title bar. `SearchSheet` finds visible files by path; with no query it lists recently opened ones.
+Rename / Move / Remove for any file or folder (the only way to rename) go through `ItemMenu` (⋯) on list rows, tree rows and the title bar. A file's ⋯ also has Duplicate: a copy next to it ("x 2.md", `freePath`), its text when edited on this device, else the same bytes (`duplicate` in lib/changes.js; a blob GitHub already has isn't uploaded again on push); a symlink can't be duplicated. `SearchSheet` finds visible files by path; with no query it lists recently opened ones.
 
 ## Symlinks
 - Git mode `120000`. A link never opens itself: opening one (from the list, search or a note's link) opens its source. A link row is dimmed with "(symlink)" after its name (tooltip "Symlinked from <path>"). Links outside the repo, to nothing, or not on the device yet show the reason and can't be opened. Folder links sort with the folders.

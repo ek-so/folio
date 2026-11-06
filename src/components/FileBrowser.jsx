@@ -16,7 +16,7 @@ import Spinner from './Spinner.jsx'
 import PageLayout from './PageLayout.jsx'
 import { cn } from '@/lib/utils.js'
 
-export default function FileBrowser({ path, onNavigate, listDir, loading, error, notice, onSelect, onNewFile, repoName, onRename, onDelete, onMove, folders, onUpload, onDropMove, symlinks = {}, linkedBy, onOpenLink }) {
+export default function FileBrowser({ path, onNavigate, listDir, loading, error, notice, onSelect, onNewFile, repoName, onRename, onDuplicate, onDelete, onMove, folders, onUpload, onDropMove, symlinks = {}, linkedBy, onOpenLink }) {
   // Symlinked folders sort with the folders
   const isFolder = i => i.type === 'dir' || symlinks[i.path]?.kind === 'folder'
   const listed = loading ? [] : listDir(path)
@@ -192,7 +192,7 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
                     dimmed={!isDraggedItem && (item.name.startsWith('.') || isLink)}
                     // Where a link points: the browser's own tooltip on hover
                     tooltip={link?.path ? `Symlinked from ${link.path}` : undefined}
-                    trailing={<ItemMenu item={item} onRename={onRename} onDelete={onDelete} onMove={onMove} folders={folders} inList hoverReveal={cards} />}
+                    trailing={<ItemMenu item={item} onRename={onRename} onDuplicate={onDuplicate} onDelete={onDelete} onMove={onMove} folders={folders} inList hoverReveal={cards} />}
                     className={cn(
                       isDraggedItem && 'opacity-40',
                       dragOverPath === item.path && item.type === 'dir' && 'bg-primary/10 ring-1 ring-primary/40',

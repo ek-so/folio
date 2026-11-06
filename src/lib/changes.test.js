@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   empty, count, virtualFiles, add, setEdit, rename, remove, conflicts, settle, treeEntries, filesAfter,
-  upload, replaceUpload, normalize, freePath,
+  upload, replaceUpload, normalize, freePath, duplicate, commitMessage,
   renameTarget, renameError, canMoveTo, createError, getAllFolders, nameError,
 } from './changes.js'
 
@@ -109,6 +109,18 @@ describe('changes', () => {
     const after = { 'b.md': { sha: 'b1' }, 'dir/x.md': files['dir/x.md'] }
     const next = settle(current, committed, after)
     expect(next).toEqual({ edits: { 'b.md': 'edited' }, uploads: {}, moves: {}, base: { 'b.md': 'b1' } })
+  })
+})
+
+describe('duplicate', () => {
+  it('copies an edited note\'s text, else points at the same bytes', () => {
+    const files = { 'a.md': { sha: 'A' }, 'p.png': { sha: 'P' } }
+    let ch = setEdit(empty(), virtualFiles(files, empty())['a.md'], 'new text', 'old')
+    ch = duplicate(ch, files, virtualFiles(files, ch)['a.md'], 'a 2.md')
+    ch = duplicate(ch, files, virtualFiles(files, ch)['p.png'], 'p 2.png')
+    expect(ch.edits['a 2.md']).toBe('new text')
+    expect(ch.uploads['p 2.png']).toBe('P')
+    expect(commitMessage(ch)).toContain('Create p 2.png')
   })
 })
 

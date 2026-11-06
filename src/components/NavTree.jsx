@@ -17,7 +17,7 @@ import { storage } from '../lib/storage.js'
 
 // What the file tree needs from App: `listDir(dir)`, `symlinks`, the `current`
 // path, the open folders (`expanded`, `onToggle`, `onCollapseAll`), `onOpenFolder` /
-// `onOpenFile`, `itemActions` for each row's ⋯ (ItemMenu's onRename / onDelete / onMove / folders, as in File manager), and for
+// `onOpenFile`, `itemActions` for each row's ⋯ (ItemMenu's onRename / onDuplicate / onDelete / onMove / folders, as in File manager), and for
 // drag and drop `onDropMove(item, folder)` / `onUpload(files, folder)`, and for the
 // title's RepoMenu the open `repo`, the `repos` used on this device and `onSwitchRepo(repo)`.
 export const NavContext = createContext(null)
