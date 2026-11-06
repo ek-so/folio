@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Check, PencilSimple, Trash } from '@phosphor-icons/react'
+import { Check } from '@phosphor-icons/react'
 import { Button } from './ui/button.jsx'
 import { Input } from './ui/input.jsx'
 import { ListRow } from './ui/list-row.jsx'
@@ -8,10 +8,10 @@ import ValueEditForm from './ValueEditForm.jsx'
 
 // The dialog behind a property popover's pencil: all the values of the property
 // `name` (`values`, each with its color in `colors`, a Map), a field to add a new
-// one, and for each a pencil (rename it and pick its color: `onEdit(from, to,
-// color)`) and a red trash (`onRemove(value)`); either is left out when not given.
-// `count(value)`: in how many notes; `scopeName`: where. Editing replaces the list
-// in the same dialog; Cancel or Save comes back to it.
+// one. The rows are plain (a color dot and the name); choosing one replaces the list
+// in the same dialog with its form: rename it and pick its color (`onEdit(from, to,
+// color)`), or the red Delete (`onRemove(value)`, left out when not given); Cancel or
+// Save comes back to the list. `count(value)`: in how many notes; `scopeName`: where.
 export default function ValuesModal({ name, values, colors, count, scopeName, onAdd, onEdit, onRemove, onClose }) {
   const [editing, setEditing] = useState(null) // the value being edited
   const [typed, setTyped] = useState('')
@@ -39,10 +39,11 @@ export default function ValuesModal({ name, values, colors, count, scopeName, on
           color={color}
           onSave={(next, picked) => {
             // Unchanged: nothing is saved (that would pin the automatic color)
-            if (next !== editing || picked !== color) onEdit(editing, next, picked)
+            if (next !== editing || picked !== color) onEdit?.(editing, next, picked)
             setEditing(null)
           }}
           onCancel={() => setEditing(null)}
+          onDelete={onRemove && (() => onRemove(editing))}
         />
       </BottomSheet>
     )
@@ -66,13 +67,9 @@ export default function ValuesModal({ name, values, colors, count, scopeName, on
           {values.map(v => (
             <li key={v}>
               <ListRow
-                disabled
                 icon={<span className="size-3 shrink-0 rounded-full" style={{ background: `var(--tag-${colors.get(v) ?? 0})` }} />}
                 title={v}
-                trailing={<>
-                  {onEdit && <Button variant="ghost" size="icon" aria-label={`Edit ${v}`} tooltip="Edit this value" onClick={() => setEditing(v)}><PencilSimple /></Button>}
-                  {onRemove && <Button variant="ghost-destructive" size="icon" aria-label={`Delete ${v}`} tooltip="Delete this value" onClick={() => onRemove(v)}><Trash /></Button>}
-                </>}
+                onClick={() => setEditing(v)}
               />
             </li>
           ))}
