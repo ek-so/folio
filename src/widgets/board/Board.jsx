@@ -1,5 +1,5 @@
 import { useState, useMemo, forwardRef } from 'react'
-import { DotsThree, DotsSixVertical, Trash, Plus, PencilSimple, Tag, Columns } from '@phosphor-icons/react'
+import { DotsThree, Trash, Plus, PencilSimple, Tag, Columns } from '@phosphor-icons/react'
 import {
   DndContext, DragOverlay, MouseSensor, TouchSensor, useSensor, useSensors,
   closestCenter, closestCorners, pointerWithin,
@@ -8,6 +8,7 @@ import { SortableContext, useSortable, arrayMove, horizontalListSortingStrategy,
 import { CSS } from '@dnd-kit/utilities'
 import { cn } from '@/lib/utils.js'
 import { Button } from '@/components/ui/button.jsx'
+import { Tray, TrayTitle } from '@/components/ui/tray.jsx'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu.jsx'
 import PropertyBadges from '@/components/PropertyBadges.jsx'
 import Spinner from '@/components/Spinner.jsx'
@@ -163,9 +164,9 @@ export default function Board({ id, services, onRemove }) {
         <DragOverlay>
           {dragged && drag.type === 'card' && byPath[dragged] && <CardBody path={dragged} text={notes[dragged]} board={board} files={files} chosen={services.tagColors.colors} className="rotate-2 border-transparent shadow-lg" />}
           {dragged && drag.type === 'column' && (
-            <div className="w-80 rotate-1 rounded-lg bg-secondary p-space-sm shadow-lg">
-              <ColumnTitle column={dragged} grip />
-            </div>
+            <Tray className="w-80 rotate-1 bg-secondary shadow-lg">
+              <TrayTitle grip>{dragged.name}</TrayTitle>
+            </Tray>
           )}
         </DragOverlay>
       </DndContext>
@@ -251,16 +252,6 @@ export default function Board({ id, services, onRemove }) {
   )
 }
 
-// A column's name; `grip`: the drag indicator before it (a column that can be moved)
-function ColumnTitle({ column, grip }) {
-  return (
-    <div className="flex min-h-control-md items-center gap-1 px-space-xs">
-      {grip && <DotsSixVertical className="size-4 shrink-0 text-muted-foreground" aria-hidden />}
-      <h3 className="min-w-0 flex-1 truncate text-sm font-semibold">{column.name}</h3>
-    </div>
-  )
-}
-
 // A column: a drop target for cards; its title moves it (not No status, which stays first).
 // ⋯ beside the title: Rename / Delete (not No status); New card under its cards.
 function Column({ column, canEdit, onNewCard, onRename, onDelete, children }) {
@@ -270,15 +261,15 @@ function Column({ column, canEdit, onNewCard, onRename, onDelete, children }) {
     disabled: { draggable: column.key === LOOSE, droppable: false },
   })
   return (
-    <div
+    <Tray
       ref={setNodeRef}
       style={{ transform: CSS.Translate.toString(transform), transition }}
-      className={cn('flex w-80 shrink-0 flex-col gap-space-sm rounded-lg bg-secondary/60 p-space-sm', isDragging && 'opacity-40')}
+      className={cn('w-80 shrink-0', isDragging && 'opacity-40')}
     >
-      {column.key === LOOSE ? <ColumnTitle column={column} /> : (
+      {column.key === LOOSE ? <TrayTitle>{column.name}</TrayTitle> : (
         <div className="flex items-center gap-1">
           <div ref={setActivatorNodeRef} {...attributes} {...listeners} className={cn('min-w-0 flex-1 cursor-grab touch-manipulation select-none', NO_CALLOUT)}>
-            <ColumnTitle column={column} grip />
+            <TrayTitle grip>{column.name}</TrayTitle>
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -297,7 +288,7 @@ function Column({ column, canEdit, onNewCard, onRename, onDelete, children }) {
       <Button variant="ghost" disabled={!canEdit} className="justify-start gap-2 px-3 text-sm font-normal text-muted-foreground hover:bg-muted-foreground/10" onClick={onNewCard}>
         <Plus /> New card
       </Button>
-    </div>
+    </Tray>
   )
 }
 
@@ -336,7 +327,7 @@ const CardBody = forwardRef(function CardBody({ path, text, board, files, menu, 
       role="button"
       tabIndex={0}
       onKeyDown={e => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); props.onClick?.(e) } }}
-      className={cn('group flex w-full cursor-pointer touch-manipulation select-none flex-col gap-1 rounded-lg border border-border bg-background p-3 text-left outline-none transition-[box-shadow,border-color] hover:border-transparent hover:shadow-md focus-visible:ring-1 focus-visible:ring-ring', NO_CALLOUT, className)}
+      className={cn('group flex w-full cursor-pointer touch-manipulation select-none flex-col gap-1 rounded-lg border border-border bg-card p-3 text-left outline-none transition-[box-shadow,border-color] hover:border-transparent hover:shadow-md focus-visible:ring-1 focus-visible:ring-ring', NO_CALLOUT, className)}
       {...props}
     >
       <div className="flex items-start gap-1">

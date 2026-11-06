@@ -39,6 +39,7 @@ Never hardcode colors; use the semantic tokens (light and dark values in `src/in
 | `--tag-0`…`--tag-9`, `--tag-tint` | Property badge colors, tinted against `--card` |
 | `--callout-*` | GitHub alert callouts in the preview |
 | `--radius` | `0.75rem` base radius |
+| `shadow-sm`…`shadow-lg` | Redefined in `src/index.css` (`@theme`): close under the element, a small drop and mostly spread |
 
 `--safe-top` / `--safe-bottom` hold the iOS safe-area insets.
 
@@ -53,6 +54,8 @@ Never hardcode colors; use the semantic tokens (light and dark values in `src/in
 ## List rows and cards
 - **`ListRow`** (`ui/list-row.jsx`) is every list's row: file manager, tree, search, move, backlinks, popover lists. Icon left, title (with the changed dot), optional muted description, `trailing` slot (⋯), `leading` before the button (tree indent and chevron). Base height, rounded, highlighted on hover or while its ⋯ is open. States: `active`, `dimmed` (hidden files, symlinks), `disabled`. Lists don't build their own rows.
 - **`CardTile`** (`ui/card-tile.jsx`, same props): file manager's cards. A 24px icon in a 48px tinted square over the name; outlined, `rounded-lg`; names up to two lines (tiles two lines tall only when some name in the folder wraps, measured in `FileBrowser`); ⋯ in the corner on hover.
+- **`Tray`** / **`TrayTitle`** (`ui/tray.jsx`): a tinted, rounded box grouping what's in it under a small title (`grip`: the drag dots): a board's column, a note widget's note. What sits in it is `bg-card`.
+- **`Placeholder`** (`ui/placeholder.jsx`): light text for what isn't filled in yet (Untitled, No value).
 
 ## Tooltips
 shadcn's (`ui/tooltip.jsx`): dark on light, text-sm, after 300ms (`TooltipProvider` in App), on mouse hover and keyboard focus, never on a tap. The `tooltip` prop of `Button` (`tooltipSide`), `ListRow` and `CardTile` (on the whole row, so a row that can't be opened explains why), or wrap in `Tip`. The one exception is the rendered note preview (HTML, not React): a date chip keeps its `title`.

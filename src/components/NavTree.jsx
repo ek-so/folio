@@ -213,7 +213,7 @@ export function NavPanel() {
       <aside aria-label="Files and folders" className="flex h-full flex-col overflow-hidden rounded-xl border border-border bg-card">
         <TreePanel dnd />
       </aside>
-      <ResizeHandle label="Resize file tree" width={width} limits={TREE_WIDTH} onResize={resize} />
+      <ResizeHandle label="Resize file tree" size={width} limits={TREE_WIDTH} onResize={resize} />
     </div>
   )
 }

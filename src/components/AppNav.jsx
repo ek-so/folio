@@ -104,7 +104,7 @@ export function NavRail({ page, pages, viewActions, onPage, onSearch, renderSync
       <Button variant="ghost" tooltip={hint('Sign out')} tooltipSide="right" className={cn('justify-start gap-3 font-normal text-destructive', collapsed && 'size-control justify-center px-0')} onClick={menu.onSignOut}>
         <SignOut /> {label('Sign out')}
       </Button>
-      {!collapsed && <ResizeHandle label="Resize menu" width={width} limits={RAIL_WIDTH} onResize={resize} className="inset-y-space-lg" />}
+      {!collapsed && <ResizeHandle label="Resize menu" size={width} limits={RAIL_WIDTH} onResize={resize} className="inset-y-space-lg" />}
     </nav>
   )
 }

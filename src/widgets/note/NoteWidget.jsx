@@ -9,11 +9,17 @@ import MarkdownPreview from '@/components/MarkdownPreview.jsx'
 import MarkdownEditor from '@/components/MarkdownEditor.jsx'
 import { useNote } from '@/hooks/useNote.js'
 import { displayName } from '@/lib/files.js'
-import { notePath, parseNote } from './note.js'
+import ResizeHandle from '@/components/ResizeHandle.jsx'
+import { Tray, TrayTitle } from '@/components/ui/tray.jsx'
+import { Placeholder } from '@/components/ui/placeholder.jsx'
+import { noteTitle } from '@/lib/frontmatter.js'
+import { NOTE_HEIGHT, clampSize } from '@/lib/resize.js'
+import { notePath, parseNote, serializeNote, noteHeight } from './note.js'
 
 // A note widget (note.js): the note's file name, Edit (✓ when done) and ⋯ (Open full screen, Rename: renames
-// the file, Remove) on top,
-// then its text in a box of fixed height that scrolls inside; a double tap edits at the tapped word. Edits save on their own, like on
+// the file, Remove) on top, then a tray titled with the note's title (Untitled, light, without one) around its
+// text in a box that scrolls inside, as tall as its settings say (resizable on desktop by its bottom edge);
+// a double tap edits at the tapped word. Edits save on their own, like on
 // the note's own page; opening it full screen is opening the note, as a board's card does.
 export default function NoteWidget({ id, services, onRemove }) {
   const file = services.config.read(notePath(id))
@@ -43,13 +49,16 @@ export default function NoteWidget({ id, services, onRemove }) {
   if (!file.ready) return frame('Note', <div className="flex justify-center py-12"><Spinner /></div>)
   if (!note) return frame('Note', message("This note widget's settings can't be read."))
   if (!found) return frame(displayName(path), message(`Its note “${path}” is gone.`))
-  return <NoteBox key={`${path}:${services.discards}`} path={path} found={found} services={services} frame={frame} />
+  const resize = services.canEdit ? height => services.update(services.config.write(notePath(id), serializeNote({ ...note, height }))) : null
+  return <NoteBox key={`${path}:${services.discards}`} path={path} found={found} services={services} frame={frame} height={noteHeight(note)} onResize={resize} />
 }
 
 // The note itself: read from GitHub (or this device's edits), shown or edited in the box
-function NoteBox({ path, found, services, frame }) {
+// `height`: the box's, from the settings; `onResize(px)` saves a new one (null: it can't be)
+function NoteBox({ path, found, services, frame, height, onResize }) {
   const { content, change, loading, loadError } = useNote(found.entry, found.edited, (text, original) => services.saveNote(path, text, original))
   const [editing, setEditing] = useState(false)
+  const [dragged, setDragged] = useState(null) // the height while its edge is dragged, until it's saved
   const textareaRef = useRef()
   const ready = !loading && !loadError
 
@@ -70,7 +79,28 @@ function NoteBox({ path, found, services, frame }) {
     : loadError ? <p className="px-6 py-12 text-center text-sm text-muted-foreground">Couldn't open this note. It isn't saved on this device yet — connect to the internet and pull to refresh.</p>
     : editing ? <MarkdownEditor ref={textareaRef} content={content} onChange={change} onDone={() => setEditing(false)} />
     : <MarkdownPreview content={content} path={path} files={services.virtual} onDoubleTap={startEditing} onChange={change} onOpenFile={services.openFile} onNavigate={services.openFolder} />
-  return frame(displayName(path), <div data-no-pull className="flex h-80 flex-col overflow-hidden rounded-lg border border-border bg-card">{body}</div>, actions)
+  const title = ready ? noteTitle(content, null) : null
+  const shown = dragged ?? height
+  return frame(displayName(path), (
+    <Tray>
+      <TrayTitle>{title ?? (ready && <Placeholder>Untitled</Placeholder>)}</TrayTitle>
+      {/* Phones: the default height; desktop: the settings' */}
+      <div style={{ '--note-h': `${shown}px` }} className="relative h-80 md:h-(--note-h)">
+        <div data-no-pull className="flex h-full flex-col overflow-hidden rounded-lg border border-border bg-card">{body}</div>
+        {onResize && (
+          <ResizeHandle
+            vertical label="Resize note" size={shown} limits={NOTE_HEIGHT} className="hidden md:flex"
+            onResize={(px, save = true) => {
+              const next = clampSize(px, NOTE_HEIGHT)
+              if (!save) return setDragged(next)
+              setDragged(null)
+              if (next !== height) onResize(next)
+            }}
+          />
+        )}
+      </div>
+    </Tray>
+  ), actions)
 }
 
 // The widget's title row over `children`; ⋯ opens the note full screen (`onOpen`)
