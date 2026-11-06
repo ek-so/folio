@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { boardPath, boardTitle, parseBoard, serializeBoard, boardColumns, placeCard, moveColumn, withBoardKeys, editNotes, emptyColumn, isTechnical } from './board.js'
+import { boardPath, parseBoard, serializeBoard, boardColumns, placeCard, moveColumn, withBoardKeys, editNotes, emptyColumn, isTechnical } from './board.js'
 import { editNote } from '@/lib/changes.js'
 import { DESCRIPTION, frontMatter, withoutKeys, renameKey, keyNameError, withValue, withTitle, valueActions } from '@/lib/frontmatter.js'
 
@@ -14,10 +14,10 @@ export function placeCardVia(services, id, board, data, path, column, index) {
 
 // Board `id` as its widget shows and changes it, through the app's `services`:
 // `ready` (its settings are read), `board` (null when they can't be), `data`
-// (boardColumns), `title`, and what the board can do. Every change goes through
+// (boardColumns), and what the board can do. Every change goes through
 // the app's own pipeline (services.update and its file actions).
 export function useBoard(id, services) {
-  const { config, update, files, repoName } = services
+  const { config, update, files } = services
   const file = config.read(boardPath(id))
   const board = file.ready && file.text !== undefined ? parseBoard(file.text) : null
   const data = board && boardColumns(board, files)
@@ -39,7 +39,6 @@ export function useBoard(id, services) {
     ready: file.ready,
     board,
     data,
-    title: board ? boardTitle(board, repoName) : 'Board',
     // A card dropped at `index` in `column`: the order is saved, and a card dropped in
     // another column moves its file there (a taken name is refused, as a toast)
     placeCard: (path, column, index) => placeCardVia(services, id, board, data, path, column, index),

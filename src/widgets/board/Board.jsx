@@ -50,7 +50,7 @@ function collide(args) {
 // file there, a column's title moves the column. Everything it does is in
 // useBoard; `services` come from the app (widgets/index.js).
 export default function Board({ id, services, onRemove }) {
-  const { ready, board, data, title, ...act } = useBoard(id, services)
+  const { ready, board, data, ...act } = useBoard(id, services)
   const { notes, canEdit, openFile, openFolder } = services
   const files = useMemo(() => Object.fromEntries(services.files.map(f => [f, true])), [services.files]) // as the preview's links want them
   const sensors = useSensors(
@@ -184,7 +184,11 @@ export default function Board({ id, services, onRemove }) {
   return (
     <section className="flex shrink-0 flex-col gap-space-sm">
       <div className="flex min-h-control items-center gap-space-sm">
-        <h2 className="min-w-0 flex-1 truncate px-space-xs text-base font-bold">{title}</h2>
+        {/* "Board", then its folder from the repo's root, muted */}
+        <h2 className="flex min-w-0 flex-1 items-baseline gap-space-sm px-space-xs">
+          <span className="shrink-0 text-base font-bold">Board</span>
+          {board && <span className="truncate text-sm text-muted-foreground">{board.folder || services.repoName}</span>}
+        </h2>
         {menu}
       </div>
       {body}
