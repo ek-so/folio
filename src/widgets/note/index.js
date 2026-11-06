@@ -1,29 +1,24 @@
 import { Note } from '@phosphor-icons/react'
 import NoteWidget from './NoteWidget.jsx'
 import NoteSetup from './NoteSetup.jsx'
-import { displayName } from '@/lib/files.js'
-import { notePath, parseNote, serializeNote, movedNote } from './note.js'
+import { notePath, parseNotes, serializeNotes, movedNotes } from './note.js'
 
-// The note widget: one note shown and edited on a view (note.js). Its settings are .folio/notes/<id>.json.
+// The notes widget: notes side by side, shown and edited on a view (note.js). Its settings are .folio/notes/<id>.json.
 export default {
   type: 'note',
-  label: 'Note',
+  label: 'Notes',
   icon: Note,
   Widget: NoteWidget,
   Setup: NoteSetup,
-  title(id, { config }) {
-    const file = config.read(notePath(id))
-    const note = file.ready && file.text !== undefined ? parseNote(file.text) : null
-    return note ? displayName(note.file) : 'Note'
-  },
-  // Its note follows renames and moves
+  title: () => 'Notes',
+  // Its notes follow renames and moves
   moved(ch, id, from, to, isDir, { config }) {
     const text = config.readIn(ch, notePath(id))
-    const note = typeof text === 'string' ? parseNote(text) : null
-    if (!note) return ch
-    const moved = movedNote(note, from, to, isDir)
-    return moved === note ? ch : config.write(notePath(id), serializeNote(moved))(ch)
+    const settings = typeof text === 'string' ? parseNotes(text) : null
+    if (!settings) return ch
+    const moved = movedNotes(settings, from, to, isDir)
+    return moved === settings ? ch : config.write(notePath(id), serializeNotes(moved))(ch)
   },
-  // The note itself stays
+  // The notes themselves stay
   removed: (ch, id, { config }) => config.erase(notePath(id))(ch),
 }

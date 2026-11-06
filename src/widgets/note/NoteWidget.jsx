@@ -1,58 +1,152 @@
 import { useState, useRef } from 'react'
 import { flushSync } from 'react-dom'
-import { DotsThree, Trash, PencilSimple, Check, ArrowsOut } from '@phosphor-icons/react'
+import { DotsThree, Trash, PencilSimple, Check, ArrowsOut, Plus, ListBullets, X } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button.jsx'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu.jsx'
 import Spinner from '@/components/Spinner.jsx'
 import RenameModal from '@/components/RenameModal.jsx'
+import ConfirmModal from '@/components/ConfirmModal.jsx'
+import EditListModal from '@/components/EditListModal.jsx'
+import FileIcon from '@/components/FileIcon.jsx'
 import MarkdownPreview from '@/components/MarkdownPreview.jsx'
 import MarkdownEditor from '@/components/MarkdownEditor.jsx'
 import { useNote } from '@/hooks/useNote.js'
 import { displayName } from '@/lib/files.js'
 import ResizeHandle from '@/components/ResizeHandle.jsx'
-import { Tray } from '@/components/ui/tray.jsx'
+import { Tray, TrayTitle, TRAY_BUTTON } from '@/components/ui/tray.jsx'
 import { NOTE_HEIGHT, clampSize } from '@/lib/resize.js'
-import { notePath, parseNote, serializeNote, noteHeight, resizedNote } from './note.js'
+import { notePath, parseNotes, serializeNotes, noteHeight, resizedNote, addedNote, removedNote, reorderedNote } from './note.js'
+import { NotePicker } from './NoteSetup.jsx'
 
-// A note widget (note.js): the note's file name, Edit (✓ when done) and ⋯ (Open full screen, Rename note: renames
-// the file, Remove note) on top, then its text in a box that scrolls inside, in a grey tray like a board's column, as tall as its settings say (resizable on desktop by its bottom edge);
-// a double tap edits at the tapped word. Edits save on their own, like on
-// the note's own page; opening it full screen is opening the note, as a board's card does.
+// The notes widget (note.js): "Notes" and its ⋯ (Add note…, Edit notes…: order them and take them out, Remove widget)
+// on top, then each note in a grey tray like a board's column, side by side, at least 320px wide (narrower, they wrap
+// onto the next line): its name, Edit (✓ when done) and its own ⋯ (Open full screen, Rename note, Remove from widget),
+// then its text in a box that scrolls inside, as tall as its settings say (resizable on desktop by its bottom edge).
+// A double tap edits at the tapped word. Edits save on their own, like on the note's own page; opening one full
+// screen is opening the note, as a board's card does. Taking a note out of the widget keeps the note.
 export default function NoteWidget({ id, services, onRemove }) {
   const file = services.config.read(notePath(id))
-  const note = file.ready && file.text !== undefined ? parseNote(file.text) : null
-  const path = note?.file
-  const found = path && services.noteFile(path)
-  const open = () => { window.dispatchEvent(new Event('folio:flush')); services.openFile(path) } // typing first
+  const settings = file.ready && file.text !== undefined ? parseNotes(file.text) : null
+  const canEdit = services.canEdit && !!settings
+  const save = next => services.update(services.config.write(notePath(id), serializeNotes(next)))
+  const [adding, setAdding] = useState(false)
+  const [listing, setListing] = useState(false) // Edit notes is open
+  const [removing, setRemoving] = useState(null) // the index of the note whose removal is being confirmed
 
+  const message = text => <p className="py-6 text-center text-sm text-muted-foreground">{text}</p>
+  const body = !file.ready ? <div className="flex justify-center py-12"><Spinner /></div>
+    : !settings ? message("This notes widget's settings can't be read.")
+    : !settings.notes.length ? message('No notes yet. Add one from ⋯.')
+    : (
+      <div className="flex flex-wrap items-start gap-space-sm">
+        {settings.notes.map((entry, i) => (
+          <NoteTray
+            key={`${entry.file}:${services.discards}`} path={entry.file} services={services} height={noteHeight(entry)}
+            onResize={canEdit ? height => save(resizedNote(settings, i, height)) : null}
+            onTakeOut={canEdit ? () => setRemoving(i) : null}
+          />
+        ))}
+      </div>
+    )
+
+  return (
+    <section className="flex shrink-0 flex-col gap-space-sm">
+      <div className="flex min-h-control items-center gap-space-sm">
+        <h2 className="min-w-0 flex-1 truncate px-space-xs text-base font-bold">Notes</h2>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost-outline" size="icon" aria-label="Notes widget actions" className="shrink-0 border-muted-foreground/50">
+              <DotsThree weight="bold" size={20} />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" onCloseAutoFocus={e => e.preventDefault()}>
+            <DropdownMenuItem disabled={!canEdit} onSelect={() => setAdding(true)}><Plus /> Add note…</DropdownMenuItem>
+            <DropdownMenuItem disabled={!canEdit || !settings.notes.length} onSelect={() => setListing(true)}><ListBullets /> Edit notes…</DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem variant="destructive" disabled={!services.canEdit} onSelect={onRemove}><Trash /> Remove widget</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+      {body}
+      {adding && (
+        <NotePicker
+          services={services}
+          onPick={(path, first = ch => ch) => {
+            setAdding(false)
+            services.update(ch => services.config.write(notePath(id), serializeNotes(addedNote(settings, path)))(first(ch)))
+          }}
+          onClose={() => setAdding(false)}
+        />
+      )}
+      {listing && settings && (
+        <EditListModal
+          title="Edit notes"
+          description="Drag them into order. Taking one out keeps the note."
+          items={settings.notes.map(n => ({ id: n.file, icon: <FileIcon path={n.file} />, title: displayName(n.file) }))}
+          onMove={(from, to) => save(reorderedNote(settings, from, to))}
+          onRemove={item => setRemoving(settings.notes.findIndex(n => n.file === item.id))}
+          empty="No notes"
+          onClose={() => setListing(false)}
+        />
+      )}
+      {removing !== null && settings?.notes[removing] && (
+        <ConfirmModal
+          title={`Remove “${displayName(settings.notes[removing].file)}” from this widget?`}
+          description="The note itself stays."
+          onConfirm={() => { save(removedNote(settings, removing)); setRemoving(null) }}
+          onClose={() => setRemoving(null)}
+        />
+      )}
+    </section>
+  )
+}
+
+// One note's tray: its name, Edit and ⋯ over its box. `onTakeOut` (null: it can't be) asks to remove it from the widget
+function NoteTray({ path, services, height, onResize, onTakeOut }) {
+  const found = services.noteFile(path)
   const [renaming, setRenaming] = useState(false)
-  const frame = (title, body, actions) => (
-    <Frame title={title} onOpen={found ? open : undefined} onRename={found ? () => setRenaming(true) : undefined} actions={actions} canRemove={services.canEdit} onRemove={onRemove}>
+  const item = { name: path.slice(path.lastIndexOf('/') + 1), path, type: 'file' }
+  const open = () => { window.dispatchEvent(new Event('folio:flush')); services.openFile(path) } // typing first
+  const tray = (actions, body) => (
+    <Tray className="min-w-0 flex-[1_1_20rem]">
+      <div className="flex items-center gap-1">
+        <div className="min-w-0 flex-1"><TrayTitle>{displayName(path)}</TrayTitle></div>
+        {actions}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" aria-label={`Actions for ${displayName(path)}`} className={TRAY_BUTTON}>
+              <DotsThree weight="bold" size={16} />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" onCloseAutoFocus={e => e.preventDefault()}>
+            <DropdownMenuItem disabled={!found} onSelect={open}><ArrowsOut /> Open full screen</DropdownMenuItem>
+            <DropdownMenuItem disabled={!found} onSelect={() => setRenaming(true)}><PencilSimple /> Rename note</DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem variant="destructive" disabled={!onTakeOut} onSelect={onTakeOut}><X /> Remove from widget</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
       {body}
       {renaming && found && (
         <RenameModal
-          item={{ name: path.slice(path.lastIndexOf('/') + 1), path, type: 'file' }}
+          item={item}
           onRename={name => {
-            const error = services.rename({ name: path.slice(path.lastIndexOf('/') + 1), path, type: 'file' }, name)
+            const error = services.rename(item, name)
             if (!error) setRenaming(false)
             return error
           }}
           onClose={() => setRenaming(false)}
         />
       )}
-    </Frame>
+    </Tray>
   )
-  const message = text => <p className="py-6 text-center text-sm text-muted-foreground">{text}</p>
-  if (!file.ready) return frame('Note', <div className="flex justify-center py-12"><Spinner /></div>)
-  if (!note) return frame('Note', message("This note widget's settings can't be read."))
-  if (!found) return frame(displayName(path), message(`Its note “${path}” is gone.`))
-  const resize = services.canEdit ? height => services.update(services.config.write(notePath(id), serializeNote(resizedNote(note, height)))) : null
-  return <NoteBox key={`${path}:${services.discards}`} path={path} found={found} services={services} frame={frame} height={noteHeight(note)} onResize={resize} />
+  if (!found) return tray(null, <p className="py-6 text-center text-sm text-muted-foreground">This note is gone.</p>)
+  return <NoteBox path={path} found={found} services={services} tray={tray} height={height} onResize={onResize} />
 }
 
 // The note itself: read from GitHub (or this device's edits), shown or edited in the box
 // `height`: the box's, from the settings; `onResize(px)` saves a new one (null: it can't be)
-function NoteBox({ path, found, services, frame, height, onResize }) {
+function NoteBox({ path, found, services, tray, height, onResize }) {
   const { content, change, loading, loadError } = useNote(found.entry, found.edited, (text, original) => services.saveNote(path, text, original))
   const [editing, setEditing] = useState(false)
   const [dragged, setDragged] = useState(null) // the height while its edge is dragged, until it's saved
@@ -68,9 +162,9 @@ function NoteBox({ path, found, services, frame, height, onResize }) {
   }
 
   const actions = editing ? (
-    <Button variant="success" size="icon" aria-label="Done" tooltip="Done" className="shrink-0" onClick={() => setEditing(false)}><Check /></Button>
+    <Button variant="success" size="icon" aria-label="Done" tooltip="Done" className="size-control-md shrink-0" onClick={() => setEditing(false)}><Check /></Button>
   ) : (
-    <Button variant="ghost-outline" size="icon" aria-label="Edit" tooltip="Edit" disabled={!ready} className="shrink-0 border-muted-foreground/50" onClick={() => startEditing()}><PencilSimple /></Button>
+    <Button variant="ghost" size="icon" aria-label="Edit" tooltip="Edit" disabled={!ready} className={TRAY_BUTTON} onClick={() => startEditing()}><PencilSimple /></Button>
   )
   const body = loading ? <div className="flex flex-1 items-center justify-center"><Spinner /></div>
     : loadError ? <p className="px-6 py-12 text-center text-sm text-muted-foreground">Couldn't open this note. It isn't saved on this device yet — connect to the internet and pull to refresh.</p>
@@ -78,50 +172,20 @@ function NoteBox({ path, found, services, frame, height, onResize }) {
     : <MarkdownPreview content={content} path={path} files={services.virtual} onDoubleTap={startEditing} onChange={change} onOpenFile={services.openFile} onNavigate={services.openFolder} />
   const shown = dragged ?? height
   // Phones: the default height; desktop: the settings'
-  return frame(displayName(path), (
-    <Tray>
-      <div style={{ '--note-h': `${shown}px` }} className="relative h-80 md:h-(--note-h)">
-        <div data-no-pull className="flex h-full flex-col overflow-hidden rounded-lg border border-border bg-card">{body}</div>
-        {onResize && (
-          <ResizeHandle
-            vertical label="Resize note" size={shown} limits={NOTE_HEIGHT} className="hidden md:flex"
-            onResize={(px, save = true) => {
-              const next = clampSize(px, NOTE_HEIGHT)
-              if (!save) return setDragged(next)
-              setDragged(null)
-              if (next !== height) onResize(next)
-            }}
-          />
-        )}
-      </div>
-    </Tray>
-  ), actions)
-}
-
-// The widget's title row over `children`; ⋯ opens the note full screen (`onOpen`)
-function Frame({ title, onOpen, onRename, actions, canRemove, onRemove, children }) {
-  return (
-    <section className="flex shrink-0 flex-col gap-space-sm">
-      <div className="flex min-h-control items-center gap-space-sm">
-        <h2 className="min-w-0 flex-1 truncate px-space-xs text-base font-bold">
-          {title}
-        </h2>
-        {actions}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost-outline" size="icon" aria-label="Note actions" className="shrink-0 border-muted-foreground/50">
-              <DotsThree weight="bold" size={20} />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" onCloseAutoFocus={e => e.preventDefault()}>
-            <DropdownMenuItem disabled={!onOpen} onSelect={onOpen}><ArrowsOut /> Open full screen</DropdownMenuItem>
-            <DropdownMenuItem disabled={!onRename} onSelect={onRename}><PencilSimple /> Rename note</DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem variant="destructive" disabled={!canRemove} onSelect={onRemove}><Trash /> Remove note</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-      {children}
-    </section>
-  )
+  return tray(actions, (
+    <div style={{ '--note-h': `${shown}px` }} className="relative h-80 md:h-(--note-h)">
+      <div data-no-pull className="flex h-full flex-col overflow-hidden rounded-lg border border-border bg-card">{body}</div>
+      {onResize && (
+        <ResizeHandle
+          vertical label="Resize note" size={shown} limits={NOTE_HEIGHT} className="hidden md:flex"
+          onResize={(px, save = true) => {
+            const next = clampSize(px, NOTE_HEIGHT)
+            if (!save) return setDragged(next)
+            setDragged(null)
+            if (next !== height) onResize(next)
+          }}
+        />
+      )}
+    </div>
+  ))
 }
