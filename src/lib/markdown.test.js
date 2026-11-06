@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { renderBlocks, tapOffset, taskOffsets, taskProgress, linkSpans, linkMarkdown, replaceLink, highlightMarkdown, parseIsoDate } from './markdown.js'
+import { renderBlocks, tapOffset, taskOffsets, taskProgress, linkSpans, linkMarkdown, replaceLink, listsIn, moveListItem, highlightMarkdown, parseIsoDate } from './markdown.js'
 
 describe('markdown', () => {
   it('tags each block with its source range', () => {
@@ -56,6 +56,25 @@ describe('markdown', () => {
     expect(replaceLink(md, span, '[b](https://b.io)')).toBe('See [b](https://b.io) here')
     expect(replaceLink(md, span, '')).toBe('See here')
     expect(replaceLink('[a](x) end', linkSpans('[a](x) end')[0], '')).toBe('end')
+  })
+
+  it('finds list items and their nested lists', () => {
+    const md = '- [ ] a\n  more a\n  - a1\n  - a2\n- [x] b\n\n- c\n* d\n'
+    const lists = listsIn(md)
+    expect(lists.map(l => l.items.map(i => md.slice(i.start, i.end)))).toEqual([
+      ['- [ ] a\n  more a\n  - a1\n  - a2\n', '- [x] b\n\n', '- c\n'],
+      ['  - a1\n', '  - a2\n'],
+      ['* d\n'],
+    ])
+    expect(listsIn('3) x\n4) y').map(l => [l.ordered, l.first, l.items.length])).toEqual([[true, 3, 2]])
+  })
+
+  it('moves a list item with its sub-items, renumbering an ordered list', () => {
+    const md = 'Intro\n\n- a\n  - a1\n- b\n- c'
+    const [list] = listsIn(md.slice(7)).map(l => ({ ...l, items: l.items.map(i => ({ start: i.start + 7, end: i.end + 7 })) }))
+    expect(moveListItem(md, list, 0, 2)).toBe('Intro\n\n- b\n- c\n- a\n  - a1')
+    const ol = '1. one\n2. two\n\n3. three\n'
+    expect(moveListItem(ol, listsIn(ol)[0], 2, 0)).toBe('1. three\n2. one\n\n3. two\n')
   })
 
   it('renders smart-punctuated dashes as a divider', () => {

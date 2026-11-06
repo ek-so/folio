@@ -176,6 +176,54 @@ export function replaceLink(text, span, markdown) {
   return text.slice(0, start) + markdown + text.slice(end)
 }
 
+// The lists in a list block's markdown `raw`, nested ones too, in the order the preview
+// renders them: [{ ordered, first, items: [{ start, end }] }]. An item runs from its marker
+// line to the next marker that isn't nested in it (its sub-lists and blank lines are in it).
+// A change of marker (- to *, 1. to 1)) starts another list, as in markdown.
+const LIST_MARKER = /^([ \t]*)([-*+]|(\d{1,9})([.)]))(?:[ \t]+|$)/
+export function listsIn(raw) {
+  const lists = []
+  const marks = [] // every item, in order: { item, content }
+  const stack = [] // open lists: { list, indent, content, kind }
+  let at = 0
+  for (const line of raw.split('\n')) {
+    const m = line.match(LIST_MARKER)
+    if (m) {
+      const indent = m[1].replace(/\t/g, '    ').length
+      const kind = m[3] ? m[4] : m[2]
+      while (stack.length && indent < stack.at(-1).indent) stack.pop()
+      let top = stack.at(-1)
+      if (top && indent < top.content && top.kind !== kind) { stack.pop(); top = null } // same level, another list
+      if (!top || indent >= top.content) {
+        const list = { ordered: Boolean(m[3]), first: m[3] ? Number(m[3]) : 1, items: [] }
+        lists.push(list)
+        top = { list, indent, kind }
+        stack.push(top)
+      }
+      top.content = indent + Math.max(m[0].length - m[1].length, m[2].length + 1) // where its text starts
+      const item = { start: at, end: raw.length }
+      top.list.items.push(item)
+      for (const prev of marks) if (prev.item.end === raw.length && prev.item !== item && indent < prev.content) prev.item.end = at
+      marks.push({ item, content: top.content })
+    }
+    at += line.length + 1
+  }
+  return lists
+}
+
+// `text` with the item at `from` of `list` (from listsIn, offsets into `text`) moved to `to`,
+// its sub-items with it; the blank lines between items stay where they were and an ordered
+// list is numbered again from its first number
+export function moveListItem(text, list, from, to) {
+  const { items } = list
+  const parts = items.map(i => text.slice(i.start, i.end).match(/^([\s\S]*?)(\n*)$/))
+  const bodies = parts.map(p => p[1])
+  const [moved] = bodies.splice(from, 1)
+  bodies.splice(to, 0, moved)
+  const joined = bodies.map((body, k) => (list.ordered ? body.replace(/^([ \t]*)\d+/, (_, sp) => sp + (list.first + k)) : body) + parts[k][2]).join('')
+  return text.slice(0, items[0].start) + joined + text.slice(items.at(-1).end)
+}
+
 // Offsets of each task checkbox's mark (the " " or "x" in "- [ ]") in a
 // block's markdown, in order. Only a box opening a list item counts, not
 // "[x]" further along in its text.

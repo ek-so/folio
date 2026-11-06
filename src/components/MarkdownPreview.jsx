@@ -1,6 +1,6 @@
 import { useMemo, useEffect, useLayoutEffect, useRef, useState, forwardRef, useImperativeHandle } from 'react'
 import DOMPurify from 'dompurify'
-import { renderBlocks, tapOffset, taskOffsets, resolveImage, linkSpans, linkMarkdown, replaceLink } from '../lib/markdown.js'
+import { renderBlocks, tapOffset, taskOffsets, resolveImage, linkSpans, linkMarkdown, replaceLink, listsIn, moveListItem } from '../lib/markdown.js'
 import { useRepoImages } from '../hooks/useRepoImages.js'
 import { linkSpots, openLink } from '../lib/previewLinks.js'
 import { isPortaled } from '../lib/utils.js'
@@ -10,6 +10,9 @@ import { toast } from 'sonner'
 import LinkBadge from './LinkBadge.jsx'
 import LinkModal from './LinkModal.jsx'
 import ConfirmModal from './ConfirmModal.jsx'
+import ListGrip from './ListGrip.jsx'
+import { DndContext, MouseSensor, TouchSensor, useSensor, useSensors, closestCenter } from '@dnd-kit/core'
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 
 // Text node and offset under a screen point
 function caretAt(x, y) {
@@ -49,12 +52,34 @@ function breakLongWords(root) {
   }
 }
 
+// List items get a `.list-grip` spot to drag them by (ListGrip): `data-list` (its list's index in
+// the returned lists, offsets into the note) and `data-item`. Only where the block's lists line up
+// with its markdown (listsIn): not in a quote, for one
+function listGrips(root, content) {
+  const lists = []
+  for (const block of root.querySelectorAll('[data-src]')) {
+    const start = Number(block.dataset.src)
+    const found = listsIn(content.slice(start, start + Number(block.dataset.len)))
+    const rendered = [...block.querySelectorAll('ul, ol')].map(l => l.querySelectorAll(':scope > li'))
+    if (!found.length || found.length !== rendered.length || found.some((l, i) => l.items.length !== rendered[i].length)) continue
+    found.forEach((list, i) => {
+      const key = lists.push({ ...list, items: list.items.map(it => ({ start: start + it.start, end: start + it.end })) }) - 1
+      rendered[i].forEach((li, j) => li.insertAdjacentHTML('afterbegin', `<span class="list-grip" data-list="${key}" data-item="${j}"></span>`))
+    })
+  }
+  return lists
+}
+
+// Dragging a list item only lands among its own list's items
+const ownList = args => closestCenter({ ...args, droppableContainers: args.droppableContainers.filter(c => c.data.current?.list === args.active.data.current?.list) })
+
 // <img> elements in `root` that show repo files: [img, repo path]
 const repoImages = (root, notePath) => [...root.querySelectorAll('img')]
   .map(img => [img, resolveImage(notePath, img.getAttribute('src'))])
   .filter(([, repoPath]) => repoPath !== null)
 
-// Rendered note, read-only apart from task checkboxes and links' Edit link / Remove (with `onChange`). Double-tapping (or
+// Rendered note, read-only apart from task checkboxes, links' Edit link / Remove and dragging
+// list items into another order (with `onChange`). Double-tapping (or
 // double-clicking) text calls onDoubleTap with the markdown offset of the
 // tapped word. On mount, scrolls the block holding `scrollTo` (a markdown
 // offset) into view. The ref's
@@ -68,6 +93,11 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
   const openDetails = useRef(new Set()) // indexes of accordions opened by the reader
   const [carets, setCarets] = useState([]) // accordion title spots for CaretRight
   const [links, setLinks] = useState([]) // link spots for LinkBadge
+  const [grips, setGrips] = useState([]) // list item spots for ListGrip
+  const sensors = useSensors(
+    useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 8 } }),
+  )
   const [editing, setEditing] = useState(null) // the link span in the Edit link dialog
   const [removing, setRemoving] = useState(null) // the link span being confirmed
 
@@ -83,7 +113,7 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
   const linkHandlerRef = useRef()
 
   const spans = useMemo(() => linkSpans(content), [content])
-  const [html, imagePaths] = useMemo(() => {
+  const [html, imagePaths, lists] = useMemo(() => {
     const sanitized = DOMPurify.sanitize(renderBlocks(content))
     const tpl = document.createElement('template')
     tpl.innerHTML = sanitized
@@ -106,8 +136,9 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
     for (const summary of tpl.content.querySelectorAll('summary')) {
       summary.insertAdjacentHTML('afterbegin', '<span class="summary-caret" aria-hidden="true"></span>')
     }
-    return [tpl.innerHTML, repoImages(tpl.content, path).map(([, repoPath]) => repoPath)]
-  }, [content, path, files, spans])
+    const lists = onChange ? listGrips(tpl.content, content) : []
+    return [tpl.innerHTML, repoImages(tpl.content, path).map(([, repoPath]) => repoPath), lists]
+  }, [content, path, files, spans, Boolean(onChange)])
 
   const images = useRepoImages(imagePaths, files)
 
@@ -146,6 +177,7 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
     ref.current.querySelectorAll('details').forEach((d, i) => { if (openDetails.current.has(i)) d.open = true })
     setCarets([...ref.current.querySelectorAll('.summary-caret')])
     setLinks([...ref.current.querySelectorAll('.link-spot')])
+    setGrips([...ref.current.querySelectorAll('.list-grip')])
   }, [withImages])
 
   // Always up-to-date handler without re-attaching the listener
@@ -198,7 +230,7 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
       }
       return
     }
-    if (e.target.closest('a, img, summary, .link-spot')) return // summary opens/closes its accordion
+    if (e.target.closest('a, img, summary, .link-spot, .list-grip')) return // summary opens/closes its accordion
     if (isDoubleTap(e)) onDoubleTap?.(offsetAt(e.clientX, e.clientY, e.target))
   }
 
@@ -235,6 +267,21 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
             onRemove={onChange && span ? () => setRemoving({ ...span, text }) : undefined}
           />, spot, `link-${i}`)
       })}
+      <DndContext
+        sensors={sensors}
+        collisionDetection={ownList}
+        onDragEnd={({ active, over }) => {
+          const [list, from] = active.id.split(':').map(Number)
+          const to = over && over.data.current?.list === list ? Number(over.id.split(':')[1]) : from
+          if (to !== from) onChange(moveListItem(content, lists[list], from, to))
+        }}
+      >
+        {lists.map((list, l) => (
+          <SortableContext key={l} items={list.items.map((_, i) => `${l}:${i}`)} strategy={verticalListSortingStrategy}>
+            {grips.filter(g => Number(g.dataset.list) === l).map(spot => createPortal(<ListGrip spot={spot} id={`${l}:${spot.dataset.item}`} list={l} />, spot, `grip-${l}-${spot.dataset.item}`))}
+          </SortableContext>
+        ))}
+      </DndContext>
       {editing && (
         <LinkModal
           name={editing.bare ? '' : editing.label} url={editing.href}
