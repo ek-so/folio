@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils.js'
 import { Button } from './ui/button.jsx'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from './ui/dropdown-menu.jsx'
 
-// ⋯ menu of a view in the navigation rail: Rename / Delete. `onRename(view)`
+// ⋯ menu of a view in the navigation rail: Rename / Remove. `onRename(view)`
 // and `onDelete(view)` open App's dialogs; `disabled` while the views can't
 // be changed (not read yet). With a mouse it shows only while the row (`group`) is hovered, focused or its
 // menu is open; always on touch.

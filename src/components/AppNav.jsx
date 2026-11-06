@@ -26,7 +26,7 @@ const ACTIVE = 'bg-primary/15 text-primary hover:bg-primary/20 hover:text-primar
 // then a separator like every other; Sync, Search right under it (plain items), a separator, the views, Add view,
 // a separator, File manager, Graph, and at the bottom Broken links (count), Settings and Sign out.
 // `pages`: the main pages (lib/pages.js): the views, then Add view, a separator, File manager and Graph. With a
-// mouse, a view shows its ⋯ (Rename / Delete: `viewActions`) on hover; the collapsed rail has none, and Add view is an icon.
+// mouse, a view shows its ⋯ (Rename / Remove: `viewActions`) on hover; the collapsed rail has none, and Add view is an icon.
 export function NavRail({ page, pages, viewActions, onPage, onSearch, renderSync, menu, onShowTree }) {
   const [collapsed, setCollapsed] = useState(storage.getRailCollapsed)
   const [width, resize] = useResizableWidth(RAIL_WIDTH, storage.getRailWidth, storage.setRailWidth)
