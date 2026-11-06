@@ -51,12 +51,12 @@ function breakLongWords(root) {
   }
 }
 
-// A rendered list item's first word: its link and date badges' spots count as their text, its sub-lists don't
+// A rendered list item's first word: its link and date badges' spots count as their typed text, its sub-lists don't
 function itemWord(li) {
   const copy = li.cloneNode(true)
   copy.querySelectorAll('ul, ol').forEach(l => l.remove())
   copy.querySelectorAll('.link-spot').forEach(s => s.replaceWith(s.dataset.text))
-  copy.querySelectorAll('.date-spot').forEach(s => s.replaceWith(s.dataset.label))
+  copy.querySelectorAll('.date-spot').forEach(s => s.replaceWith(s.dataset.raw))
   return firstWord(copy.textContent)
 }
 
@@ -216,7 +216,8 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
     return () => el.removeEventListener('click', handler, true)
   }, [])
 
-  // Markdown offset for a tap: the tapped block, at the tapped word
+  // Markdown offset for a tap: the tapped block, at the tapped word (a date badge: at its date). Before
+  // it, date badges count as what's typed, as in the markdown
   function offsetAt(x, y, target) {
     const block = target.closest('[data-src]')
     if (!block) return content.length
@@ -224,11 +225,15 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
     const raw = content.slice(start, start + Number(block.dataset.len))
     const caret = caretAt(x, y)
     if (!caret || !block.contains(caret.node)) return start
+    const date = (caret.node.nodeType === Node.ELEMENT_NODE ? caret.node : caret.node.parentElement)?.closest('.date-spot')
     const before = document.createRange()
     before.setStart(block, 0)
-    before.setEnd(caret.node, caret.offset)
-    const textAfter = caret.node.nodeType === Node.TEXT_NODE ? caret.node.textContent.slice(caret.offset) : ''
-    return start + tapOffset(raw, before.toString(), textAfter)
+    if (date) before.setEndBefore(date)
+    else before.setEnd(caret.node, caret.offset)
+    const typed = before.cloneContents()
+    typed.querySelectorAll('.date-spot').forEach(s => s.replaceWith(s.dataset.raw))
+    const textAfter = date ? date.dataset.raw : caret.node.nodeType === Node.TEXT_NODE ? caret.node.textContent.slice(caret.offset) : ''
+    return start + tapOffset(raw, typed.textContent, textAfter)
   }
 
   function handleClick(e) {
@@ -272,7 +277,7 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
         return createPortal(
           <LinkBadge href={href} text={text} kind={kind} path={target} {...linkEdits.actions(span, text)} />, spot, `link-${i}`)
       })}
-      {dates.map((spot, i) => createPortal(<DateBadge label={spot.dataset.label} />, spot, `date-${i}`))}
+      {dates.map((spot, i) => createPortal(<DateBadge label={spot.dataset.label} onClick={handleClick} />, spot, `date-${i}`))}
       <DndContext
         sensors={sensors}
         collisionDetection={ownList}

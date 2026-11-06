@@ -9,7 +9,6 @@ import Backlinks from './Backlinks.jsx'
 import MarkdownEditor from './MarkdownEditor.jsx'
 import { useNote } from '../hooks/useNote.js'
 import { displayName } from '../lib/files.js'
-import { withFixedDates } from '../lib/dates.js'
 import { frontMatter, withValue, valueActions } from '../lib/frontmatter.js'
 import PropertyBadges from './PropertyBadges.jsx'
 
@@ -18,9 +17,8 @@ import PropertyBadges from './PropertyBadges.jsx'
 // starting where you were reading, and a double tap starts at the tapped
 // word. Edits save on their own; ✓ (same spot) switches back to preview, writing typed dates in one format.
 export default function Editor({ linkedBy, onOpenLink, path, entry, files, notes, onEditNotes, tagColors, edited, onEdit, onNavigate, onOpenFile, onRename, onDuplicate, onDelete, onMove, folders, columns, valueScope, backlinks }) {
+  const { content, change, loading, loadError, beginEdit, endEdit } = useNote(entry, edited, onEdit)
   const [mode, setMode] = useState('preview')
-  // Leaving the page while editing writes the dates as ✓ does
-  const { content, change, loading, loadError } = useNote(entry, edited, onEdit, mode === 'edit' ? withFixedDates : undefined)
   const [editedAt, setEditedAt] = useState(null) // offset to show when back in preview
   const textareaRef = useRef()
   const previewRef = useRef()
@@ -29,6 +27,7 @@ export default function Editor({ linkedBy, onOpenLink, path, entry, files, notes
   // `pos`: markdown offset to put the cursor at (a double tap); ✏️ starts at
   // the first block on screen
   function startEditing(pos = previewRef.current?.visibleOffset() ?? 0) {
+    beginEdit()
     flushSync(() => setMode('edit'))
     const textarea = textareaRef.current
     if (!textarea) return
@@ -36,10 +35,9 @@ export default function Editor({ linkedBy, onOpenLink, path, entry, files, notes
     textarea.focus()
   }
 
-  // Dates typed in any format are written as "17 Oct 2026, 14:30" (lib/dates.js) on the way out
+  // The dates typed meanwhile are written as "17 Oct 2026, 14:30" on the way out (useNote)
   function finishEditing() {
-    const fixed = withFixedDates(content)
-    if (fixed !== content) change(fixed)
+    endEdit()
     setEditedAt(textareaRef.current?.selectionStart ?? null)
     setMode('preview')
   }

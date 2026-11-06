@@ -47,7 +47,7 @@ marked.use({ useNewRenderer: true, renderer: {
 } })
 
 // Dates in the text (lib/dates.js; not in code or links) become date spots: an empty
-// <time> the preview fills with a DateBadge, its label in `data-label`. The markdown stays as typed.
+// <time> the preview fills with a DateBadge, its label in `data-label`, what's typed in `data-raw`.
 function splitDates(token) {
   const parts = []
   let last = 0
@@ -71,9 +71,60 @@ const withDates = tokens => tokens.flatMap(t =>
 marked.use({
   extensions: [{
     name: 'date',
-    renderer: ({ date }) => `<time class="date-spot" datetime="${isoDate(date)}" data-label="${formatDate(date)}"></time>`,
+    renderer: ({ raw, date }) => `<time class="date-spot" datetime="${isoDate(date)}" data-label="${formatDate(date)}" data-raw="${escapeAttr(raw)}"></time>`,
   }],
 })
+
+const escapeAttr = s => s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+
+// Where the preview shows plain text (where it shows dates as badges): [start, end] of each piece of `markdown`'s
+// text, not in the front matter, code, links, images or HTML
+function textRanges(markdown) {
+  const ranges = []
+  const KEEP = new Set(['code', 'codespan', 'html', 'link', 'image', 'def'])
+  // `tokens` found in order in `src` (at `base` in the markdown) from `offset`; returns where it stopped
+  const walk = (tokens, src, base, offset = 0) => {
+    for (const t of tokens ?? []) {
+      const at = src.indexOf(t.raw, offset)
+      if (at === -1) continue
+      offset = at + t.raw.length
+      if (KEEP.has(t.type)) continue
+      if (t.type === 'text' && !t.tokens) ranges.push([base + at, base + offset])
+      else if (t.type === 'table') [...t.header, ...t.rows.flat()].reduce((o, cell) => walk(cell.tokens, t.raw, base + at, o), 0)
+      else walk(t.items ?? t.tokens, t.raw, base + at)
+    }
+    return offset
+  }
+  const text = blankFrontMatter(markdown) // same length, positions stay
+  walk(marked.lexer(text), text, 0)
+  return ranges
+}
+
+// Dates in `markdown`'s text (as the preview shows them), each with its line up to it: the same date with
+// the same text before it is the same date
+function datesIn(markdown, now) {
+  return textRanges(markdown).flatMap(([from, to]) => findDates(markdown.slice(from, to), now).map(d => {
+    const start = from + d.start
+    const end = from + d.end
+    return { start, end, date: d.date, key: markdown.slice(markdown.lastIndexOf('\n', start - 1) + 1, end) }
+  }))
+}
+
+// The markdown with the dates typed since `before` (the text when editing started) written as
+// "17 Oct 2026, 14:30". Dates already there are left as they are, and so is anything that isn't text
+// in the preview: the front matter, code, links, HTML
+export function withFixedDates(markdown, before = '', now = new Date()) {
+  const old = datesIn(before, now).map(d => d.key)
+  let out = ''
+  let last = 0
+  for (const { start, end, date, key } of datesIn(markdown, now)) {
+    const i = old.indexOf(key)
+    if (i !== -1) { old.splice(i, 1); continue }
+    out += markdown.slice(last, start) + formatDate(date)
+    last = end
+  }
+  return out + markdown.slice(last)
+}
 
 // One line of markdown as HTML (a property's value, such as a description), its dates as date spots
 export const renderInline = text => marked.Parser.parseInline(withDates(marked.Lexer.lexInline(text)))

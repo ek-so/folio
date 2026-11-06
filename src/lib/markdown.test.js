@@ -120,7 +120,7 @@ describe('highlightMarkdown', () => {
   })
 
   it('shows the dates of one line as date spots, not in code', () => {
-    expect(renderInline('Call on **17.10.26 2pm**, not `2026-10-17`')).toBe('Call on <strong><time class="date-spot" datetime="2026-10-17T14:00" data-label="17 Oct 2026, 14:00"></time></strong>, not <code>2026-10-17</code>')
+    expect(renderInline('Call on **17.10.2026 2pm**, not `2026-10-17`')).toBe('Call on <strong><time class="date-spot" datetime="2026-10-17T14:00" data-label="17 Oct 2026, 14:00" data-raw="17.10.2026 2pm"></time></strong>, not <code>2026-10-17</code>')
   })
 
   it('shows dates as date spots, not in code or links', () => {

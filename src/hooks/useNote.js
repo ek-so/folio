@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { getBlob } from '../lib/github.js'
+import { withFixedDates } from '../lib/markdown.js'
 
 const SAVE_DELAY_MS = 400
 
@@ -8,21 +9,21 @@ const fetchOriginal = sha => sha === null ? Promise.resolve('') : getBlob(sha)
 
 // A note's text and GitHub's version of it. Typing is reported through
 // onEdit(content, original) after a pause, on close, before a reload and
-// before Sync. Mount once per note. `onClose(text)`, when given, is applied to the text as the note
-// closes (the editor still open: its dates written in one form) and saved with it.
-export function useNote(entry, edited, onEdit, onClose) {
+// before Sync. Mount once per note. `beginEdit()` and `endEdit()` frame a time in the editor: the
+// dates typed in it are written in one form (`withFixedDates`) when it ends, or when the note closes
+// before it does (closing the tab saves the typing as it is).
+export function useNote(entry, edited, onEdit) {
   const [content, setContent] = useState('')
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState(false)
   const originalRef = useRef(null)
   const pendingRef = useRef(null)
   const onEditRef = useRef(onEdit)
-  const onCloseRef = useRef(onClose)
-  const latestRef = useRef(null) // the text as shown, for onClose
+  const latestRef = useRef(null) // the text as shown
+  const baseRef = useRef(null) // the text when editing began, while editing
   const shaRef = useRef(entry.sha)
 
   useEffect(() => { onEditRef.current = onEdit }, [onEdit])
-  useEffect(() => { onCloseRef.current = onClose }, [onClose])
 
   function show(value) {
     latestRef.current = value
@@ -49,9 +50,8 @@ export function useNote(entry, edited, onEdit, onClose) {
     return () => {
       window.removeEventListener('pagehide', flush)
       window.removeEventListener('folio:flush', flush)
-      const latest = latestRef.current
-      const closed = latest !== null && onCloseRef.current ? onCloseRef.current(latest) : latest
-      if (closed !== latest) pendingRef.current = closed
+      const done = fixed()
+      if (done !== latestRef.current) pendingRef.current = done
       flush()
     }
   }, [])
@@ -79,5 +79,19 @@ export function useNote(entry, edited, onEdit, onClose) {
     show(value)
   }
 
-  return { content, change, loading, loadError }
+  // The text with the dates typed since editing began written in one form
+  function fixed() {
+    const latest = latestRef.current
+    return baseRef.current === null || latest === null ? latest : withFixedDates(latest, baseRef.current)
+  }
+
+  function beginEdit() { baseRef.current = latestRef.current }
+
+  function endEdit() {
+    const done = fixed()
+    baseRef.current = null
+    if (done !== latestRef.current) change(done)
+  }
+
+  return { content, change, loading, loadError, beginEdit, endEdit }
 }

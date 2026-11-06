@@ -12,7 +12,6 @@ import MarkdownPreview from '@/components/MarkdownPreview.jsx'
 import MarkdownEditor from '@/components/MarkdownEditor.jsx'
 import { useNote } from '@/hooks/useNote.js'
 import { displayName } from '@/lib/files.js'
-import { withFixedDates } from '@/lib/dates.js'
 import ResizeHandle from '@/components/ResizeHandle.jsx'
 import { Tray, TrayTitle, TRAY_BUTTON } from '@/components/ui/tray.jsx'
 import { NOTE_HEIGHT, clampSize } from '@/lib/resize.js'
@@ -158,24 +157,23 @@ function NoteTray({ path, services, height, onTakeOut }) {
 // The note itself: read from GitHub (or this device's edits), shown or edited in the box
 // `height`: the box's
 function NoteBox({ path, found, services, tray, height }) {
+  const { content, change, loading, loadError, beginEdit, endEdit } = useNote(found.entry, found.edited, (text, original) => services.saveNote(path, text, original))
   const [editing, setEditing] = useState(false)
-  // Leaving the view while editing writes the dates as Done does
-  const { content, change, loading, loadError } = useNote(found.entry, found.edited, (text, original) => services.saveNote(path, text, original), editing ? withFixedDates : undefined)
   const textareaRef = useRef()
   const ready = !loading && !loadError
 
   // Inside the tap, so the textarea gets focus and mobile keyboards open. `pos`: markdown offset
   // to put the cursor at (a double tap: the tapped word); Edit starts at the top
   function startEditing(pos = 0) {
+    beginEdit()
     flushSync(() => setEditing(true))
     textareaRef.current?.setSelectionRange(pos, pos)
     textareaRef.current?.focus()
   }
 
-  // Dates typed in any format are written as "17 Oct 2026, 14:30" (lib/dates.js) on the way out
+  // The dates typed meanwhile are written as "17 Oct 2026, 14:30" on the way out (useNote)
   function finishEditing() {
-    const fixed = withFixedDates(content)
-    if (fixed !== content) change(fixed)
+    endEdit()
     setEditing(false)
   }
 
