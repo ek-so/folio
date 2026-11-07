@@ -1,9 +1,9 @@
 import FolderSheet from '@/components/FolderSheet.jsx'
-import { boardPath, serializeBoard, newBoard } from './board.js'
+import { boardPath, serializeBoard, newBoard, STATUS } from './board.js'
 import { withNoteKeys } from '@/lib/folderNotes.js'
 import { DESCRIPTION } from '@/lib/frontmatter.js'
 
-// A new board: pick its folder. Its notes get a description, empty, if they lack one.
+// A new board: pick its folder. Its notes get a status and a description, empty, if they lack them.
 export default function BoardSetup({ services, onCreate, onClose }) {
   const { config, folders, remoteFiles, remoteText } = services
   return (
@@ -11,12 +11,12 @@ export default function BoardSetup({ services, onCreate, onClose }) {
       title="Board from folder…"
       folders={['', ...folders]}
       onPick={folder => {
-        onCreate(id => ch => withNoteKeys(config.write(boardPath(id), serializeBoard(newBoard(folder)))(ch), remoteFiles, folder, [DESCRIPTION], remoteText))
+        onCreate(id => ch => withNoteKeys(config.write(boardPath(id), serializeBoard(newBoard(folder)))(ch), remoteFiles, folder, [STATUS, DESCRIPTION], remoteText))
         return null
       }}
       onClose={onClose}
     >
-      <p className="text-muted-foreground text-xs">Its subfolders become the columns and their files the cards.</p>
+      <p className="text-muted-foreground text-xs">Its files, in subfolders too, become the cards, in a column per status.</p>
     </FolderSheet>
   )
 }
