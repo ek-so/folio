@@ -22,7 +22,7 @@ const WIDGET_DOCS = {
     summary: 'Your notes on a ribbon of days, like a calendar.',
     points: [
       'Takes every note in the folder you pick, subfolders too. Each card sits on the day in its date property.',
-      'Adds an empty date, type and description to notes that lack them. Date and type always show first on cards. In the text editor they're greyed out and can't be changed: use their badges. They also come back if they go missing from a note.',
+      'Adds an empty date, type and description to notes that lack them. Date and type always show first on cards. In the text editor they are greyed out and cannot be changed: use their badges. They also come back if they go missing from a note.',
       'Type says how often a card happens: one-time, or repeating every few days, weeks (on chosen weekdays), months or years, until a day if you like. Tap it to choose. A repeating card shows on every day it happens.',
       'Tap a day to see its cards, or jump to any day with the calendar on the right and back with Today. Notes with no date or a past date also show under today, dashed.',
       'Drag a card onto a day, or tap its date, to move it. New card uses the selected day.',
