@@ -94,7 +94,7 @@ export function useBoard(id, services) {
       if (keepCards) update(ch => withStatus(services, board, column.cards.map(c => c.path), LOOSE)(write(removedColumn(board, column.name))(ch)))
       else {
         save(removedColumn(board, column.name))
-        column.cards.forEach(c => services.remove(fileItem(c.path)))
+        services.removeAll(column.cards.map(c => fileItem(c.path)))
       }
     },
   }

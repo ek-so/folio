@@ -251,7 +251,7 @@ export default function Board({ id, services, onRemove }) {
         <ConfirmModal
           title={`Remove column “${deleting.name}”?`}
           description={deleting.cards.length
-            ? `It has ${deleting.cards.length} card${deleting.cards.length === 1 ? '' : 's'}. Remove their files too, or move them to ${looseName(board)} (their ${board.group} is emptied)? It's removed from GitHub when you sync.`
+            ? `It has ${deleting.cards.length} card${deleting.cards.length === 1 ? '' : 's'}. Remove their files too (they move to the archive, where you can recover them for 30 days), or move them to ${looseName(board)} (their ${board.group} is emptied)?`
             : 'No card has this status.'}
           confirm={deleting.cards.length ? 'Remove with cards' : 'Remove'}
           onConfirm={() => { setDeleting(null); act.deleteColumn(deleting, false) }}

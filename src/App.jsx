@@ -47,7 +47,7 @@ import { Toaster } from './components/ui/sonner.jsx'
 import { TooltipProvider } from './components/ui/tooltip.jsx'
 import { SingleOpenProvider } from './hooks/useSingleOpen.jsx'
 import { cache } from './lib/cache.js'
-import { ARCHIVE, KEEP_DAYS, staleArchived } from './lib/archive.js'
+import { archiveDay, inArchive, staleArchiveDays, KEEP_DAYS } from './lib/archive.js'
 import { fileItem } from './lib/folderNotes.js'
 import {
   listDir, nameError, renameTarget, renameError, createError, add, setEdit, rename, remove, getAllFolders,
@@ -338,6 +338,11 @@ export default function App() {
     rename: (item, name) => handleRename(item, name),
     duplicate: item => handleDuplicate(item),
     remove: item => handleDelete(item),
+    // Several files to the archive at once (a board column's cards), told in one toast
+    removeAll: items => {
+      items.forEach(item => archive(item))
+      if (items.length) toast.success(`${items.length} file${items.length === 1 ? '' : 's'} moved to the archive`)
+    },
     createFolder: (parent, name) => createFolder(parent, name),
     // `keys`: the properties it starts with, empty; `stay`: don't open it
     newNote: (folder, { keys, values, stay, titled } = {}) => setNewFile({ folder, kind: 'note', keys, values, stay, titled }),
@@ -351,31 +356,10 @@ export default function App() {
     }),
     virtual, // every file, as a note's preview wants them for its links and images
     discards, // a discard reloads the notes widgets show
-    // A done note out of the way (lib/archive.js): `edit` applied to its text, then moved into .archive/ at the root
-    // (a taken name gets a number), in one step; links and widgets follow, like any move. { to: its new path, text: its
+    // A done note archived (archive): `edit` applied to its text first, in the same step. { to: its new path, text: its
     // text as it was archived (with the typing flushed first), for an undo }
-    archive: (path, edit) => {
-      window.dispatchEvent(new Event('folio:flush')) // typing in an open note first
-      let to = path
-      let text
-      update(ch => {
-        const entry = filesOf(ch)[path]
-        text = entry && (ch.edits[entry.orig] ?? links.remoteText(entry.sha))
-        to = freePath(ch, filesOf(ch), `${ARCHIVE}/${path.slice(path.lastIndexOf('/') + 1)}`)
-        return relocated(editNote(ch, repo.remote?.files ?? {}, path, edit, links.remoteText), fileItem(path), to)
-      })
-      followTrails(movedTrails(trails, path, to))
-      return { to, text }
-    },
-    // Archive undone: the note at `from` back at `to` (a free name next to it if that's taken), with its text `text`
-    unarchive: (from, to, text) => {
-      let back = to
-      update(ch => {
-        back = freePath(ch, filesOf(ch), to)
-        return editNote(relocated(ch, fileItem(from), back), repo.remote?.files ?? {}, back, () => text, links.remoteText)
-      })
-      followTrails(movedTrails(trails, from, back))
-    },
+    archive: (path, edit) => archive(fileItem(path), edit),
+    unarchive: (from, to, text) => unarchive(fileItem(from), to, text),
   }
 
   // The note open on a view that has a board it's a card of: the columns it can move to (widgets/index.js)
@@ -414,8 +398,51 @@ export default function App() {
     })
   }
 
+  // `ch` with `item` moved into today's folder of the archive (lib/archive.js; a taken name gets a number), and its path there
+  function archived(ch, item) {
+    const now = new Date()
+    const dir = archiveDay({ year: now.getFullYear(), month: now.getMonth() + 1, day: now.getDate() }) + '/'
+    const [stem, ext] = item.type === 'dir' ? [item.name, ''] : splitName(item.name)
+    let to = dir + item.name
+    for (let n = 2; renameError(ch, filesOf(ch), item, to); n++) to = `${dir}${stem} ${n}${ext}`
+    return { next: relocated(ch, item, to), to }
+  }
+
+  // `item` (a file or folder) into the archive, in one step; `edit` first applied to its text (a note: a planner's done
+  // card). Links and widgets follow, like any move. { to, text: its text as it was archived, for an undo }
+  function archive(item, edit) {
+    window.dispatchEvent(new Event('folio:flush')) // typing in an open note first
+    let to = item.path
+    let text
+    update(ch => {
+      const entry = filesOf(ch)[item.path]
+      text = entry && item.path.endsWith('.md') ? ch.edits[entry.orig] ?? links.remoteText(entry.sha) : undefined
+      const done = archived(edit ? editNote(ch, repo.remote?.files ?? {}, item.path, edit, links.remoteText) : ch, item)
+      to = done.to
+      return done.next
+    })
+    followTrails(movedTrails(trails, item.path, to))
+    return { to, text }
+  }
+
+  // An archive undone: `item` (in the archive) back at `to` (a free name next to it if that's taken), a note with its text `text`
+  function unarchive(item, to, text) {
+    let back = to
+    update(ch => {
+      back = item.type === 'dir' ? to : freePath(ch, filesOf(ch), to)
+      const next = relocated(ch, item, back)
+      return text === undefined ? next : editNote(next, repo.remote?.files ?? {}, back, () => text, links.remoteText)
+    })
+    followTrails(movedTrails(trails, item.path, back))
+  }
+
+  // Remove: a file or folder goes to the archive, with a toast to undo it; one already in the archive is deleted for good
   function handleDelete(item) {
-    update(ch => remove(ch, filesOf(ch), item.path, item.type === 'dir'))
+    if (inArchive(item.path)) return update(ch => remove(ch, filesOf(ch), item.path, item.type === 'dir'))
+    const { to } = archive(item)
+    toast.success(`“${item.name}” moved to the archive`, {
+      action: { label: 'Undo', onClick: () => unarchive({ ...item, path: to, name: to.slice(to.lastIndexOf('/') + 1) }, item.path) },
+    })
   }
 
   // A new folder `name` in `parent` (kept by an empty .gitkeep): an error message, or null
@@ -510,7 +537,7 @@ export default function App() {
     }
   }, [])
 
-  // Notes archived more than KEEP_DAYS days ago are removed when Folio opens (lib/archive.js), as local changes shown
+  // The archive's day folders older than KEEP_DAYS are removed when Folio opens (lib/archive.js), as local changes shown
   // before Sync; each one once a session per repo, so one put back by a discard stays until Folio opens again
   const cleaned = useRef({ repo: null, paths: new Set() })
   useEffect(() => {
@@ -518,13 +545,13 @@ export default function App() {
     if (cleaned.current.repo !== auth.repo) cleaned.current = { repo: auth.repo, paths: new Set() }
     const done = cleaned.current.paths
     const now = new Date()
-    const stale = staleArchived(links.notes, { year: now.getFullYear(), month: now.getMonth() + 1, day: now.getDate() })
+    const stale = staleArchiveDays(Object.keys(virtual), { year: now.getFullYear(), month: now.getMonth() + 1, day: now.getDate() })
       .filter(path => !done.has(path))
     if (!stale.length) return
     stale.forEach(path => done.add(path))
-    update(ch => stale.reduce((c, path) => remove(c, filesOf(c), path, false), ch))
-    toast.success(`${stale.length} archived note${stale.length === 1 ? '' : 's'} older than ${KEEP_DAYS} days removed. Sync to remove ${stale.length === 1 ? 'it' : 'them'} from GitHub.`)
-  }, [links.notes, repo.remote, auth.repo])
+    update(ch => stale.reduce((c, path) => remove(c, filesOf(c), path, true), ch))
+    toast.success(`What was archived more than ${KEEP_DAYS} days ago is removed. Sync to remove it from GitHub.`)
+  }, [virtual, repo.remote, auth.repo])
 
   // Drop all local changes (a note or folder that only existed locally leaves the trails)
   function discardChanges() {

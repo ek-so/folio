@@ -39,7 +39,7 @@ export function usePlanner(id, services) {
         notes.setProperty(path, DATE, formatDate(droppedDate(text, next)))
         return { next, undo: () => notes.setProperty(path, DATE, old) }
       }
-      const archived = services.archive(path, t => markedDone(t, keyDay(today)))
+      const archived = services.archive(path, markedDone)
       return { next: null, undo: () => services.unarchive(archived.to, path, archived.text ?? text) }
     },
     // The properties cards show besides the date; a newly chosen one is added, empty, to the notes that lack it

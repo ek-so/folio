@@ -11,7 +11,7 @@ App flow: **Auth → RepoSetup → FileBrowser / Editor / FileViewer**. `App.jsx
 - `dates.js` — dates typed in a note's text: finding them in any clear format (`findDates`) and their one written form "17 Oct 2026, 14:30" (`formatDate`). Tested; `markdown.js`'s `withFixedDates` rewrites a note with it.
 - `frontmatter.js` — a note's properties (read, add and remove keys, set, rename and remove values, colors of values, title, and `valueActions`: what a values dialog does over a set of notes, shared by the preview and the board). Tested.
 - `tagColors.js` — picked value colors in `.folio/colors.json`. Tested.
-- `archive.js` — done notes: `markedDone` (`status: done` and the day as `archived`), `ARCHIVE` (`.archive/` at the root) and `staleArchived` (archived more than 30 days ago: App removes them when Folio opens, as local changes). Tested.
+- `archive.js` — the archive: what's removed moves into `.archive/<day>/` (`archiveDay`, `inArchive`), `markedDone` (a planner card's `status: done`) and `staleArchiveDays` (day folders older than 30 days: App removes them when Folio opens, as local changes). Tested.
 - `links.js` — internal links: backlink and broken-link index, rewriting links on moves, Fix suggestions, `resolveSymlink`. Tested.
 - `viewsConfig.js` — views and their widgets in `.folio/views.json`, `isConfigPath`. Tested.
 - `views.js` — each main page's trail (`openView`, `currentView`, `trailTo`). Tested.

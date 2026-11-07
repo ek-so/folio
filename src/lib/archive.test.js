@@ -1,18 +1,20 @@
 import { describe, it, expect } from 'vitest'
-import { markedDone, staleArchived } from './archive.js'
+import { archiveDay, inArchive, markedDone, staleArchiveDays } from './archive.js'
 
 describe('archive', () => {
-  it('marks a note done on a day', () => {
-    expect(markedDone('---\nstatus: todo\n---\n# T\n', { year: 2026, month: 11, day: 7 })).toBe('---\nstatus: done\narchived: 7 Nov 2026\n---\n# T\n')
+  it('has a folder per day', () => {
+    expect(archiveDay({ year: 2026, month: 11, day: 7 })).toBe('.archive/2026-11-07')
+    expect(inArchive('.archive/2026-11-07/a.md')).toBe(true)
+    expect(inArchive('.archive')).toBe(true)
+    expect(inArchive('.archived/a.md')).toBe(false)
   })
 
-  it('finds archived notes older than 30 days', () => {
-    const notes = {
-      '.archive/old.md': '---\narchived: 7 Oct 2026\n---\n',
-      '.archive/new.md': '---\narchived: 8 Oct 2026\n---\n',
-      '.archive/undated.md': '# no date\n',
-      'life/old.md': '---\narchived: 1 Jan 2020\n---\n',
-    }
-    expect(staleArchived(notes, { year: 2026, month: 11, day: 7 })).toEqual(['.archive/old.md'])
+  it('marks a note done', () => {
+    expect(markedDone('---\nstatus: todo\n---\n# T\n')).toBe('---\nstatus: done\n---\n# T\n')
+  })
+
+  it('finds day folders older than 30 days', () => {
+    const paths = ['.archive/2026-10-07/a.md', '.archive/2026-10-07/b/c.png', '.archive/2026-10-08/d.md', '.archive/loose.md', 'life/2020-01-01/e.md']
+    expect(staleArchiveDays(paths, { year: 2026, month: 11, day: 7 })).toEqual(['.archive/2026-10-07'])
   })
 })

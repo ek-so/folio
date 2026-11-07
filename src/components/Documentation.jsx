@@ -24,7 +24,7 @@ const WIDGET_DOCS = {
       'Takes every note in the folder you pick, subfolders too. Each card sits on the day in its date property.',
       'Adds an empty date, repeat and description to notes that lack them. Date and repeat always show first on cards. In the text editor they are greyed out and cannot be changed: use their badges. They also come back if they go missing from a note.',
       'Repeat says how often a card happens: one-time, or every few days, weeks (on chosen weekdays), months or years, until a day if you like. Tap it to choose. A card shows once, on its date.',
-      'Mark as done in a card\'s ⋯ moves a repeating card to its next date. Any other card goes to the .archive folder, and is removed from there after 30 days (you see it before you sync). Undo is offered right away.',
+      'Mark as done in a card\'s ⋯ moves a repeating card to its next date. Any other card goes to the archive, like anything you remove. Undo is offered right away.',
       'Tap a day to see its cards, or jump to any day with the calendar on the right and back with Today. Notes with no date or a past date also show under today, dashed.',
       'Drag a card onto a day, or tap its date, to move it. New task uses the selected day.',
       'Removing the planner keeps every note.',
@@ -53,7 +53,7 @@ export default function Documentation() {
               <ul className="flex list-disc flex-col gap-1 pl-5 text-sm">
                 <li>Add a widget with +. Reorder or remove them in the view's ⋯.</li>
                 <li>Your notes hold the content. Views and widgets are saved in .folio and only change how notes look, so deleting them never deletes a note.</li>
-                <li>A trash deletes for good. A ✕ only takes something off a view.</li>
+                <li>A trash removes. A file or folder goes to the archive (.archive) first, where you can recover it for 30 days; a value or property is removed for good. A ✕ only takes something off a view.</li>
                 <li>Changes stay on this device until you Sync.</li>
               </ul>
             </section>
