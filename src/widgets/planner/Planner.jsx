@@ -17,7 +17,7 @@ import { shownCards, hiddenCards } from '@/lib/trayCards.js'
 import { displayName } from '@/lib/files.js'
 import { formatDate } from '@/lib/dates.js'
 import { noteTitle, properties, valueList, DESCRIPTION } from '@/lib/frontmatter.js'
-import { DATE, FIXED, plan, addDays, daysBetween, dayOffsets, dayAt, keyDay, dayKey, cardDate, droppedDate, monthLabel } from './planner.js'
+import { DATE, FIXED, plan, addDays, daysBetween, dayOffsets, dayAt, keyDay, dayKey, cardDate, dateValue, droppedDate, monthLabel } from './planner.js'
 import { usePlanner } from './usePlanner.js'
 import { useToday } from './useToday.js'
 import { BADGES } from './RecurrenceField.jsx'
@@ -134,11 +134,25 @@ export default function Planner({ id, services, onRemove }) {
     const list = arranged.on(selected)
     const shown = [...FIXED, ...planner.properties]
     // Mark as done (usePlanner), told in a toast with Undo: a repeating card moved on, any other archived
+    const titleOf = path => notes[path] === undefined ? displayName(path) : noteTitle(notes[path], displayName(path))
+    // "Yoga moved to tomorrow, Sunday" (`key`: its new day; null: it has no date now), with Undo
+    const toastMoved = (path, key, undo) => toast.success(
+      key ? `${titleOf(path)} moved to ${shortTitle(key, today).replace(/^[A-Z][a-z]+,/, m => m.toLowerCase())}` : `${titleOf(path)} has no date now`,
+      { action: { label: 'Undo', onClick: undo } })
     const markDone = path => {
       const done = act.markDone(path, today)
       if (!done) return
-      const title = noteTitle(notes[path], displayName(path))
-      toast.success(done.next ? `${title} moved to ${shortTitle(done.next, today).replace(/^[A-Z][a-z]+,/, m => m.toLowerCase())}` : `${title} archived`, { action: { label: 'Undo', onClick: done.undo } })
+      if (done.next) toastMoved(path, done.next, done.undo)
+      else toast.success(`${titleOf(path)} archived`, { action: { label: 'Undo', onClick: done.undo } })
+    }
+    // A card's date set to `value` (dragged onto a day, or picked on its date badge), told in a toast with Undo when its day changes
+    const reschedule = (path, value) => {
+      const text = notes[path]
+      const old = text === undefined ? undefined : properties(text)[DATE]
+      act.setProperty(path, DATE, value)
+      const before = dateValue(old), after = dateValue(value)
+      const day = after && dayKey(after)
+      if (day !== (before && dayKey(before))) toastMoved(path, day, () => act.setProperty(path, DATE, old ?? ''))
     }
     const cardMenu = path => off ? undefined : (
       <CardMenu
@@ -155,7 +169,7 @@ export default function Planner({ id, services, onRemove }) {
     )
     const cardProps = path => ({
       path, text: notes[path], properties: shown, always: FIXED, dateKeys: [DATE], badges: BADGES, scopeName: 'this planner', files,
-      onChange: off ? undefined : (key, value) => act.setProperty(path, key, value), options: act.valuesOf,
+      onChange: off ? undefined : (key, value) => key === DATE ? reschedule(path, value) : act.setProperty(path, key, value), options: act.valuesOf,
       onRemoveValue: off ? undefined : act.removeValue, valueCount: act.valueCount,
       chosen: services.tagColors.colors, onEditValue: off || !services.tagColors.canEdit ? undefined : act.editValue,
     })
@@ -167,7 +181,7 @@ export default function Planner({ id, services, onRemove }) {
       const key = over.id.slice(4)
       const old = notes[path] === undefined ? null : cardDate(notes[path])
       if (old && dayKey(old) === key) return // already dated that day
-      act.setProperty(path, DATE, formatDate(droppedDate(notes[path], key)))
+      reschedule(path, formatDate(droppedDate(notes[path], key)))
     }
     const paths = list.map(c => c.path)
     const visible = new Set(shownCards(paths, expanded.has(selected), dragged))
