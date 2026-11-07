@@ -278,7 +278,7 @@ function Day({ dayKey: key, first, today, selected, count, onSelect }) {
   const { year, month, day } = keyDay(key)
   const weekday = WEEKDAYS[new Date(Date.UTC(year, month - 1, day)).getUTCDay()]
   return (
-    <div className={cn('relative shrink-0 px-1', first && 'before:absolute before:inset-y-0 before:left-0 before:w-px before:bg-muted-foreground/30')} style={{ width: DAY_WIDTH }}>
+    <div className={cn('relative shrink-0 px-1', first && 'before:absolute before:inset-y-0 before:left-0 before:w-0.5 before:-translate-x-1/2 before:rounded-full before:bg-muted-foreground/60')} style={{ width: DAY_WIDTH }}>
       <Button
         ref={setNodeRef}
         variant={selected ? 'default' : 'ghost'}
