@@ -21,7 +21,7 @@ import { NotePicker } from './NoteSetup.jsx'
 
 // The notes widget (note.js): "Notes" and its ⋯ (Add note…, Edit notes…: order them and take them out, Remove widget)
 // on top, then each note in a grey tray like a board's column, side by side, at least 320px wide (narrower, they wrap
-// onto the next line): its name, Edit (✓ when done) and its own ⋯ (Open full screen, Rename note, Remove from widget),
+// onto the next line): its name, Full screen, Edit (✓ when done) and its own ⋯ (Rename note, Remove from widget),
 // then its text in a box that scrolls inside; all boxes are one height (resizable on desktop by one handle under them, edge to edge).
 // A double tap edits at the tapped word. Edits save on their own, like on the note's own page; opening one full
 // screen is opening the note, as a board's card does. Taking a note out of the widget keeps the note.
@@ -113,7 +113,7 @@ export default function NoteWidget({ id, services, onRemove }) {
   )
 }
 
-// One note's tray: its name, Edit and ⋯ over its box, `height` tall on desktop (the widget's). `onTakeOut` (null: it can't be) asks to remove it from the widget
+// One note's tray: its name, Full screen, Edit and ⋯ over its box, `height` tall on desktop (the widget's). `onTakeOut` (null: it can't be) asks to remove it from the widget
 function NoteTray({ path, services, height, onTakeOut, onReplace }) {
   const found = services.noteFile(path)
   const [renaming, setRenaming] = useState(false)
@@ -124,6 +124,7 @@ function NoteTray({ path, services, height, onTakeOut, onReplace }) {
     <Tray className="min-w-0 flex-[1_1_20rem]">
       <div className="flex items-center gap-1">
         <div className="min-w-0 flex-1"><TrayTitle>{displayName(path)}</TrayTitle></div>
+        {found && <Button variant="ghost" size="icon" aria-label="Full screen" tooltip="Full screen" className={TRAY_BUTTON} onClick={open}><ArrowsOut /></Button>}
         {actions}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -132,7 +133,6 @@ function NoteTray({ path, services, height, onTakeOut, onReplace }) {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" onCloseAutoFocus={e => e.preventDefault()}>
-            <DropdownMenuItem disabled={!found} onSelect={open}><ArrowsOut /> Open full screen</DropdownMenuItem>
             <DropdownMenuItem disabled={!found} onSelect={() => setRenaming(true)}><PencilSimple /> Rename note</DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem variant="destructive" disabled={!onTakeOut} onSelect={onTakeOut}><X /> Remove from widget</DropdownMenuItem>
