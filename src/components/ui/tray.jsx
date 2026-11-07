@@ -26,13 +26,19 @@ export function TrayTitle({ grip, children }) {
 // A tray's own text buttons under its cards
 export const TRAY_ROW = 'justify-start gap-2 px-3 text-sm font-normal text-muted-foreground hover:bg-muted-foreground/10'
 
+// Show `more` more (`onShowMore`). On its own where the cards sit in a grid of columns, so it takes one column's width
+export function TrayShowMore({ more, onShowMore, className }) {
+  return <Button variant="ghost" className={cn(TRAY_ROW, className)} onClick={onShowMore}><CaretDown /> Show {more} more</Button>
+}
+
 // What a tray of cards ends with: Show `more` more (`onShowMore`; nothing when 0), a separator, then `newLabel`
-// (`onNew`; `disabled` when it can't be changed)
+// (`onNew`; `disabled` when it can't be changed). Without `onShowMore`, Show more is among the cards (TrayShowMore)
+// and only its separator is here
 export function TrayFooter({ more, onShowMore, newLabel, onNew, disabled }) {
   return (
     <>
       {more > 0 && <>
-        <Button variant="ghost" className={TRAY_ROW} onClick={onShowMore}><CaretDown /> Show {more} more</Button>
+        {onShowMore && <TrayShowMore more={more} onShowMore={onShowMore} />}
         <Separator className="mx-space-xs data-[orientation=horizontal]:w-auto" />
       </>}
       <Button variant="ghost" disabled={disabled} className={TRAY_ROW} onClick={onNew}>

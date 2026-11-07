@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button.jsx'
 import { Separator } from '@/components/ui/separator.jsx'
 import { Segmented } from '@/components/ui/segmented.jsx'
 import { ListRow } from '@/components/ui/list-row.jsx'
-import { Tray, TrayTitle, TrayFooter, TRAY_BUTTON, TRAY_ROW } from '@/components/ui/tray.jsx'
+import { Tray, TrayTitle, TrayFooter, TrayShowMore, TRAY_BUTTON, TRAY_ROW } from '@/components/ui/tray.jsx'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu.jsx'
 import NoteCard, { NO_CALLOUT, ownListeners, cardClick } from '@/components/NoteCard.jsx'
 import CardMenu from '@/components/CardMenu.jsx'
@@ -201,6 +201,7 @@ export default function Planner({ id, services, onRemove }) {
     }
     const paths = list.map(c => c.path)
     const visible = new Set(shownCards(paths, expanded.has(selected), dragged))
+    const more = expanded.has(selected) ? 0 : hiddenCards(paths, dragged).length
     // The list view: every card in grey groups of time (listed), each a white card of rows; Today always, with New task
     const newTask = <TrayFooter more={0} newLabel="New task" onNew={() => act.newCard(today)} disabled={off} />
     if (view === 'list') body = (
@@ -249,11 +250,12 @@ export default function Planner({ id, services, onRemove }) {
               {list.filter(c => visible.has(c.path)).map(({ path, overdue, undated }) => (
                 <PlannerCard key={path} {...cardProps(path)} menu={cardMenu(path)} dashed={overdue || undated} onOpen={openFile} onOpenFolder={openFolder} />
               ))}
+              {/* On a row of its own, one column wide (all of it on phones) */}
+              {more > 0 && <TrayShowMore more={more} onShowMore={() => setExpanded(e => new Set(e).add(selected))} className="col-start-1 w-full" />}
             </div>
           )}
           <TrayFooter
-            more={expanded.has(selected) ? 0 : hiddenCards(paths, dragged).length}
-            onShowMore={() => setExpanded(e => new Set(e).add(selected))}
+            more={more}
             newLabel="New task" onNew={() => act.newCard(selected)} disabled={off}
           />
         </Tray>
