@@ -138,7 +138,7 @@ export default function Planner({ id, services, onRemove }) {
       const done = act.markDone(path, today)
       if (!done) return
       const title = noteTitle(notes[path], displayName(path))
-      toast(done.next ? `${title} moved to ${shortTitle(done.next, today).replace(/^[A-Z][a-z]+,/, m => m.toLowerCase())}` : `${title} archived`, { action: { label: 'Undo', onClick: done.undo } })
+      toast.success(done.next ? `${title} moved to ${shortTitle(done.next, today).replace(/^[A-Z][a-z]+,/, m => m.toLowerCase())}` : `${title} archived`, { action: { label: 'Undo', onClick: done.undo } })
     }
     const cardMenu = path => off ? undefined : (
       <CardMenu

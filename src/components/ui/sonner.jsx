@@ -3,7 +3,8 @@ import { CheckCircle, WarningCircle } from '@phosphor-icons/react'
 
 // Toasts in theme tokens, at the bottom center: above the floating
 // navigation on phones, where they take the full width inside the 16px gutters.
-// Success and error toasts are filled (richColors): a 20px icon and the text, 16px padding.
+// Success and error toasts are filled (richColors): a 20px icon and the text, 16px padding. An action (Undo) is a small
+// button tinted with the toast's own text color, so it sits on the fill.
 // Sonner's own styles aren't in a layer, so the overrides are !important. `theme` is the app's preference (light | dark | system).
 function Toaster({ theme, ...props }) {
   return (
@@ -21,6 +22,7 @@ function Toaster({ theme, ...props }) {
           toast: '!gap-3 !p-space !shadow-lg',
           icon: '!m-0 !size-5',
           title: '!text-sm !font-semibold',
+          actionButton: '!h-control-sm !rounded-sm !bg-current/15 !px-2 !text-sm !font-semibold ![color:inherit] hover:!bg-current/25',
         },
       }}
       offset={{ bottom: 'var(--toast-bottom)' }}

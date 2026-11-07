@@ -30,7 +30,7 @@ const MarkdownEditor = forwardRef(function MarkdownEditor({ content, onChange, o
     const [start, end] = selection.current
     requestAnimationFrame(() => textarea.setSelectionRange(start, end))
     const names = locked.join(' and ')
-    toast(`${names.charAt(0).toUpperCase() + names.slice(1)} can only be changed with ${locked.length === 1 ? 'its badge' : 'their badges'}.`, { id: 'locked-properties' })
+    toast.error(`${names.charAt(0).toUpperCase() + names.slice(1)} can only be changed with ${locked.length === 1 ? 'its badge' : 'their badges'}.`, { id: 'locked-properties' })
   }
 
   return (

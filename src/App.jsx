@@ -523,7 +523,7 @@ export default function App() {
     if (!stale.length) return
     stale.forEach(path => done.add(path))
     update(ch => stale.reduce((c, path) => remove(c, filesOf(c), path, false), ch))
-    toast(`${stale.length} archived note${stale.length === 1 ? '' : 's'} older than ${KEEP_DAYS} days removed. Sync to remove ${stale.length === 1 ? 'it' : 'them'} from GitHub.`)
+    toast.success(`${stale.length} archived note${stale.length === 1 ? '' : 's'} older than ${KEEP_DAYS} days removed. Sync to remove ${stale.length === 1 ? 'it' : 'them'} from GitHub.`)
   }, [links.notes, repo.remote, auth.repo])
 
   // Drop all local changes (a note or folder that only existed locally leaves the trails)
