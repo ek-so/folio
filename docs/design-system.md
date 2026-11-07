@@ -36,12 +36,13 @@ Never hardcode colors; use the semantic tokens (light and dark values in `src/in
 | `bg-secondary` | Hover, subtle fills |
 | `border-border` | Dividers, input borders |
 | `text-foreground` / `text-muted-foreground` | Primary / secondary text |
-| `bg-primary` / `text-primary` | Accent blue |
+| `bg-primary` / `text-primary` | Accent blue: fills and icons |
+| `text-primary-ink` / `text-destructive-ink` / `text-success-ink` | Every colored text (links, Today, red menu items and errors, green text): the color mixed with the text color by `--ink` (70%), so it's darker on light and lighter on dark. Badge values (`--tag-N`) and callout titles mix the same way. Never `text-primary` for text |
 | `bg-destructive` | Errors, danger |
 | `bg-success` / `text-success-foreground` | Success (green) |
 | `bg-segment` / `bg-segment-active` | Segmented toggle track / selected segment |
 | `text-folder`, `text-file-image` | Folder and image file icons |
-| `--tag-0`…`--tag-9`, `--tag-tint` | Property badge colors, tinted against `--card` |
+| `--tag-0`…`--tag-9`, `--tag-tint` (text: `--ink`) | Property badge colors, tinted against `--card` |
 | `--callout-*` | GitHub alert callouts in the preview |
 | `--radius` | `0.75rem` base radius |
 | `shadow-sm`…`shadow-lg` | Redefined in `src/index.css` (`@theme`): close under the element, a small drop and mostly spread |

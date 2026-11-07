@@ -41,7 +41,7 @@ export default function Auth({ onAuth }) {
             spellCheck="false"
             className="font-mono tracking-wide bg-card border-border"
           />
-          {error && <p className="text-destructive text-xs text-center">{error}</p>}
+          {error && <p className="text-destructive-ink text-xs text-center">{error}</p>}
           <Button type="submit" disabled={loading || !token.trim()} className="w-full">
             {loading ? 'Connecting…' : 'Connect'}
           </Button>
@@ -50,7 +50,7 @@ export default function Auth({ onAuth }) {
           href="https://github.com/settings/personal-access-tokens/new"
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex min-h-control items-center text-primary text-sm hover:opacity-80 transition-opacity"
+          className="inline-flex min-h-control items-center text-primary-ink text-sm hover:opacity-80 transition-opacity"
         >
           Create a token on GitHub ↗
         </a>

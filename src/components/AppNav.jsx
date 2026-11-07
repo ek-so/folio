@@ -16,7 +16,7 @@ import ViewMenu from './ViewMenu.jsx'
 import PageTitle from './PageTitle.jsx'
 
 // The open page's button: light accent fill, accent text
-const ACTIVE = 'bg-primary/15 text-primary hover:bg-primary/20 hover:text-primary'
+const ACTIVE = 'bg-primary/15 text-primary-ink hover:bg-primary/20 hover:text-primary-ink'
 
 // The app's primary navigation, in place of a header. `menu`: brokenCount and
 // onSignOut; `page` the open page; `renderSync(compact, bar)` makes the SyncButton (`bar`: the phone's top bar).
@@ -106,7 +106,7 @@ export function NavRail({ page, pages, viewActions, onPage, onSearch, renderSync
       <Button variant="ghost" tooltip={hint('Settings')} tooltipSide="right" aria-current={page === PAGE.SETTINGS ? 'page' : undefined} className={item(PAGE.SETTINGS)} onClick={() => onPage(PAGE.SETTINGS)}>
         <Gear /> {label('Settings')}
       </Button>
-      <Button variant="ghost" tooltip={hint('Sign out')} tooltipSide="right" className={cn('justify-start gap-3 font-normal text-destructive', collapsed && 'size-control justify-center px-0')} onClick={menu.onSignOut}>
+      <Button variant="ghost" tooltip={hint('Sign out')} tooltipSide="right" className={cn('justify-start gap-3 font-normal text-destructive-ink', collapsed && 'size-control justify-center px-0')} onClick={menu.onSignOut}>
         <SignOut /> {label('Sign out')}
       </Button>
       {!collapsed && <ResizeHandle label="Resize menu" size={width} limits={RAIL_WIDTH} onResize={resize} className="inset-y-space-lg" />}

@@ -52,7 +52,7 @@ export default function ViewPage({ page, widgets = [], error, services, onAdd, o
         </TitleBar>
       }>
         <div className="flex min-h-0 flex-1 flex-col gap-space overflow-y-auto p-space">
-          {error && <p className="text-center text-sm text-destructive">{error}</p>}
+          {error && <p className="text-center text-sm text-destructive-ink">{error}</p>}
           {widgets.length === 0 ? (
             <div className="flex flex-1 flex-col items-center justify-center gap-space py-12 text-center">
               <p className="text-sm text-muted-foreground">Nothing on this view yet.</p>

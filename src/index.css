@@ -70,8 +70,10 @@
     --tag-8: oklch(0.6 0.17 305);
     --tag-9: oklch(0.65 0.17 350);
     --tag-tint: 20%;
-    /* How much of a badge's hue its text keeps (the rest is the text color) */
-    --tag-ink: 75%;
+    /* Colored text keeps this much of its hue, the rest is the text color: darker on light, lighter on dark. Every
+       colored text uses it (text-primary-ink, text-destructive-ink, text-success-ink, a badge's value, a callout's
+       title); icons and fills keep the raw colors */
+    --ink: 70%;
     /* The outline of a box lifted by a shadow (a hovered or dragged card): none on light, where the shadow shows
        its edge; faint on dark, where a shadow barely shows */
     --lift-edge: transparent;
@@ -203,6 +205,9 @@
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
+  --color-primary-ink: color-mix(in oklab, var(--primary) var(--ink), var(--foreground));
+  --color-destructive-ink: color-mix(in oklab, var(--destructive) var(--ink), var(--foreground));
+  --color-success-ink: color-mix(in oklab, var(--success) var(--ink), var(--foreground));
   --color-primary-foreground: var(--primary-foreground);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);

@@ -113,7 +113,7 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
             <Spinner />
           </div>
         )}
-        {error && <p className="text-destructive text-sm text-center pt-4 px-4">{error}</p>}
+        {error && <p className="text-destructive-ink text-sm text-center pt-4 px-4">{error}</p>}
         {notice && <p className="text-muted-foreground text-xs text-center pt-3 px-4">{notice}</p>}
         {!loading && !error && items.length === 0 && (
           <p className="text-muted-foreground text-sm text-center py-12">No notes yet</p>

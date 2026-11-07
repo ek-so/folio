@@ -343,8 +343,8 @@ const escapeHtml = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/
 // wrapped as a whole, markers included, so the text keeps its exact length.
 const INLINE = [
   ['text-muted-foreground', /`[^`\n]+`/],
-  ['text-primary', /!?\[[^\]\n]*\]\([^)\n]*\)/],
-  ['text-primary', /https?:\/\/[^\s<)]+/],
+  ['text-primary-ink', /!?\[[^\]\n]*\]\([^)\n]*\)/],
+  ['text-primary-ink', /https?:\/\/[^\s<)]+/],
   ['font-bold', /\*\*(?!\s)[^*\n]+?\*\*|__(?!\s)[^_\n]+?__/],
   ['italic', /(?<![\w*])\*(?![\s*])[^*\n]+?\*(?!\*)|(?<![\w_])_(?![\s_])[^_\n]+?_(?![\w_])/],
   ['line-through', /~~[^~\n]+~~/],

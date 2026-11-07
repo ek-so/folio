@@ -124,11 +124,11 @@ describe('highlightMarkdown', () => {
     const html = highlightMarkdown(md)
     const text = html.replace(/<[^>]+>/g, '').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&')
     expect(text).toBe(md + ' ')
-    expect(html).toContain('<span class="text-primary">[docs](a.md)</span>')
+    expect(html).toContain('<span class="text-primary-ink">[docs](a.md)</span>')
     expect(html).toContain('<span class="font-bold">**bold**</span>')
     expect(html).toContain('<span class="italic">*it*</span>')
     expect(html).not.toContain('<span class="italic">_case_</span>')
-    expect(highlightMarkdown('[docs(a.md)')).not.toContain('text-primary')
+    expect(highlightMarkdown('[docs(a.md)')).not.toContain('text-primary-ink')
   })
 
   it('shows the dates of one line as date spots, not in code', () => {

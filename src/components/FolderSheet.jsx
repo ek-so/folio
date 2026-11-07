@@ -33,7 +33,7 @@ export default function FolderSheet({ title, folders, onPick, onClose, children 
           onChange={e => { setQuery(e.target.value); setError('') }}
           className="bg-background border-border"
         />
-        {error && <p className="text-destructive text-xs">{error}</p>}
+        {error && <p className="text-destructive-ink text-xs">{error}</p>}
         {children}
         <ul className="flex flex-col gap-0.5 max-h-64 overflow-y-auto -mx-1">
           {filtered.map(folder => (

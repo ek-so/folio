@@ -48,7 +48,7 @@ export default function SyncButton({ className, compact, bar, syncState, syncing
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         {bar ? (
-          <Button variant="ghost-outline" size="icon" disabled={syncing} aria-label={label} className={cn('relative shrink-0 border-muted-foreground/50', failed && 'text-destructive', className)}>
+          <Button variant="ghost-outline" size="icon" disabled={syncing} aria-label={label} className={cn('relative shrink-0 border-muted-foreground/50', failed && 'text-destructive-ink', className)}>
             {icon}{dot}
           </Button>
         ) : (
@@ -58,7 +58,7 @@ export default function SyncButton({ className, compact, bar, syncState, syncing
             aria-label={iconOnly ? label : undefined}
             tooltip={compact ? label : undefined}
             tooltipSide="right"
-            className={cn('relative justify-start gap-3 font-normal', compact && 'size-control justify-center px-0', failed && 'text-destructive hover:text-destructive', className)}
+            className={cn('relative justify-start gap-3 font-normal', compact && 'size-control justify-center px-0', failed && 'text-destructive-ink hover:text-destructive-ink', className)}
           >
             {icon}
             {compact ? dot : <>

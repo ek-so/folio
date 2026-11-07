@@ -17,12 +17,12 @@ const buttonVariants = cva(
         ghost: 'hover:bg-secondary hover:text-secondary-foreground',
         // ✓ and ✕ icon buttons: green (success) and red; `*-light` where a ✓ and a ✕ stand together
         success: 'bg-success text-success-foreground shadow-sm hover:bg-success/90',
-        'success-light': 'bg-success/15 text-success hover:bg-success/25',
-        'destructive-light': 'bg-destructive/15 text-destructive hover:bg-destructive/25',
+        'success-light': 'bg-success/15 text-success-ink hover:bg-success/25',
+        'destructive-light': 'bg-destructive/15 text-destructive-ink hover:bg-destructive/25',
         // Trash and other destructive icon buttons: red, a light red fill on hover
-        'ghost-destructive': 'text-destructive hover:bg-destructive/10',
+        'ghost-destructive': 'text-destructive-ink hover:bg-destructive/10',
         'ghost-outline': 'bg-secondary text-muted-foreground hover:bg-secondary/80 hover:text-foreground',
-        link: 'text-primary underline-offset-4 hover:underline',
+        link: 'text-primary-ink underline-offset-4 hover:underline',
       },
       size: {
         // Base control (40px, the comfortable tap target); md (32px) and sm (24px) are the medium and small ones. Sizes live in index.css

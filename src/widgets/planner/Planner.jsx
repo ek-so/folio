@@ -236,7 +236,7 @@ export default function Planner({ id, services, onRemove }) {
         <Tray>
           <div className="flex items-center gap-1">
             <div className="min-w-0 flex-1"><TrayTitle>{month}</TrayTitle></div>
-            <Button variant="ghost" size="md" className={cn(TRAY_ROW, 'shrink-0 gap-1.5 px-2', selected !== today && 'text-primary hover:text-primary')} onClick={goToday}><CrosshairSimple /> Today</Button>
+            <Button variant="ghost" size="md" className={cn(TRAY_ROW, 'shrink-0 gap-1.5 px-2', selected !== today && 'text-primary-ink hover:text-primary-ink')} onClick={goToday}><CrosshairSimple /> Today</Button>
             <DatePopover dayOnly date={keyDay(selected)} onPick={d => d && goToDay(dayKey(d))}>
               <Button variant="ghost" size="icon" aria-label="Go to a day" className={TRAY_BUTTON}><CalendarBlank /></Button>
             </DatePopover>
@@ -370,7 +370,7 @@ function Day({ dayKey: key, today, selected, count, onSelect }) {
       >
         <span className={cn('text-xs', !selected && 'text-muted-foreground')}>{weekday}</span>
         <span className="text-base font-semibold tabular-nums">{day}</span>
-        <span className={cn('flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-xs tabular-nums', count ? (selected ? 'bg-primary-foreground/20' : 'bg-primary/15 text-primary') : 'invisible')}>{count || 0}</span>
+        <span className={cn('flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-xs tabular-nums', count ? (selected ? 'bg-primary-foreground/20' : 'bg-primary/15 text-primary-ink') : 'invisible')}>{count || 0}</span>
       </Button>
     </div>
   )

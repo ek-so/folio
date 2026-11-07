@@ -18,10 +18,10 @@ import { formatDate } from '../lib/dates.js'
 
 
 // A badge's color: its value's hue within its property (--tag-N, index.css), grey when empty; tinted against the card, a bit
-// stronger on hover. Its text and ▾ are the same hue, mixed toward the text color so they read (--tag-ink)
+// stronger on hover. Its text and ▾ are the same hue, mixed toward the text color like all colored text (--ink)
 const tint = color => ({
   style: { '--tag': color === undefined ? 'var(--muted-foreground)' : `var(--tag-${color})` },
-  className: cn('bg-[color-mix(in_oklab,var(--tag)_var(--tag-tint),var(--card))]', color !== undefined && 'text-[color:color-mix(in_oklab,var(--tag)_var(--tag-ink),var(--foreground))]'),
+  className: cn('bg-[color-mix(in_oklab,var(--tag)_var(--tag-tint),var(--card))]', color !== undefined && 'text-[color:color-mix(in_oklab,var(--tag)_var(--ink),var(--foreground))]'),
 })
 const TINT_HOVER = 'hover:bg-[color-mix(in_oklab,var(--tag)_calc(var(--tag-tint)_*_1.7),var(--card))]'
 

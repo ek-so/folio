@@ -53,7 +53,7 @@ export default function NewFileModal({ folder, kind, titled, onCreate, onClose }
             {nameInput}
           </Label>
         </> : nameInput}
-        {error && <p className="text-destructive text-xs">{error}</p>}
+        {error && <p className="text-destructive-ink text-xs">{error}</p>}
         <div className="flex justify-end gap-2">
           <Button type="button" variant="secondary" onClick={onClose}>Cancel</Button>
           <Button type="submit" disabled={!isView && !name.trim()}>Create</Button>

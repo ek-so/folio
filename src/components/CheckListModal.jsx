@@ -68,7 +68,7 @@ export default function CheckListModal({ title, description, header, items, lock
                   <Button type="submit" variant="success-light" size="icon" aria-label="Save" tooltip="Save" className="shrink-0"><Check /></Button>
                   <Button type="button" variant="destructive-light" size="icon" aria-label="Cancel" tooltip="Cancel" className="shrink-0" onClick={() => setEditing(null)}><X /></Button>
                 </div>
-                {editing.error && <p className="text-destructive text-xs">{editing.error}</p>}
+                {editing.error && <p className="text-destructive-ink text-xs">{editing.error}</p>}
               </form>
             </li>
           ) : (
@@ -112,7 +112,7 @@ export default function CheckListModal({ title, description, header, items, lock
               />
               <Button type="submit" variant="success" size="icon" aria-label="Add" tooltip="Add" disabled={!name.trim()} className="shrink-0"><Check /></Button>
             </div>
-            {error && <p className="text-destructive text-xs">{error}</p>}
+            {error && <p className="text-destructive-ink text-xs">{error}</p>}
           </form>
         )}
         <div className="flex justify-end">

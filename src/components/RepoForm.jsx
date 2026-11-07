@@ -42,7 +42,7 @@ export default function RepoForm({ initial, onConnect, inputRef, inputClassName,
         spellCheck="false"
         className={inputClassName}
       />
-      {error && <p className={cn('text-destructive text-xs', errorClassName)}>{error}</p>}
+      {error && <p className={cn('text-destructive-ink text-xs', errorClassName)}>{error}</p>}
       {actions({ busy, empty: !value.trim() })}
     </form>
   )

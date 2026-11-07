@@ -42,7 +42,7 @@ export default function RenameModal({ item, onRename, onClose, kind }) {
           />
           {ext && <span className="text-muted-foreground shrink-0">{ext}</span>}
         </div>
-        {error && <p className="text-destructive text-xs">{error}</p>}
+        {error && <p className="text-destructive-ink text-xs">{error}</p>}
         {linkCount > 0 && (
           <p className="text-muted-foreground text-xs">Also updates links in {linkCount} note{linkCount === 1 ? '' : 's'}.</p>
         )}
