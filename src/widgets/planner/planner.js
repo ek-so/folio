@@ -53,6 +53,12 @@ export function addDays(key, n) {
   return dayKey({ year: d.getUTCFullYear(), month: d.getUTCMonth() + 1, day: d.getUTCDate() })
 }
 
+// How many days `to` is after `from` (negative when before)
+export function daysBetween(from, to) {
+  const utc = key => { const { year, month, day } = keyDay(key); return Date.UTC(year, month - 1, day) }
+  return Math.round((utc(to) - utc(from)) / 86400000)
+}
+
 // The card's date: { year, month, day, hour?, minute? }, or null when its `date` is empty or isn't one date
 export const cardDate = text => {
   const value = properties(text)[DATE]
