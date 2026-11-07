@@ -3,8 +3,8 @@ import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { DotsSixVertical } from '@phosphor-icons/react'
 
-// The drag handle of a list item in the note preview, rendered into its `.list-grip` spot (in the
-// gutter left of the item, MarkdownPreview). The item itself (the spot's <li>, HTML the preview
+// The drag handle of a list item in the note preview, rendered into its `.list-grip` spot (always shown, in the
+// text column before the item's marker: App.css, MarkdownPreview). Held 0.25s on touch, then dragged. The item itself (the spot's <li>, HTML the preview
 // rendered) is what moves, up and down only.
 export default function ListGrip({ spot, id, list }) {
   const { setNodeRef, setActivatorNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({ id, data: { list } })

@@ -7,18 +7,17 @@
 .editor-preview ul { list-style-type: disc; padding-left: 20px; margin: 0 0 14px; }
 .editor-preview ol { list-style-type: decimal; padding-left: 20px; margin: 0 0 14px; }
 .editor-preview li { margin: 4px 0; }
-/* A list item's drag handle (ListGrip) in the gutter left of its marker: --list-pad is how far its
-   list indents its items. With a mouse it shows while the item (not one nested in it) is hovered */
+/* A list item's drag handle (ListGrip), always shown, inside the text column before its marker: a list that can be
+   dragged indents by the grip's width (--grip-w) more, and the grip sits there; --list-pad is how far its list
+   indents its items past the marker */
+.editor-preview { --grip-w: 24px; }
 .editor-preview :is(ul, ol) { --list-pad: 20px; }
+.editor-preview :is(ul, ol):has(> li > .list-grip) { padding-left: calc(var(--list-pad) + var(--grip-w)); }
 .editor-preview li:has(> .list-grip) { position: relative; }
-.editor-preview .list-grip { position: absolute; top: 0; right: calc(100% + var(--list-pad)); width: 16px; height: 1lh; }
-@media (pointer: fine) {
-  .editor-preview .list-grip { opacity: 0; }
-  .editor-preview li:hover:not(:has(li:hover)) > .list-grip, .editor-preview .list-dragging > .list-grip { opacity: 1; }
-}
-@media (pointer: coarse) { .editor-preview .list-grip { opacity: 0.5; } }
+.editor-preview .list-grip { position: absolute; top: 0; right: calc(100% + var(--list-pad)); width: var(--grip-w); height: 1lh; }
 .editor-preview li.list-dragging { z-index: 1; background: var(--card); border-radius: 8px; box-shadow: var(--shadow-md); }
 .editor-preview ul:has(> .task-item) { padding-left: 0; --list-pad: 0px; }
+.editor-preview ul:has(> .task-item):has(> li > .list-grip) { padding-left: var(--grip-w); }
 /* A plain item among tasks: its bullet in the checkbox's place, its text in line with theirs */
 .editor-preview ul:has(> .task-item) > li:not(.task-item) { list-style: none; position: relative; padding-left: 24px; }
 .editor-preview ul:has(> .task-item) > li:not(.task-item)::before { content: ''; position: absolute; left: 5px; top: calc((1lh - 6px) / 2); width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
