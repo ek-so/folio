@@ -23,7 +23,7 @@ const WIDGET_DOCS = {
     points: [
       'Takes every note in the folder you pick, subfolders too. Each card sits on the day in its date property.',
       'Adds an empty date and description to notes that lack them.',
-      'Tap a day to see its cards, or jump to any day with the calendar on the right. Notes with no date or a past date also show under today, dashed.',
+      'Tap a day to see its cards, or jump to any day with the calendar on the right and back with Today. Notes with no date or a past date also show under today, dashed.',
       'Drag a card onto a day, or tap its date, to move it. New card uses the selected day.',
       'Removing the planner keeps every note.',
     ],

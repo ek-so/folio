@@ -1,9 +1,9 @@
 import { useState, useMemo, useRef, useCallback, useLayoutEffect } from 'react'
-import { DotsThree, X, Tag, CalendarBlank } from '@phosphor-icons/react'
+import { DotsThree, X, Tag, CalendarBlank, CrosshairSimple } from '@phosphor-icons/react'
 import { DndContext, DragOverlay, MouseSensor, TouchSensor, useSensor, useSensors, useDraggable, useDroppable, pointerWithin } from '@dnd-kit/core'
 import { cn } from '@/lib/utils.js'
 import { Button } from '@/components/ui/button.jsx'
-import { Tray, TrayTitle, TrayFooter, TRAY_BUTTON } from '@/components/ui/tray.jsx'
+import { Tray, TrayTitle, TrayFooter, TRAY_BUTTON, TRAY_ROW } from '@/components/ui/tray.jsx'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu.jsx'
 import NoteCard, { NO_CALLOUT, ownListeners, cardClick } from '@/components/NoteCard.jsx'
 import CardMenu from '@/components/CardMenu.jsx'
@@ -102,7 +102,6 @@ export default function Planner({ id, services, onRemove }) {
 
   const menu = (
     <div className="flex shrink-0 items-center gap-space-sm">
-      <Button variant="ghost-outline" className="border-muted-foreground/50" onClick={goToday}><CalendarBlank /> Today</Button>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost-outline" size="icon" aria-label="Planner actions" className="shrink-0 border-muted-foreground/50">
@@ -163,16 +162,17 @@ export default function Planner({ id, services, onRemove }) {
         onDragEnd={onDragEnd}
         onDragCancel={() => setDragged(null)}
       >
-        {/* The ribbon in a tray like the cards' below, under a title row like a column's: the month in view, and a
+        {/* The ribbon in a tray like the cards' below, under a title row like a column's: the month in view, Today and a
             calendar to pick any day; it scrolls sideways to the tray's edges */}
         <Tray>
           <div className="flex items-center gap-1">
             <div className="min-w-0 flex-1"><TrayTitle>{month}</TrayTitle></div>
+            <Button variant="ghost" size="md" className={cn(TRAY_ROW, 'shrink-0 gap-1.5 px-2')} onClick={goToday}><CrosshairSimple /> Today</Button>
             <DatePopover date={keyDay(selected)} onPick={d => d && goToDay(dayKey(d))}>
               <Button variant="ghost" size="icon" aria-label="Go to a day" className={TRAY_BUTTON}><CalendarBlank /></Button>
             </DatePopover>
           </div>
-          <div ref={setScroller} onScroll={onScroll} data-no-pull className="-mx-space-sm overflow-x-auto px-space-sm pb-space-xs">
+          <div ref={setScroller} onScroll={onScroll} data-no-pull className="-mx-space-sm overflow-x-auto px-space-sm pb-space-sm">
             <Ribbon days={days} today={today} selected={selected} count={arranged.count} onSelect={setPicked} />
           </div>
         </Tray>
