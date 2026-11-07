@@ -178,10 +178,7 @@ export default function Planner({ id, services, onRemove }) {
         </Tray>
         {/* The selected day's cards in a tray like a board's column: its first cards, Show N more, New card */}
         <Tray>
-          <div className="flex items-center gap-1">
-            <div className="min-w-0 flex-1"><TrayTitle>{shortTitle(selected, today)}</TrayTitle></div>
-            <span className="flex size-control-md shrink-0 items-center justify-center text-sm tabular-nums text-muted-foreground">{list.length}</span>
-          </div>
+          <TrayTitle>{shortTitle(selected, today)}</TrayTitle>
           {list.length ? (
             <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,18rem),1fr))] items-start gap-space-sm">
               {list.filter(c => visible.has(c.path)).map(({ path, overdue, undated }) => (
