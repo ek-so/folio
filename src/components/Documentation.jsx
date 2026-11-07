@@ -8,9 +8,9 @@ import { WIDGET_TYPES } from '../widgets/index.js'
 // (with a line to write) and none can be forgotten.
 const WIDGET_DOCS = {
   board: {
-    summary: 'A Kanban board over a folder: the notes right in it are the cards, in a column per value of their status property.',
+    summary: 'A Kanban board over a folder: its notes, in subfolders too, are the cards, in a column per value of their status property.',
     points: [
-      'Pick the folder when you add it. Notes without a status wait in a "No status" column that shows only while it has cards. Subfolders, and technical files (a name starting with . or _), stay off the board.',
+      'Pick the folder when you add it. Notes without a status wait in a "No status" column that shows only while it has cards. Technical files and folders (a name starting with . or _) stay off the board.',
       'Drag a card to another column and its status becomes that column; the file stays where it is. Drag a column by its title to reorder it. The order is saved.',
       'A card shows the note\'s title, its description, the properties you chose and a progress bar when the note has a checklist. Tap it to open the note.',
       'Click a badge on a card to choose another value or add a new one. In the popover, Edit values renames a value, gives it a color or removes it from every card.',

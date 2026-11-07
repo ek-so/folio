@@ -26,10 +26,4 @@ describe('folder notes', () => {
     const renamed = editNotes(ch, remote, 'T', t => t.replace('description:', 'summary:'), sha => texts[sha])
     expect(renamed.edits['T/a.md']).toBe('---\nsummary:\n---\n# A\n')
   })
-
-  it('with flat, edits only the notes right in the folder', () => {
-    const remote = { 'T/a.md': { sha: 's1', mode: '100644' }, 'T/sub/b.md': { sha: 's1', mode: '100644' } }
-    const ch = withNoteKeys(empty(), remote, 'T', ['status'], () => '# A\n', true)
-    expect(Object.keys(ch.edits)).toEqual(['T/a.md'])
-  })
 })

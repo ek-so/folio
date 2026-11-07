@@ -1,23 +1,24 @@
 import { useMemo } from 'react'
-import { fileItem, inFolder, editNotes } from '@/lib/folderNotes.js'
+import { fileItem, isTechnical, editNotes } from '@/lib/folderNotes.js'
 import { editNote } from '@/lib/changes.js'
 import { DESCRIPTION, frontMatter, withoutKeys, renameKey, keyNameError, withValue, withTitle, valueActions } from '@/lib/frontmatter.js'
 
 // What a widget (board, planner) does with the notes of its `folder` (null: it
-// has none, e.g. its settings can't be read; `flat`: only those right in it, a board's), through the app's `services`; every
+// has none, e.g. its settings can't be read), through the app's `services`; every
 // change goes through the app's own pipeline (services.update and its file actions).
 // `edit(text, first)` below is `editNotes`: `first(ch)` is applied to the changes before the notes
 // (a widget's own settings file goes in the same step).
-export function useFolderNotes(services, folder, flat = false) {
+export function useFolderNotes(services, folder) {
   const { update } = services
+  const prefix = folder ? folder + '/' : ''
   // Every note of the folder (on this device; no technical files), [path, text]
   const entries = useMemo(() => folder !== null ? Object.entries(services.notes)
-    .filter(([p]) => inFolder(p, folder, flat)) : [], [services.notes, folder, flat])
+    .filter(([p]) => p.startsWith(prefix) && !isTechnical(p.slice(prefix.length))) : [], [services.notes, prefix, folder === null])
   const texts = useMemo(() => entries.map(([, text]) => text), [entries])
   // With no folder there are no notes to edit (never the whole repo)
   const editAll = (edit, first = ch => ch) => {
     if (folder === null) return
-    update(ch => editNotes(first(ch), services.remoteFiles, folder, edit, services.remoteText, flat))
+    update(ch => editNotes(first(ch), services.remoteFiles, folder, edit, services.remoteText))
   }
   // Its values' actions (lib/frontmatter.js `valueActions`) over every note, in one step
   const valuesCache = useMemo(() => new Map(), [texts])

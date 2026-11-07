@@ -30,7 +30,7 @@ export function useBoard(id, services) {
   const data = board && boardColumns(board, files, services.notes)
   const write = next => config.write(boardPath(id), serializeBoard(next))
   const save = next => update(write(next))
-  const notes = useFolderNotes(services, board ? board.folder : null, true)
+  const notes = useFolderNotes(services, board ? board.folder : null)
 
   return {
     ready: file.ready,
@@ -45,7 +45,7 @@ export function useBoard(id, services) {
       const added = keys.filter(k => !board.properties.includes(k))
       update(ch => {
         const next = write({ ...board, properties: keys })(ch)
-        return added.length ? withNoteKeys(next, services.remoteFiles, board.folder, added, services.remoteText, true) : next
+        return added.length ? withNoteKeys(next, services.remoteFiles, board.folder, added, services.remoteText) : next
       })
     },
     // The columns shown (`shown`: names); the others are hidden (still listed in the Columns sheet)

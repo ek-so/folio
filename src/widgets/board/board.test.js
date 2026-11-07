@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { parseBoard, serializeBoard, newBoard, boardColumns, movedBoard, placeCard, moveColumn, cardStatus, columnNameError, addedColumn, renamedColumn, removedColumn, LOOSE } from './board.js'
 
 const note = status => `---\nstatus: ${status}\n---\n# N\n`
-const files = ['T/b.md', 'T/a.md', 'T/old.md', 'T/loose.md', 'T/pic.png', 'T/sub/deep.md', 'T/.gitkeep', 'T/_index.md', 'Other/x.md']
+const files = ['T/b.md', 'T/a.md', 'T/old.md', 'T/loose.md', 'T/pic.png', 'T/sub/deep.md', 'T/.gitkeep', 'T/_index.md', 'T/_assets/x.md', 'T/sub/.x.md', 'Other/x.md']
 const notes = { 'T/b.md': note('Todo'), 'T/a.md': note('Todo'), 'T/old.md': note('Done'), 'T/loose.md': '# L\n', 'T/sub/deep.md': note('Todo') }
 
 describe('board', () => {
@@ -21,11 +21,11 @@ describe('board', () => {
     expect(cardStatus(undefined)).toBe(LOOSE)
   })
 
-  it('has a column per status of the files right in its folder, the rest in No status', () => {
+  it('has a column per status of the files in its folder at any depth, the rest in No status', () => {
     const { columns, loose, missing } = boardColumns(newBoard('T'), files, notes)
     expect(columns.map(c => c.name)).toEqual(['Done', 'Todo'])
     expect(columns[0].cards).toEqual([{ key: 'old.md', path: 'T/old.md' }])
-    expect(columns[1].cards.map(c => c.key)).toEqual(['a.md', 'b.md'])
+    expect(columns[1].cards.map(c => c.key)).toEqual(['a.md', 'b.md', 'sub/deep.md'])
     expect(loose.map(c => c.path)).toEqual(['T/loose.md', 'T/pic.png'])
     expect(missing).toBe(false)
     expect(boardColumns(newBoard('Gone'), files, notes).missing).toBe(true)
@@ -35,15 +35,17 @@ describe('board', () => {
     const board = { ...newBoard('T'), columns: ['Todo', 'Empty'], cards: { Todo: ['b.md'] } }
     const { columns } = boardColumns(board, files, notes)
     expect(columns.map(c => c.name)).toEqual(['Todo', 'Empty', 'Done'])
-    expect(columns[0].cards.map(c => c.key)).toEqual(['b.md', 'a.md'])
+    expect(columns[0].cards.map(c => c.key)).toEqual(['b.md', 'a.md', 'sub/deep.md'])
     expect(columns[1].cards).toEqual([])
   })
 
   it('keeps its order when things are renamed', () => {
-    const board = { ...newBoard('T'), columns: ['Todo'], cards: { Todo: ['b.md', 'a.md'] } }
+    const board = { ...newBoard('T'), columns: ['Todo'], cards: { Todo: ['b.md', 'a.md', 'sub/deep.md'] } }
     expect(movedBoard(board, 'T', 'Tasks', true).folder).toBe('Tasks')
-    expect(movedBoard(board, 'T/a.md', 'T/c.md', false).cards.Todo).toEqual(['b.md', 'c.md'])
-    expect(movedBoard(board, 'T/a.md', 'T/sub/a.md', false)).toBe(board)
+    expect(movedBoard(board, 'T/a.md', 'T/c.md', false).cards.Todo).toEqual(['b.md', 'c.md', 'sub/deep.md'])
+    expect(movedBoard(board, 'T/a.md', 'T/sub/a.md', false).cards.Todo).toEqual(['b.md', 'sub/a.md', 'sub/deep.md'])
+    expect(movedBoard(board, 'T/sub', 'T/next', true).cards.Todo).toEqual(['b.md', 'a.md', 'next/deep.md'])
+    expect(movedBoard(board, 'T/a.md', 'Other/a.md', false)).toBe(board)
     expect(movedBoard(board, 'Other/x.md', 'Other/y.md', false)).toBe(board)
   })
 
@@ -52,10 +54,11 @@ describe('board', () => {
     const data = boardColumns(board, files, notes)
     const same = placeCard(board, data, 'T/b.md', 'Todo', 0)
     expect(same.status).toBeNull()
-    expect(same.board.cards.Todo).toEqual(['b.md', 'a.md'])
+    expect(same.board.cards.Todo).toEqual(['b.md', 'a.md', 'sub/deep.md'])
     const moved = placeCard(board, data, 'T/old.md', 'Todo', 1)
     expect(moved.status).toBe('Todo')
-    expect(moved.board.cards).toEqual({ Todo: ['a.md', 'old.md', 'b.md'], Done: [] })
+    expect(moved.board.cards).toEqual({ Todo: ['a.md', 'old.md', 'b.md', 'sub/deep.md'], Done: [] })
+    expect(placeCard(board, data, 'T/sub/deep.md', 'Done', 0).board.cards.Done).toEqual(['sub/deep.md', 'old.md'])
     expect(placeCard(board, data, 'T/a.md', LOOSE, 0).status).toBe(LOOSE)
   })
 

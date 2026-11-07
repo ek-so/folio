@@ -1,15 +1,15 @@
-import { inFolder } from '@/lib/folderNotes.js'
+import { isTechnical } from '@/lib/folderNotes.js'
 import { properties, valueList } from '@/lib/frontmatter.js'
 
-// A board widget (Kanban): the files right in a folder are its cards, grouped
-// into columns by their `status` property (a column per value). Files without
-// a status (and files that aren't notes) are "No status", a column shown only
-// while there are any. Subfolders stay off the board. Moving a card to another
-// column sets its status. Each board's settings live in the repo, beside the views:
+// A board widget (Kanban): the files in a folder, at any depth, are its cards,
+// grouped into columns by their `status` property (a column per value). Files
+// without a status (and files that aren't notes) are "No status", a column shown
+// only while there are any. Moving a card to another column sets its status;
+// the file stays where it is. Each board's settings live in the repo, beside the views:
 // `.folio/boards/<id>.json`,
 //   { "folder", "properties": [keys shown on cards], "hidden": [column names not shown],
 //     "columns": [column names, in order], "cards": { column name: [card keys, in order] } }
-// A card's key is its file name. What isn't in the saved order follows it, by name.
+// A card's key is its path inside the board's folder. What isn't in the saved order follows it, by name.
 
 export const boardPath = id => `.folio/boards/${id}.json`
 export const LOOSE = '' // the No status column's key in `cards`
@@ -45,8 +45,15 @@ export const cardStatus = text => text === undefined ? LOOSE : (valueList(proper
 const nameOf = path => path.slice(path.lastIndexOf('/') + 1)
 const prefixOf = board => board.folder ? board.folder + '/' : ''
 
-// Whether `path` is one of the board's cards: a file right in its folder, not a technical one
-export const isCard = (board, path) => inFolder(path, board.folder, true)
+// Where `path` sits inside the board's folder, or null when it isn't one of its cards (outside it, or technical)
+function keyOf(board, path) {
+  const prefix = prefixOf(board)
+  const rest = path.startsWith(prefix) ? path.slice(prefix.length) : ''
+  return rest && !isTechnical(rest) ? rest : null
+}
+
+// Whether `path` is one of the board's cards: a file in its folder, at any depth, not a technical one
+export const isCard = (board, path) => keyOf(board, path) !== null
 
 // `items` in the saved order (`saved`: keys), then the rest by name
 function ordered(items, saved = []) {
@@ -65,7 +72,7 @@ export function boardColumns(board, files, notes) {
     if (!isCard(board, path)) continue
     const status = cardStatus(notes[path])
     if (!groups.has(status)) groups.set(status, [])
-    groups.get(status).push({ key: nameOf(path), path })
+    groups.get(status).push({ key: keyOf(board, path), path })
   }
   const names = [...board.columns, ...[...groups.keys()].filter(n => n !== LOOSE && !board.columns.includes(n))]
   const columns = ordered([...new Set(names)].map(name => ({ key: name, name, path: name })), board.columns)
@@ -75,15 +82,16 @@ export function boardColumns(board, files, notes) {
 }
 
 // The board after the file or folder (`isDir`) at `from` moved to `to` (a
-// rename or a move anywhere in the repo): its folder follows, and a card renamed
-// in its folder keeps its place in its column
+// rename or a move anywhere in the repo): its folder follows, and a card (or a
+// subfolder of cards) renamed or moved inside its folder keeps its place in its column
 export function movedBoard(board, from, to, isDir) {
   if (board.folder !== '' && (board.folder === from || board.folder.startsWith(from + '/'))) {
     return { ...board, folder: to + board.folder.slice(from.length) }
   }
-  if (isDir || !isCard(board, from) || !isCard(board, to)) return board
-  const [was, now] = [nameOf(from), nameOf(to)]
-  const cards = Object.fromEntries(Object.entries(board.cards).map(([c, keys]) => [c, keys.map(k => k === was ? now : k)]))
+  const [was, now] = [keyOf(board, from), keyOf(board, to)]
+  if (was === null || now === null) return board
+  const follow = k => k === was ? now : isDir && k.startsWith(was + '/') ? now + k.slice(was.length) : k
+  const cards = Object.fromEntries(Object.entries(board.cards).map(([c, keys]) => [c, keys.map(follow)]))
   return { ...board, cards }
 }
 
@@ -98,7 +106,7 @@ export function placeCard(board, data, path, column, index) {
   if (!from || !target) return { board, status: null }
   const same = from === target
   const keys = target.cards.filter(c => c.path !== path).map(c => c.key)
-  keys.splice(Math.max(0, Math.min(index, keys.length)), 0, nameOf(path))
+  keys.splice(Math.max(0, Math.min(index, keys.length)), 0, from.cards.find(c => c.path === path).key)
   const cards = { ...board.cards, [column]: keys }
   if (!same) cards[from.key] = from.cards.filter(c => c.path !== path).map(c => c.key)
   return { board: { ...board, cards }, status: same ? null : column }
