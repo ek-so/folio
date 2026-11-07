@@ -1,7 +1,6 @@
 import { forwardRef, useMemo, useRef } from 'react'
 import { toast } from 'sonner'
-import { highlightMarkdown } from '../lib/markdown.js'
-import { frontMatter } from '../lib/frontmatter.js'
+import { highlightMarkdown, keyLines } from '../lib/markdown.js'
 import { cn } from '@/lib/utils.js'
 
 // Shared by the textarea and its styling layer so they line up exactly
@@ -12,11 +11,13 @@ const TEXT_LAYOUT = 'w-full h-full p-space font-mono text-base leading-relaxed w
 //
 // Closing the keyboard in any way calls onDone (back to preview): iOS Done,
 // tapping elsewhere or Escape. Scrolling keeps editing.
-// `locked`: property keys that can't be changed here (a planner's date and type: their badges change them): their lines
-// are greyed out, and typing that would change, add or remove one is refused, with a message.
+// `locked`: property keys that can't be changed here (a planner's date and repeat: their badges change them): their lines
+// (`keyLines`) are greyed out, and typing that would change, add or remove one is refused, with a message.
 const NONE = []
 
-const MarkdownEditor = forwardRef(function MarkdownEditor({ content, onChange, onDone, locked = NONE }, textareaRef) {
+const MarkdownEditor = forwardRef(function MarkdownEditor({ content, onChange, onDone, locked: lockedKeys = NONE }, textareaRef) {
+  const lockedKey = lockedKeys.join('\n')
+  const locked = useMemo(() => lockedKey ? lockedKey.split('\n') : NONE, [lockedKey]) // the same list while its keys are
   const highlightRef = useRef()
   const selection = useRef([0, 0]) // the selection before the latest typing, to put back when it's refused
   const highlighted = useMemo(() => highlightMarkdown(content, locked), [content, locked])
@@ -60,5 +61,8 @@ const MarkdownEditor = forwardRef(function MarkdownEditor({ content, onChange, o
 
 export default MarkdownEditor
 
-// The `keys` properties of `text`'s front matter, as one string to compare
-const lockedProps = (text, keys) => JSON.stringify((frontMatter(text)?.props ?? []).filter(p => keys.includes(p.key)))
+// The lines of `text` that set the `keys` properties (keyLines), as one string to compare
+const lockedProps = (text, keys) => {
+  const lines = text.split('\n')
+  return keyLines(text, keys).map(i => lines[i]).join('\n')
+}

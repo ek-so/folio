@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { DotsThree, PencilSimple, Trash, Columns, Copy, TextT, TextAlignLeft, LinkSimple } from '@phosphor-icons/react'
+import { DotsThree, PencilSimple, Trash, Columns, Copy, TextT, TextAlignLeft, LinkSimple, CheckCircle } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button.jsx'
 import { Input } from '@/components/ui/input.jsx'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu.jsx'
@@ -12,13 +12,13 @@ import { repoLink } from '@/lib/markdown.js'
 import { own } from '@/lib/utils.js'
 
 // A card's ⋯ menu, a board's and a planner's (hidden until the card is hovered with a mouse, always shown on touch):
-// Edit title (the card's title, not the file's name; only with `onTitle`: a note on this device), Add / Edit
+// Mark as done (only with `onDone`, a planner's), Edit title (the card's title, not the file's name; only with `onTitle`: a note on this device), Add / Edit
 // description (`description`, its text; only with `onDescription`, a note on this device), Rename file (its file's
 // name, `RenameModal`; `onRename(name)` returns an error or null), Duplicate (a copy of the file next to it), Copy link (`repoLink`), Move to column (only with `columns`, a board's: a submenu of its
 // columns, then Edit columns… that opens its Columns dialog) and Remove (the file, deleted like anywhere else, confirmed). `columns`: [{ key, name }] shown,
 // `column`: the card's key. Its dialogs are in a `contents` div so a click in them stays
 // theirs, never the card's.
-export default function CardMenu({ path, title, description, columns, column, onTitle, onDescription, onRename, onDuplicate, onMove, onEditColumns, onDelete }) {
+export default function CardMenu({ path, title, description, columns, column, onDone, onTitle, onDescription, onRename, onDuplicate, onMove, onEditColumns, onDelete }) {
   const [editing, setEditing] = useState(null) // 'title' | 'description' while its dialog is open
   const [renaming, setRenaming] = useState(false)
   const item = { name: path.slice(path.lastIndexOf('/') + 1), path, type: 'file' }
@@ -37,6 +37,10 @@ export default function CardMenu({ path, title, description, columns, column, on
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" onCloseAutoFocus={e => e.preventDefault()}>
+          {onDone && <>
+            <DropdownMenuItem onSelect={onDone}><CheckCircle /> Mark as done</DropdownMenuItem>
+            <DropdownMenuSeparator />
+          </>}
           {onTitle && <DropdownMenuItem onSelect={() => setEditing('title')}><TextT /> Edit title</DropdownMenuItem>}
           {onDescription && <DropdownMenuItem onSelect={() => setEditing('description')}><TextAlignLeft /> {description ? 'Edit' : 'Add'} description</DropdownMenuItem>}
           <DropdownMenuItem onSelect={() => setRenaming(true)}><PencilSimple /> Rename file</DropdownMenuItem>

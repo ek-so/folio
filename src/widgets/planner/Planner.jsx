@@ -1,3 +1,4 @@
+import { toast } from 'sonner'
 import { Fragment, useState, useMemo, useRef, useCallback, useLayoutEffect } from 'react'
 import { DotsThree, X, Tag, CalendarBlank, CrosshairSimple } from '@phosphor-icons/react'
 import { DndContext, DragOverlay, MouseSensor, TouchSensor, useSensor, useSensors, useDraggable, useDroppable, pointerWithin } from '@dnd-kit/core'
@@ -16,20 +17,20 @@ import { shownCards, hiddenCards } from '@/lib/trayCards.js'
 import { displayName } from '@/lib/files.js'
 import { formatDate } from '@/lib/dates.js'
 import { noteTitle, properties, valueList, DESCRIPTION } from '@/lib/frontmatter.js'
-import { DATE, TYPE, FIXED, plan, addDays, daysBetween, dayOffsets, dayAt, keyDay, dayKey, cardDate, droppedDate, monthLabel } from './planner.js'
+import { DATE, FIXED, plan, addDays, daysBetween, dayOffsets, dayAt, keyDay, dayKey, cardDate, droppedDate, monthLabel } from './planner.js'
 import { usePlanner } from './usePlanner.js'
 import { useToday } from './useToday.js'
-import RecurrenceField from './RecurrenceField.jsx'
+import { BADGES } from './RecurrenceField.jsx'
+import { WEEKDAYS } from './recurrence.js'
 
-// The ribbon: each day takes DAY_WIDTH (its box and the gap around it), and a line between months MONTH_GAP (1px and the
-// same gap on each side); it starts with a window of days around today and grows by
-// MORE_DAYS on either side as it's scrolled near an end (EDGE), so it never ends
+// The ribbon: each day takes DAY_WIDTH (its box and the gap around it), and a line between months MONTH_GAP (a box that
+// wide with the 1px line in its middle: the days' gap on each side), so the scrolling sums match what's drawn; it starts
+// with a window of days around a day (today, or one picked far away) and grows by MORE_DAYS on either side as it's
+// scrolled near an end (EDGE), so it never ends
 const DAY_WIDTH = 80
 const MONTH_GAP = 9
 const MORE_DAYS = 60
 const EDGE = DAY_WIDTH * 3
-
-const BADGES = { [TYPE]: RecurrenceField } // a card's type: its own badge and popover
 
 const dayCardId = path => 'card:' + path
 const dayCellId = key => 'day:' + key
@@ -49,7 +50,7 @@ export default function Planner({ id, services, onRemove }) {
   const today = useToday()
   const [picked, setPicked] = useState(null) // the day chosen on the ribbon; none follows today
   const selected = picked ?? today
-  const [anchor] = useState(today) // the ribbon's days are counted from where it started, so a new day doesn't shift them
+  const [anchor, setAnchor] = useState(today) // the ribbon's days are counted from where it started, so a new day doesn't shift them
   const [expanded, setExpanded] = useState(() => new Set()) // keys of the days showing all their cards
   const [range, setRange] = useState({ before: MORE_DAYS, after: MORE_DAYS * 2 }) // days shown before and after today
   const [dragged, setDragged] = useState(null) // the path of the card being dragged
@@ -92,19 +93,20 @@ export default function Planner({ id, services, onRemove }) {
     if (el.scrollLeft < EDGE) { grown.current = true; setRange(r => ({ ...r, before: r.before + MORE_DAYS })) }
     else if (el.scrollWidth - el.scrollLeft - el.clientWidth < EDGE) setRange(r => ({ ...r, after: r.after + MORE_DAYS }))
   }
-  function goToday() {
-    setPicked(null)
-    scrollToDay(today)
-  }
-  // A day picked in a month's calendar: the ribbon grows to it if needed, scrolls to it and selects it
-  function goToDay(key) {
-    const from = daysBetween(anchor, key)
-    setRange(r => ({ before: Math.max(r.before, MORE_DAYS - from), after: Math.max(r.after, from + MORE_DAYS) }))
-    setPicked(key)
+  // Select the day `key` (`pick`: null for today, which then follows the date) and bring it to the middle: it scrolls there
+  // when the ribbon has it, else the ribbon starts anew around it (it never grows all the way to a far day) and is there at once
+  function goTo(key, pick) {
+    setPicked(pick)
+    setMonth(monthLabel(key)) // a jump may land where the ribbon already was, with no scroll to name the month
+    if (days.includes(key)) return scrollToDay(key)
+    setAnchor(key)
+    setRange({ before: MORE_DAYS, after: MORE_DAYS * 2 })
     setJumping(key)
   }
+  const goToday = () => goTo(today, null)
+  const goToDay = key => goTo(key, key) // a day picked in the calendar
   useLayoutEffect(() => {
-    if (jumping && days.includes(jumping)) { scrollToDay(jumping); setJumping(null) }
+    if (jumping && days.includes(jumping)) { scrollToDay(jumping, 'auto'); setJumping(null) }
   }, [jumping, days, scrollToDay])
 
   const menu = (
@@ -131,6 +133,13 @@ export default function Planner({ id, services, onRemove }) {
   else {
     const list = arranged.on(selected)
     const shown = [...FIXED, ...planner.properties]
+    // Mark as done (usePlanner), told in a toast with Undo: a repeating card moved on, any other archived
+    const markDone = path => {
+      const done = act.markDone(path, today)
+      if (!done) return
+      const title = noteTitle(notes[path], displayName(path))
+      toast(done.next ? `${title} moved to ${shortTitle(done.next, today).replace(/^[A-Z][a-z]+,/, m => m.toLowerCase())}` : `${title} archived`, { action: { label: 'Undo', onClick: done.undo } })
+    }
     const cardMenu = path => off ? undefined : (
       <CardMenu
         path={path}
@@ -140,6 +149,7 @@ export default function Planner({ id, services, onRemove }) {
         onDescription={act.canTitle(path) ? text => act.setDescription(path, text) : undefined}
         onRename={name => services.rename({ name: path.slice(path.lastIndexOf('/') + 1), path, type: 'file' }, name)}
         onDuplicate={() => services.duplicate({ name: path.slice(path.lastIndexOf('/') + 1), path, type: 'file' })}
+        onDone={() => markDone(path)}
         onDelete={() => act.deleteCard(path)}
       />
     )
@@ -220,7 +230,7 @@ export default function Planner({ id, services, onRemove }) {
       {choosing && planner && (
         <CheckListModal
           title="Properties"
-          description="Their values show on the cards, without names. The date, type and description always show."
+          description="Their values show on the cards, without names. The date, repeat and description always show."
           lockedDescription="Every card has it; it comes back if removed"
           locked={FIXED}
           items={[...planner.properties, ...act.propertyKeys().filter(k => !FIXED.includes(k) && !planner.properties.includes(k))]}
@@ -274,7 +284,11 @@ function Ribbon({ days, today, selected, count, onSelect }) {
     <div className="flex w-max items-center">
       {days.map((key, i) => (
         <Fragment key={key}>
-          {i > 0 && keyDay(key).day === 1 && <Separator orientation="vertical" className="mx-1 data-[orientation=vertical]:h-12" />}
+          {i > 0 && keyDay(key).day === 1 && (
+            <div className="flex shrink-0 justify-center" style={{ width: MONTH_GAP }}>
+              <Separator orientation="vertical" className="data-[orientation=vertical]:h-12" />
+            </div>
+          )}
           <Day dayKey={key} today={key === today} selected={key === selected} count={count(key)} onSelect={onSelect} />
         </Fragment>
       ))}
@@ -282,7 +296,6 @@ function Ribbon({ days, today, selected, count, onSelect }) {
   )
 }
 
-const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
 // One day of the ribbon, a drop target for cards: its weekday, number and, when it has cards, how many.
 // A Button (white and outlined like a card, filled for the selected day) so it focuses like every control; today has a ring.

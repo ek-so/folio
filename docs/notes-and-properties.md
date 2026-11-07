@@ -17,6 +17,7 @@
 - The `description` (`DESCRIPTION`) is muted text whose markdown links are link badges, opened like the note's own, and whose dates are date badges (`renderInline`); never a badge. Every other value is a badge (no property name, no tooltip). Badges listed before the description show above it, the rest below.
 - Each badge has a ▾ and opens a popover to change that property, through `useNote`'s `change` in a note and `setProperty` on a board card (both `withValue`).
 - A click, press or touch inside a badge or its popover doesn't reach the note or card (`own`). The editor shows the raw block.
+- **A widget's properties** (`valueScope`, e.g. a planner's `date` and `repeat`): they show first on the note's page; in the editor their lines (`keyLines`) are greyed out and typing that would change, add or remove them is refused with a message (`MarkdownEditor` `locked`); and when the text was changed in the editor and lacks one (`required`, also a board's group property), it comes back, empty, as the editor closes (`useNote`).
 
 ## Value popover (`ValueChooser`)
 - A field to find or add a value, the values the notes next to it have for that key (the note's folder; on a card, and on the page of a note that is a card of any board, the whole board: `valuesOf`, `valueScope`) with a ✓ on the current ones, then a separator and **Edit values**.

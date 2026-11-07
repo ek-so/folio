@@ -361,19 +361,28 @@ function highlightInline(line) {
 
 // HTML for the styling layer behind the markdown editor: same characters as
 // `text`, with links/images in the accent color and bold/italic/etc. styled.
-// `locked`: property keys whose front matter lines (a key's line and its `- item` lines) are greyed out, as they can't be edited here
+// The indexes of `text`'s lines that set one of the properties `keys` (`key: value`) in its front matter: between a first
+// line `---` and the next `---` or `...` line (or the end, while that's missing). The markdown editor greys them out and
+// refuses typing that changes them (a planner's date and repeat).
+export function keyLines(text, keys) {
+  if (!keys.length) return []
+  const lines = text.split('\n')
+  if (!/^---\s*$/.test(lines[0])) return []
+  const out = []
+  for (let i = 1; i < lines.length && !/^(---|\.\.\.)\s*$/.test(lines[i]); i++) {
+    const m = lines[i].match(/^([^\s#][^:]*):/)
+    if (m && keys.includes(m[1].trim())) out.push(i)
+  }
+  return out
+}
+
+// `locked`: property keys whose lines (keyLines) are greyed out, as they can't be edited here
 export function highlightMarkdown(text, locked = []) {
   let inFence = false
-  const raws = text.split('\n')
-  const close = locked.length && /^---\s*$/.test(raws[0]) ? raws.findIndex((l, i) => i > 0 && /^---\s*$/.test(l)) : -1
-  let key = null // the front matter key a line belongs to
-  const lines = raws.map((raw, i) => {
+  const greyed = new Set(keyLines(text, locked))
+  const lines = text.split('\n').map((raw, i) => {
     const line = escapeHtml(raw)
-    if (i > 0 && i < close) {
-      const m = raw.match(/^([^\s#-][^:]*):/)
-      if (m) key = m[1].trim()
-      if (locked.includes(key)) return `<span class="text-muted-foreground/50">${line}</span>`
-    }
+    if (greyed.has(i)) return `<span class="text-muted-foreground/50">${line}</span>`
     if (/^\s*(```|~~~)/.test(raw)) {
       inFence = !inFence
       return `<span class="text-muted-foreground">${line}</span>`

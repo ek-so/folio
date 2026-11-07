@@ -13,7 +13,7 @@ const fetchOriginal = sha => sha === null ? Promise.resolve('') : getBlob(sha)
 // onEdit(content, original) after a pause, on close, before a reload and
 // before Sync. Mount once per note. `beginEdit()` and `endEdit()` frame a time in the editor: when it
 // ends, or the note closes before it does, every date in the note is written in one form
-// (`withFixedDates`) and the properties `required` (a planner's date and type) that were taken out come back, empty;
+// (`withFixedDates`) and, when the text was changed, the properties `required` (a planner's date and repeat) it lacks come back, empty;
 // closing the tab saves the typing as it is.
 export function useNote(entry, edited, onEdit, required) {
   const [content, setContent] = useState('')
@@ -24,6 +24,7 @@ export function useNote(entry, edited, onEdit, required) {
   const onEditRef = useRef(onEdit)
   const latestRef = useRef(null) // the text as shown
   const editingRef = useRef(false)
+  const startRef = useRef(null) // the text when editing began
   const shaRef = useRef(entry.sha)
   const requiredRef = useRef(required)
   requiredRef.current = required
@@ -91,7 +92,7 @@ export function useNote(entry, edited, onEdit, required) {
     if (!editingRef.current || latest === null) return latest
     try {
       const dated = withFixedDates(latest)
-      return requiredRef.current?.length ? withKeys(dated, requiredRef.current) : dated
+      return requiredRef.current?.length && latest !== startRef.current ? withKeys(dated, requiredRef.current) : dated
     } catch (error) {
       console.error(error)
       toast.error("The dates couldn't be formatted. The note is saved as typed.")
@@ -99,7 +100,10 @@ export function useNote(entry, edited, onEdit, required) {
     }
   }
 
-  function beginEdit() { editingRef.current = true }
+  function beginEdit() {
+    editingRef.current = true
+    startRef.current = latestRef.current
+  }
 
   function endEdit() {
     const done = fixed()

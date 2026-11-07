@@ -2,15 +2,16 @@ import { valueDate } from '@/lib/markdown.js'
 import { formatDate } from '@/lib/dates.js'
 import { keyDay, dayKey, addDays, daysBetween } from './planner.js'
 
-// A card's `type`: how often it happens, written in the note so it reads as plain words:
+// A card's `repeat`: how often it happens, written in the note so it reads as plain words:
 //   one-time
-//   recurring                          repeats, how often not picked yet (shown on its own date only)
+//   recurring                          repeats, how often not picked yet (done, it's archived like a one-time card)
 //   daily | weekly | monthly | yearly  every 1 day, week, month, year
 //   every 2 weeks                      every N days, weeks, months, years
 //   … on Mon, Wed                      weekly only: on those weekdays (else the date's own weekday)
 //   … until 31 Dec 2026                the last day it can happen on
-// It repeats from the card's date, which always counts as its first day (even when weekly on other weekdays): monthly on that day of the month (the month's last day when it's shorter),
-// yearly on that day of that month.
+// A card shows once, on its date: its next time. Mark as done moves the date on to the next time after it (nextOccurrence),
+// counted from that date: weekly on its weekdays (else the date's own), monthly on the date's day of the month (the month's
+// last day when it's shorter, and from then on that day), yearly on that day of that month.
 
 export const ONE_TIME = 'one-time'
 export const UNSET = 'recurring'
@@ -21,7 +22,7 @@ const ONCE_A = { day: 'daily', week: 'weekly', month: 'monthly', year: 'yearly' 
 
 const RULE = /^(?:(daily|weekly|monthly|yearly)|every\s+(\d+)\s+(day|week|month|year)s?)(?:\s+on\s+([a-z,\s]+?))?(?:\s+until\s+(.+))?$/i
 
-// What a `type` value says: { kind: 'one-time' }, { kind: 'unset' } (plain "recurring"),
+// What a `repeat` value says: { kind: 'one-time' }, { kind: 'unset' } (plain "recurring"),
 // { kind: 'repeat', every, unit, weekdays: [0 = Sunday …], until: day key or null }, or null (empty or not one of these)
 export function parseRecurrence(value) {
   const text = typeof value === 'string' ? value.trim() : ''
@@ -50,7 +51,7 @@ export function parseRecurrence(value) {
   return { kind: 'repeat', every, unit, weekdays: WEEK_ORDER.filter(d => weekdays.includes(d)), until }
 }
 
-// A rule written back as its `type` value (parseRecurrence's opposite)
+// A rule written back as its `repeat` value (parseRecurrence's opposite)
 export function formatRecurrence(rule) {
   if (rule.kind === 'one-time') return ONE_TIME
   if (rule.kind === 'unset') return UNSET
@@ -64,10 +65,9 @@ const weekday = key => { const { year, month, day } = keyDay(key); return new Da
 const monday = key => addDays(key, -((weekday(key) + 6) % 7))
 const monthDays = (year, month) => new Date(Date.UTC(year, month, 0)).getUTCDate()
 
-// Whether a card dated `start` with the rule `rule` (kind 'repeat') happens on the day `key`
+// Whether a card dated `start` with the rule `rule` (kind 'repeat') happens on the day `key` (counted from `start`)
 export function occursOn(rule, start, key) {
   if (key < start || (rule.until && key > rule.until)) return false
-  if (key === start) return true
   const a = keyDay(start), b = keyDay(key)
   switch (rule.unit) {
     case 'day': return daysBetween(start, key) % rule.every === 0
@@ -83,4 +83,15 @@ export function occursOn(rule, start, key) {
       return (b.year - a.year) % rule.every === 0 && b.month === a.month && b.day === Math.min(a.day, monthDays(b.year, b.month))
     default: return false
   }
+}
+
+// The day after `from` (a key) that a card with the rule `rule` (kind 'repeat') happens on next, or null when its `until` comes first
+export function nextOccurrence(rule, from) {
+  const limit = 366 * rule.every + 7 // a year of its unit and a week: always reached
+  for (let n = 1; n <= limit; n++) {
+    const key = addDays(from, n)
+    if (rule.until && key > rule.until) return null
+    if (occursOn(rule, from, key)) return key
+  }
+  return null
 }

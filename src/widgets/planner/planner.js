@@ -1,11 +1,11 @@
 import { properties, noteTitle } from '@/lib/frontmatter.js'
 import { valueDate } from '@/lib/markdown.js'
-import { parseRecurrence, occursOn } from './recurrence.js'
+import { parseRecurrence, nextOccurrence } from './recurrence.js'
 
 // A planner widget: a folder whose notes are cards, each on the day of its `date`
 // property, shown on a ribbon of days. Each planner's settings live in the repo, beside the views:
 // `.folio/planners/<id>.json`, { "folder", "properties": [keys shown on cards besides the date] }.
-// The date and type (one-time or recurring) are always shown, can't be turned off, renamed or removed, and come back
+// The date and repeat (one-time or how it repeats: recurrence.js) are always shown, can't be turned off, renamed or removed, and come back
 // into a card's note when it's saved without them.
 
 export const plannerPath = id => `.folio/planners/${id}.json`
@@ -13,9 +13,9 @@ export const plannerPath = id => `.folio/planners/${id}.json`
 // The property that holds a card's day
 export const DATE = 'date'
 // The property that says whether a card happens once or how it repeats (recurrence.js)
-export const TYPE = 'type'
+export const REPEAT = 'repeat'
 // The properties every card of a planner has
-export const FIXED = [DATE, TYPE]
+export const FIXED = [DATE, REPEAT]
 
 const strings = list => Array.isArray(list) ? list.filter(s => typeof s === 'string' && !FIXED.includes(s)) : []
 
@@ -102,23 +102,28 @@ export const droppedDate = (text, key) => {
   return old?.hour === undefined ? day : { ...day, hour: old.hour, minute: old.minute }
 }
 
+// Where Mark as done takes a card: a repeating one with a date, the day of its next time (a key); null for any other,
+// or one past its last time (`until`): it's archived
+export function doneNext(text) {
+  const rule = parseRecurrence(properties(text)[REPEAT])
+  const date = cardDate(text)
+  return rule?.kind === 'repeat' && date ? nextOccurrence(rule, dayKey(date)) : null
+}
+
 // `cards` ([{ path, text }]) arranged by day, as of `today` (a key): `on(key)` is what a day lists,
-// [{ path, overdue, undated }] by time, then title: the cards dated that day or repeating on it (their `type`, from
-// their date on: recurrence.js), and under today also the cards without a date (`undated`) and those dated before
-// today that don't repeat (`overdue`; they also stay on their own day); `count(key)` is how many that is. Each day is worked out once.
+// [{ path, overdue, undated }] by time, then title: the cards dated that day (a repeating card too: its date is its next
+// time, moved on by Mark as done), and under today also the cards without a date (`undated`) and those dated before today
+// (`overdue`; they also stay on their own day); `count(key)` is how many that is. Each day is worked out once.
 export function plan(cards, today) {
   const dated = new Map() // key → [{ path, time, title }]
   const loose = [] // without a date
   const past = [] // dated before today
-  const repeating = [] // [{ entry, start, rule }]
   for (const { path, text } of cards) {
     const date = cardDate(text)
     const title = noteTitle(text, path.slice(path.lastIndexOf('/') + 1).replace(/\.md$/, ''))
     const entry = { path, title, time: date?.hour === undefined ? '99:99' : `${pad(date.hour)}:${pad(date.minute)}` }
     if (!date) { loose.push(entry); continue }
     const key = dayKey(date)
-    const rule = parseRecurrence(properties(text)[TYPE])
-    if (rule?.kind === 'repeat') { repeating.push({ entry, start: key, rule }); continue }
     if (dated.has(key)) dated.get(key).push(entry)
     else dated.set(key, [entry])
     if (key < today) past.push(entry)
@@ -127,8 +132,7 @@ export function plan(cards, today) {
   const days = new Map()
   const on = key => {
     if (!days.has(key)) {
-      const repeats = repeating.filter(r => occursOn(r.rule, r.start, key)).map(r => r.entry)
-      const own = [...(dated.get(key) ?? []), ...repeats].map(e => ({ ...e, overdue: false, undated: false }))
+      const own = (dated.get(key) ?? []).map(e => ({ ...e, overdue: false, undated: false }))
       const extra = key === today ? [...loose.map(e => ({ ...e, overdue: false, undated: true })), ...past.map(e => ({ ...e, overdue: true, undated: false }))] : []
       days.set(key, [...own, ...extra].sort(order).map(({ path, overdue, undated }) => ({ path, overdue, undated })))
     }

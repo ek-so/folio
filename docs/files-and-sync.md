@@ -17,6 +17,7 @@ Drop files on the file list (into the open folder or onto a folder row) or + →
 
 ## Offline and sync
 - A service worker (vite-plugin-pwa) caches the app, and all notes are prefetched to IndexedDB.
+- **Archive:** a planner's Mark as done moves a one-time card's note into `.archive/` at the root (flat, a taken name gets a number) with `status: done` and `archived: <day>` (`services.archive`, one step with its links rewritten; Undo puts it back). When Folio opens, notes there archived more than 30 days ago are removed as local changes, with a message, so they go on the next Sync and can still be discarded (`lib/archive.js`).
 - Every change is local until Sync, which makes one commit. GitHub's state after it is computed locally (`filesAfter`, `blobSha`), so a dropped connection can't leave pushed changes looking unsynced.
 - The app never downloads GitHub's changes by itself: on start, return, coming online and pull-to-refresh it only checks for new commits (`checkRemote`) and shows the dot. Files change only on Sync or Pull (a repo never opened on this device downloads on start).
 - **`SyncButton`** is one button everywhere (a plain `ghost` item in the rail; on the phone bar an icon button) that opens the sync menu: Sync all (blue badge: the total to push and pull; "7+" or New when GitHub can't count), then Push / Pull (badges; "New" when GitHub can't compare) / Discard (confirmed). The rail item's badge shows only directions (↑ ↓); icon-only ones a dot. It flashes only Failed and Offline.

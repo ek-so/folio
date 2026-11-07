@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { parsePlanner, serializePlanner, newPlanner, movedPlanner, addDays, daysBetween, dayOffsets, dayAt, dayKey, plan, cardDate, droppedDate, monthLabel } from './planner.js'
+import { parsePlanner, serializePlanner, newPlanner, movedPlanner, addDays, daysBetween, dayOffsets, dayAt, dayKey, plan, cardDate, doneNext, droppedDate, monthLabel } from './planner.js'
 
 const note = (date, extra = '') => `---\n${date === null ? '' : `date: ${date}\n`}${extra}---\n# T\n`
 
@@ -8,7 +8,7 @@ describe('planner', () => {
     expect(parsePlanner('nope')).toBeNull()
     expect(parsePlanner('{}')).toBeNull()
     expect(parsePlanner('{"folder":"T","properties":["date","tags"]}')).toEqual({ folder: 'T', properties: ['tags'] })
-    expect(parsePlanner('{"folder":"T","properties":["priority","type"]}')).toEqual({ folder: 'T', properties: ['priority'] })
+    expect(parsePlanner('{"folder":"T","properties":["priority","repeat"]}')).toEqual({ folder: 'T', properties: ['priority'] })
     const p = { ...newPlanner('T'), properties: ['tags'] }
     expect(parsePlanner(serializePlanner(p))).toEqual(p)
   })
@@ -67,15 +67,18 @@ describe('planner', () => {
     expect(count('2026-11-06')).toBe(4)
   })
 
-  it('lists a repeating card on each day it happens, never overdue', () => {
-    const cards = [
-      { path: 'T/weekly.md', text: note('4 Nov 2026', 'type: weekly\n') },
-      { path: 'T/unset.md', text: note('4 Nov 2026', 'type: recurring\n') },
-    ]
-    const { on } = plan(cards, '2026-11-07')
-    expect(on('2026-11-04').map(c => c.path)).toEqual(['T/unset.md', 'T/weekly.md'])
-    expect(on('2026-11-07')).toEqual([{ path: 'T/unset.md', overdue: true, undated: false }]) // no rule yet: like a one-time card
-    expect(on('2026-11-11')).toEqual([{ path: 'T/weekly.md', overdue: false, undated: false }])
-    expect(on('2026-10-28')).toEqual([])
+  it('lists a repeating card once, on its date, overdue when that has passed', () => {
+    const { on } = plan([{ path: 'T/weekly.md', text: note('4 Nov 2026', 'repeat: weekly\n') }], '2026-11-07')
+    expect(on('2026-11-04')).toEqual([{ path: 'T/weekly.md', overdue: false, undated: false }])
+    expect(on('2026-11-11')).toEqual([])
+    expect(on('2026-11-07')).toEqual([{ path: 'T/weekly.md', overdue: true, undated: false }])
+  })
+
+  it('moves a repeating card on when done, archives any other', () => {
+    expect(doneNext(note('4 Nov 2026', 'repeat: weekly\n'))).toBe('2026-11-11')
+    expect(doneNext(note('4 Nov 2026', 'repeat: weekly until 10 Nov 2026\n'))).toBeNull()
+    expect(doneNext(note('4 Nov 2026', 'repeat: recurring\n'))).toBeNull()
+    expect(doneNext(note('4 Nov 2026', 'repeat: one-time\n'))).toBeNull()
+    expect(doneNext(note(null, 'repeat: weekly\n'))).toBeNull()
   })
 })

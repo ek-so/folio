@@ -44,7 +44,7 @@ const TINT_HOVER = 'hover:bg-[color-mix(in_oklab,var(--tag)_calc(var(--tag-tint)
 // `chosen` ({ key: { value: color } }, lib/tagColors.js) are the colors picked so far.
 // `dateKeys`: properties that are always dates (a planner's date), a calendar even while none has a value yet, reading "No date" while empty or not a day.
 // `badges` ({ key: Component }): properties a widget shows its own way (a planner's type: widgets/planner/RecurrenceField.jsx),
-// one badge for the property, given `prop` and `onChange`.
+// one badge for the property, given `prop`, all `props` and `onChange`.
 export default function PropertyBadges({ props, path, files, clamp, title, className, onChange, options, onRemoveValue, valueCount, scopeName, onEditValue, chosen, dateKeys, badges }) {
   const [removing, setRemoving] = useState(null) // { key, value } being confirmed
   const [managing, setManaging] = useState(null) // the key whose values are in the dialog
@@ -66,7 +66,7 @@ export default function PropertyBadges({ props, path, files, clamp, title, class
     : (
       <div key={i} className="flex flex-wrap gap-space-xs">
         {part.badges.map(({ id, prop, label }) => badges?.[prop.key]
-          ? <Custom key={id} as={badges[prop.key]} prop={prop} onChange={onChange} />
+          ? <Custom key={id} as={badges[prop.key]} prop={prop} props={props} onChange={onChange} />
           : isDateProp(prop, options, dateKeys)
           ? <DateValue key={id} prop={prop} onChange={onChange} emptyLabel={dateKeys?.includes(prop.key) ? 'No date' : prop.key} />
           : onChange

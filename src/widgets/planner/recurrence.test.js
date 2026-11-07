@@ -1,11 +1,11 @@
 import { describe, it, expect } from 'vitest'
-import { parseRecurrence, formatRecurrence, occursOn } from './recurrence.js'
+import { parseRecurrence, formatRecurrence, occursOn, nextOccurrence } from './recurrence.js'
 
 const rule = text => parseRecurrence(text)
 const days = (text, start, keys) => keys.filter(k => occursOn(rule(text), start, k))
 
 describe('recurrence', () => {
-  it('reads and writes a type', () => {
+  it('reads and writes a repeat', () => {
     expect(rule('one-time')).toEqual({ kind: 'one-time' })
     expect(rule('recurring')).toEqual({ kind: 'unset' })
     expect(rule('')).toBeNull()
@@ -24,11 +24,23 @@ describe('recurrence', () => {
     const nov = Array.from({ length: 30 }, (_, i) => `2026-11-${String(i + 1).padStart(2, '0')}`)
     expect(days('every 3 days', '2026-11-05', nov)).toEqual(['2026-11-05', '2026-11-08', '2026-11-11', '2026-11-14', '2026-11-17', '2026-11-20', '2026-11-23', '2026-11-26', '2026-11-29'])
     expect(days('weekly', '2026-11-04', nov)).toEqual(['2026-11-04', '2026-11-11', '2026-11-18', '2026-11-25']) // Wednesdays
-    expect(days('every 2 weeks on Mon, Fri', '2026-11-04', nov)).toEqual(['2026-11-04', '2026-11-06', '2026-11-16', '2026-11-20', '2026-11-30']) // its date, then the weekdays
+    expect(days('every 2 weeks on Mon, Fri', '2026-11-04', nov)).toEqual(['2026-11-06', '2026-11-16', '2026-11-20', '2026-11-30'])
     expect(days('daily until 3 Nov 2026', '2026-11-01', nov)).toEqual(['2026-11-01', '2026-11-02', '2026-11-03'])
     expect(days('monthly', '2026-01-31', ['2026-02-27', '2026-02-28', '2026-03-31', '2026-04-30'])).toEqual(['2026-02-28', '2026-03-31', '2026-04-30'])
     expect(days('every 2 months', '2026-01-15', ['2026-02-15', '2026-03-15', '2026-05-15'])).toEqual(['2026-03-15', '2026-05-15'])
     expect(days('yearly', '2024-02-29', ['2025-02-28', '2026-03-01', '2028-02-29'])).toEqual(['2025-02-28', '2028-02-29'])
     expect(days('daily', '2026-11-10', ['2026-11-09'])).toEqual([])
+  })
+
+  it('finds the next time after a day', () => {
+    const next = (text, from) => nextOccurrence(rule(text), from)
+    expect(next('weekly', '2026-11-04')).toBe('2026-11-11')
+    expect(next('every 2 weeks on Mon, Fri', '2026-11-02')).toBe('2026-11-06')
+    expect(next('every 2 weeks on Mon, Fri', '2026-11-06')).toBe('2026-11-16')
+    expect(next('monthly', '2026-01-31')).toBe('2026-02-28')
+    expect(next('yearly', '2026-03-01')).toBe('2027-03-01')
+    expect(next('every 3 years', '2026-03-01')).toBe('2029-03-01')
+    expect(next('daily until 5 Nov 2026', '2026-11-04')).toBe('2026-11-05')
+    expect(next('daily until 5 Nov 2026', '2026-11-05')).toBeNull()
   })
 })
