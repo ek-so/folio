@@ -171,7 +171,7 @@ export default function Planner({ id, services, onRemove }) {
         <Tray>
           <div className="flex items-center gap-1">
             <div className="min-w-0 flex-1"><TrayTitle>{month}</TrayTitle></div>
-            <Button variant="ghost" size="md" className={cn(TRAY_ROW, 'shrink-0 gap-1.5 px-2')} onClick={goToday}><CrosshairSimple /> Today</Button>
+            <Button variant="ghost" size="md" className={cn(TRAY_ROW, 'shrink-0 gap-1.5 px-2', selected !== today && 'text-primary hover:text-primary')} onClick={goToday}><CrosshairSimple /> Today</Button>
             <DatePopover date={keyDay(selected)} onPick={d => d && goToDay(dayKey(d))}>
               <Button variant="ghost" size="icon" aria-label="Go to a day" className={TRAY_BUTTON}><CalendarBlank /></Button>
             </DatePopover>
