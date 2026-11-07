@@ -1,5 +1,7 @@
 import { forwardRef, useMemo, useRef } from 'react'
+import { toast } from 'sonner'
 import { highlightMarkdown } from '../lib/markdown.js'
+import { frontMatter } from '../lib/frontmatter.js'
 import { cn } from '@/lib/utils.js'
 
 // Shared by the textarea and its styling layer so they line up exactly
@@ -10,9 +12,25 @@ const TEXT_LAYOUT = 'w-full h-full p-space font-mono text-base leading-relaxed w
 //
 // Closing the keyboard in any way calls onDone (back to preview): iOS Done,
 // tapping elsewhere or Escape. Scrolling keeps editing.
-const MarkdownEditor = forwardRef(function MarkdownEditor({ content, onChange, onDone }, textareaRef) {
+// `locked`: property keys that can't be changed here (a planner's date and type: their badges change them): their lines
+// are greyed out, and typing that would change, add or remove one is refused, with a message.
+const NONE = []
+
+const MarkdownEditor = forwardRef(function MarkdownEditor({ content, onChange, onDone, locked = NONE }, textareaRef) {
   const highlightRef = useRef()
-  const highlighted = useMemo(() => highlightMarkdown(content), [content])
+  const selection = useRef([0, 0]) // the selection before the latest typing, to put back when it's refused
+  const highlighted = useMemo(() => highlightMarkdown(content, locked), [content, locked])
+
+  function handleChange(e) {
+    const next = e.target.value
+    if (!locked.length || lockedProps(next, locked) === lockedProps(content, locked)) return onChange(next)
+    // Refused: the text stays as it was (React puts it back), and so does the selection
+    const textarea = e.currentTarget
+    const [start, end] = selection.current
+    requestAnimationFrame(() => textarea.setSelectionRange(start, end))
+    const names = locked.join(' and ')
+    toast(`${names.charAt(0).toUpperCase() + names.slice(1)} can only be changed with ${locked.length === 1 ? 'its badge' : 'their badges'}.`, { id: 'locked-properties' })
+  }
 
   return (
     // data-no-pull: drags here scroll, never refresh
@@ -27,7 +45,8 @@ const MarkdownEditor = forwardRef(function MarkdownEditor({ content, onChange, o
         ref={textareaRef}
         className={cn(TEXT_LAYOUT, 'absolute inset-0 overflow-y-auto bg-transparent text-transparent caret-foreground selection:bg-primary/30 resize-none outline-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden')}
         value={content}
-        onChange={e => onChange(e.target.value)}
+        onChange={handleChange}
+        onSelect={e => { selection.current = [e.currentTarget.selectionStart, e.currentTarget.selectionEnd] }}
         onScroll={e => { highlightRef.current.scrollTop = e.currentTarget.scrollTop }}
         onBlur={onDone}
         onKeyDown={e => e.key === 'Escape' && e.currentTarget.blur()}
@@ -40,3 +59,6 @@ const MarkdownEditor = forwardRef(function MarkdownEditor({ content, onChange, o
 })
 
 export default MarkdownEditor
+
+// The `keys` properties of `text`'s front matter, as one string to compare
+const lockedProps = (text, keys) => JSON.stringify((frontMatter(text)?.props ?? []).filter(p => keys.includes(p.key)))

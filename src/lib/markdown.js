@@ -361,10 +361,19 @@ function highlightInline(line) {
 
 // HTML for the styling layer behind the markdown editor: same characters as
 // `text`, with links/images in the accent color and bold/italic/etc. styled.
-export function highlightMarkdown(text) {
+// `locked`: property keys whose front matter lines (a key's line and its `- item` lines) are greyed out, as they can't be edited here
+export function highlightMarkdown(text, locked = []) {
   let inFence = false
-  const lines = text.split('\n').map(raw => {
+  const raws = text.split('\n')
+  const close = locked.length && /^---\s*$/.test(raws[0]) ? raws.findIndex((l, i) => i > 0 && /^---\s*$/.test(l)) : -1
+  let key = null // the front matter key a line belongs to
+  const lines = raws.map((raw, i) => {
     const line = escapeHtml(raw)
+    if (i > 0 && i < close) {
+      const m = raw.match(/^([^\s#-][^:]*):/)
+      if (m) key = m[1].trim()
+      if (locked.includes(key)) return `<span class="text-muted-foreground/50">${line}</span>`
+    }
     if (/^\s*(```|~~~)/.test(raw)) {
       inFence = !inFence
       return `<span class="text-muted-foreground">${line}</span>`

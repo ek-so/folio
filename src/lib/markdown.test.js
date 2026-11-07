@@ -107,6 +107,15 @@ describe('markdown', () => {
 })
 
 describe('highlightMarkdown', () => {
+  it('greys out the locked properties of the front matter only', () => {
+    const html = highlightMarkdown('---\ndate: 4 Nov 2026\ntags:\n  - a\ntype: weekly\n---\ndate: in the text', ['date', 'type'])
+    expect(html).toContain('<span class="text-muted-foreground/50">date: 4 Nov 2026</span>')
+    expect(html).toContain('<span class="text-muted-foreground/50">type: weekly</span>')
+    expect(html).not.toContain('muted-foreground/50">tags')
+    expect(html).not.toContain('muted-foreground/50">  - a')
+    expect(html).not.toContain('muted-foreground/50">date: in the text')
+  })
+
   it('styles markdown without changing the text', () => {
     const md = '# Title\nSee [docs](a.md), **bold** and *it* <u>u</u> snake_case_name'
     const html = highlightMarkdown(md)

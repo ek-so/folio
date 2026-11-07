@@ -93,7 +93,7 @@ export default function Editor({ linkedBy, onOpenLink, path, entry, files, notes
           </p>
         )
       ) : mode === 'edit' ? (
-        <MarkdownEditor ref={textareaRef} content={content} onChange={change} onDone={finishEditing} />
+        <MarkdownEditor ref={textareaRef} content={content} onChange={change} onDone={finishEditing} locked={valueScope?.locked} />
       ) : (
         <MarkdownPreview
           ref={previewRef}
@@ -101,9 +101,15 @@ export default function Editor({ linkedBy, onOpenLink, path, entry, files, notes
           onDoubleTap={startEditing} onChange={change} onOpenFile={onOpenFile} onNavigate={onNavigate}
           footer={<Backlinks links={backlinks} onOpen={onOpenFile} />}
         >
-          <PropertyBadges props={frontMatter(content)?.props ?? []} path={path} files={files} title="Properties" onChange={(key, value) => change(withValue(content, key, value))} options={values.options} onRemoveValue={values.removeValue} valueCount={values.count} scopeName={valueScope?.name ?? "this folder"} chosen={tagColors.colors} onEditValue={tagColors.canEdit ? values.editValue : undefined} badges={valueScope?.badges} className="px-space pt-space" />
+          <PropertyBadges props={lockedFirst(frontMatter(content)?.props ?? [], valueScope?.locked)} path={path} files={files} title="Properties" onChange={(key, value) => change(withValue(content, key, value))} options={values.options} onRemoveValue={values.removeValue} valueCount={values.count} scopeName={valueScope?.name ?? "this folder"} chosen={tagColors.colors} onEditValue={tagColors.canEdit ? values.editValue : undefined} badges={valueScope?.badges} className="px-space pt-space" />
         </MarkdownPreview>
       )}
     </FilePage>
   )
+}
+
+// A note's properties with the `locked` ones first, in that order (a planner's date, then its type), the rest as in the file
+function lockedFirst(props, locked = []) {
+  const first = locked.map(k => props.find(p => p.key === k)).filter(Boolean)
+  return [...first, ...props.filter(p => !locked.includes(p.key))]
 }

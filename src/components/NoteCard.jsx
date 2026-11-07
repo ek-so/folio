@@ -26,8 +26,9 @@ export const cardClick = (path, files, onOpen, onOpenFolder) => e => {
 // the badges in it are buttons
 const NoteCard = forwardRef(function NoteCard({ path, text, properties, always = [], scopeName, files, menu, onChange, options, onRemoveValue, valueCount, chosen, onEditValue, dateKeys, badges, className, ...props }, ref) {
   const fm = text === undefined ? [] : frontMatter(text)?.props ?? []
-  const shown = fm.filter(p => p.key === DESCRIPTION || properties.includes(p.key)) // in the file's order
-  for (const key of always) if (text !== undefined && !shown.some(p => p.key === key)) shown.push({ key, value: '' }) // `always`: shown empty when the note lacks it
+  // `always` first, in that order (a planner's date, then its type), shown empty when the note lacks one; the rest in the file's order
+  const first = text === undefined ? [] : always.map(key => fm.find(p => p.key === key) ?? { key, value: '' })
+  const shown = [...first, ...fm.filter(p => !always.includes(p.key) && (p.key === DESCRIPTION || properties.includes(p.key)))]
   return (
     <div
       ref={ref}

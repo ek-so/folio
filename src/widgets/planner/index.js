@@ -27,13 +27,14 @@ export default {
   },
   // Where a note's property values come from on its page when it's a card of this planner: the whole planner
   // ({ name, includes(path) }), so a value used on one day is offered on every other; its date and type come back
-  // when it's saved without them (`required`), and its type shows as RecurrenceField (`badges`); else null
+  // when it's saved without them (`required`), come first and can't be edited in its markdown (`locked`: their badges
+  // change them), and its type shows as RecurrenceField (`badges`); else null
   valueScope(id, path, services) {
     const file = services.config.read(plannerPath(id))
     const planner = file.ready && file.text !== undefined ? parsePlanner(file.text) : null
     const prefix = planner?.folder ? planner.folder + '/' : ''
     const inPlanner = p => p.startsWith(prefix) && !isTechnical(p.slice(prefix.length))
-    return planner && inPlanner(path) ? { name: 'this planner', includes: inPlanner, required: FIXED, badges: { [TYPE]: RecurrenceField } } : null
+    return planner && inPlanner(path) ? { name: 'this planner', includes: inPlanner, required: FIXED, locked: FIXED, badges: { [TYPE]: RecurrenceField } } : null
   },
   removed: (ch, id, { config }) => config.erase(plannerPath(id))(ch),
 }
