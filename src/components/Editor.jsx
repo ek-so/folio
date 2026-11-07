@@ -101,7 +101,7 @@ export default function Editor({ linkedBy, onOpenLink, path, entry, files, notes
           onDoubleTap={startEditing} onChange={change} onOpenFile={onOpenFile} onNavigate={onNavigate}
           footer={<Backlinks links={backlinks} onOpen={onOpenFile} />}
         >
-          <PropertyBadges props={frontMatter(content)?.props ?? []} path={path} files={files} title="Properties" onChange={(key, value) => change(withValue(content, key, value))} options={values.options} onRemoveValue={values.removeValue} valueCount={values.count} scopeName={valueScope?.name ?? "this folder"} chosen={tagColors.colors} onEditValue={tagColors.canEdit ? values.editValue : undefined} fixedValues={valueScope?.fixedValues} className="px-space pt-space" />
+          <PropertyBadges props={frontMatter(content)?.props ?? []} path={path} files={files} title="Properties" onChange={(key, value) => change(withValue(content, key, value))} options={values.options} onRemoveValue={values.removeValue} valueCount={values.count} scopeName={valueScope?.name ?? "this folder"} chosen={tagColors.colors} onEditValue={tagColors.canEdit ? values.editValue : undefined} badges={valueScope?.badges} className="px-space pt-space" />
         </MarkdownPreview>
       )}
     </FilePage>

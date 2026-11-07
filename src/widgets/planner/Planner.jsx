@@ -16,9 +16,10 @@ import { shownCards, hiddenCards } from '@/lib/trayCards.js'
 import { displayName } from '@/lib/files.js'
 import { formatDate } from '@/lib/dates.js'
 import { noteTitle, properties, valueList, DESCRIPTION } from '@/lib/frontmatter.js'
-import { DATE, TYPE, TYPES, FIXED, plan, addDays, daysBetween, dayOffsets, dayAt, keyDay, dayKey, cardDate, droppedDate, monthLabel } from './planner.js'
+import { DATE, TYPE, FIXED, plan, addDays, daysBetween, dayOffsets, dayAt, keyDay, dayKey, cardDate, droppedDate, monthLabel } from './planner.js'
 import { usePlanner } from './usePlanner.js'
 import { useToday } from './useToday.js'
+import RecurrenceField from './RecurrenceField.jsx'
 
 // The ribbon: each day takes DAY_WIDTH (its box and the gap around it), and a line between months MONTH_GAP (1px and the
 // same gap on each side); it starts with a window of days around today and grows by
@@ -27,6 +28,8 @@ const DAY_WIDTH = 80
 const MONTH_GAP = 9
 const MORE_DAYS = 60
 const EDGE = DAY_WIDTH * 3
+
+const BADGES = { [TYPE]: RecurrenceField } // a card's type: its own badge and popover
 
 const dayCardId = path => 'card:' + path
 const dayCellId = key => 'day:' + key
@@ -141,8 +144,8 @@ export default function Planner({ id, services, onRemove }) {
       />
     )
     const cardProps = path => ({
-      path, text: notes[path], properties: shown, always: FIXED, dateKeys: [DATE], fixedValues: { [TYPE]: TYPES }, scopeName: 'this planner', files,
-      onChange: off ? undefined : act.setProperty, options: act.valuesOf,
+      path, text: notes[path], properties: shown, always: FIXED, dateKeys: [DATE], badges: BADGES, scopeName: 'this planner', files,
+      onChange: off ? undefined : (key, value) => act.setProperty(path, key, value), options: act.valuesOf,
       onRemoveValue: off ? undefined : act.removeValue, valueCount: act.valueCount,
       chosen: services.tagColors.colors, onEditValue: off || !services.tagColors.canEdit ? undefined : act.editValue,
     })

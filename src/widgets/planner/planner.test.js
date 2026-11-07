@@ -66,4 +66,16 @@ describe('planner', () => {
     expect(on('2026-11-08')).toEqual([])
     expect(count('2026-11-06')).toBe(4)
   })
+
+  it('lists a repeating card on each day it happens, never overdue', () => {
+    const cards = [
+      { path: 'T/weekly.md', text: note('4 Nov 2026', 'type: weekly\n') },
+      { path: 'T/unset.md', text: note('4 Nov 2026', 'type: recurring\n') },
+    ]
+    const { on } = plan(cards, '2026-11-07')
+    expect(on('2026-11-04').map(c => c.path)).toEqual(['T/unset.md', 'T/weekly.md'])
+    expect(on('2026-11-07')).toEqual([{ path: 'T/unset.md', overdue: true, undated: false }]) // no rule yet: like a one-time card
+    expect(on('2026-11-11')).toEqual([{ path: 'T/weekly.md', overdue: false, undated: false }])
+    expect(on('2026-10-28')).toEqual([])
+  })
 })

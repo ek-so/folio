@@ -24,7 +24,7 @@ export const cardClick = (path, files, onOpen, onOpenFolder) => e => {
 
 // What a card of a board or a planner shows: the note's title, its description, the chosen `properties`' values. A div, not a button:
 // the badges in it are buttons
-const NoteCard = forwardRef(function NoteCard({ path, text, properties, always = [], scopeName, files, menu, onChange, options, onRemoveValue, valueCount, chosen, onEditValue, dateKeys, fixedValues, className, ...props }, ref) {
+const NoteCard = forwardRef(function NoteCard({ path, text, properties, always = [], scopeName, files, menu, onChange, options, onRemoveValue, valueCount, chosen, onEditValue, dateKeys, badges, className, ...props }, ref) {
   const fm = text === undefined ? [] : frontMatter(text)?.props ?? []
   const shown = fm.filter(p => p.key === DESCRIPTION || properties.includes(p.key)) // in the file's order
   for (const key of always) if (text !== undefined && !shown.some(p => p.key === key)) shown.push({ key, value: '' }) // `always`: shown empty when the note lacks it
@@ -41,7 +41,7 @@ const NoteCard = forwardRef(function NoteCard({ path, text, properties, always =
         <span className="min-w-0 flex-1 break-words text-sm font-medium">{text === undefined ? displayName(path) : noteTitle(text, displayName(path))}</span>
         {menu}
       </div>
-      <PropertyBadges props={shown} path={path} files={files} clamp className="pt-1" onChange={onChange} options={options} onRemoveValue={onRemoveValue} valueCount={valueCount} scopeName={scopeName} chosen={chosen} onEditValue={onEditValue} dateKeys={dateKeys} fixedValues={fixedValues} />
+      <PropertyBadges props={shown} path={path} files={files} clamp className="pt-1" onChange={onChange} options={options} onRemoveValue={onRemoveValue} valueCount={valueCount} scopeName={scopeName} chosen={chosen} onEditValue={onEditValue} dateKeys={dateKeys} badges={badges} />
       {text !== undefined && <TaskProgress {...taskProgress(text)} />}
     </div>
   )
