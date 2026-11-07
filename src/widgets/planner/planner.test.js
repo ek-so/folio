@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { parsePlanner, serializePlanner, newPlanner, movedPlanner, addDays, daysBetween, dayKey, plan, cardDate, droppedDate, monthLabel } from './planner.js'
+import { parsePlanner, serializePlanner, newPlanner, movedPlanner, addDays, daysBetween, dayOffsets, dayAt, dayKey, plan, cardDate, droppedDate, monthLabel } from './planner.js'
 
 const note = (date, extra = '') => `---\n${date === null ? '' : `date: ${date}\n`}${extra}---\n# T\n`
 
@@ -23,6 +23,16 @@ describe('planner', () => {
     expect(addDays('2026-03-01', -1)).toBe('2026-02-28')
     expect(daysBetween('2026-11-06', '2026-12-01')).toBe(25)
     expect(daysBetween('2026-03-01', '2026-02-28')).toBe(-1)
+  })
+
+  it('places days on the ribbon with a gap before each month', () => {
+    const offsets = dayOffsets(['2026-10-31', '2026-11-01', '2026-11-02', '2026-12-01'], 80, 9)
+    expect(offsets).toEqual([0, 89, 169, 258])
+    expect(dayOffsets(['2026-11-01', '2026-11-02'], 80, 9)).toEqual([0, 80])
+    expect(dayAt(offsets, 0)).toBe(0)
+    expect(dayAt(offsets, 88)).toBe(0)
+    expect(dayAt(offsets, 89)).toBe(1)
+    expect(dayAt(offsets, 1000)).toBe(3)
     expect(dayKey({ year: 2026, month: 1, day: 5 })).toBe('2026-01-05')
     expect(monthLabel('2026-11-06')).toBe('November 2026')
   })

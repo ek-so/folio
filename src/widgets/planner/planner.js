@@ -53,6 +53,28 @@ export function addDays(key, n) {
   return dayKey({ year: d.getUTCFullYear(), month: d.getUTCMonth() + 1, day: d.getUTCDate() })
 }
 
+// Where each of `days` starts on the ribbon: each takes `width`, and a month's first day (but the very first) has `gap` before it, its separator
+export function dayOffsets(days, width, gap) {
+  let x = 0
+  return days.map((key, i) => {
+    if (i > 0 && keyDay(key).day === 1) x += gap
+    const at = x
+    x += width
+    return at
+  })
+}
+
+// The index of the day at `x` on the ribbon (`offsets` from dayOffsets): the last one starting at or before it
+export function dayAt(offsets, x) {
+  let lo = 0, hi = offsets.length - 1
+  while (lo < hi) {
+    const mid = Math.ceil((lo + hi) / 2)
+    if (offsets[mid] <= x) lo = mid
+    else hi = mid - 1
+  }
+  return lo
+}
+
 // How many days `to` is after `from` (negative when before)
 export function daysBetween(from, to) {
   const utc = key => { const { year, month, day } = keyDay(key); return Date.UTC(year, month - 1, day) }

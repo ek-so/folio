@@ -1,8 +1,9 @@
-import { useState, useMemo, useRef, useCallback, useLayoutEffect } from 'react'
+import { Fragment, useState, useMemo, useRef, useCallback, useLayoutEffect } from 'react'
 import { DotsThree, X, Tag, CalendarBlank, CrosshairSimple } from '@phosphor-icons/react'
 import { DndContext, DragOverlay, MouseSensor, TouchSensor, useSensor, useSensors, useDraggable, useDroppable, pointerWithin } from '@dnd-kit/core'
 import { cn } from '@/lib/utils.js'
 import { Button } from '@/components/ui/button.jsx'
+import { Separator } from '@/components/ui/separator.jsx'
 import { Tray, TrayTitle, TrayFooter, TRAY_BUTTON, TRAY_ROW } from '@/components/ui/tray.jsx'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu.jsx'
 import NoteCard, { NO_CALLOUT, ownListeners, cardClick } from '@/components/NoteCard.jsx'
@@ -15,13 +16,15 @@ import { shownCards, hiddenCards } from '@/lib/trayCards.js'
 import { displayName } from '@/lib/files.js'
 import { formatDate } from '@/lib/dates.js'
 import { noteTitle, properties, valueList, DESCRIPTION } from '@/lib/frontmatter.js'
-import { DATE, plan, addDays, daysBetween, keyDay, dayKey, cardDate, droppedDate, monthLabel } from './planner.js'
+import { DATE, plan, addDays, daysBetween, dayOffsets, dayAt, keyDay, dayKey, cardDate, droppedDate, monthLabel } from './planner.js'
 import { usePlanner } from './usePlanner.js'
 import { useToday } from './useToday.js'
 
-// The ribbon: each day takes DAY_WIDTH (its box and the gap around it); it starts with a window of days around today and grows by
+// The ribbon: each day takes DAY_WIDTH (its box and the gap around it), and a line between months MONTH_GAP (1px and the
+// same gap on each side); it starts with a window of days around today and grows by
 // MORE_DAYS on either side as it's scrolled near an end (EDGE), so it never ends
 const DAY_WIDTH = 80
+const MONTH_GAP = 9
 const MORE_DAYS = 60
 const EDGE = DAY_WIDTH * 3
 
@@ -52,7 +55,7 @@ export default function Planner({ id, services, onRemove }) {
   const [jumping, setJumping] = useState(null) // a day picked in the calendar, scrolled to once the ribbon has it
   const [month, setMonth] = useState(() => monthLabel(today)) // the month of the day in the middle of the ribbon, its title
   const scroller = useRef(null)
-  const grown = useRef(0) // the width added before the first day while it's scrolled to, to keep its place
+  const grown = useRef(false) // days were added before the first: the view moves by their width to keep its place
   const centered = useRef(false)
   const off = !canEdit || !planner || missing
   const sensors = useSensors(
@@ -61,28 +64,29 @@ export default function Planner({ id, services, onRemove }) {
   )
 
   const days = useMemo(() => Array.from({ length: range.before + range.after + 1 }, (_, i) => addDays(anchor, i - range.before)), [anchor, range])
+  const offsets = useMemo(() => dayOffsets(days, DAY_WIDTH, MONTH_GAP), [days])
   const arranged = useMemo(() => plan(cards, today), [cards, today])
 
   const scrollToDay = useCallback((key, behavior = 'smooth') => {
     const el = scroller.current
     const at = days.indexOf(key)
-    if (el && at >= 0) el.scrollTo({ left: at * DAY_WIDTH - el.clientWidth / 2 + DAY_WIDTH / 2, behavior })
-  }, [days])
+    if (el && at >= 0) el.scrollTo({ left: offsets[at] - el.clientWidth / 2 + DAY_WIDTH / 2, behavior })
+  }, [days, offsets])
   // The ribbon starts with today in the middle
   const setScroller = useCallback(el => {
     scroller.current = el
-    if (el && !centered.current) { centered.current = true; el.scrollLeft = range.before * DAY_WIDTH - el.clientWidth / 2 + DAY_WIDTH / 2 }
-  }, [range.before])
+    if (el && !centered.current) { centered.current = true; el.scrollLeft = offsets[range.before] - el.clientWidth / 2 + DAY_WIDTH / 2 }
+  }, [range.before, offsets])
   // Days added before the first keep what was in view where it was
   useLayoutEffect(() => {
-    if (grown.current && scroller.current) { scroller.current.scrollLeft += grown.current; grown.current = 0 }
-  }, [range.before])
+    if (grown.current && scroller.current) { scroller.current.scrollLeft += offsets[MORE_DAYS]; grown.current = false }
+  }, [range.before, offsets])
   function onScroll() {
     const el = scroller.current
     if (!el || grown.current) return
-    const middle = days[Math.floor((el.scrollLeft + el.clientWidth / 2) / DAY_WIDTH)]
+    const middle = days[dayAt(offsets, el.scrollLeft + el.clientWidth / 2)]
     if (middle) setMonth(monthLabel(middle))
-    if (el.scrollLeft < EDGE) { grown.current = MORE_DAYS * DAY_WIDTH; setRange(r => ({ ...r, before: r.before + MORE_DAYS })) }
+    if (el.scrollLeft < EDGE) { grown.current = true; setRange(r => ({ ...r, before: r.before + MORE_DAYS })) }
     else if (el.scrollWidth - el.scrollLeft - el.clientWidth < EDGE) setRange(r => ({ ...r, after: r.after + MORE_DAYS }))
   }
   function goToday() {
@@ -260,25 +264,30 @@ const dayTitle = key => {
   return new Date(Date.UTC(year, month - 1, day)).toLocaleDateString('en', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })
 }
 
-// The days side by side, a line before each month's first day
+// The days side by side, a short line between months that takes its own place (MONTH_GAP: the days' gap on each side)
 function Ribbon({ days, today, selected, count, onSelect }) {
   return (
-    <div className="flex w-max">
-      {days.map((key, i) => <Day key={key} dayKey={key} first={i > 0 && keyDay(key).day === 1} today={key === today} selected={key === selected} count={count(key)} onSelect={onSelect} />)}
+    <div className="flex w-max items-center">
+      {days.map((key, i) => (
+        <Fragment key={key}>
+          {i > 0 && keyDay(key).day === 1 && <Separator orientation="vertical" className="mx-1 data-[orientation=vertical]:h-10" />}
+          <Day dayKey={key} today={key === today} selected={key === selected} count={count(key)} onSelect={onSelect} />
+        </Fragment>
+      ))}
     </div>
   )
 }
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
-// One day of the ribbon, a drop target for cards: its weekday, number and, when it has cards, how many; `first`: a month's first day, a line before it.
+// One day of the ribbon, a drop target for cards: its weekday, number and, when it has cards, how many.
 // A Button (white and outlined like a card, filled for the selected day) so it focuses like every control; today has a ring.
-function Day({ dayKey: key, first, today, selected, count, onSelect }) {
+function Day({ dayKey: key, today, selected, count, onSelect }) {
   const { setNodeRef, isOver } = useDroppable({ id: dayCellId(key) })
   const { year, month, day } = keyDay(key)
   const weekday = WEEKDAYS[new Date(Date.UTC(year, month - 1, day)).getUTCDay()]
   return (
-    <div className={cn('relative shrink-0 px-1', first && 'before:absolute before:inset-y-0 before:left-0 before:w-0.5 before:-translate-x-1/2 before:rounded-full before:bg-muted-foreground/60')} style={{ width: DAY_WIDTH }}>
+    <div className="shrink-0 px-1" style={{ width: DAY_WIDTH }}>
       <Button
         ref={setNodeRef}
         variant={selected ? 'default' : 'ghost'}
