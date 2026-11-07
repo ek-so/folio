@@ -26,7 +26,7 @@ const WIDGET_DOCS = {
       'Repeat says how often a card happens: one-time, or every few days, weeks (on chosen weekdays), months or years, until a day if you like. Tap it to choose. A card shows once, on its date.',
       'Mark as done in a card\'s ⋯ moves a repeating card to its next date. Any other card goes to the .archive folder, and is removed from there after 30 days (you see it before you sync). Undo is offered right away.',
       'Tap a day to see its cards, or jump to any day with the calendar on the right and back with Today. Notes with no date or a past date also show under today, dashed.',
-      'Drag a card onto a day, or tap its date, to move it. New card uses the selected day.',
+      'Drag a card onto a day, or tap its date, to move it. New task uses the selected day.',
       'Removing the planner keeps every note.',
     ],
   },

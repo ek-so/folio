@@ -193,20 +193,20 @@ export default function Planner({ id, services, onRemove }) {
             <Ribbon days={days} today={today} selected={selected} count={arranged.count} onSelect={setPicked} />
           </div>
         </Tray>
-        {/* The selected day's cards in a tray like a board's column: its first cards, Show N more, New card */}
+        {/* The selected day's cards in a tray like a board's column: its first cards, Show N more, New task; a day without any has only New task */}
         <Tray>
           <TrayTitle>{shortTitle(selected, today)}</TrayTitle>
-          {list.length ? (
+          {list.length > 0 && (
             <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,18rem),1fr))] items-start gap-space-sm">
               {list.filter(c => visible.has(c.path)).map(({ path, overdue, undated }) => (
                 <PlannerCard key={path} {...cardProps(path)} menu={cardMenu(path)} dashed={overdue || undated} onOpen={openFile} onOpenFolder={openFolder} />
               ))}
             </div>
-          ) : <p className="px-space-sm py-space-sm text-sm text-muted-foreground">Nothing planned for this day.</p>}
+          )}
           <TrayFooter
             more={expanded.has(selected) ? 0 : hiddenCards(paths, dragged).length}
             onShowMore={() => setExpanded(e => new Set(e).add(selected))}
-            newLabel="New card" onNew={() => act.newCard(selected)} disabled={off}
+            newLabel="New task" onNew={() => act.newCard(selected)} disabled={off}
           />
         </Tray>
         <DragOverlay>
