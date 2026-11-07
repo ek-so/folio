@@ -183,6 +183,12 @@
   }
 }
 
+/* An outlined white box that lifts on hover (a board's card, a planner's day): a shadow takes the outline's place
+   (border-lift-edge: a faint one stays on dark). The one hover for such boxes; a dragged one adds shadow-lg itself */
+@utility hover-lift {
+  @apply transition-[box-shadow,border-color,background-color] hover:border-lift-edge hover:shadow-md;
+}
+
 @theme inline {
   /* Shadows sit close under what they lift (a small drop, mostly spread); every shadow-* uses them */
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05), 0 0 1px 0 rgb(0 0 0 / 0.08);

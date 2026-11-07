@@ -351,7 +351,7 @@ function Ribbon({ days, today, selected, count, onSelect }) {
 
 
 // One day of the ribbon, a drop target for cards: its weekday, number and, when it has cards, how many.
-// A Button (white and outlined like a card, filled for the selected day) so it focuses like every control; today has a ring.
+// A Button (white and outlined like a card, lifting on hover like one: hover-lift; filled for the selected day) so it focuses like every control; today has a ring.
 function Day({ dayKey: key, today, selected, count, onSelect }) {
   const { setNodeRef, isOver } = useDroppable({ id: dayCellId(key) })
   const { year, month, day } = keyDay(key)
@@ -364,7 +364,7 @@ function Day({ dayKey: key, today, selected, count, onSelect }) {
         aria-pressed={selected}
         aria-label={`${dayTitle(key)}${today ? ', today' : ''}${count ? `, ${count} card${count === 1 ? '' : 's'}` : ''}`}
         onClick={() => onSelect(key)}
-        className={cn('h-auto w-full flex-col gap-0.5 rounded-lg border px-0 py-2.5 font-normal', selected ? 'border-transparent' : 'border-border bg-card', today && 'border-primary ring-1 ring-inset ring-primary', isOver && !selected && 'bg-secondary')}
+        className={cn('h-auto w-full flex-col gap-0.5 rounded-lg border px-0 py-2.5 font-normal', selected ? 'border-transparent' : cn('hover-lift border-border', isOver ? 'bg-secondary hover:bg-secondary' : 'bg-card hover:bg-card'), today && 'border-primary ring-1 ring-inset ring-primary hover:border-primary')}
       >
         <span className={cn('text-xs', !selected && 'text-muted-foreground')}>{weekday}</span>
         <span className="text-base font-semibold tabular-nums">{day}</span>
