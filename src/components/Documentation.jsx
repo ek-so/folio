@@ -23,7 +23,7 @@ const WIDGET_DOCS = {
     summary: 'A ribbon of days with the cards of the selected day under it. Each note in the folder is a card on the day of its date property.',
     points: [
       'Pick the folder when you add it. Every note in it, at any depth, gets an empty date and description property.',
-      'The ribbon scrolls sideways without end. Today has a ring, the selected day is filled, and a day with cards shows how many. The month is named above its days, with a line between months. The calendar beside a month\'s name jumps to any day and shows its cards. The Today button jumps back.',
+      'The ribbon scrolls sideways without end. Today has a ring, the selected day is filled, and a day with cards shows how many. The month in view is named above the days, with a line between months. The calendar on the right jumps to any day and shows its cards. The Today button jumps back.',
       'Under the ribbon: the selected day\'s cards in a box like a board column, by time and then title. It shows the first seven; Show more shows the rest. Cards without a date always show under today, with a dashed outline and "No date" on the date badge until you pick one. Cards dated before today show there too, also dashed, and also on their own day.',
       'To change a card\'s day, drag it onto a day in the ribbon, or click its date badge and pick a day in the calendar. A time stays when you drag.',
       'New card under the list creates a note in the folder with the selected day as its date.',
