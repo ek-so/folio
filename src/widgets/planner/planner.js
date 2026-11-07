@@ -4,14 +4,20 @@ import { valueDate } from '@/lib/markdown.js'
 // A planner widget: a folder whose notes are cards, each on the day of its `date`
 // property, shown on a ribbon of days. Each planner's settings live in the repo, beside the views:
 // `.folio/planners/<id>.json`, { "folder", "properties": [keys shown on cards besides the date] }.
-// The date is always shown and can't be turned off.
+// The date and type (one-time or recurring) are always shown, can't be turned off, renamed or removed, and come back
+// into a card's note when it's saved without them.
 
 export const plannerPath = id => `.folio/planners/${id}.json`
 
 // The property that holds a card's day
 export const DATE = 'date'
+// The property that says whether a card happens once or recurs (a label for now: a recurring card isn't repeated), and its only values
+export const TYPE = 'type'
+export const TYPES = ['one-time', 'recurring']
+// The properties every card of a planner has
+export const FIXED = [DATE, TYPE]
 
-const strings = list => Array.isArray(list) ? list.filter(s => typeof s === 'string' && s !== DATE) : []
+const strings = list => Array.isArray(list) ? list.filter(s => typeof s === 'string' && !FIXED.includes(s)) : []
 
 // The planner a file's text holds, or null when it can't be read as one
 export function parsePlanner(text) {

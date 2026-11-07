@@ -352,8 +352,15 @@ export default function App() {
   }
 
   // The note open on a view that has a board it's a card of: the columns it can move to (widgets/index.js)
-  // Where the open note's property values come from: a widget's (a board it's a card of, in any view), else its folder (Editor)
-  const valueScope = selectedFile && widgets.map(w => widgetType(w.type)?.valueScope?.(w.id, selectedFile, widgetServices)).find(Boolean)
+  // Where the open note's property values come from: a widget's (the first board or planner it's a card of, in any view), else
+  // its folder (Editor); with what every widget it's a card of requires of it: the properties that come back when they're
+  // taken out (`required`) and those with only some values (`fixedValues`)
+  const scopes = selectedFile ? widgets.map(w => widgetType(w.type)?.valueScope?.(w.id, selectedFile, widgetServices)).filter(Boolean) : []
+  const valueScope = scopes.length ? {
+    ...scopes[0],
+    required: [...new Set(scopes.flatMap(s => s.required ?? []))],
+    fixedValues: Object.assign({}, ...scopes.map(s => s.fixedValues)),
+  } : undefined
   const fileMoves = selectedFile && views.find(v => v.id === page)?.widgets
     ?.map(w => widgetType(w.type)?.fileMoves?.(w.id, selectedFile, widgetServices)).find(Boolean)
 

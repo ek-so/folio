@@ -16,7 +16,7 @@ import { shownCards, hiddenCards } from '@/lib/trayCards.js'
 import { displayName } from '@/lib/files.js'
 import { formatDate } from '@/lib/dates.js'
 import { noteTitle, properties, valueList, DESCRIPTION } from '@/lib/frontmatter.js'
-import { DATE, plan, addDays, daysBetween, dayOffsets, dayAt, keyDay, dayKey, cardDate, droppedDate, monthLabel } from './planner.js'
+import { DATE, TYPE, TYPES, FIXED, plan, addDays, daysBetween, dayOffsets, dayAt, keyDay, dayKey, cardDate, droppedDate, monthLabel } from './planner.js'
 import { usePlanner } from './usePlanner.js'
 import { useToday } from './useToday.js'
 
@@ -127,7 +127,7 @@ export default function Planner({ id, services, onRemove }) {
   else if (missing) body = <p className="py-6 text-center text-sm text-muted-foreground">Its folder “{planner.folder}” is gone.</p>
   else {
     const list = arranged.on(selected)
-    const shown = [DATE, ...planner.properties]
+    const shown = [...FIXED, ...planner.properties]
     const cardMenu = path => off ? undefined : (
       <CardMenu
         path={path}
@@ -141,7 +141,7 @@ export default function Planner({ id, services, onRemove }) {
       />
     )
     const cardProps = path => ({
-      path, text: notes[path], properties: shown, always: [DATE], dateKeys: [DATE], scopeName: 'this planner', files,
+      path, text: notes[path], properties: shown, always: FIXED, dateKeys: [DATE], fixedValues: { [TYPE]: TYPES }, scopeName: 'this planner', files,
       onChange: off ? undefined : act.setProperty, options: act.valuesOf,
       onRemoveValue: off ? undefined : act.removeValue, valueCount: act.valueCount,
       chosen: services.tagColors.colors, onEditValue: off || !services.tagColors.canEdit ? undefined : act.editValue,
@@ -217,19 +217,20 @@ export default function Planner({ id, services, onRemove }) {
       {choosing && planner && (
         <CheckListModal
           title="Properties"
-          description="Their values show on the cards, without names. The date and description always show."
-          locked={[DATE]}
-          items={[...planner.properties, ...act.propertyKeys().filter(k => k !== DATE && !planner.properties.includes(k))]}
+          description="Their values show on the cards, without names. The date, type and description always show."
+          lockedDescription="Every card has it; it comes back if removed"
+          locked={FIXED}
+          items={[...planner.properties, ...act.propertyKeys().filter(k => !FIXED.includes(k) && !planner.properties.includes(k))]}
           selected={planner.properties}
           onChange={act.setProperties}
           addLabel="New property"
           onAdd={key => {
-            const error = key === DATE ? 'The date is always shown.' : act.keyError(key)
+            const error = FIXED.includes(key) ? `The ${key} is always shown.` : act.keyError(key)
             if (error) return error
             if (!planner.properties.includes(key)) act.setProperties([...planner.properties, key])
             return null
           }}
-          onRename={(from, to) => to === DATE ? 'The date is always shown.' : act.renameProperty(from, to)}
+          onRename={(from, to) => FIXED.includes(to) ? `The ${to} is always shown.` : act.renameProperty(from, to)}
           onDelete={key => { setChoosing(false); setDropping(key) }}
           empty="Its notes have no other properties yet."
           onClose={() => setChoosing(false)}

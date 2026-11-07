@@ -8,6 +8,7 @@ describe('planner', () => {
     expect(parsePlanner('nope')).toBeNull()
     expect(parsePlanner('{}')).toBeNull()
     expect(parsePlanner('{"folder":"T","properties":["date","tags"]}')).toEqual({ folder: 'T', properties: ['tags'] })
+    expect(parsePlanner('{"folder":"T","properties":["priority","type"]}')).toEqual({ folder: 'T', properties: ['priority'] })
     const p = { ...newPlanner('T'), properties: ['tags'] }
     expect(parsePlanner(serializePlanner(p))).toEqual(p)
   })

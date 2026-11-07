@@ -43,7 +43,8 @@ const TINT_HOVER = 'hover:bg-[color-mix(in_oklab,var(--tag)_calc(var(--tag-tint)
 // `valueCount(key, value)`: in how many notes; `scopeName`: where, "this folder";
 // `chosen` ({ key: { value: color } }, lib/tagColors.js) are the colors picked so far.
 // `dateKeys`: properties that are always dates (a planner's date), a calendar even while none has a value yet, reading "No date" while empty or not a day.
-export default function PropertyBadges({ props, path, files, clamp, title, className, onChange, options, onRemoveValue, valueCount, scopeName, onEditValue, chosen, dateKeys }) {
+// `fixedValues` ({ key: [values] }): properties that only take those values (a planner's type): no new ones, no Edit values.
+export default function PropertyBadges({ props, path, files, clamp, title, className, onChange, options, onRemoveValue, valueCount, scopeName, onEditValue, chosen, dateKeys, fixedValues }) {
   const [removing, setRemoving] = useState(null) // { key, value } being confirmed
   const [managing, setManaging] = useState(null) // the key whose values are in the dialog
   const parts = [] // [{ text }] or [{ badges: [{ id, prop, label }] }], in order
@@ -58,7 +59,7 @@ export default function PropertyBadges({ props, path, files, clamp, title, class
   if (!parts.length) return null
   // Each property's values (all it can have, so none shares a color with another)
   const colors = Object.fromEntries([...new Set(props.map(p => p.key))].map(key =>
-    [key, valueColors(key, [...(options?.(key) ?? []), ...valueList(props.find(p => p.key === key).value)], chosen?.[key])]))
+    [key, valueColors(key, [...(fixedValues?.[key] ?? options?.(key) ?? []), ...valueList(props.find(p => p.key === key).value)], chosen?.[key])]))
   const body = parts.map((part, i) => part.text
     ? <InlineMarkdown key={i} text={part.text} path={path} files={files} onChange={onChange && (text => onChange(DESCRIPTION, text))} className={cn('break-words text-sm text-muted-foreground', clamp && 'line-clamp-3')} />
     : (
@@ -66,7 +67,9 @@ export default function PropertyBadges({ props, path, files, clamp, title, class
         {part.badges.map(({ id, prop, label }) => isDateProp(prop, options, dateKeys)
           ? <DateValue key={id} prop={prop} onChange={onChange} emptyLabel={dateKeys?.includes(prop.key) ? 'No date' : prop.key} />
           : onChange
-          ? <EditableBadge key={id} prop={prop} label={label} color={colors[prop.key].get(label)} options={options} onChange={onChange} onManage={(onEditValue || onRemoveValue) && (() => setManaging(prop.key))} />
+          ? fixedValues?.[prop.key]
+            ? <EditableBadge key={id} prop={prop} label={label} color={colors[prop.key].get(label)} options={() => fixedValues[prop.key]} fixed onChange={onChange} />
+            : <EditableBadge key={id} prop={prop} label={label} color={colors[prop.key].get(label)} options={options} onChange={onChange} onManage={(onEditValue || onRemoveValue) && (() => setManaging(prop.key))} />
           : (
             <Badge key={id} {...tint(colors[prop.key].get(label))}><span className="truncate">{label}</span></Badge>
           ))}
@@ -143,7 +146,7 @@ function DateValue({ prop, onChange, emptyLabel }) {
 
 // One value of a property as a badge with a ▾ that opens the property's popover
 // (`label` null: the property is empty and shows its name)
-function EditableBadge({ prop, label, color, options, onChange, onManage }) {
+function EditableBadge({ prop, label, color, options, fixed, onChange, onManage }) {
   const [open, setOpen] = useSingleOpen()
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -161,7 +164,7 @@ function EditableBadge({ prop, label, color, options, onChange, onManage }) {
       </PopoverTrigger>
       {/* Opening it doesn't focus the field (the keyboard on a phone): the panel takes the focus, a tap or Tab reaches the field */}
       <PopoverContent {...own} data-badge-popover tabIndex={-1} onOpenAutoFocus={e => { e.preventDefault(); e.currentTarget.focus() }} onCloseAutoFocus={keepFocusInOtherPopover}>
-        <ValueChooser prop={prop} options={options?.(prop.key) ?? []} onChange={onChange} onManage={onManage && (() => { setOpen(false); onManage() })} close={() => setOpen(false)} />
+        <ValueChooser prop={prop} options={options?.(prop.key) ?? []} fixed={fixed} onChange={onChange} onManage={onManage && (() => { setOpen(false); onManage() })} close={() => setOpen(false)} />
       </PopoverContent>
     </Popover>
   )
@@ -170,8 +173,8 @@ function EditableBadge({ prop, label, color, options, onChange, onManage }) {
 // The values to choose from (what other notes nearby have, plus what this one
 // has), a field to type a new one. A property with a list of values toggles them
 // and stays open; one with a single value takes the chosen one (choosing it
-// again empties it) and closes.
-function ValueChooser({ prop, options, onChange, onManage, close }) {
+// again empties it) and closes. `fixed`: only `options` (a planner's type): no field, and choosing the one it has keeps it.
+function ValueChooser({ prop, options, fixed, onChange, onManage, close }) {
   const [typed, setTyped] = useState('')
   const isList = Array.isArray(prop.value)
   const current = valueList(prop.value)
@@ -183,7 +186,7 @@ function ValueChooser({ prop, options, onChange, onManage, close }) {
   function choose(value) {
     if (isList) onChange(prop.key, current.includes(value) ? current.filter(v => v !== value) : [...current, value])
     else {
-      onChange(prop.key, current.includes(value) ? '' : value)
+      onChange(prop.key, current.includes(value) && !fixed ? '' : value)
       close()
     }
     setTyped('')
@@ -191,7 +194,7 @@ function ValueChooser({ prop, options, onChange, onManage, close }) {
 
   return (
     <div className="flex flex-col gap-space-xs">
-      <Input
+      {!fixed && <Input
         value={typed}
         placeholder={`Find or add ${prop.key}`}
         onChange={e => setTyped(e.target.value)}
@@ -200,7 +203,7 @@ function ValueChooser({ prop, options, onChange, onManage, close }) {
           e.preventDefault()
           choose(isNew ? query : (all.find(v => v.toLowerCase() === query.toLowerCase())))
         }}
-      />
+      />}
       <div className="flex max-h-60 flex-col overflow-y-auto">
         {isNew && <ListRow title={`Add “${query}”`} icon={<span className="size-4" />} onClick={() => choose(query)} />}
         {shown.map(v => (

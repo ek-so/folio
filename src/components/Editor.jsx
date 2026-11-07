@@ -17,7 +17,7 @@ import PropertyBadges from './PropertyBadges.jsx'
 // starting where you were reading, and a double tap starts at the tapped
 // word. Edits save on their own; ✓ (same spot) switches back to preview, writing typed dates in one format.
 export default function Editor({ linkedBy, onOpenLink, path, entry, files, notes, onEditNotes, tagColors, edited, onEdit, onNavigate, onOpenFile, onRename, onDuplicate, onDelete, onMove, folders, columns, valueScope, backlinks }) {
-  const { content, change, loading, loadError, beginEdit, endEdit } = useNote(entry, edited, onEdit)
+  const { content, change, loading, loadError, beginEdit, endEdit } = useNote(entry, edited, onEdit, valueScope?.required)
   const [mode, setMode] = useState('preview')
   const [editedAt, setEditedAt] = useState(null) // offset to show when back in preview
   const textareaRef = useRef()
@@ -101,7 +101,7 @@ export default function Editor({ linkedBy, onOpenLink, path, entry, files, notes
           onDoubleTap={startEditing} onChange={change} onOpenFile={onOpenFile} onNavigate={onNavigate}
           footer={<Backlinks links={backlinks} onOpen={onOpenFile} />}
         >
-          <PropertyBadges props={frontMatter(content)?.props ?? []} path={path} files={files} title="Properties" onChange={(key, value) => change(withValue(content, key, value))} options={values.options} onRemoveValue={values.removeValue} valueCount={values.count} scopeName={valueScope?.name ?? "this folder"} chosen={tagColors.colors} onEditValue={tagColors.canEdit ? values.editValue : undefined} className="px-space pt-space" />
+          <PropertyBadges props={frontMatter(content)?.props ?? []} path={path} files={files} title="Properties" onChange={(key, value) => change(withValue(content, key, value))} options={values.options} onRemoveValue={values.removeValue} valueCount={values.count} scopeName={valueScope?.name ?? "this folder"} chosen={tagColors.colors} onEditValue={tagColors.canEdit ? values.editValue : undefined} fixedValues={valueScope?.fixedValues} className="px-space pt-space" />
         </MarkdownPreview>
       )}
     </FilePage>

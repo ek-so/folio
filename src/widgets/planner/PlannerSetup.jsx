@@ -1,5 +1,5 @@
 import FolderSheet from '@/components/FolderSheet.jsx'
-import { plannerPath, serializePlanner, newPlanner, DATE } from './planner.js'
+import { plannerPath, serializePlanner, newPlanner, FIXED } from './planner.js'
 import { withNoteKeys } from '@/lib/folderNotes.js'
 import { DESCRIPTION } from '@/lib/frontmatter.js'
 
@@ -11,7 +11,7 @@ export default function PlannerSetup({ services, onCreate, onClose }) {
       title="Planner from folder…"
       folders={['', ...folders]}
       onPick={folder => {
-        onCreate(id => ch => withNoteKeys(config.write(plannerPath(id), serializePlanner(newPlanner(folder)))(ch), remoteFiles, folder, [DATE, DESCRIPTION], remoteText))
+        onCreate(id => ch => withNoteKeys(config.write(plannerPath(id), serializePlanner(newPlanner(folder)))(ch), remoteFiles, folder, [...FIXED, DESCRIPTION], remoteText))
         return null
       }}
       onClose={onClose}

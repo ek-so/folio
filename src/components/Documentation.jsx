@@ -13,7 +13,7 @@ const WIDGET_DOCS = {
       'Takes every note in the folder you pick, subfolders too. Files starting with . or _ are skipped.',
       'Columns come from one property, status by default. Each value is a column; notes without one go to "No status". Pick another property in ⋯ → Columns → Group by.',
       'Drag a card to another column and its status changes in the note. The file doesn\'t move.',
-      'Adds an empty status and description to notes that lack them. Showing another property on cards adds it, empty, the same way.',
+      'Adds an empty status and description to notes that lack them. Showing another property on cards adds it, empty, the same way. The property the columns come from comes back if you delete it in a note.',
       'Cards show the title, description, chosen properties and checklist progress. Tap a value to change it.',
       'Column order, hidden columns and shown properties are just display settings. Removing the board keeps every note.',
     ],
@@ -22,7 +22,7 @@ const WIDGET_DOCS = {
     summary: 'Your notes on a ribbon of days, like a calendar.',
     points: [
       'Takes every note in the folder you pick, subfolders too. Each card sits on the day in its date property.',
-      'Adds an empty date and description to notes that lack them.',
+      'Adds an empty date, type and description to notes that lack them. Type is one-time or recurring (a label for now). Date and type always show on cards and come back if you delete them in a note.',
       'Tap a day to see its cards, or jump to any day with the calendar on the right and back with Today. Notes with no date or a past date also show under today, dashed.',
       'Drag a card onto a day, or tap its date, to move it. New card uses the selected day.',
       'Removing the planner keeps every note.',
