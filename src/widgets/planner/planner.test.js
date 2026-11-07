@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { parsePlanner, serializePlanner, newPlanner, movedPlanner, addDays, daysBetween, dayOffsets, dayAt, dayKey, plan, cardDate, doneNext, droppedDate, monthLabel } from './planner.js'
+import { parsePlanner, serializePlanner, newPlanner, movedPlanner, addDays, daysBetween, dayOffsets, dayAt, dayKey, plan, cardDate, doneNext, droppedDate, listed, monthLabel } from './planner.js'
 
 const note = (date, extra = '') => `---\n${date === null ? '' : `date: ${date}\n`}${extra}---\n# T\n`
 
@@ -7,8 +7,10 @@ describe('planner', () => {
   it('reads its settings, or nothing from bad text; the date is never a chosen property', () => {
     expect(parsePlanner('nope')).toBeNull()
     expect(parsePlanner('{}')).toBeNull()
-    expect(parsePlanner('{"folder":"T","properties":["date","tags"]}')).toEqual({ folder: 'T', properties: ['tags'] })
-    expect(parsePlanner('{"folder":"T","properties":["priority","repeat"]}')).toEqual({ folder: 'T', properties: ['priority'] })
+    expect(parsePlanner('{"folder":"T","properties":["date","tags"]}')).toEqual({ folder: 'T', properties: ['tags'], view: 'calendar' })
+    expect(parsePlanner('{"folder":"T","properties":[],"view":"list"}').view).toBe('list')
+    expect(parsePlanner('{"folder":"T","view":"grid"}').view).toBe('calendar')
+    expect(parsePlanner('{"folder":"T","properties":["priority","repeat"]}')).toEqual({ folder: 'T', properties: ['priority'], view: 'calendar' })
     const p = { ...newPlanner('T'), properties: ['tags'] }
     expect(parsePlanner(serializePlanner(p))).toEqual(p)
   })
@@ -86,5 +88,24 @@ describe('planner', () => {
     expect(doneNext(note('4 Nov 2026', 'repeat: recurring\n'), today)).toBeNull()
     expect(doneNext(note('4 Nov 2026', 'repeat: one-time\n'), today)).toBeNull()
     expect(doneNext(note(null, 'repeat: weekly\n'), today)).toBeNull()
+  })
+
+  it('groups every card by when it is, for the list view', () => {
+    const today = '2026-11-07' // a Saturday
+    const card = (name, date) => ({ path: `T/${name}.md`, text: note(date) })
+    const groups = listed([
+      card('later', '1 Feb 2027'), card('year', '20 Dec 2026'), card('month', '30 Nov 2026'), card('week', null),
+      card('sunday', '8 Nov 2026'), card('today', '7 Nov 2026'), card('late', '1 Nov 2026'), card('monday', '9 Nov 2026'),
+    ], today)
+    expect(groups.map(g => [g.key, g.cards.map(c => c.path.slice(2, -3))])).toEqual([
+      ['today', ['late', 'today', 'week']],
+      ['tomorrow', ['sunday']], // Sunday is tomorrow, so This week has nothing left and isn't shown
+      ['month', ['monday', 'month']],
+      ['year', ['year']],
+      ['later', ['later']],
+    ])
+    expect(groups[0].cards[0]).toEqual({ path: 'T/late.md', overdue: true, undated: false })
+    expect(groups[0].cards[2]).toEqual({ path: 'T/week.md', overdue: false, undated: true })
+    expect(listed([card('wed', '11 Nov 2026')], '2026-11-09').map(g => g.key)).toEqual(['week']) // from a Monday
   })
 })

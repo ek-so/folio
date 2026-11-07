@@ -27,6 +27,7 @@ const WIDGET_DOCS = {
       'Mark as done in a card\'s ⋯ moves a repeating card to its next date. Any other card goes to the archive, like anything you remove. Undo is offered right away.',
       'Tap a day to see its cards, or jump to any day with the calendar on the right and back with Today. Notes with no date or a past date also show under today, dashed.',
       'Drag a card onto a day, or tap its date, to move it. New task uses the selected day.',
+      'The toggle next to ⋯ switches to a list: every task grouped into Today, Tomorrow, This week, This month, This year and Later. The planner remembers which one you used.',
       'Removing the planner keeps every note.',
     ],
   },

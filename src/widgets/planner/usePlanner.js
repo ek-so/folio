@@ -42,6 +42,8 @@ export function usePlanner(id, services) {
       const archived = services.archive(path, markedDone)
       return { next: null, undo: () => services.unarchive(archived.to, path, archived.text ?? text) }
     },
+    // Calendar or list (planner.js VIEWS), saved in its settings
+    setView: view => update(write({ ...planner, view })),
     // The properties cards show besides the date; a newly chosen one is added, empty, to the notes that lack it
     setProperties(keys) {
       const added = keys.filter(k => !planner.properties.includes(k))

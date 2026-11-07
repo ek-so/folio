@@ -12,7 +12,8 @@ const toggleVariants = cva(
   {
     variants: {
       variant: {
-        segmented: 'h-full flex-1 rounded text-sm text-muted-foreground data-[state=on]:bg-segment-active data-[state=on]:text-foreground data-[state=on]:shadow-sm',
+        // on: data-state, or aria-checked where a tooltip (Tip) on the item takes over its data-state (icon-only segments)
+        segmented: 'h-full flex-1 rounded text-sm text-muted-foreground data-[state=on]:bg-segment-active data-[state=on]:text-foreground data-[state=on]:shadow-sm aria-checked:bg-segment-active aria-checked:text-foreground aria-checked:shadow-sm',
         bare: 'rounded-sm',
       },
     },

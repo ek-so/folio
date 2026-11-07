@@ -4,7 +4,7 @@ import { parseRecurrence, nextOccurrence } from './recurrence.js'
 
 // A planner widget: a folder whose notes are cards, each on the day of its `date`
 // property, shown on a ribbon of days. Each planner's settings live in the repo, beside the views:
-// `.folio/planners/<id>.json`, { "folder", "properties": [keys shown on cards besides the date] }.
+// `.folio/planners/<id>.json`, { "folder", "properties": [keys shown on cards besides the date], "view": "calendar" | "list" }.
 // The date and repeat (one-time or how it repeats: recurrence.js) are always shown, can't be turned off, renamed or removed, and come back
 // into a card's note when it's saved without them.
 
@@ -21,12 +21,15 @@ export const ORDER = [DESCRIPTION, DATE, REPEAT]
 
 const strings = list => Array.isArray(list) ? list.filter(s => typeof s === 'string' && !FIXED.includes(s)) : []
 
+// How a planner shows its cards: a ribbon of days with the selected day's cards, or every card in groups of time (listed)
+export const VIEWS = ['calendar', 'list']
+
 // The planner a file's text holds, or null when it can't be read as one
 export function parsePlanner(text) {
   try {
     const data = JSON.parse(text)
     if (typeof data?.folder !== 'string') return null
-    return { folder: data.folder, properties: strings(data.properties) }
+    return { folder: data.folder, properties: strings(data.properties), view: VIEWS.includes(data.view) ? data.view : VIEWS[0] }
   } catch {
     return null
   }
@@ -34,7 +37,7 @@ export function parsePlanner(text) {
 
 export const serializePlanner = planner => JSON.stringify(planner, null, 2) + '\n'
 
-export const newPlanner = folder => ({ folder, properties: [] })
+export const newPlanner = folder => ({ folder, properties: [], view: VIEWS[0] })
 
 export const plannerTitle = (planner, repoName) => planner.folder.split('/').pop() || repoName
 
@@ -118,6 +121,44 @@ export function doneNext(text, today) {
   let next = nextOccurrence(rule, dayKey(date))
   while (next && next <= today) next = nextOccurrence(rule, next)
   return next
+}
+
+// The list view's groups, in order: a card's day decides its group; each is the time after the one before it
+export const GROUPS = [
+  { key: 'today', label: 'Today' },
+  { key: 'tomorrow', label: 'Tomorrow' },
+  { key: 'week', label: 'This week' },
+  { key: 'month', label: 'This month' },
+  { key: 'year', label: 'This year' },
+  { key: 'later', label: 'Later' },
+]
+
+// `cards` ([{ path, text }]) in the list view's groups as of `today` (a key): [{ key, label, cards: [{ path, overdue,
+// undated }] }], only the groups with cards. Today also has the cards without a date (`undated`, last) and those dated
+// before today (`overdue`, first); This week runs to Sunday, This month and This year to their last day. In a group, by
+// day, time, then title.
+export function listed(cards, today) {
+  const { year, month } = keyDay(today)
+  const ends = [ // the last day of each group but Later
+    today,
+    addDays(today, 1),
+    addDays(today, (7 - new Date(Date.UTC(year, month - 1, keyDay(today).day)).getUTCDay()) % 7),
+    dayKey({ year, month, day: new Date(Date.UTC(year, month, 0)).getUTCDate() }),
+    `${year}-12-31`,
+  ]
+  const groups = GROUPS.map(g => ({ ...g, cards: [] }))
+  for (const { path, text } of cards) {
+    const date = cardDate(text)
+    const key = date ? dayKey(date) : null
+    const at = key === null || key <= today ? 0 : ends.findIndex(end => key <= end)
+    groups[at < 0 ? GROUPS.length - 1 : at].cards.push({
+      path, key: key ?? '9999-99-99', time: date?.hour === undefined ? '99:99' : `${pad(date.hour)}:${pad(date.minute)}`,
+      title: noteTitle(text, path.slice(path.lastIndexOf('/') + 1).replace(/\.md$/, '')),
+      overdue: key !== null && key < today, undated: key === null,
+    })
+  }
+  const order = (a, b) => a.key.localeCompare(b.key) || a.time.localeCompare(b.time) || a.title.localeCompare(b.title)
+  return groups.filter(g => g.cards.length).map(g => ({ ...g, cards: g.cards.sort(order).map(({ path, overdue, undated }) => ({ path, overdue, undated })) }))
 }
 
 // `cards` ([{ path, text }]) arranged by day, as of `today` (a key): `on(key)` is what a day lists,

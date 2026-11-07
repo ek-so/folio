@@ -1,10 +1,12 @@
 import { toast } from 'sonner'
 import { Fragment, useState, useMemo, useRef, useCallback, useLayoutEffect } from 'react'
-import { DotsThree, X, Tag, CalendarBlank, CrosshairSimple } from '@phosphor-icons/react'
+import { DotsThree, X, Tag, CalendarBlank, CrosshairSimple, CalendarDots, ListBullets, CalendarDot, ArrowsClockwise } from '@phosphor-icons/react'
 import { DndContext, DragOverlay, MouseSensor, TouchSensor, useSensor, useSensors, useDraggable, useDroppable, pointerWithin } from '@dnd-kit/core'
 import { cn } from '@/lib/utils.js'
 import { Button } from '@/components/ui/button.jsx'
 import { Separator } from '@/components/ui/separator.jsx'
+import { Segmented } from '@/components/ui/segmented.jsx'
+import { ListRow } from '@/components/ui/list-row.jsx'
 import { Tray, TrayTitle, TrayFooter, TRAY_BUTTON, TRAY_ROW } from '@/components/ui/tray.jsx'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu.jsx'
 import NoteCard, { NO_CALLOUT, ownListeners, cardClick } from '@/components/NoteCard.jsx'
@@ -17,11 +19,11 @@ import { shownCards, hiddenCards } from '@/lib/trayCards.js'
 import { displayName } from '@/lib/files.js'
 import { formatDate } from '@/lib/dates.js'
 import { noteTitle, properties, valueList, DESCRIPTION } from '@/lib/frontmatter.js'
-import { DATE, FIXED, plan, addDays, daysBetween, dayOffsets, dayAt, keyDay, dayKey, cardDate, dateValue, droppedDate, monthLabel } from './planner.js'
+import { DATE, REPEAT, FIXED, listed, plan, addDays, daysBetween, dayOffsets, dayAt, keyDay, dayKey, cardDate, dateValue, droppedDate, monthLabel } from './planner.js'
 import { usePlanner } from './usePlanner.js'
 import { useToday } from './useToday.js'
 import { BADGES } from './RecurrenceField.jsx'
-import { WEEKDAYS } from './recurrence.js'
+import { WEEKDAYS, parseRecurrence } from './recurrence.js'
 
 // The ribbon: each day takes DAY_WIDTH (its box and the gap around it), and a line between months MONTH_GAP (a box that
 // wide with the 1px line in its middle: the days' gap on each side), so the scrolling sums match what's drawn; it starts
@@ -70,6 +72,7 @@ export default function Planner({ id, services, onRemove }) {
   const days = useMemo(() => Array.from({ length: range.before + range.after + 1 }, (_, i) => addDays(anchor, i - range.before)), [anchor, range])
   const offsets = useMemo(() => dayOffsets(days, DAY_WIDTH, MONTH_GAP), [days])
   const arranged = useMemo(() => plan(cards, today), [cards, today])
+  const groups = useMemo(() => listed(cards, today), [cards, today])
 
   const scrollToDay = useCallback((key, behavior = 'smooth') => {
     const el = scroller.current
@@ -79,6 +82,7 @@ export default function Planner({ id, services, onRemove }) {
   // The ribbon starts with today in the middle
   const setScroller = useCallback(el => {
     scroller.current = el
+    if (!el) centered.current = false // gone (the list view): centered again when it's back
     if (el && !centered.current) { centered.current = true; el.scrollLeft = offsets[range.before] - el.clientWidth / 2 + DAY_WIDTH / 2 }
   }, [range.before, offsets])
   // Days added before the first keep what was in view where it was
@@ -111,6 +115,12 @@ export default function Planner({ id, services, onRemove }) {
 
   const menu = (
     <div className="flex shrink-0 items-center gap-space-sm">
+      {/* Calendar or list, saved in the planner's settings */}
+      {!off && (
+        <div className="w-24">
+          <Segmented iconOnly label="View" value={planner.view} onChange={act.setView} options={[['calendar', 'Calendar', CalendarDots], ['list', 'List', ListBullets]]} />
+        </div>
+      )}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost-outline" size="icon" aria-label="Planner actions" className="shrink-0 border-muted-foreground/50">
@@ -185,7 +195,25 @@ export default function Planner({ id, services, onRemove }) {
     }
     const paths = list.map(c => c.path)
     const visible = new Set(shownCards(paths, expanded.has(selected), dragged))
-    body = (
+    // The list view: every card in grey groups of time (listed), each a white card of rows; Today always, with New task
+    const newTask = <TrayFooter more={0} newLabel="New task" onNew={() => act.newCard(today)} disabled={off} />
+    if (planner.view === 'list') body = (
+      <>
+        {groups[0]?.key !== 'today' && <Tray><TrayTitle>Today</TrayTitle>{newTask}</Tray>}
+        {groups.map(group => (
+          <Tray key={group.key}>
+            <TrayTitle>{group.label}</TrayTitle>
+            <div className="flex flex-col gap-0.5 rounded-lg border border-border bg-card p-1">
+              {group.cards.map(({ path, overdue, undated }) => (
+                <TaskRow key={path} path={path} text={notes[path]} dashed={overdue || undated} menu={cardMenu(path)} onOpen={openFile} />
+              ))}
+            </div>
+            {group.key === 'today' && newTask}
+          </Tray>
+        ))}
+      </>
+    )
+    else body = (
       <DndContext
         sensors={canEdit ? sensors : []}
         collisionDetection={collide}
@@ -332,6 +360,27 @@ function Day({ dayKey: key, today, selected, count, onSelect }) {
         <span className={cn('flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-xs tabular-nums', count ? (selected ? 'bg-primary-foreground/20' : 'bg-primary/15 text-primary') : 'invisible')}>{count || 0}</span>
       </Button>
     </div>
+  )
+}
+
+// A card as a row of the list view (ListRow): its repeat's icon (circling arrows in the accent color for a repeat, a
+// calendar with a dot for one-time), its title, its date (and repeat) under it, its ⋯; it opens the note. `dashed`:
+// listed under Today because it has no date or is late
+function TaskRow({ path, text, dashed, menu, onOpen }) {
+  const name = displayName(path)
+  const date = text === undefined ? null : cardDate(text)
+  const repeat = text === undefined ? '' : properties(text)[REPEAT]
+  const repeats = parseRecurrence(repeat) && parseRecurrence(repeat).kind !== 'one-time'
+  const Icon = repeats ? ArrowsClockwise : CalendarDot
+  return (
+    <ListRow
+      icon={<Icon className={cn('size-4', repeats ? 'text-primary' : 'text-muted-foreground')} />}
+      title={text === undefined ? name : noteTitle(text, name)}
+      description={`${date ? formatDate(date) : 'No date'}${repeats ? ` · ${repeat.charAt(0).toUpperCase()}${repeat.slice(1)}` : ''}`}
+      trailing={menu}
+      onClick={() => onOpen(path)}
+      className={cn(dashed && 'border border-dashed border-muted-foreground/50')}
+    />
   )
 }
 
