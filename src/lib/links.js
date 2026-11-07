@@ -8,17 +8,23 @@ import { displayName } from './files.js'
 
 const INLINE_LINK = /(!?)\[([^\]\n]*)\]\([ \t]*(<[^>\n]*>|[^)\s]+)(?:[ \t]+"[^"\n]*")?[ \t]*\)/dg
 const REF_DEF = /^ {0,3}\[[^\]\n]+\]:[ \t]*(<[^>\n]*>|\S+)/dgm
-const FENCE = /^\s*(```|~~~)/
+const FENCE = /^ {0,3}(`{3,}|~{3,})/
+// An inline code span: a run of backticks, up to the next run of the same length
+const CODE_SPAN = /(`+)(?!`)[^\n]*?(?<!`)\1(?!`)/g
 
 // Same text with code (fenced blocks, inline spans) blanked out, so offsets
-// still match the original
+// still match the original. A fence closes only with the same character, at least as many
 function maskCode(md) {
-  let inFence = false
+  let open = null // the fence that opened the block we're in
   return md.split(/(?<=\n)/).map(line => {
     const blank = () => line.replace(/[^\n]/g, ' ')
-    if (FENCE.test(line)) { inFence = !inFence; return blank() }
-    if (inFence) return blank()
-    return line.replace(/`[^`\n]*`/g, m => ' '.repeat(m.length))
+    const fence = line.match(FENCE)?.[1]
+    if (open) {
+      if (fence && fence[0] === open[0] && fence.length >= open.length && !line.slice(line.indexOf(fence) + fence.length).trim()) open = null
+      return blank()
+    }
+    if (fence) { open = fence; return blank() }
+    return line.replace(CODE_SPAN, m => ' '.repeat(m.length))
   }).join('')
 }
 

@@ -510,20 +510,24 @@ export default function App() {
       if (reason) { errors.push([file.name, reason]); continue }
       const view = virtualFiles(remoteFiles, ch)
       let path = folder ? `${folder}/${file.name}` : file.name
-      let replace = null
+      let replace = false
       if (view[path]) {
         const choice = await new Promise(resolve => setUploadClash({ name: file.name, folder, resolve }))
         setUploadClash(null)
         if (choice === 'skip') continue
-        if (choice === 'replace') replace = view[path]
+        if (choice === 'replace') replace = true
       }
-      if (!replace) path = freePath(ch, view, path)
       try {
         const bytes = new Uint8Array(await file.arrayBuffer())
         const sha = await blobShaOf(bytes)
         await cache.setBlob(sha, toBase64(bytes))
         if (await cache.getBlob(sha) === undefined) throw new Error()
-        const apply = c => replace ? replaceUpload(c, replace, sha) : upload(c, remoteFiles, path, sha)
+        // Placed in the changes as they are when it's added (others may have been made while it was asked about or
+        // stored): the file it replaces, if it's still there, else the first free name
+        const apply = c => {
+          const now = virtualFiles(remoteFiles, c)
+          return replace && now[path] ? replaceUpload(c, now[path], sha) : upload(c, remoteFiles, freePath(c, now, path), sha)
+        }
         ch = apply(ch)
         update(apply)
       } catch {

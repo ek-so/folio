@@ -18,11 +18,15 @@ function read(store, key) {
   try { return store.getItem(key) } catch { return null }
 }
 
+// false when it couldn't be stored (storage full or blocked)
 function write(store, key, value) {
   try {
     if (value === null || value === undefined) store.removeItem(key)
     else store.setItem(key, value)
-  } catch {}
+    return true
+  } catch {
+    return false
+  }
 }
 
 export const storage = {
@@ -96,6 +100,7 @@ export const localChanges = {
   get: (repo) => {
     try { return JSON.parse(read(localStorage, CHANGES_KEY + repo)) } catch { return null }
   },
+  // false when they couldn't be stored
   set: (repo, changes) => write(localStorage, CHANGES_KEY + repo, JSON.stringify(changes)),
   clear: (repo) => write(localStorage, CHANGES_KEY + repo, null),
 }

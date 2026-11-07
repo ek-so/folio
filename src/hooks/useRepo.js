@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
+import { toast } from 'sonner'
 import { getTree, getBlobBase64, commitTree, isNetworkError, getLatestCommitSha, changedFileCount, blobSha, encodeText, uploadBlob } from '../lib/github.js'
 import { cache } from '../lib/cache.js'
 import { localChanges } from '../lib/storage.js'
@@ -8,6 +9,7 @@ import {
 } from '../lib/changes.js'
 
 const PREFETCH_WORKERS = 4
+const UNSAVED = 'unsaved-changes' // the toast shown while local changes can't be stored
 
 // Download every note not yet on this device, so all of them open offline.
 async function downloadNotes(files) {
@@ -68,6 +70,7 @@ export function useRepo(repo, onDone) {
   const [incoming, setIncoming] = useState(null)
   const [syncError, setSyncError] = useState(null) // { ...describeSyncError(), retry } after a failed action
   const knownCommitSha = useRef(null)
+  const busy = useRef(false) // a sync step is running: another waits for none, it's ignored (a double tap)
   const flashTimer = useRef()
 
   useEffect(() => {
@@ -128,9 +131,15 @@ export function useRepo(repo, onDone) {
     const prev = changesRef.current
     const next = fn(prev)
     changesRef.current = next
-    localChanges.set(repo, next)
+    keep(next)
     setChanges(next)
     dropUnusedUploads(prev, next)
+  }
+
+  // The local changes stored on this device; when they can't be (storage full), a message that stays until they are
+  function keep(next) {
+    if (localChanges.set(repo, next)) return toast.dismiss(UNSAVED)
+    toast.error("Changes can't be saved on this device: its storage is full. Sync now, or they're lost when Folio closes.", { id: UNSAVED, duration: Infinity })
   }
 
   // Bytes of files added on this device that no change uses any more
@@ -219,11 +228,14 @@ export function useRepo(repo, onDone) {
     pull().catch(() => {}) // anything else that changed; offline is fine
   }
 
-  // Runs a sync step: success reports through onDone, failure flashes on the Sync
+  // Runs a sync step, after the typing in an open note is saved; one at a time (one asked for meanwhile is ignored): success reports through onDone, failure flashes on the Sync
   // button. A task returning false ends without a toast (e.g. stopped for
   // conflicts). Offline isn't an error (the button says Offline); anything
   // else opens the error sheet, whose Try again repeats `retry`.
   async function run(task, retry, doneMessage = 'Synced') {
+    if (busy.current) return
+    busy.current = true
+    window.dispatchEvent(new Event('folio:flush')) // typing in an open note first
     setSyncing(true)
     setSyncError(null)
     try {
@@ -237,12 +249,11 @@ export function useRepo(repo, onDone) {
         setSyncError({ ...describeSyncError(e), retry })
       }
     }
+    busy.current = false
     setSyncing(false)
   }
 
   function sync() {
-    if (syncing) return
-    window.dispatchEvent(new Event('folio:flush'))
     return run(async () => {
       const latest = await pull()
       setError('')
@@ -257,7 +268,6 @@ export function useRepo(repo, onDone) {
 
   // Pull only, from the Sync menu; local changes stay
   function pullChanges() {
-    if (syncing) return
     return run(fetchLatest, pullChanges, 'Pulled')
   }
 
@@ -278,6 +288,7 @@ export function useRepo(repo, onDone) {
     window.dispatchEvent(new Event('folio:flush'))
     setConflictPaths([])
     localChanges.clear(repo)
+    toast.dismiss(UNSAVED)
     const prev = changesRef.current
     changesRef.current = empty()
     setChanges(changesRef.current)

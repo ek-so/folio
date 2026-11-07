@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { getBlob } from '../lib/github.js'
 import { add, setEdit, remove, virtualFiles } from '../lib/changes.js'
 import { isConfigPath } from '../lib/viewsConfig.js'
@@ -17,16 +17,17 @@ export function useConfig({ remote, virtual, changes }) {
   const [copies, setCopies] = useState({}) // blob sha -> text, null if it couldn't be read
   const shas = Object.entries(virtual).filter(([path, e]) => isConfigPath(path) && e.sha !== null).map(([, e]) => e.sha)
   const wanted = shas.filter(sha => !(sha in copies)).join()
+  const fetching = useRef(new Set()) // shas being fetched: each is asked for once at a time
 
   useEffect(() => {
-    if (!wanted) return
-    let live = true
-    for (const sha of wanted.split(',')) {
+    for (const sha of wanted ? wanted.split(',') : []) {
+      if (fetching.current.has(sha)) continue
+      fetching.current.add(sha)
       getBlob(sha)
-        .then(text => live && setCopies(c => ({ ...c, [sha]: text })))
-        .catch(() => live && setCopies(c => ({ ...c, [sha]: null })))
+        .then(text => setCopies(c => ({ ...c, [sha]: text })))
+        .catch(() => setCopies(c => ({ ...c, [sha]: null })))
+        .finally(() => fetching.current.delete(sha))
     }
-    return () => { live = false }
   }, [wanted])
 
   // What couldn't be fetched (offline, a dropped connection) is fetched again

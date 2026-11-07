@@ -26,7 +26,10 @@ export function useNote(entry, edited, onEdit, required, order) {
   const latestRef = useRef(null) // the text as shown
   const editingRef = useRef(false)
   const startRef = useRef(null) // the text when editing began
-  const shaRef = useRef(entry.sha)
+  const shaRef = useRef(entry.sha) // the GitHub version being loaded or shown; an older load that ends later is ignored
+  const loadedRef = useRef(false) // a version has loaded (the text is shown)
+  const editedRef = useRef(edited) // this device's text of the note in the local changes, as of the last render
+  editedRef.current = edited
   const requiredRef = useRef(required)
   requiredRef.current = required
   const orderRef = useRef(order)
@@ -45,14 +48,24 @@ export function useNote(entry, edited, onEdit, required, order) {
     pendingRef.current = null
   }
 
-  useEffect(() => {
-    fetchOriginal(entry.sha).then(original => {
+  // GitHub's version `sha`: the first one shows this device's text (or it); a later one (e.g. after Sync) is shown only
+  // when nothing is edited locally. Without GitHub's version edits can't be tracked, so none are allowed
+  function load(sha) {
+    fetchOriginal(sha).then(original => {
+      if (shaRef.current !== sha) return
       originalRef.current = original
-      show(edited ?? original)
+      if (!loadedRef.current) show(editedRef.current ?? original)
+      else if (editedRef.current === undefined && pendingRef.current === null) show(original)
+      loadedRef.current = true
     }).catch(() => {
-      // Without GitHub's version edits can't be tracked, so don't allow any
-      setLoadError(true)
-    }).finally(() => setLoading(false))
+      if (shaRef.current === sha) setLoadError(true)
+    }).finally(() => {
+      if (shaRef.current === sha) setLoading(false)
+    })
+  }
+
+  useEffect(() => {
+    load(entry.sha)
 
     window.addEventListener('pagehide', flush)
     window.addEventListener('folio:flush', flush)
@@ -71,17 +84,19 @@ export function useNote(entry, edited, onEdit, required, order) {
     return () => clearTimeout(timer)
   }, [content])
 
-  // The file changed on GitHub (e.g. after Sync): compare edits against the
-  // new version, and show it if nothing is edited locally
+  // The file changed on GitHub (e.g. after Sync): compare edits against the new version
   useEffect(() => {
     if (entry.sha === shaRef.current) return
     shaRef.current = entry.sha
-    const hasEdit = edited !== undefined
-    fetchOriginal(entry.sha).then(original => {
-      originalRef.current = original
-      if (!hasEdit && pendingRef.current === null) show(original)
-    }).catch(() => setLoadError(true)) // same as the first load: no editing without GitHub's version
+    load(entry.sha)
   }, [entry.sha])
+
+  // Its text changed in the local changes by something else (a link rewritten by a rename, a widget's edit): shown,
+  // so typing goes on from it rather than saving the old text over it. Typing not reported yet wins
+  useEffect(() => {
+    if (edited === undefined || !loadedRef.current || pendingRef.current !== null) return
+    if (edited !== latestRef.current) show(edited)
+  }, [edited])
 
   function change(value) {
     pendingRef.current = value

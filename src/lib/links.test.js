@@ -58,3 +58,10 @@ describe('symlinks', () => {
     expect(resolveSymlink('a', 'gone.md', tree)).toEqual({ error: 'missing' })
   })
 })
+
+describe('links inside code', () => {
+  it('skips mixed fences and double-backtick spans', () => {
+    const md = '~~~\n```\n[a](x.md)\n~~~\n``[b](x.md)`` and [c](x.md)\n'
+    expect(extractLinks(md).map(l => l.text)).toEqual(['c'])
+  })
+})
