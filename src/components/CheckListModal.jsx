@@ -7,14 +7,15 @@ import { Checkbox } from '@/components/ui/checkbox.jsx'
 import BottomSheet from '@/components/BottomSheet.jsx'
 
 // A sheet of names to tick (a board's columns to show, the properties its cards show):
-// `items` in the order listed (`locked`: names listed first, ticked and not to be changed, like a planner's date), `selected` the ticked ones; ticking calls
+// `items` in the order listed (`locked`: names listed first, ticked and not to be changed, like a planner's date or a
+// board's status; `lockedDescription`: a muted line under each, why), `selected` the ticked ones; ticking calls
 // `onChange(selected)`, in the order they were ticked. `addLabel` and `onAdd(name)`:
 // a field to add a name (returns an error message, or null). At the end of each
 // row: `onOpen(item)` a folder button (`openLabel` its label), `onRename(item,
 // name)` a pencil that turns the row into a name field (returns an error message,
 // or null), `onDelete(item)` a trash button (confirmed by the caller). `empty`:
-// the text when there's nothing to list.
-export default function CheckListModal({ title, description, items, locked = [], selected, onChange, addLabel, onAdd, onOpen, openLabel, onRename, onDelete, empty, onClose }) {
+// the text when there's nothing to list. `header`: what sits above the list (a board's Group by).
+export default function CheckListModal({ title, description, header, items, locked = [], lockedDescription, selected, onChange, addLabel, onAdd, onOpen, openLabel, onRename, onDelete, empty, onClose }) {
   const [name, setName] = useState('')
   const [error, setError] = useState('')
   const [editing, setEditing] = useState(null) // { item, name, error } while a row is renamed
@@ -43,10 +44,11 @@ export default function CheckListModal({ title, description, items, locked = [],
     // Focus goes to the sheet itself, not its first row, so no row opens lit up
     <BottomSheet title={title} description={description} onClose={onClose} onOpenAutoFocus={e => { e.preventDefault(); e.currentTarget?.focus() }}>
       <div className="flex flex-col gap-3">
+        {header}
         <ul className="-mx-1 flex max-h-64 flex-col gap-0.5 overflow-y-auto" data-no-pull>
           {locked.map(item => (
             <li key={item}>
-              <ListRow icon={<Checkbox checked disabled />} title={item} disabled />
+              <ListRow icon={<Checkbox checked disabled />} title={item} description={lockedDescription} disabled />
             </li>
           ))}
           {items.map(item => editing?.item === item ? (

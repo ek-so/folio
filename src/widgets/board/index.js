@@ -1,8 +1,7 @@
 import { Kanban } from '@phosphor-icons/react'
 import Board from './Board.jsx'
 import BoardSetup from './BoardSetup.jsx'
-import { boardPath, boardTitle, parseBoard, serializeBoard, movedBoard, boardColumns, LOOSE } from './board.js'
-import { isTechnical } from '@/lib/folderNotes.js'
+import { boardPath, boardTitle, parseBoard, serializeBoard, movedBoard, boardColumns, isCard, looseName, LOOSE } from './board.js'
 import { placeCardVia } from './useBoard.js'
 
 // The board widget (Kanban): see board.js. Its settings are .folio/boards/<id>.json.
@@ -17,7 +16,7 @@ export default {
     const board = file.ready && file.text !== undefined ? parseBoard(file.text) : null
     return board ? boardTitle(board, repoName) : 'Board'
   },
-  // Its folder, columns and order follow renames and moves
+  // Its folder and card order follow renames and moves
   moved(ch, id, from, to, isDir, { config }) {
     const text = config.readIn(ch, boardPath(id))
     const board = typeof text === 'string' ? parseBoard(text) : null
@@ -30,9 +29,9 @@ export default {
   fileMoves(id, path, services) {
     const file = services.config.read(boardPath(id))
     const board = file.ready && file.text !== undefined ? parseBoard(file.text) : null
-    const data = board && boardColumns(board, services.files)
+    const data = board && boardColumns(board, services.files, services.notes)
     if (!data || data.missing || !services.canEdit) return null
-    const all = [{ key: LOOSE, name: 'No status', cards: data.loose }, ...data.columns]
+    const all = [{ key: LOOSE, name: looseName(board), cards: data.loose }, ...data.columns]
     const current = all.find(c => c.cards.some(card => card.path === path))
     if (!current) return null
     const columns = all.filter(c => c.key === current.key || (c.key === LOOSE ? c.cards.length : !board.hidden.includes(c.name)))
@@ -46,8 +45,7 @@ export default {
   valueScope(id, path, services) {
     const file = services.config.read(boardPath(id))
     const board = file.ready && file.text !== undefined ? parseBoard(file.text) : null
-    const prefix = board?.folder ? board.folder + '/' : ''
-    const inBoard = p => p.startsWith(prefix) && !isTechnical(p.slice(prefix.length))
+    const inBoard = p => isCard(board, p)
     return board && inBoard(path) ? { name: 'this board', includes: inBoard } : null
   },
   removed: (ch, id, { config }) => config.erase(boardPath(id))(ch),
