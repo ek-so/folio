@@ -8,37 +8,32 @@ import { WIDGET_TYPES } from '../widgets/index.js'
 // (with a line to write) and none can be forgotten.
 const WIDGET_DOCS = {
   board: {
-    summary: 'A Kanban board over a folder: its notes, in subfolders too, are the cards, in a column per value of one property (status, unless you pick another).',
+    summary: 'Your notes as cards in columns, like a to-do board.',
     points: [
-      'Pick the folder when you add it. Notes without a value wait in a "No status" (or "No priority"…) column that shows only while it has cards. Technical files and folders (a name starting with . or _) stay off the board.',
-      'Drag a card to another column and that property takes the column\'s value; the file stays where it is. Drag a column by its title to reorder it. The order is saved.',
-      'A card shows the note\'s title, its description, the properties you chose and a progress bar when the note has a checklist. Tap it to open the note.',
-      'Click a badge on a card to choose another value or add a new one. In the popover, Edit values renames a value, gives it a color or removes it from every card.',
-      'A card\'s ⋯: Edit title (the file keeps its name), description, Rename file, Duplicate, Copy link, Move to column and Remove.',
-      'The board\'s ⋯: Columns (Group by picks the property the columns come from, and each property keeps its own columns for when you switch back; show or hide columns, add or remove one), Properties (pick which ones show; rename or remove one in every note; the grouping property is listed first, and can\'t be changed there) and Remove board. Removing the board keeps its notes.',
-      'A column\'s ⋯: Rename (renames the value in its cards) and Remove (with its cards\' files, or moving them to No status).',
-      'New card under a column asks for a title and a file name, then creates the note in the board\'s folder with that column as its value.',
+      'Takes every note in the folder you pick, subfolders too. Files starting with . or _ are skipped.',
+      'Columns come from one property, status by default. Each value is a column; notes without one go to "No status". Pick another property in ⋯ → Columns → Group by.',
+      'Drag a card to another column and its status changes in the note. The file doesn\'t move.',
+      'Adds an empty status and description to notes that lack them. Showing another property on cards adds it, empty, the same way.',
+      'Cards show the title, description, chosen properties and checklist progress. Tap a value to change it.',
+      'Column order, hidden columns and shown properties are just display settings. Removing the board keeps every note.',
     ],
   },
   planner: {
-    summary: 'A ribbon of days with the cards of the selected day under it. Each note in the folder is a card on the day of its date property.',
+    summary: 'Your notes on a ribbon of days, like a calendar.',
     points: [
-      'Pick the folder when you add it. Every note in it, at any depth, gets an empty date and description property.',
-      'The ribbon scrolls sideways without end. Today has a ring, the selected day is filled, and a day with cards shows how many. The month is named above its days. The Today button jumps back.',
-      'Under the ribbon: the selected day\'s cards in a box like a board column, by time and then title. It shows the first seven; Show more shows the rest. Cards without a date always show under today, with a dashed outline and "No date" on the date badge until you pick one. Cards dated before today show there too, also dashed, and also on their own day.',
-      'To change a card\'s day, drag it onto a day in the ribbon, or click its date badge and pick a day in the calendar. A time stays when you drag.',
-      'New card under the list creates a note in the folder with the selected day as its date.',
-      'The planner\'s ⋯: Properties (the date is always shown and locked; pick the others) and Remove planner. Removing the planner keeps its notes.',
+      'Takes every note in the folder you pick, subfolders too. Each card sits on the day in its date property.',
+      'Adds an empty date and description to notes that lack them.',
+      'Tap a day to see its cards. Notes with no date or a past date also show under today, dashed.',
+      'Drag a card onto a day, or tap its date, to move it. New card uses the selected day.',
+      'Removing the planner keeps every note.',
     ],
   },
   note: {
-    summary: 'Notes from anywhere in the repo, side by side on a view, to read and edit in place.',
+    summary: 'A few notes side by side, to read and edit right on the view.',
     points: [
-      'Add note… finds an existing note by its path, or creates a new one in a folder you pick. A note already in the widget isn\'t added twice.',
-      'Each note sits in its own box with its name, Edit (tick when done) and a ⋯: Open full screen, Rename note, and Remove from widget (the note stays).',
-      'Edits save on their own, and ticking a checkbox in the preview edits the note too.',
-      'On a wide screen the boxes share one height. Drag the handle under them to resize all of them; double click it to reset.',
-      'Edit notes… puts them in order and takes them out. Remove widget keeps the notes.',
+      'Pick any notes in the repo, or create a new one. Nothing is added to them.',
+      'Edits save on their own, ticking a checkbox too.',
+      'Removing a note from the widget, or the widget itself, keeps the note.',
     ],
   },
 }
@@ -52,12 +47,12 @@ export default function Documentation() {
           <div className="mx-auto flex max-w-2xl flex-col gap-space-lg p-space">
             <section className="flex flex-col gap-space-sm">
               <h2 className="text-lg font-bold">Views and widgets</h2>
-              <p className="text-sm">A view is a dashboard in the navigation (Home, or any you add with Add view). It stacks widgets, each one showing some of your notes in its own way.</p>
+              <p className="text-sm">A view is a page of widgets. Each widget shows some of your notes in its own way.</p>
               <ul className="flex list-disc flex-col gap-1 pl-5 text-sm">
-                <li>Add a widget with + in the view's title bar. The view's ⋯ has Edit widgets (drag to reorder, ✕ to take one off), Rename and Remove.</li>
-                <li>Widgets and views are saved in the repo's .folio folder, so they sync like notes.</li>
-                <li>A trash means a note, folder or value is deleted. A ✕ only takes something off a view or a widget; the notes stay.</li>
-                <li>Everything you change is a local change until you Sync.</li>
+                <li>Add a widget with +. Reorder or remove them in the view's ⋯.</li>
+                <li>Your notes hold the content. Views and widgets are saved in .folio and only change how notes look, so deleting them never deletes a note.</li>
+                <li>A trash deletes for good. A ✕ only takes something off a view.</li>
+                <li>Changes stay on this device until you Sync.</li>
               </ul>
             </section>
             {WIDGET_TYPES.map(({ type, label, icon: Icon }) => {
