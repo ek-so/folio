@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button.jsx'
 import { Separator } from '@/components/ui/separator.jsx'
 import { Segmented } from '@/components/ui/segmented.jsx'
 import { ListRow } from '@/components/ui/list-row.jsx'
-import { Tray, TrayTitle, TrayFooter, TrayShowMore, TRAY_BUTTON, TRAY_ROW } from '@/components/ui/tray.jsx'
+import { Tray, TrayTitle, TrayFooter, TRAY_BUTTON, TRAY_ROW } from '@/components/ui/tray.jsx'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu.jsx'
 import NoteCard, { NO_CALLOUT, ownListeners, cardClick } from '@/components/NoteCard.jsx'
 import CardMenu from '@/components/CardMenu.jsx'
@@ -17,7 +17,8 @@ import Spinner from '@/components/Spinner.jsx'
 import EmptyState from '@/components/EmptyState.jsx'
 import FolderSheet from '@/components/FolderSheet.jsx'
 import DatePopover from '@/components/DatePopover.jsx'
-import { shownCards, hiddenCards } from '@/lib/trayCards.js'
+import { shownCards, hiddenCards, shownLimit } from '@/lib/trayCards.js'
+import { useGridColumns } from '@/hooks/useGridColumns.js'
 import { displayName } from '@/lib/files.js'
 import { formatDate } from '@/lib/dates.js'
 import { noteTitle, properties, valueList, DESCRIPTION } from '@/lib/frontmatter.js'
@@ -58,6 +59,8 @@ export default function Planner({ id, services, onRemove }) {
   const [expanded, setExpanded] = useState(() => new Set()) // keys of the days showing all their cards
   const [range, setRange] = useState({ before: MORE_DAYS, after: MORE_DAYS * 2 }) // days shown before and after today
   const [dragged, setDragged] = useState(null) // the path of the card being dragged
+  const [grid, setGrid] = useState(null) // the selected day's grid of cards, whose columns are counted
+  const limit = shownLimit(useGridColumns(grid)) // its cards shown before Show more: whole rows on desktop
   const [choosing, setChoosing] = useState(false) // the Properties sheet
   const [relocating, setRelocating] = useState(false) // picking another folder, its own being gone
   const [viewHere, setViewHere] = useState(null) // calendar or list picked where it can't be saved (read only): this screen only
@@ -200,8 +203,8 @@ export default function Planner({ id, services, onRemove }) {
       reschedule(path, formatDate(droppedDate(notes[path], key)))
     }
     const paths = list.map(c => c.path)
-    const visible = new Set(shownCards(paths, expanded.has(selected), dragged))
-    const more = expanded.has(selected) ? 0 : hiddenCards(paths, dragged).length
+    const visible = new Set(shownCards(paths, expanded.has(selected), dragged, limit))
+    const more = expanded.has(selected) ? 0 : hiddenCards(paths, dragged, limit).length
     // The list view: every card in grey groups of time (listed), each a white card of rows; Today always, with New task
     const newTask = <TrayFooter more={0} newLabel="New task" onNew={() => act.newCard(today)} disabled={off} />
     if (view === 'list') body = (
@@ -245,19 +248,16 @@ export default function Planner({ id, services, onRemove }) {
         {/* The selected day's cards in a tray like a board's column: its first cards, Show N more, New task; a day without any has only New task */}
         <Tray>
           <TrayTitle>{shortTitle(selected, today)}</TrayTitle>
-          {list.length > 0 && (
-            <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,18rem),1fr))] items-start gap-space-sm">
-              {list.filter(c => visible.has(c.path)).map(({ path, overdue, undated }) => (
-                <PlannerCard key={path} {...cardProps(path)} menu={cardMenu(path)} dashed={overdue || undated} onOpen={openFile} onOpenFolder={openFolder} />
-              ))}
-              {/* On a row of its own, one column wide (all of it on phones) */}
-              {more > 0 && <TrayShowMore more={more} onShowMore={() => setExpanded(e => new Set(e).add(selected))} className="col-start-1 w-full" />}
-            </div>
-          )}
-          <TrayFooter
-            more={more}
-            newLabel="New task" onNew={() => act.newCard(selected)} disabled={off}
-          />
+          {/* The cards of a row are one height; Show more and New task each on a row of its own, one column wide (all of it on phones) */}
+          <div ref={setGrid} className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,18rem),1fr))] gap-space-sm">
+            {list.filter(c => visible.has(c.path)).map(({ path, overdue, undated }) => (
+              <PlannerCard key={path} {...cardProps(path)} menu={cardMenu(path)} dashed={overdue || undated} onOpen={openFile} onOpenFolder={openFolder} />
+            ))}
+            <TrayFooter
+              grid more={more} onShowMore={() => setExpanded(e => new Set(e).add(selected))}
+              newLabel="New task" onNew={() => act.newCard(selected)} disabled={off}
+            />
+          </div>
         </Tray>
         <DragOverlay>
           {dragged && <NoteCard {...cardProps(dragged)} className="rotate-2 border-lift-edge shadow-lg" />}
