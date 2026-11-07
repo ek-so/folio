@@ -1,21 +1,21 @@
-import { boardPath, parseBoard, serializeBoard, boardColumns, placeCard, moveColumn, columnNameError, addedColumn, renamedColumn, removedColumn, STATUS, LOOSE } from './board.js'
+import { boardPath, parseBoard, serializeBoard, boardColumns, placeCard, moveColumn, columnNameError, addedColumn, renamedColumn, removedColumn, groupedBy, LOOSE } from './board.js'
 import { fileItem, withNoteKeys } from '@/lib/folderNotes.js'
 import { useFolderNotes } from '@/hooks/useFolderNotes.js'
 import { editNote } from '@/lib/changes.js'
 import { DESCRIPTION, withValue } from '@/lib/frontmatter.js'
 
-// `ch` with the status of each note in `paths` set to `status` (LOOSE: kept, empty), then `ch => ch` steps
-const withStatus = (services, paths, status) => ch => paths.reduce(
-  (next, path) => editNote(next, services.remoteFiles, path, t => withValue(t, STATUS, status), services.remoteText), ch)
+// `ch` with the board's grouping property of each note in `paths` set to `status` (LOOSE: kept, empty)
+const withStatus = (services, board, paths, status) => ch => paths.reduce(
+  (next, path) => editNote(next, services.remoteFiles, path, t => withValue(t, board.group, status), services.remoteText), ch)
 
 // A card dropped at `index` in `column`: the order is saved, and a card dropped in
-// another column gets that column as its status, in the same step. Used by the
+// another column gets that column as its grouping property's value, in the same step. Used by the
 // board's drops and its menus, and by an open card's file menu (index.js).
 export function placeCardVia(services, id, board, data, path, column, index) {
   const { board: next, status } = placeCard(board, data, path, column, index)
   services.update(ch => {
     const saved = services.config.write(boardPath(id), serializeBoard(next))(ch)
-    return status === null ? saved : withStatus(services, [path], status)(saved)
+    return status === null ? saved : withStatus(services, board, [path], status)(saved)
   })
 }
 
@@ -52,35 +52,46 @@ export function useBoard(id, services) {
     showColumns: shown => save({ ...board, hidden: data.columns.map(c => c.name).filter(n => !shown.includes(n)) }),
     // What its notes do (hooks/useFolderNotes.js): property keys and values, a card's title, description and removal
     ...notes,
-    // The keys its notes have, besides the description and the status
-    propertyKeys: () => notes.propertyKeys().filter(k => k !== STATUS),
-    keyError: key => key === STATUS ? 'The status is what the columns are grouped by.' : notes.keyError(key),
+    // The keys its notes have, besides the description and the grouping one
+    propertyKeys: () => notes.propertyKeys().filter(k => k !== board.group),
+    keyError: key => key === board.group ? `The columns are grouped by “${key}”.` : notes.keyError(key),
+    // Every key it could group by: its notes' keys (the grouping one too), by name
+    groupKeys: () => [...new Set([board.group, ...notes.propertyKeys()])].sort(),
+    // Grouped by the property `key` (its own columns, kept from before); the notes that lack it get it, empty
+    groupBy: key => update(ch => withNoteKeys(write(groupedBy(board, key))(ch), services.remoteFiles, board.folder, [key], services.remoteText)),
     // The property `from` renamed `to` in every note of the board (and on its cards, and in its settings)
-    renameProperty: (from, to) => to === STATUS ? 'The status is what the columns are grouped by.' : notes.renameProperty(from, to,
-      write({ ...board, properties: board.properties.map(k => k === from ? to : k) })),
-    // The property `key`, with its value, out of every note of the board (confirmed first)
-    removeProperty: key => notes.removeProperty(key, write({ ...board, properties: board.properties.filter(k => k !== key) })),
+    // (its columns, if it was ever grouped by, follow)
+    renameProperty(from, to) {
+      if (to === board.group) return `The columns are grouped by “${to}”.`
+      const { [from]: layout, ...groups } = board.groups
+      return notes.renameProperty(from, to, write({ ...board, properties: board.properties.map(k => k === from ? to : k), groups: layout ? { ...groups, [to]: layout } : groups }))
+    },
+    // The property `key`, with its value, out of every note of the board (confirmed first), and its columns
+    removeProperty(key) {
+      const groups = Object.fromEntries(Object.entries(board.groups).filter(([k]) => k !== key))
+      notes.removeProperty(key, write({ ...board, properties: board.properties.filter(k => k !== key), groups }))
+    },
     // A column named `name`, right away, at the end (an error message, or null)
     addColumn(name) {
       const error = columnNameError(data, name)
       if (!error) save(addedColumn(board, data, name))
       return error
     },
-    // A new card starts with the column's status and the board's properties, empty; the board stays open
+    // A new card starts with the column as its grouping property's value and the board's properties, empty; the board stays open
     newCard: column => services.newNote(board.folder, {
-      keys: [STATUS, DESCRIPTION, ...board.properties], values: column === LOOSE ? {} : { [STATUS]: column }, stay: true, titled: true,
+      keys: [board.group, DESCRIPTION, ...board.properties], values: column === LOOSE ? {} : { [board.group]: column }, stay: true, titled: true,
     }),
-    // The column's name and the status of every card in it (an error message, or null)
+    // The column's name and the grouping property of every card in it (an error message, or null)
     renameColumn(column, name) {
       if (name === column.name) return null
       const error = columnNameError(data, name, column.name)
       if (error) return error
-      update(ch => withStatus(services, column.cards.map(c => c.path), name)(write(renamedColumn(board, data, column.name, name))(ch)))
+      update(ch => withStatus(services, board, column.cards.map(c => c.path), name)(write(renamedColumn(board, data, column.name, name))(ch)))
       return null
     },
-    // With its cards' files, or after taking their status out (No status)
+    // With its cards' files, or after emptying their grouping property (No status)
     deleteColumn(column, keepCards) {
-      if (keepCards) update(ch => withStatus(services, column.cards.map(c => c.path), LOOSE)(write(removedColumn(board, column.name))(ch)))
+      if (keepCards) update(ch => withStatus(services, board, column.cards.map(c => c.path), LOOSE)(write(removedColumn(board, column.name))(ch)))
       else {
         save(removedColumn(board, column.name))
         column.cards.forEach(c => services.remove(fileItem(c.path)))

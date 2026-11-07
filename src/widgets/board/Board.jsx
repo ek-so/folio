@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { DotsThree, Trash, X, PencilSimple, Tag, Columns } from '@phosphor-icons/react'
+import { DotsThree, Trash, X, PencilSimple, Tag, Columns, Check, CaretRight, Rows } from '@phosphor-icons/react'
 import {
   DndContext, DragOverlay, MouseSensor, TouchSensor, useSensor, useSensors,
   closestCenter, closestCorners, pointerWithin,
@@ -19,7 +19,7 @@ import CardMenu from '@/components/CardMenu.jsx'
 import NoteCard, { NO_CALLOUT, ownListeners, cardClick } from '@/components/NoteCard.jsx'
 import { displayName } from '@/lib/files.js'
 import { noteTitle, properties, valueList, DESCRIPTION } from '@/lib/frontmatter.js'
-import { LOOSE, STATUS } from './board.js'
+import { LOOSE, looseName } from './board.js'
 import { useBoard } from './useBoard.js'
 
 // Drag ids: a column's and a card's
@@ -39,7 +39,7 @@ function collide(args) {
 }
 
 // A board widget (board.js): its folder's name and ⋯ on top, then its
-// columns (one per status) side by side, scrolling sideways; No status first while it has
+// columns (one per value of its grouping property, `group`) side by side, scrolling sideways; No status first while it has
 // cards. A card shows the note's title, its description and the values of the
 // board's chosen properties; tapping it opens the file. Cards and columns are
 // dragged into any order (with a mouse right away; on touch after holding
@@ -83,7 +83,7 @@ export default function Board({ id, services, onRemove }) {
   else if (!board) body = <p className="py-6 text-center text-sm text-muted-foreground">This board's settings can't be read.</p>
   else if (data.missing) body = <p className="py-6 text-center text-sm text-muted-foreground">Its folder “{board.folder}” is gone.</p>
   else {
-    const columns = [...(data.loose.length ? [{ key: LOOSE, name: 'No status', cards: data.loose }] : []), ...data.columns.filter(c => !board.hidden.includes(c.name))]
+    const columns = [...(data.loose.length ? [{ key: LOOSE, name: looseName(board), cards: data.loose }] : []), ...data.columns.filter(c => !board.hidden.includes(c.name))]
     const base = Object.fromEntries(columns.map(c => [c.key, c.cards.map(card => card.path)]))
     const items = drag?.items ?? base
     const columnOf = path => Object.keys(items).find(k => items[k].includes(path))
@@ -164,7 +164,7 @@ export default function Board({ id, services, onRemove }) {
               </Column>
             ))}
           </SortableContext>
-          {!columns.length && <p className="py-6 text-sm text-muted-foreground">No columns yet: each status its notes have becomes a column.</p>}
+          {!columns.length && <p className="py-6 text-sm text-muted-foreground">No columns yet: each {board.group} its notes have becomes a column.</p>}
         </div>
         <DragOverlay>
           {dragged && drag.type === 'card' && byPath[dragged] && <NoteCard path={dragged} text={notes[dragged]} properties={board.properties} scopeName="this board" files={files} chosen={services.tagColors.colors} className="rotate-2 border-lift-edge shadow-lg" />}
@@ -204,22 +204,23 @@ export default function Board({ id, services, onRemove }) {
       {choosing === 'columns' && board && (
         <CheckListModal
           title="Columns"
-          description="Tick the columns to show. Each one is a status its cards have."
+          description={`Tick the columns to show. Each one is a ${board.group} its cards have.`}
+          header={<GroupBy group={board.group} keys={act.groupKeys()} onSelect={act.groupBy} />}
           items={data.columns.map(c => c.name)}
           onDelete={name => { setChoosing(null); setDeleting(data.columns.find(c => c.name === name)) }}
           addLabel="New column"
           onAdd={act.addColumn}
           selected={data.columns.map(c => c.name).filter(n => !board.hidden.includes(n))}
           onChange={act.showColumns}
-          empty="No columns yet: each status its notes have becomes a column."
+          empty={`No columns yet: each ${board.group} its notes have becomes a column.`}
           onClose={() => setChoosing(null)}
         />
       )}
       {choosing === 'properties' && board && (
         <CheckListModal
           title="Properties"
-          description="Their values show on the cards, without names. The description always shows. The columns are grouped by the status, so cards don't repeat it."
-          locked={[STATUS]}
+          description={`Their values show on the cards, without names. The description always shows. The columns are grouped by ${board.group}, so cards don't repeat it.`}
+          locked={[board.group]}
           lockedDescription="Grouped by: its values are the columns"
           items={[...board.properties, ...act.propertyKeys().filter(k => !board.properties.includes(k))]}
           selected={board.properties}
@@ -250,15 +251,38 @@ export default function Board({ id, services, onRemove }) {
         <ConfirmModal
           title={`Remove column “${deleting.name}”?`}
           description={deleting.cards.length
-            ? `It has ${deleting.cards.length} card${deleting.cards.length === 1 ? '' : 's'}. Remove their files too, or move them to No status (their status is emptied)? It's removed from GitHub when you sync.`
+            ? `It has ${deleting.cards.length} card${deleting.cards.length === 1 ? '' : 's'}. Remove their files too, or move them to ${looseName(board)} (their ${board.group} is emptied)? It's removed from GitHub when you sync.`
             : 'No card has this status.'}
           confirm={deleting.cards.length ? 'Remove with cards' : 'Remove'}
           onConfirm={() => { setDeleting(null); act.deleteColumn(deleting, false) }}
-          alternative={deleting.cards.length ? { label: 'Move to No status', onSelect: () => { setDeleting(null); act.deleteColumn(deleting, true) } } : undefined}
+          alternative={deleting.cards.length ? { label: `Move to ${looseName(board)}`, onSelect: () => { setDeleting(null); act.deleteColumn(deleting, true) } } : undefined}
           onClose={() => setDeleting(null)}
         />
       )}
     </section>
+  )
+}
+
+// The Columns sheet's Group by: the property the columns come from; it opens a menu on its side of
+// the notes' properties (a new one is added in Properties first), the current one ticked
+function GroupBy({ group, keys, onSelect }) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="outline" className="w-full justify-start gap-3 font-normal">
+          <Rows /> Group by
+          <span className="ml-auto truncate text-muted-foreground">{group}</span>
+          <CaretRight className="text-muted-foreground" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent side="right" align="start" onCloseAutoFocus={e => e.preventDefault()}>
+        {keys.map(k => (
+          <DropdownMenuItem key={k} disabled={k === group} onSelect={() => onSelect(k)}>
+            {k === group ? <Check /> : <span className="size-4" />} {k}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }
 

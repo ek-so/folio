@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { parseBoard, serializeBoard, newBoard, boardColumns, movedBoard, placeCard, moveColumn, cardStatus, columnNameError, addedColumn, renamedColumn, removedColumn, LOOSE } from './board.js'
+import { parseBoard, serializeBoard, newBoard, boardColumns, movedBoard, placeCard, moveColumn, cardStatus, groupedBy, looseName, columnNameError, addedColumn, renamedColumn, removedColumn, LOOSE } from './board.js'
 
 const note = status => `---\nstatus: ${status}\n---\n# N\n`
 const files = ['T/b.md', 'T/a.md', 'T/old.md', 'T/loose.md', 'T/pic.png', 'T/sub/deep.md', 'T/.gitkeep', 'T/_index.md', 'T/_assets/x.md', 'T/sub/.x.md', 'Other/x.md']
@@ -12,6 +12,24 @@ describe('board', () => {
     const b = { ...newBoard('T'), columns: ['Done'] }
     expect(parseBoard(serializeBoard(b))).toEqual(b)
     expect(parseBoard(serializeBoard({ ...b, properties: ['status', 'project'] })).properties).toEqual(['project'])
+  })
+
+  it('reads an older file\'s columns as the status\'s', () => {
+    const old = parseBoard(JSON.stringify({ folder: 'T', properties: ['project'], hidden: ['Done'], columns: ['Todo', 'Done'], cards: { Todo: ['a.md'] } }))
+    expect(old).toEqual({ ...newBoard('T'), properties: ['project'], hidden: ['Done'], columns: ['Todo', 'Done'], cards: { Todo: ['a.md'] } })
+    expect(JSON.parse(serializeBoard(old)).groups).toEqual({ status: { columns: ['Todo', 'Done'], hidden: ['Done'], cards: { Todo: ['a.md'] } } })
+  })
+
+  it('groups by another property, keeping each one\'s columns for later', () => {
+    const board = { ...newBoard('T'), properties: ['priority', 'project'], columns: ['Todo'], hidden: ['Done'] }
+    const byPriority = groupedBy(board, 'priority')
+    expect(byPriority).toMatchObject({ group: 'priority', properties: ['project'], columns: [], hidden: [], cards: {} })
+    expect(looseName(byPriority)).toBe('No priority')
+    const back = parseBoard(serializeBoard(groupedBy({ ...byPriority, columns: ['high'] }, 'status')))
+    expect(back).toMatchObject({ group: 'status', columns: ['Todo'], hidden: ['Done'], groups: { priority: { columns: ['high'], hidden: [], cards: {} } } })
+    const notes = { 'T/a.md': '---\nstatus: Todo\npriority: high\n---\n' }
+    expect(boardColumns(byPriority, ['T/a.md'], notes).columns.map(c => c.name)).toEqual(['high'])
+    expect(cardStatus(notes['T/a.md'], 'priority')).toBe('high')
   })
 
   it('reads a card\'s status: its first value, or none', () => {

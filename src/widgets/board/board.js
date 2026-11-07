@@ -2,45 +2,72 @@ import { isTechnical } from '@/lib/folderNotes.js'
 import { properties, valueList } from '@/lib/frontmatter.js'
 
 // A board widget (Kanban): the files in a folder, at any depth, are its cards,
-// grouped into columns by their `status` property (a column per value). Files
-// without a status (and files that aren't notes) are "No status", a column shown
-// only while there are any. Moving a card to another column sets its status;
-// the file stays where it is. Each board's settings live in the repo, beside the views:
+// grouped into columns by one of their properties, `group` (`status` unless
+// another is picked; a column per value). Files without a value (and files
+// that aren't notes) are "No status", a column shown only while there are any.
+// Moving a card to another column sets that property; the file stays where it
+// is. Each board's settings live in the repo, beside the views:
 // `.folio/boards/<id>.json`,
-//   { "folder", "properties": [keys shown on cards], "hidden": [column names not shown],
-//     "columns": [column names, in order], "cards": { column name: [card keys, in order] } }
-// A card's key is its path inside the board's folder. What isn't in the saved order follows it, by name.
+//   { "folder", "group": the grouping property, "properties": [keys shown on cards],
+//     "groups": { property: { "columns": [column names, in order], "hidden": [column names not shown],
+//       "cards": { column name: [card keys, in order] } } } }
+// so each property keeps its own columns when another is picked and back. An older file's top-level
+// `columns`, `hidden` and `cards` are the status's. A card's key is its path inside the board's folder.
+// What isn't in the saved order follows it, by name.
+// In the app a board is { folder, group, properties, columns, hidden, cards: the group's, groups: the others' }.
 
 export const boardPath = id => `.folio/boards/${id}.json`
 export const LOOSE = '' // the No status column's key in `cards`
 
-// The property a card's column comes from: listed in Properties, but not shown on cards
+// The property a new board groups by. The grouping one is listed in Properties, but not shown on cards.
 export const STATUS = 'status'
 
 const strings = list => Array.isArray(list) ? list.filter(s => typeof s === 'string') : []
+const layout = data => {
+  const cards = {}
+  for (const [k, v] of Object.entries(data?.cards ?? {})) cards[k] = strings(v)
+  return { columns: strings(data?.columns), hidden: strings(data?.hidden), cards }
+}
 
 // The board a file's text holds, or null when it can't be read as one
 export function parseBoard(text) {
   try {
     const data = JSON.parse(text)
     if (typeof data?.folder !== 'string') return null
-    const cards = {}
-    for (const [k, v] of Object.entries(data.cards ?? {})) cards[k] = strings(v)
-    return { folder: data.folder, properties: strings(data.properties).filter(k => k !== STATUS), hidden: strings(data.hidden), columns: strings(data.columns), cards }
+    const group = typeof data.group === 'string' && data.group ? data.group : STATUS
+    const groups = {}
+    for (const [k, v] of Object.entries(data.groups ?? {})) groups[k] = layout(v)
+    if (!data.groups) groups[STATUS] = layout(data)
+    const own = groups[group] ?? layout(null)
+    delete groups[group]
+    return { folder: data.folder, group, properties: strings(data.properties).filter(k => k !== group), ...own, groups }
   } catch {
     return null
   }
 }
 
-export const serializeBoard = board => JSON.stringify(board, null, 2) + '\n'
+export const serializeBoard = ({ folder, group, properties, columns, hidden, cards, groups }) =>
+  JSON.stringify({ folder, group, properties, groups: { ...groups, [group]: { columns, hidden, cards } } }, null, 2) + '\n'
 
 // A board's name: its folder's, or the repo's for the root
 export const boardTitle = (board, repoName) => board.folder.split('/').pop() || repoName
 
-export const newBoard = folder => ({ folder, properties: [], hidden: [], columns: [], cards: {} })
+export const newBoard = folder => ({ folder, group: STATUS, properties: [], columns: [], hidden: [], cards: {}, groups: {} })
 
-// A note's column: its first status value, or LOOSE when it has none (or isn't a note on this device)
-export const cardStatus = text => text === undefined ? LOOSE : (valueList(properties(text)[STATUS] ?? '')[0] ?? LOOSE)
+// `board` grouped by the property `key`: its columns are the ones it had for `key` (if it was ever
+// grouped by it), and `key` isn't shown on cards any more; the current group's columns are kept for later
+export function groupedBy(board, key) {
+  if (key === board.group) return board
+  const { [key]: own = layout(null), ...rest } = board.groups
+  const groups = { ...rest, [board.group]: { columns: board.columns, hidden: board.hidden, cards: board.cards } }
+  return { ...board, group: key, properties: board.properties.filter(k => k !== key), ...own, groups }
+}
+
+// The name of the column of cards without a value: No status, No priority…
+export const looseName = board => `No ${board.group}`
+
+// A note's column: its first value of `group`, or LOOSE when it has none (or isn't a note on this device)
+export const cardStatus = (text, group = STATUS) => text === undefined ? LOOSE : (valueList(properties(text)[group] ?? '')[0] ?? LOOSE)
 
 const nameOf = path => path.slice(path.lastIndexOf('/') + 1)
 const prefixOf = board => board.folder ? board.folder + '/' : ''
@@ -70,7 +97,7 @@ export function boardColumns(board, files, notes) {
   const groups = new Map()
   for (const path of files) {
     if (!isCard(board, path)) continue
-    const status = cardStatus(notes[path])
+    const status = cardStatus(notes[path], board.group)
     if (!groups.has(status)) groups.set(status, [])
     groups.get(status).push({ key: keyOf(board, path), path })
   }

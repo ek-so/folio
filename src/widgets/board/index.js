@@ -1,7 +1,7 @@
 import { Kanban } from '@phosphor-icons/react'
 import Board from './Board.jsx'
 import BoardSetup from './BoardSetup.jsx'
-import { boardPath, boardTitle, parseBoard, serializeBoard, movedBoard, boardColumns, isCard, LOOSE } from './board.js'
+import { boardPath, boardTitle, parseBoard, serializeBoard, movedBoard, boardColumns, isCard, looseName, LOOSE } from './board.js'
 import { placeCardVia } from './useBoard.js'
 
 // The board widget (Kanban): see board.js. Its settings are .folio/boards/<id>.json.
@@ -31,7 +31,7 @@ export default {
     const board = file.ready && file.text !== undefined ? parseBoard(file.text) : null
     const data = board && boardColumns(board, services.files, services.notes)
     if (!data || data.missing || !services.canEdit) return null
-    const all = [{ key: LOOSE, name: 'No status', cards: data.loose }, ...data.columns]
+    const all = [{ key: LOOSE, name: looseName(board), cards: data.loose }, ...data.columns]
     const current = all.find(c => c.cards.some(card => card.path === path))
     if (!current) return null
     const columns = all.filter(c => c.key === current.key || (c.key === LOOSE ? c.cards.length : !board.hidden.includes(c.name)))
