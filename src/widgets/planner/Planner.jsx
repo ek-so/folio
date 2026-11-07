@@ -172,7 +172,7 @@ export default function Planner({ id, services, onRemove }) {
               <Button variant="ghost" size="icon" aria-label="Go to a day" className={TRAY_BUTTON}><CalendarBlank /></Button>
             </DatePopover>
           </div>
-          <div ref={setScroller} onScroll={onScroll} data-no-pull className="-mx-space-sm overflow-x-auto px-space-sm">
+          <div ref={setScroller} onScroll={onScroll} data-no-pull className="-mx-space-sm overflow-x-auto px-space-sm pb-space-xs">
             <Ribbon days={days} today={today} selected={selected} count={arranged.count} onSelect={setPicked} />
           </div>
         </Tray>
