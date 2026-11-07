@@ -8,15 +8,16 @@ import { WIDGET_TYPES } from '../widgets/index.js'
 // (with a line to write) and none can be forgotten.
 const WIDGET_DOCS = {
   board: {
-    summary: 'A Kanban board over a folder: its subfolders are the columns and the notes in them are the cards.',
+    summary: 'A Kanban board over a folder: the notes right in it are the cards, in a column per value of their status property.',
     points: [
-      'Pick the folder when you add it. Notes right in that folder wait in a "No status" column that shows only while it has cards. Technical files and folders (a name starting with . or _) stay off the board.',
-      'Drag a card to another column and its file moves into that column\'s folder. Drag a column by its title to reorder it. The order is saved.',
+      'Pick the folder when you add it. Notes without a status wait in a "No status" column that shows only while it has cards. Subfolders, and technical files (a name starting with . or _), stay off the board.',
+      'Drag a card to another column and its status becomes that column; the file stays where it is. Drag a column by its title to reorder it. The order is saved.',
       'A card shows the note\'s title, its description, the properties you chose and a progress bar when the note has a checklist. Tap it to open the note.',
       'Click a badge on a card to choose another value or add a new one. In the popover, Edit values renames a value, gives it a color or removes it from every card.',
       'A card\'s ⋯: Edit title (the file keeps its name), description, Rename file, Duplicate, Copy link, Move to column and Remove.',
-      'The board\'s ⋯: Columns (show or hide them, open a column\'s folder, add or remove one), Properties (pick which ones show; rename or remove one in every note) and Remove board. Removing the board keeps its notes.',
-      'New card under a column asks for a title and a file name, then creates the note in that column.',
+      'The board\'s ⋯: Columns (show or hide them, add or remove one), Properties (pick which ones show; rename or remove one in every note; the status is listed first as what the board is grouped by, and can\'t be changed there) and Remove board. Removing the board keeps its notes.',
+      'A column\'s ⋯: Rename (renames the status in its cards) and Remove (with its cards\' files, or moving them to No status).',
+      'New card under a column asks for a title and a file name, then creates the note in the board\'s folder with that column as its status.',
     ],
   },
   planner: {
