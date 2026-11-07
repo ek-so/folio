@@ -179,7 +179,7 @@ export default function Planner({ id, services, onRemove }) {
         {/* The selected day's cards in a tray like a board's column: its first cards, Show N more, New card */}
         <Tray>
           <div className="flex items-center gap-1">
-            <div className="min-w-0 flex-1"><TrayTitle>{dayTitle(selected)}{selected === today && ' · Today'}</TrayTitle></div>
+            <div className="min-w-0 flex-1"><TrayTitle>{shortTitle(selected, today)}</TrayTitle></div>
             <span className="flex size-control-md shrink-0 items-center justify-center text-sm tabular-nums text-muted-foreground">{list.length}</span>
           </div>
           {list.length ? (
@@ -245,6 +245,16 @@ export default function Planner({ id, services, onRemove }) {
       )}
     </section>
   )
+}
+
+// The cards' title: "Today, Saturday", "Tomorrow, Sunday", "Yesterday, Friday"; another day "November 12" ("November 12, 2027" in another year)
+const RELATIVE = { [-1]: 'Yesterday', 0: 'Today', 1: 'Tomorrow' }
+const shortTitle = (key, today) => {
+  const { year, month, day } = keyDay(key)
+  const date = new Date(Date.UTC(year, month - 1, day))
+  const near = RELATIVE[daysBetween(today, key)]
+  if (near) return `${near}, ${date.toLocaleDateString('en', { weekday: 'long', timeZone: 'UTC' })}`
+  return date.toLocaleDateString('en', { month: 'long', day: 'numeric', ...(year !== keyDay(today).year && { year: 'numeric' }), timeZone: 'UTC' })
 }
 
 // "Friday, 6 November 2026"
