@@ -21,12 +21,13 @@ const DateBadge = forwardRef(function DateBadge({ label, inline, className, ...p
 })
 export default DateBadge
 
-// A date badge (`inline`: in a line of text) that, with `onPick(date)` (DatePopover's), opens a calendar and a time
-// field to change it; without, plain
-export function DateField({ label, date, onPick, className, ...props }) {
+// A date badge (`inline`: in a line of text) that, with `onPick(date)` (DatePopover's), opens the date picker to change
+// its day and time, add either or take either out; one in a line of text can't be emptied (`required`: its last part
+// stays). `dayOnly`: DatePopover's (a day and nothing else). Without `onPick`, plain
+export function DateField({ label, date, onPick, dayOnly, className, ...props }) {
   if (!onPick) return <DateBadge label={label} className={className} {...props} />
   return (
-    <DatePopover date={date} onPick={onPick}>
+    <DatePopover date={date} onPick={onPick} required={props.inline} dayOnly={dayOnly}>
       <DateBadge as="button" type="button" label={label} className={cn('cursor-pointer outline-none hover:bg-muted-foreground/15 focus-visible:ring-1 focus-visible:ring-ring', className)} {...props} />
     </DatePopover>
   )

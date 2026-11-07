@@ -119,7 +119,7 @@ function RecurrenceChooser({ rule, start, onChange }) {
           <Segmented label="Ends" value={repeat?.until ? 'on' : 'never'} options={ENDS} onChange={end => set({ until: end === 'never' ? null : (repeat?.until ?? addDays(earliest, 365)) })} />
           {repeat?.until && (
             <DateField
-              label={formatDate(keyDay(repeat.until))} date={keyDay(repeat.until)}
+              label={formatDate(keyDay(repeat.until))} date={keyDay(repeat.until)} dayOnly
               onPick={d => d && set({ until: start && dayKey(d) < start ? start : dayKey(d) })} // never before the card's day
               className="self-start"
             />
