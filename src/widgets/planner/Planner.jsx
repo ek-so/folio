@@ -18,9 +18,9 @@ import { DATE, plan, addDays, keyDay, dayKey, cardDate, droppedDate, monthLabel 
 import { usePlanner } from './usePlanner.js'
 import { useToday } from './useToday.js'
 
-// The ribbon: each day is DAY_WIDTH wide; it starts with a window of days around today and grows by
+// The ribbon: each day takes DAY_WIDTH (its box and the gap around it); it starts with a window of days around today and grows by
 // MORE_DAYS on either side as it's scrolled near an end (EDGE), so it never ends
-const DAY_WIDTH = 56
+const DAY_WIDTH = 68
 const MORE_DAYS = 60
 const EDGE = DAY_WIDTH * 3
 
@@ -258,25 +258,26 @@ function Ribbon({ days, today, selected, count, onSelect }) {
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
 // One day of the ribbon, a drop target for cards: its weekday, number and, when it has cards, how many.
-// A Button (ghost, filled for the selected day) so it looks and focuses like every control; today has a ring.
+// A Button (white and outlined like a card, filled for the selected day) so it focuses like every control; today has a ring.
 function Day({ dayKey: key, today, selected, count, onSelect }) {
   const { setNodeRef, isOver } = useDroppable({ id: dayCellId(key) })
   const { year, month, day } = keyDay(key)
   const weekday = WEEKDAYS[new Date(Date.UTC(year, month - 1, day)).getUTCDay()]
   return (
-    <Button
-      ref={setNodeRef}
-      variant={selected ? 'default' : 'ghost'}
-      aria-pressed={selected}
-      aria-label={`${dayTitle(key)}${today ? ', today' : ''}${count ? `, ${count} card${count === 1 ? '' : 's'}` : ''}`}
-      onClick={() => onSelect(key)}
-      style={{ width: DAY_WIDTH }}
-      className={cn('h-auto shrink-0 flex-col gap-0.5 px-0 py-1.5 font-normal', today && 'ring-1 ring-primary', isOver && !selected && 'bg-secondary')}
-    >
-      <span className={cn('text-xs', !selected && 'text-muted-foreground')}>{weekday}</span>
-      <span className="text-base font-semibold tabular-nums">{day}</span>
-      <span className={cn('flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-xs tabular-nums', count ? (selected ? 'bg-primary-foreground/20' : 'bg-primary/15 text-primary') : 'invisible')}>{count || 0}</span>
-    </Button>
+    <div className="shrink-0 px-1" style={{ width: DAY_WIDTH }}>
+      <Button
+        ref={setNodeRef}
+        variant={selected ? 'default' : 'ghost'}
+        aria-pressed={selected}
+        aria-label={`${dayTitle(key)}${today ? ', today' : ''}${count ? `, ${count} card${count === 1 ? '' : 's'}` : ''}`}
+        onClick={() => onSelect(key)}
+        className={cn('h-auto w-full flex-col gap-0.5 border px-0 py-2.5 font-normal', selected ? 'border-transparent' : 'border-border bg-card', today && 'ring-1 ring-primary', isOver && !selected && 'bg-secondary')}
+      >
+        <span className={cn('text-xs', !selected && 'text-muted-foreground')}>{weekday}</span>
+        <span className="text-base font-semibold tabular-nums">{day}</span>
+        <span className={cn('flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-xs tabular-nums', count ? (selected ? 'bg-primary-foreground/20' : 'bg-primary/15 text-primary') : 'invisible')}>{count || 0}</span>
+      </Button>
+    </div>
   )
 }
 
