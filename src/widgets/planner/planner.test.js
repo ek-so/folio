@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { parsePlanner, serializePlanner, newPlanner, movedPlanner, addDays, dayKey, plan, cardDate, droppedDate, monthLabel } from './planner.js'
+import { parsePlanner, serializePlanner, newPlanner, movedPlanner, addDays, daysBetween, dayKey, plan, cardDate, droppedDate, monthLabel } from './planner.js'
 
 const note = (date, extra = '') => `---\n${date === null ? '' : `date: ${date}\n`}${extra}---\n# T\n`
 
@@ -21,6 +21,8 @@ describe('planner', () => {
   it('counts days', () => {
     expect(addDays('2026-11-30', 1)).toBe('2026-12-01')
     expect(addDays('2026-03-01', -1)).toBe('2026-02-28')
+    expect(daysBetween('2026-11-06', '2026-12-01')).toBe(25)
+    expect(daysBetween('2026-03-01', '2026-02-28')).toBe(-1)
     expect(dayKey({ year: 2026, month: 1, day: 5 })).toBe('2026-01-05')
     expect(monthLabel('2026-11-06')).toBe('November 2026')
   })

@@ -3,24 +3,25 @@ import { DotsThree, X, Tag, CalendarBlank } from '@phosphor-icons/react'
 import { DndContext, DragOverlay, MouseSensor, TouchSensor, useSensor, useSensors, useDraggable, useDroppable, pointerWithin } from '@dnd-kit/core'
 import { cn } from '@/lib/utils.js'
 import { Button } from '@/components/ui/button.jsx'
-import { Tray, TrayTitle, TrayFooter } from '@/components/ui/tray.jsx'
+import { Tray, TrayTitle, TrayFooter, TRAY_BUTTON } from '@/components/ui/tray.jsx'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu.jsx'
 import NoteCard, { NO_CALLOUT, ownListeners, cardClick } from '@/components/NoteCard.jsx'
 import CardMenu from '@/components/CardMenu.jsx'
 import CheckListModal from '@/components/CheckListModal.jsx'
 import ConfirmModal from '@/components/ConfirmModal.jsx'
 import Spinner from '@/components/Spinner.jsx'
+import DatePopover from '@/components/DatePopover.jsx'
 import { shownCards, hiddenCards } from '@/lib/trayCards.js'
 import { displayName } from '@/lib/files.js'
 import { formatDate } from '@/lib/dates.js'
 import { noteTitle, properties, valueList, DESCRIPTION } from '@/lib/frontmatter.js'
-import { DATE, plan, addDays, keyDay, dayKey, cardDate, droppedDate, monthLabel } from './planner.js'
+import { DATE, plan, addDays, daysBetween, keyDay, dayKey, cardDate, droppedDate, monthLabel } from './planner.js'
 import { usePlanner } from './usePlanner.js'
 import { useToday } from './useToday.js'
 
 // The ribbon: each day takes DAY_WIDTH (its box and the gap around it); it starts with a window of days around today and grows by
 // MORE_DAYS on either side as it's scrolled near an end (EDGE), so it never ends
-const DAY_WIDTH = 68
+const DAY_WIDTH = 80
 const MORE_DAYS = 60
 const EDGE = DAY_WIDTH * 3
 
@@ -48,6 +49,8 @@ export default function Planner({ id, services, onRemove }) {
   const [dragged, setDragged] = useState(null) // the path of the card being dragged
   const [choosing, setChoosing] = useState(false) // the Properties sheet
   const [dropping, setDropping] = useState(null) // the property whose removal is being confirmed
+  const [jumping, setJumping] = useState(null) // a day picked in the calendar, scrolled to once the ribbon has it
+  const [month, setMonth] = useState(() => monthLabel(today)) // the month of the day in the middle of the ribbon, its title
   const scroller = useRef(null)
   const grown = useRef(0) // the width added before the first day while it's scrolled to, to keep its place
   const centered = useRef(false)
@@ -77,6 +80,8 @@ export default function Planner({ id, services, onRemove }) {
   function onScroll() {
     const el = scroller.current
     if (!el || grown.current) return
+    const middle = days[Math.floor((el.scrollLeft + el.clientWidth / 2) / DAY_WIDTH)]
+    if (middle) setMonth(monthLabel(middle))
     if (el.scrollLeft < EDGE) { grown.current = MORE_DAYS * DAY_WIDTH; setRange(r => ({ ...r, before: r.before + MORE_DAYS })) }
     else if (el.scrollWidth - el.scrollLeft - el.clientWidth < EDGE) setRange(r => ({ ...r, after: r.after + MORE_DAYS }))
   }
@@ -84,6 +89,16 @@ export default function Planner({ id, services, onRemove }) {
     setPicked(null)
     scrollToDay(today)
   }
+  // A day picked in a month's calendar: the ribbon grows to it if needed, scrolls to it and selects it
+  function goToDay(key) {
+    const from = daysBetween(anchor, key)
+    setRange(r => ({ before: Math.max(r.before, MORE_DAYS - from), after: Math.max(r.after, from + MORE_DAYS) }))
+    setPicked(key)
+    setJumping(key)
+  }
+  useLayoutEffect(() => {
+    if (jumping && days.includes(jumping)) { scrollToDay(jumping); setJumping(null) }
+  }, [jumping, days, scrollToDay])
 
   const menu = (
     <div className="flex shrink-0 items-center gap-space-sm">
@@ -148,8 +163,15 @@ export default function Planner({ id, services, onRemove }) {
         onDragEnd={onDragEnd}
         onDragCancel={() => setDragged(null)}
       >
-        {/* The ribbon in a tray like the cards' below; it scrolls sideways to the tray's edges */}
+        {/* The ribbon in a tray like the cards' below, under a title row like a column's: the month in view, and a
+            calendar to pick any day; it scrolls sideways to the tray's edges */}
         <Tray>
+          <div className="flex items-center gap-1">
+            <div className="min-w-0 flex-1"><TrayTitle>{month}</TrayTitle></div>
+            <DatePopover date={keyDay(selected)} onPick={d => d && goToDay(dayKey(d))}>
+              <Button variant="ghost" size="icon" aria-label="Go to a day" className={TRAY_BUTTON}><CalendarBlank /></Button>
+            </DatePopover>
+          </div>
           <div ref={setScroller} onScroll={onScroll} data-no-pull className="-mx-space-sm overflow-x-auto px-space-sm">
             <Ribbon days={days} today={today} selected={selected} count={arranged.count} onSelect={setPicked} />
           </div>
@@ -231,47 +253,32 @@ const dayTitle = key => {
   return new Date(Date.UTC(year, month - 1, day)).toLocaleDateString('en', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })
 }
 
-// The days side by side, a month's name over its first days (it stays in view while that month is scrolled through)
+// The days side by side, a line before each month's first day
 function Ribbon({ days, today, selected, count, onSelect }) {
-  const months = []
-  for (const key of days) {
-    const label = monthLabel(key)
-    if (months.at(-1)?.label === label) months.at(-1).days.push(key)
-    else months.push({ label, days: [key] })
-  }
   return (
-    <div className="flex w-max flex-col gap-1">
-      <div className="flex">
-        {months.map(m => (
-          <div key={m.label} className="shrink-0" style={{ width: m.days.length * DAY_WIDTH }}>
-            <span className="sticky left-0 inline-block px-space-xs text-xs font-semibold text-muted-foreground">{m.label}</span>
-          </div>
-        ))}
-      </div>
-      <div className="flex">
-        {days.map(key => <Day key={key} dayKey={key} today={key === today} selected={key === selected} count={count(key)} onSelect={onSelect} />)}
-      </div>
+    <div className="flex w-max">
+      {days.map((key, i) => <Day key={key} dayKey={key} first={i > 0 && keyDay(key).day === 1} today={key === today} selected={key === selected} count={count(key)} onSelect={onSelect} />)}
     </div>
   )
 }
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
-// One day of the ribbon, a drop target for cards: its weekday, number and, when it has cards, how many.
+// One day of the ribbon, a drop target for cards: its weekday, number and, when it has cards, how many; `first`: a month's first day, a line before it.
 // A Button (white and outlined like a card, filled for the selected day) so it focuses like every control; today has a ring.
-function Day({ dayKey: key, today, selected, count, onSelect }) {
+function Day({ dayKey: key, first, today, selected, count, onSelect }) {
   const { setNodeRef, isOver } = useDroppable({ id: dayCellId(key) })
   const { year, month, day } = keyDay(key)
   const weekday = WEEKDAYS[new Date(Date.UTC(year, month - 1, day)).getUTCDay()]
   return (
-    <div className="shrink-0 px-1" style={{ width: DAY_WIDTH }}>
+    <div className={cn('relative shrink-0 px-1', first && 'before:absolute before:inset-y-0 before:left-0 before:w-px before:bg-muted-foreground/30')} style={{ width: DAY_WIDTH }}>
       <Button
         ref={setNodeRef}
         variant={selected ? 'default' : 'ghost'}
         aria-pressed={selected}
         aria-label={`${dayTitle(key)}${today ? ', today' : ''}${count ? `, ${count} card${count === 1 ? '' : 's'}` : ''}`}
         onClick={() => onSelect(key)}
-        className={cn('h-auto w-full flex-col gap-0.5 border px-0 py-2.5 font-normal', selected ? 'border-transparent' : 'border-border bg-card', today && 'ring-1 ring-primary', isOver && !selected && 'bg-secondary')}
+        className={cn('h-auto w-full flex-col gap-0.5 rounded-lg border px-0 py-2.5 font-normal', selected ? 'border-transparent' : 'border-border bg-card', today && 'ring-1 ring-primary', isOver && !selected && 'bg-secondary')}
       >
         <span className={cn('text-xs', !selected && 'text-muted-foreground')}>{weekday}</span>
         <span className="text-base font-semibold tabular-nums">{day}</span>
