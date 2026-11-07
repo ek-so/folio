@@ -18,6 +18,7 @@ React + Vite PWA. Reads and writes markdown files from any GitHub repo through t
 8. **Design system first.** Use the shared components and theme tokens. A one-off style or color is a future inconsistency.
 9. **Small changes, verified before shipping.** Build, run tests and lint (`npm run lint`), and check the change once in the real app (`npm run local` serves it at localhost:7070). Test logic, not pixels; keep tests few and meaningful.
 10. **Replace means remove.** When something new replaces something old, delete the old code in the same change.
+11. **Content and display stay apart (hard rule).** The user's notes and files, and everything they mean (text, property values such as `status`), live only in the notes. `.folio/` holds only how Folio shows them: views, widgets, order, hidden columns, shown properties, colors. Deleting `.folio/` must never lose content, only the layout. Never store content or a note's meaning in `.folio/`, and never make a note depend on it to be read.
 
 ## UI rules
 Tokens, sizes and component details: [design-system](docs/design-system.md).
