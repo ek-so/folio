@@ -5,6 +5,7 @@ describe('front matter', () => {
   it('moves some properties to the top, in order', () => {
     const text = '---\npriority: high\ntags:\n  - a\n  - b\ndate: 4 Nov 2026\ndescription: Hi\n---\n# T\n'
     expect(withKeysFirst(text, ['description', 'date', 'repeat'])).toBe('---\ndescription: Hi\ndate: 4 Nov 2026\npriority: high\ntags:\n  - a\n  - b\n---\n# T\n')
+    expect(withKeysFirst('---\nstatus: x\n# when it happens\ndate: 1 Nov 2026\n---\n', ['date'])).toBe('---\n# when it happens\ndate: 1 Nov 2026\nstatus: x\n---\n')
     expect(withKeysFirst('# no front matter\n', ['date'])).toBe('# no front matter\n')
     expect(withKeysFirst('---\n---\n', ['date'])).toBe('---\n---\n')
   })

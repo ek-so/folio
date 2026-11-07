@@ -352,16 +352,20 @@ export default function App() {
     virtual, // every file, as a note's preview wants them for its links and images
     discards, // a discard reloads the notes widgets show
     // A done note out of the way (lib/archive.js): `edit` applied to its text, then moved into .archive/ at the root
-    // (a taken name gets a number), in one step; links and widgets follow, like any move. Its new path
+    // (a taken name gets a number), in one step; links and widgets follow, like any move. { to: its new path, text: its
+    // text as it was archived (with the typing flushed first), for an undo }
     archive: (path, edit) => {
       window.dispatchEvent(new Event('folio:flush')) // typing in an open note first
       let to = path
+      let text
       update(ch => {
+        const entry = filesOf(ch)[path]
+        text = entry && (ch.edits[entry.orig] ?? links.remoteText(entry.sha))
         to = freePath(ch, filesOf(ch), `${ARCHIVE}/${path.slice(path.lastIndexOf('/') + 1)}`)
         return relocated(editNote(ch, repo.remote?.files ?? {}, path, edit, links.remoteText), fileItem(path), to)
       })
       followTrails(movedTrails(trails, path, to))
-      return to
+      return { to, text }
     },
     // Archive undone: the note at `from` back at `to` (a free name next to it if that's taken), with its text `text`
     unarchive: (from, to, text) => {
@@ -507,18 +511,20 @@ export default function App() {
   }, [])
 
   // Notes archived more than KEEP_DAYS days ago are removed when Folio opens (lib/archive.js), as local changes shown
-  // before Sync; each one once a session, so one put back by a discard stays until Folio opens again
-  const cleaned = useRef(new Set())
+  // before Sync; each one once a session per repo, so one put back by a discard stays until Folio opens again
+  const cleaned = useRef({ repo: null, paths: new Set() })
   useEffect(() => {
     if (!repo.remote) return
+    if (cleaned.current.repo !== auth.repo) cleaned.current = { repo: auth.repo, paths: new Set() }
+    const done = cleaned.current.paths
     const now = new Date()
     const stale = staleArchived(links.notes, { year: now.getFullYear(), month: now.getMonth() + 1, day: now.getDate() })
-      .filter(path => !cleaned.current.has(path))
+      .filter(path => !done.has(path))
     if (!stale.length) return
-    stale.forEach(path => cleaned.current.add(path))
+    stale.forEach(path => done.add(path))
     update(ch => stale.reduce((c, path) => remove(c, filesOf(c), path, false), ch))
     toast(`${stale.length} archived note${stale.length === 1 ? '' : 's'} older than ${KEEP_DAYS} days removed. Sync to remove ${stale.length === 1 ? 'it' : 'them'} from GitHub.`)
-  }, [links.notes])
+  }, [links.notes, repo.remote, auth.repo])
 
   // Drop all local changes (a note or folder that only existed locally leaves the trails)
   function discardChanges() {

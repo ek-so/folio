@@ -361,17 +361,22 @@ function highlightInline(line) {
 
 // HTML for the styling layer behind the markdown editor: same characters as
 // `text`, with links/images in the accent color and bold/italic/etc. styled.
-// The indexes of `text`'s lines that set one of the properties `keys` (`key: value`) in its front matter: between a first
-// line `---` and the next `---` or `...` line (or the end, while that's missing). The markdown editor greys them out and
-// refuses typing that changes them (a planner's date and repeat).
+// The indexes of `text`'s lines that set one of the properties `keys` in its front matter: the `key: value` line and its
+// `- item` lines, between a first line `---` and the next `---` or `...` line (none when that's missing: then it isn't front
+// matter, as for frontMatter). The markdown editor greys them out and refuses typing that changes them (a planner's date and repeat).
 export function keyLines(text, keys) {
   if (!keys.length) return []
   const lines = text.split('\n')
   if (!/^---\s*$/.test(lines[0])) return []
+  const close = lines.findIndex((l, i) => i > 0 && /^(---|\.\.\.)\s*$/.test(l))
+  if (close < 0) return []
   const out = []
-  for (let i = 1; i < lines.length && !/^(---|\.\.\.)\s*$/.test(lines[i]); i++) {
+  let inKey = false // the line belongs to one of `keys`
+  for (let i = 1; i < close; i++) {
     const m = lines[i].match(/^([^\s#][^:]*):/)
-    if (m && keys.includes(m[1].trim())) out.push(i)
+    if (m) inKey = keys.includes(m[1].trim())
+    else if (!/^\s+-\s/.test(lines[i])) inKey = false
+    if (inKey) out.push(i)
   }
   return out
 }

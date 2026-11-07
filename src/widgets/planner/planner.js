@@ -90,10 +90,13 @@ export function daysBetween(from, to) {
 }
 
 // The card's date: { year, month, day, hour?, minute? }, or null when its `date` is empty or isn't one date
-export const cardDate = text => {
-  const value = properties(text)[DATE]
+export const cardDate = text => dateValue(properties(text)[DATE])
+
+// A `date` property's value as { year, month, day, hour?, minute? }, or null when it's empty or isn't one date
+// (a time alone isn't a day); the card's date, read the same way on the card and in its repeat badge
+export function dateValue(value) {
   const date = typeof value === 'string' ? valueDate(value) : null
-  return date?.year === undefined ? null : date // a time alone isn't a day
+  return date?.year === undefined ? null : date
 }
 
 // Where a card's `date` goes when dropped on the day `key`: the same property value written as
@@ -104,12 +107,17 @@ export const droppedDate = (text, key) => {
   return old?.hour === undefined ? day : { ...day, hour: old.hour, minute: old.minute }
 }
 
-// Where Mark as done takes a card: a repeating one with a date, the day of its next time (a key); null for any other,
-// or one past its last time (`until`): it's archived
-export function doneNext(text) {
+// Where Mark as done on `today` (a key) takes a card: a repeating one with a date, the day of its next time (a key),
+// counted from its date so it keeps its rhythm; when that's today or before (it fell behind), the first one after today,
+// so one click catches up and a card done today never stays on today. Null for any other card, or one past its last
+// time (`until`): it's archived.
+export function doneNext(text, today) {
   const rule = parseRecurrence(properties(text)[REPEAT])
   const date = cardDate(text)
-  return rule?.kind === 'repeat' && date ? nextOccurrence(rule, dayKey(date)) : null
+  if (rule?.kind !== 'repeat' || !date) return null
+  let next = nextOccurrence(rule, dayKey(date))
+  while (next && next <= today) next = nextOccurrence(rule, next)
+  return next
 }
 
 // `cards` ([{ path, text }]) arranged by day, as of `today` (a key): `on(key)` is what a day lists,

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { renderBlocks, tapOffset, taskOffsets, taskProgress, linkSpans, linkMarkdown, replaceLink, repoLink, listsIn, moveListItem, highlightMarkdown, renderInline } from './markdown.js'
+import { renderBlocks, tapOffset, taskOffsets, taskProgress, linkSpans, linkMarkdown, replaceLink, repoLink, listsIn, moveListItem, highlightMarkdown, keyLines, renderInline } from './markdown.js'
 
 describe('markdown', () => {
   it('tags each block with its source range', () => {
@@ -115,6 +115,8 @@ describe('highlightMarkdown', () => {
     expect(html).not.toContain('muted-foreground/50">  - a')
     expect(html).not.toContain('muted-foreground/50"># note')
     expect(html).not.toContain('muted-foreground/50">date: in the text')
+    expect(keyLines('---\ndate:\n  - 4 Nov 2026\ntags: a\n---\n', ['date'])).toEqual([1, 2]) // with its list lines
+    expect(keyLines('---\ndate: 4 Nov 2026\nno closing line', ['date'])).toEqual([]) // not front matter
   })
 
   it('styles markdown without changing the text', () => {

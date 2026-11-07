@@ -33,14 +33,14 @@ export function usePlanner(id, services) {
     markDone(path, today) {
       const text = notes.entries.find(([p]) => p === path)?.[1]
       if (text === undefined) return null
-      const next = doneNext(text)
+      const next = doneNext(text, today)
       if (next) {
         const old = properties(text)[DATE]
         notes.setProperty(path, DATE, formatDate(droppedDate(text, next)))
         return { next, undo: () => notes.setProperty(path, DATE, old) }
       }
-      const to = services.archive(path, t => markedDone(t, keyDay(today)))
-      return { next: null, undo: () => services.unarchive(to, path, text) }
+      const archived = services.archive(path, t => markedDone(t, keyDay(today)))
+      return { next: null, undo: () => services.unarchive(archived.to, path, archived.text ?? text) }
     },
     // The properties cards show besides the date; a newly chosen one is added, empty, to the notes that lack it
     setProperties(keys) {

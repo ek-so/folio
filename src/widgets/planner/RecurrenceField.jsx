@@ -11,8 +11,7 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group.jsx'
 import { DateField } from '@/components/DateBadge.jsx'
 import { useSingleOpen } from '@/hooks/useSingleOpen.jsx'
 import { formatDate } from '@/lib/dates.js'
-import { valueDate } from '@/lib/markdown.js'
-import { keyDay, dayKey, addDays, todayKey, DATE, REPEAT } from './planner.js'
+import { keyDay, dayKey, addDays, todayKey, dateValue, DATE, REPEAT } from './planner.js'
 import { parseRecurrence, formatRecurrence, ONE_TIME, UNITS, WEEKDAYS } from './recurrence.js'
 
 const KINDS = [['one-time', 'One-time', CalendarDot], ['repeat', 'Repeats', ArrowsClockwise]]
@@ -59,13 +58,13 @@ export default function RecurrenceField({ prop, props, onChange }) {
 
 // The card's day (a key) from its properties, or null
 function cardDay(props = []) {
-  const value = props.find(p => p.key === DATE)?.value
-  const date = typeof value === 'string' ? valueDate(value) : null
-  return date?.year === undefined ? null : dayKey(date)
+  const date = dateValue(props.find(p => p.key === DATE)?.value)
+  return date && dayKey(date)
 }
 
 // The popover's choices for `rule` (null when the value isn't one: it counts as one-time until something is picked);
-// `start`: the card's day, the earliest it can end (else today)
+// `start`: the card's day: it can't end before it (it can end before today: it's archived when done next), and its first
+// end is a year after it, or after today when that's later
 function RecurrenceChooser({ rule, start, onChange }) {
   const earliest = start && start > todayKey() ? start : todayKey()
   const repeat = rule?.kind === 'repeat' ? rule : null

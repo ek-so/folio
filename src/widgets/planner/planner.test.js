@@ -75,10 +75,16 @@ describe('planner', () => {
   })
 
   it('moves a repeating card on when done, archives any other', () => {
-    expect(doneNext(note('4 Nov 2026', 'repeat: weekly\n'))).toBe('2026-11-11')
-    expect(doneNext(note('4 Nov 2026', 'repeat: weekly until 10 Nov 2026\n'))).toBeNull()
-    expect(doneNext(note('4 Nov 2026', 'repeat: recurring\n'))).toBeNull()
-    expect(doneNext(note('4 Nov 2026', 'repeat: one-time\n'))).toBeNull()
-    expect(doneNext(note(null, 'repeat: weekly\n'))).toBeNull()
+    const today = '2026-11-07' // a Saturday
+    expect(doneNext(note('4 Nov 2026', 'repeat: weekly\n'), today)).toBe('2026-11-11')
+    expect(doneNext(note('7 Nov 2026', 'repeat: daily\n'), today)).toBe('2026-11-08') // done today: tomorrow
+    expect(doneNext(note('1 Nov 2026', 'repeat: daily\n'), today)).toBe('2026-11-08') // behind: one click catches up
+    expect(doneNext(note('26 Oct 2026', 'repeat: every 2 weeks on Mon\n'), today)).toBe('2026-11-09') // its rhythm kept
+    expect(doneNext(note('20 Nov 2026', 'repeat: weekly\n'), today)).toBe('2026-11-27') // done early
+    expect(doneNext(note('4 Nov 2026', 'repeat: weekly until 10 Nov 2026\n'), today)).toBeNull()
+    expect(doneNext(note('1 Nov 2026', 'repeat: daily until 7 Nov 2026\n'), today)).toBeNull()
+    expect(doneNext(note('4 Nov 2026', 'repeat: recurring\n'), today)).toBeNull()
+    expect(doneNext(note('4 Nov 2026', 'repeat: one-time\n'), today)).toBeNull()
+    expect(doneNext(note(null, 'repeat: weekly\n'), today)).toBeNull()
   })
 })

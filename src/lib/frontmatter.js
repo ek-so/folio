@@ -89,24 +89,25 @@ export function valueColors(key, values, chosen = {}) {
 export const valueList = value => (Array.isArray(value) ? value : [value]).filter(v => v !== '' && v != null)
 
 // `text` with the properties `keys` it has moved to the top of its front matter, in that order (each with its
-// `- item` lines); the other lines keep their order below them. Text without front matter is returned as it is.
+// `- item` lines, and the comment or blank lines just above it); the other lines keep their order below them.
+// Text without front matter is returned as it is.
 export function withKeysFirst(text, keys) {
   const fm = frontMatter(text)
   if (!fm) return text
   const start = text.match(OPEN)[0].length
   const lines = text.slice(start, fm.close).split('\n')
   if (lines.at(-1) === '') lines.pop() // the line break before the closing line
-  const blocks = [] // [{ key, lines }]; lines before the first key stay first
+  const blocks = [] // [{ key, lines }]: a key's line, with the comments above it and its items below
+  let above = [] // comment and blank lines waiting for the key under them
   for (const line of lines) {
     const m = line.match(KEY)
-    if (m && !ITEM.test(line)) blocks.push({ key: m[1].trim(), lines: [line] })
-    else if (blocks.length) blocks.at(-1).lines.push(line)
-    else blocks.push({ key: null, lines: [line] })
+    if (m && !ITEM.test(line)) { blocks.push({ key: m[1].trim(), lines: [...above, line] }); above = [] }
+    else if (ITEM.test(line) && blocks.length && !above.length) blocks.at(-1).lines.push(line)
+    else above.push(line)
   }
-  const lead = blocks.filter(b => b.key === null)
   const first = keys.flatMap(k => blocks.filter(b => b.key === k))
-  const rest = blocks.filter(b => b.key !== null && !keys.includes(b.key))
-  const body = [...lead, ...first, ...rest].flatMap(b => b.lines).join('\n')
+  const rest = blocks.filter(b => !keys.includes(b.key))
+  const body = [...first, ...rest].flatMap(b => b.lines).concat(above).join('\n') // lines after the last key stay last
   return text.slice(0, start) + body + (body ? '\n' : '') + text.slice(fm.close)
 }
 
