@@ -2,6 +2,7 @@ import Surface from './Surface.jsx'
 import TitleBar from './TitleBar.jsx'
 import { PAGE } from '../lib/pages.js'
 import { WIDGET_TYPES } from '../widgets/index.js'
+import { KEEP_DAYS } from '../lib/archive.js'
 
 // What each kind of widget (widgets/index.js) is for and how it works, in plain words, by its `type`.
 // The page lists every registered kind with its own label and icon, so a new widget shows up here
@@ -54,7 +55,7 @@ export default function Documentation() {
               <ul className="flex list-disc flex-col gap-1 pl-5 text-sm">
                 <li>Add a widget with +. Reorder or remove them in the view's ⋯.</li>
                 <li>Your notes hold the content. Views and widgets are saved in .folio and only change how notes look, so deleting them never deletes a note.</li>
-                <li>A trash removes. A file or folder goes to the archive (.archive) first, where you can recover it for 30 days; a value or property is removed for good. A ✕ only takes something off a view.</li>
+                <li>A trash removes. A file or folder goes to the archive (.archive) first, where you can recover it for {KEEP_DAYS} days; a value or property is removed for good. A ✕ only takes something off a view.</li>
                 <li>Changes stay on this device until you Sync.</li>
               </ul>
             </section>

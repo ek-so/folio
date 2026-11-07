@@ -234,18 +234,29 @@ export default function App() {
   const filesOf = ch => virtualFiles(repo.remote?.files ?? {}, ch)
   // `ch` with `item` moved to path `to`: links to and from it are rewritten in
   // the same local changes (one commit), and every widget follows it (`moved`)
-  function relocated(ch, item, to) {
+  // `follow` false (to and from the archive): widgets keep their paths, so a widget showing it finds it gone
+  function relocated(ch, item, to, follow = true) {
     const files = filesOf(ch)
     let next = rename(ch, files, item.path, to, item.type === 'dir')
     for (const [path, text] of linkRewrites(item, to, ch.edits, files)) {
       const entry = files[path]
       next = setEdit(next, entry, text, links.remoteText(entry.sha) ?? '')
     }
-    for (const w of widgets) {
+    for (const w of follow ? widgets : []) {
       const type = widgetType(w.type)
       if (type?.moved) next = type.moved(next, w.id, item.path, to, item.type === 'dir', widgetServices)
     }
     return next
+  }
+
+  // The first path `item` can move to: `wanted` itself, else with a number ("x 2.md", "folder 2"); a path it was moved
+  // away from counts as free for it (renameError), so an undo puts it back in its own place
+  function freeTarget(ch, item, wanted) {
+    const slash = wanted.lastIndexOf('/') + 1
+    const [stem, ext] = item.type === 'dir' ? [wanted.slice(slash), ''] : splitName(wanted.slice(slash))
+    let to = wanted
+    for (let n = 2; renameError(ch, filesOf(ch), item, to); n++) to = `${wanted.slice(0, slash)}${stem} ${n}${ext}`
+    return to
   }
 
   // Rename or move `item` to path `to`; the open folder / note follows it
@@ -399,17 +410,15 @@ export default function App() {
   }
 
   // `ch` with `item` moved into today's folder of the archive (lib/archive.js; a taken name gets a number), and its path there
+  // Links to it are rewritten (so an undo puts them back); widgets and pages don't follow it: for them it's gone
   function archived(ch, item) {
     const now = new Date()
-    const dir = archiveDay({ year: now.getFullYear(), month: now.getMonth() + 1, day: now.getDate() }) + '/'
-    const [stem, ext] = item.type === 'dir' ? [item.name, ''] : splitName(item.name)
-    let to = dir + item.name
-    for (let n = 2; renameError(ch, filesOf(ch), item, to); n++) to = `${dir}${stem} ${n}${ext}`
-    return { next: relocated(ch, item, to), to }
+    const to = freeTarget(ch, item, `${archiveDay({ year: now.getFullYear(), month: now.getMonth() + 1, day: now.getDate() })}/${item.name}`)
+    return { next: relocated(ch, item, to, false), to }
   }
 
   // `item` (a file or folder) into the archive, in one step; `edit` first applied to its text (a note: a planner's done
-  // card). Links and widgets follow, like any move. { to, text: its text as it was archived, for an undo }
+  // card). An open page showing it closes, as for a delete. { to, text: its text as it was archived, for an undo }
   function archive(item, edit) {
     window.dispatchEvent(new Event('folio:flush')) // typing in an open note first
     let to = item.path
@@ -421,19 +430,17 @@ export default function App() {
       to = done.to
       return done.next
     })
-    followTrails(movedTrails(trails, item.path, to))
     return { to, text }
   }
 
-  // An archive undone: `item` (in the archive) back at `to` (a free name next to it if that's taken), a note with its text `text`
+  // An archive undone: `item` (in the archive) back at `to` (its own place, or a free name next to it if something else
+  // took it since), a note with its text `text`
   function unarchive(item, to, text) {
-    let back = to
     update(ch => {
-      back = item.type === 'dir' ? to : freePath(ch, filesOf(ch), to)
-      const next = relocated(ch, item, back)
+      const back = freeTarget(ch, item, to)
+      const next = relocated(ch, item, back, false)
       return text === undefined ? next : editNote(next, repo.remote?.files ?? {}, back, () => text, links.remoteText)
     })
-    followTrails(movedTrails(trails, item.path, back))
   }
 
   // Remove: a file or folder goes to the archive, with a toast to undo it; one already in the archive is deleted for good
@@ -551,7 +558,7 @@ export default function App() {
     stale.forEach(path => done.add(path))
     update(ch => stale.reduce((c, path) => remove(c, filesOf(c), path, true), ch))
     toast.success(`What was archived more than ${KEEP_DAYS} days ago is removed. Sync to remove it from GitHub.`)
-  }, [virtual, repo.remote, auth.repo])
+  }, [repo.remote, auth.repo]) // when the repo's files load or change by Sync or Pull, not on every edit
 
   // Drop all local changes (a note or folder that only existed locally leaves the trails)
   function discardChanges() {

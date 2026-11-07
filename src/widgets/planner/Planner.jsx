@@ -60,6 +60,9 @@ export default function Planner({ id, services, onRemove }) {
   const [dragged, setDragged] = useState(null) // the path of the card being dragged
   const [choosing, setChoosing] = useState(false) // the Properties sheet
   const [relocating, setRelocating] = useState(false) // picking another folder, its own being gone
+  const [viewHere, setViewHere] = useState(null) // calendar or list picked where it can't be saved (read only): this screen only
+  const view = viewHere ?? planner?.view
+  const pickView = next => { if (off) setViewHere(next); else { setViewHere(null); act.setView(next) } }
   const [dropping, setDropping] = useState(null) // the property whose removal is being confirmed
   const [jumping, setJumping] = useState(null) // a day picked in the calendar, scrolled to once the ribbon has it
   const [month, setMonth] = useState(() => monthLabel(today)) // the month of the day in the middle of the ribbon, its title
@@ -118,10 +121,10 @@ export default function Planner({ id, services, onRemove }) {
 
   const menu = (
     <div className="flex shrink-0 items-center gap-space-sm">
-      {/* Calendar or list, saved in the planner's settings */}
-      {!off && (
+      {/* Calendar or list, saved in the planner's settings (where it can't be, on this screen only) */}
+      {planner && !missing && (
         <div className="w-24">
-          <Segmented iconOnly label="View" value={planner.view} onChange={act.setView} options={[['calendar', 'Calendar', CalendarDots], ['list', 'List', ListBullets]]} />
+          <Segmented iconOnly label="View" value={view} onChange={pickView} options={[['calendar', 'Calendar', CalendarDots], ['list', 'List', ListBullets]]} />
         </div>
       )}
       <DropdownMenu>
@@ -200,7 +203,7 @@ export default function Planner({ id, services, onRemove }) {
     const visible = new Set(shownCards(paths, expanded.has(selected), dragged))
     // The list view: every card in grey groups of time (listed), each a white card of rows; Today always, with New task
     const newTask = <TrayFooter more={0} newLabel="New task" onNew={() => act.newCard(today)} disabled={off} />
-    if (planner.view === 'list') body = (
+    if (view === 'list') body = (
       <>
         {groups[0]?.key !== 'today' && <Tray><TrayTitle>Today</TrayTitle>{newTask}</Tray>}
         {groups.map(group => (
@@ -378,13 +381,13 @@ function TaskRow({ path, text, dashed, menu, onOpen }) {
   const name = displayName(path)
   const date = text === undefined ? null : cardDate(text)
   const repeat = text === undefined ? '' : properties(text)[REPEAT]
-  const repeats = parseRecurrence(repeat) && parseRecurrence(repeat).kind !== 'one-time'
+  const repeats = parseRecurrence(repeat)?.kind === 'repeat' // "recurring" without a rule is done like a one-time card
   const Icon = repeats ? ArrowsClockwise : CalendarDot
   return (
     <ListRow
       icon={<Icon className={cn('size-4', repeats ? 'text-primary' : 'text-muted-foreground')} />}
       title={text === undefined ? name : noteTitle(text, name)}
-      description={`${date ? formatDate(date) : 'No date'}${repeats ? ` · ${repeat.charAt(0).toUpperCase()}${repeat.slice(1)}` : ''}`}
+      description={`${date ? formatDate(date) : 'No date'}${repeats || parseRecurrence(repeat)?.kind === 'unset' ? ` · ${repeat.charAt(0).toUpperCase()}${repeat.slice(1)}` : ''}`}
       trailing={menu}
       onClick={() => onOpen(path)}
       className={cn(dashed && 'border border-dashed border-muted-foreground/50')}
