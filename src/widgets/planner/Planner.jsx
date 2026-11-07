@@ -278,7 +278,7 @@ function Day({ dayKey: key, first, today, selected, count, onSelect }) {
         aria-pressed={selected}
         aria-label={`${dayTitle(key)}${today ? ', today' : ''}${count ? `, ${count} card${count === 1 ? '' : 's'}` : ''}`}
         onClick={() => onSelect(key)}
-        className={cn('h-auto w-full flex-col gap-0.5 rounded-lg border px-0 py-2.5 font-normal', selected ? 'border-transparent' : 'border-border bg-card', today && 'ring-1 ring-primary', isOver && !selected && 'bg-secondary')}
+        className={cn('h-auto w-full flex-col gap-0.5 rounded-lg border px-0 py-2.5 font-normal', selected ? 'border-transparent' : 'border-border bg-card', today && 'border-primary ring-1 ring-inset ring-primary', isOver && !selected && 'bg-secondary')}
       >
         <span className={cn('text-xs', !selected && 'text-muted-foreground')}>{weekday}</span>
         <span className="text-base font-semibold tabular-nums">{day}</span>
