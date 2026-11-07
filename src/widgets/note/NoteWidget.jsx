@@ -1,9 +1,10 @@
 import { useState, useRef } from 'react'
 import { flushSync } from 'react-dom'
-import { DotsThree, PencilSimple, Check, ArrowsOut, Plus, ListBullets, X } from '@phosphor-icons/react'
+import { DotsThree, PencilSimple, Check, ArrowsOut, Plus, ListBullets, X, FileText } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button.jsx'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu.jsx'
 import Spinner from '@/components/Spinner.jsx'
+import EmptyState from '@/components/EmptyState.jsx'
 import RenameModal from '@/components/RenameModal.jsx'
 import ConfirmModal from '@/components/ConfirmModal.jsx'
 import EditListModal from '@/components/EditListModal.jsx'
@@ -15,7 +16,7 @@ import { displayName } from '@/lib/files.js'
 import ResizeHandle from '@/components/ResizeHandle.jsx'
 import { Tray, TrayTitle, TRAY_BUTTON } from '@/components/ui/tray.jsx'
 import { NOTE_HEIGHT, clampSize } from '@/lib/resize.js'
-import { notePath, parseNotes, serializeNotes, notesHeight, resizedNotes, addedNote, removedNote, reorderedNote } from './note.js'
+import { notePath, parseNotes, serializeNotes, notesHeight, resizedNotes, addedNote, removedNote, replacedNote, reorderedNote } from './note.js'
 import { NotePicker } from './NoteSetup.jsx'
 
 // The notes widget (note.js): "Notes" and its ⋯ (Add note…, Edit notes…: order them and take them out, Remove widget)
@@ -52,6 +53,7 @@ export default function NoteWidget({ id, services, onRemove }) {
           <NoteTray
             key={`${entry.file}:${services.discards}`} path={entry.file} services={services} height={dragged ?? height}
             onTakeOut={canEdit ? () => setRemoving(settings.notes.indexOf(entry)) : null}
+            onReplace={canEdit ? (to, first = ch => ch) => services.update(ch => services.config.write(notePath(id), serializeNotes(replacedNote(settings, entry.file, to)))(first(ch))) : null}
           />
         ))}
         {/* One handle under them all, edge to edge: their one height */}
@@ -112,9 +114,10 @@ export default function NoteWidget({ id, services, onRemove }) {
 }
 
 // One note's tray: its name, Edit and ⋯ over its box, `height` tall on desktop (the widget's). `onTakeOut` (null: it can't be) asks to remove it from the widget
-function NoteTray({ path, services, height, onTakeOut }) {
+function NoteTray({ path, services, height, onTakeOut, onReplace }) {
   const found = services.noteFile(path)
   const [renaming, setRenaming] = useState(false)
+  const [replacing, setReplacing] = useState(false) // picking a note in place of this one, which is gone
   const item = { name: path.slice(path.lastIndexOf('/') + 1), path, type: 'file' }
   const open = () => { window.dispatchEvent(new Event('folio:flush')); services.openFile(path) } // typing first
   const tray = (actions, body) => (
@@ -150,7 +153,11 @@ function NoteTray({ path, services, height, onTakeOut }) {
       )}
     </Tray>
   )
-  if (!found) return tray(null, <p className="py-6 text-center text-sm text-muted-foreground">This note is gone.</p>)
+  // A note that's gone: Select note puts another in its place (`onReplace(path, first)`; null when it can't be saved)
+  if (!found) return tray(null, <>
+    <EmptyState message="This note is gone." action={{ label: 'Select note', icon: <FileText />, onClick: () => setReplacing(true), disabled: !onReplace }} />
+    {replacing && <NotePicker title="Select note" services={services} onPick={(to, first) => { setReplacing(false); onReplace(to, first) }} onClose={() => setReplacing(false)} />}
+  </>)
   return <NoteBox path={path} found={found} services={services} tray={tray} height={height} />
 }
 

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { parseNotes, serializeNotes, movedNotes, isNote, notesHeight, resizedNotes, addedNote, removedNote, reorderedNote } from './note.js'
+import { parseNotes, serializeNotes, movedNotes, isNote, notesHeight, resizedNotes, addedNote, removedNote, replacedNote, reorderedNote } from './note.js'
 
 describe('notes widget', () => {
   it('reads its settings, an older one-note widget too, or nothing from bad text', () => {
@@ -33,5 +33,11 @@ describe('notes widget', () => {
 
   it('tells notes from other files', () => {
     expect(['a/b.md', 'README.MD', 'pic.png', '.folio/x.md'].filter(isNote)).toEqual(['a/b.md', 'README.MD'])
+  })
+
+  it('replaces a note that is gone, in its place', () => {
+    const settings = { notes: [{ file: 'a.md' }, { file: 'gone.md' }, { file: 'c.md' }], height: 400 }
+    expect(replacedNote(settings, 'gone.md', 'new.md')).toEqual({ notes: [{ file: 'a.md' }, { file: 'new.md' }, { file: 'c.md' }], height: 400 })
+    expect(replacedNote(settings, 'gone.md', 'c.md').notes).toEqual([{ file: 'a.md' }, { file: 'c.md' }]) // already there
   })
 })

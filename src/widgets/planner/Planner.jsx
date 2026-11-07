@@ -1,6 +1,6 @@
 import { toast } from 'sonner'
 import { Fragment, useState, useMemo, useRef, useCallback, useLayoutEffect } from 'react'
-import { DotsThree, X, Tag, CalendarBlank, CrosshairSimple, CalendarDots, ListBullets, CalendarDot, ArrowsClockwise } from '@phosphor-icons/react'
+import { DotsThree, X, Tag, FolderOpen, CalendarBlank, CrosshairSimple, CalendarDots, ListBullets, CalendarDot, ArrowsClockwise } from '@phosphor-icons/react'
 import { DndContext, DragOverlay, MouseSensor, TouchSensor, useSensor, useSensors, useDraggable, useDroppable, pointerWithin } from '@dnd-kit/core'
 import { cn } from '@/lib/utils.js'
 import { Button } from '@/components/ui/button.jsx'
@@ -14,6 +14,8 @@ import CardMenu from '@/components/CardMenu.jsx'
 import CheckListModal from '@/components/CheckListModal.jsx'
 import ConfirmModal from '@/components/ConfirmModal.jsx'
 import Spinner from '@/components/Spinner.jsx'
+import EmptyState from '@/components/EmptyState.jsx'
+import FolderSheet from '@/components/FolderSheet.jsx'
 import DatePopover from '@/components/DatePopover.jsx'
 import { shownCards, hiddenCards } from '@/lib/trayCards.js'
 import { displayName } from '@/lib/files.js'
@@ -57,6 +59,7 @@ export default function Planner({ id, services, onRemove }) {
   const [range, setRange] = useState({ before: MORE_DAYS, after: MORE_DAYS * 2 }) // days shown before and after today
   const [dragged, setDragged] = useState(null) // the path of the card being dragged
   const [choosing, setChoosing] = useState(false) // the Properties sheet
+  const [relocating, setRelocating] = useState(false) // picking another folder, its own being gone
   const [dropping, setDropping] = useState(null) // the property whose removal is being confirmed
   const [jumping, setJumping] = useState(null) // a day picked in the calendar, scrolled to once the ribbon has it
   const [month, setMonth] = useState(() => monthLabel(today)) // the month of the day in the middle of the ribbon, its title
@@ -139,7 +142,7 @@ export default function Planner({ id, services, onRemove }) {
   let body
   if (!ready) body = <div className="flex justify-center py-12"><Spinner /></div>
   else if (!planner) body = <p className="py-6 text-center text-sm text-muted-foreground">This planner's settings can't be read.</p>
-  else if (missing) body = <p className="py-6 text-center text-sm text-muted-foreground">Its folder “{planner.folder}” is gone.</p>
+  else if (missing) body = <EmptyState message={`Its folder “${planner.folder}” is gone.`} action={{ label: 'Select folder', icon: <FolderOpen />, onClick: () => setRelocating(true), disabled: !canEdit }} />
   else {
     const list = arranged.on(selected)
     const shown = [...FIXED, ...planner.properties]
@@ -269,6 +272,11 @@ export default function Planner({ id, services, onRemove }) {
         {menu}
       </div>
       {body}
+      {relocating && planner && (
+        <FolderSheet title="Planner from folder…" folders={['', ...services.folders]} onPick={folder => { act.setFolder(folder); return null }} onClose={() => setRelocating(false)}>
+          <p className="text-muted-foreground text-xs">Its notes become cards, each on the day of its date.</p>
+        </FolderSheet>
+      )}
       {choosing && planner && (
         <CheckListModal
           title="Properties"

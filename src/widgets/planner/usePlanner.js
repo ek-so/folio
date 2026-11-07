@@ -1,10 +1,10 @@
 import { useMemo } from 'react'
-import { plannerPath, parsePlanner, serializePlanner, keyDay, droppedDate, doneNext, DATE, REPEAT, ORDER } from './planner.js'
+import { plannerPath, parsePlanner, serializePlanner, keyDay, droppedDate, doneNext, asCard, DATE, REPEAT, ORDER } from './planner.js'
 import { ONE_TIME } from './recurrence.js'
 import { formatDate } from '@/lib/dates.js'
 import { properties } from '@/lib/frontmatter.js'
 import { markedDone } from '@/lib/archive.js'
-import { withNoteKeys } from '@/lib/folderNotes.js'
+import { withNoteKeys, editNotes } from '@/lib/folderNotes.js'
 import { useFolderNotes } from '@/hooks/useFolderNotes.js'
 
 // Planner `id` as its widget shows and changes it, through the app's `services`: `ready` (its
@@ -42,6 +42,8 @@ export function usePlanner(id, services) {
       const archived = services.archive(path, markedDone)
       return { next: null, undo: () => services.unarchive(archived.to, path, archived.text ?? text) }
     },
+    // Another folder (its own is gone), its notes made cards as when the planner was set up
+    setFolder: folder => update(ch => editNotes(write({ ...planner, folder })(ch), services.remoteFiles, folder, asCard, services.remoteText)),
     // Calendar or list (planner.js VIEWS), saved in its settings
     setView: view => update(write({ ...planner, view })),
     // The properties cards show besides the date; a newly chosen one is added, empty, to the notes that lack it

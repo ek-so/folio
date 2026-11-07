@@ -37,6 +37,11 @@ export const addedNote = (settings, file) =>
   settings.notes.some(n => n.file === file) ? settings : { ...settings, notes: [...settings.notes, { file }] }
 
 // The settings without the note at `index` (its file stays)
+// The note `from` (gone) replaced, in its place, by `to`; when `to` is already in the widget, `from` just goes
+export const replacedNote = (settings, from, to) => settings.notes.some(n => n.file === to)
+  ? { ...settings, notes: settings.notes.filter(n => n.file !== from) }
+  : { ...settings, notes: settings.notes.map(n => n.file === from ? { ...n, file: to } : n) }
+
 export const removedNote = (settings, index) => ({ ...settings, notes: settings.notes.filter((_, i) => i !== index) })
 
 // The settings with the note at `from` moved to `to`

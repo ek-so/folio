@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { DotsThree, Trash, X, PencilSimple, Tag, Columns, Check, CaretDown, Rows } from '@phosphor-icons/react'
+import { DotsThree, Trash, X, PencilSimple, Tag, Columns, Check, CaretDown, Rows, FolderOpen } from '@phosphor-icons/react'
 import {
   DndContext, DragOverlay, MouseSensor, TouchSensor, useSensor, useSensors,
   closestCenter, closestCorners, pointerWithin,
@@ -12,6 +12,8 @@ import { Tray, TrayTitle, TrayFooter, TRAY_BUTTON } from '@/components/ui/tray.j
 import { shownCards, hiddenCards } from '@/lib/trayCards.js'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu.jsx'
 import Spinner from '@/components/Spinner.jsx'
+import EmptyState from '@/components/EmptyState.jsx'
+import FolderSheet from '@/components/FolderSheet.jsx'
 import RenameModal from '@/components/RenameModal.jsx'
 import ConfirmModal from '@/components/ConfirmModal.jsx'
 import CheckListModal from '@/components/CheckListModal.jsx'
@@ -60,6 +62,7 @@ export default function Board({ id, services, onRemove }) {
   const [dropping, setDropping] = useState(null) // the property whose removal is being confirmed
   const [expanded, setExpanded] = useState(() => new Set()) // keys of the columns showing all their cards
   const [choosing, setChoosing] = useState(null) // the open checklist: 'columns' | 'properties'
+  const [relocating, setRelocating] = useState(false) // picking another folder, its own being gone
   const off = !canEdit || !board || data?.missing
 
   const menu = (
@@ -81,7 +84,7 @@ export default function Board({ id, services, onRemove }) {
   let body
   if (!ready) body = <div className="flex justify-center py-12"><Spinner /></div>
   else if (!board) body = <p className="py-6 text-center text-sm text-muted-foreground">This board's settings can't be read.</p>
-  else if (data.missing) body = <p className="py-6 text-center text-sm text-muted-foreground">Its folder “{board.folder}” is gone.</p>
+  else if (data.missing) body = <EmptyState message={`Its folder “${board.folder}” is gone.`} action={{ label: 'Select folder', icon: <FolderOpen />, onClick: () => setRelocating(true), disabled: !services.canEdit }} />
   else {
     const columns = [...(data.loose.length ? [{ key: LOOSE, name: looseName(board), cards: data.loose }] : []), ...data.columns.filter(c => !board.hidden.includes(c.name))]
     const base = Object.fromEntries(columns.map(c => [c.key, c.cards.map(card => card.path)]))
@@ -246,6 +249,11 @@ export default function Board({ id, services, onRemove }) {
           onConfirm={() => { act.removeProperty(dropping); setDropping(null) }}
           onClose={() => setDropping(null)}
         />
+      )}
+      {relocating && board && (
+        <FolderSheet title="Board from folder…" folders={['', ...services.folders]} onPick={folder => { act.setFolder(folder); return null }} onClose={() => setRelocating(false)}>
+          <p className="text-muted-foreground text-xs">Its files, in subfolders too, become the cards, in a column per status.</p>
+        </FolderSheet>
       )}
       {deleting && (
         <ConfirmModal

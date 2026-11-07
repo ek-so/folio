@@ -7,8 +7,8 @@ import { ListRow } from '@/components/ui/list-row.jsx'
 import { notePath, serializeNotes, isNote } from './note.js'
 
 // Picks a note: found by searching every note in the repo, or New note…, which asks for its folder and name.
-// `onPick(path, first)`: `first` (ch => ch) makes a new note, to apply in the same step.
-export function NotePicker({ services, onPick, onClose }) {
+// `onPick(path, first)`: `first` (ch => ch) makes a new note, to apply in the same step. `title`: the search sheet's.
+export function NotePicker({ services, onPick, onClose, title = 'Add note' }) {
   const { folders, files } = services
   const [step, setStep] = useState('search') // 'search', then for a new note 'folder' and 'name'
   const [folder, setFolder] = useState('') // the new note's folder ('' is the root)
@@ -17,7 +17,7 @@ export function NotePicker({ services, onPick, onClose }) {
 
   if (step === 'search') return (
     <SearchSheet
-      title="Add note"
+      title={title}
       placeholder="Search notes…"
       virtual={all}
       only={isNote}

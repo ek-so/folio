@@ -58,6 +58,8 @@ export function useBoard(id, services) {
     // Every key it could group by: its notes' keys (the grouping one too), by name
     groupKeys: () => [...new Set([board.group, ...notes.propertyKeys()])].sort(),
     // Grouped by the property `key` (its own columns, kept from before); the notes that lack it get it, empty
+    // Another folder (its own is gone), its notes given the grouping property and a description, empty, as at setup
+    setFolder: folder => update(ch => withNoteKeys(write({ ...board, folder })(ch), services.remoteFiles, folder, [board.group, DESCRIPTION], services.remoteText)),
     groupBy: key => update(ch => withNoteKeys(write(groupedBy(board, key))(ch), services.remoteFiles, board.folder, [key], services.remoteText)),
     // The property `from` renamed `to` in every note of the board (and on its cards, and in its settings)
     // (its columns, if it was ever grouped by, follow)

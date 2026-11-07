@@ -63,6 +63,7 @@ Never hardcode colors; use the semantic tokens (light and dark values in `src/in
 - **`Tray`** / **`TrayTitle`** (`ui/tray.jsx`): a tinted box rounded a bit more than cards (`rounded-xl`, 16px; the Properties box too) grouping what's in it under a small title (`grip`: the drag dots): a board's column, a note in the Notes widget (its name as the title). What sits in it is `bg-card`.
 - **`Calendar`** (`ui/calendar.jsx`): shadcn's (`npx shadcn add calendar`, react-day-picker), its icons switched to Phosphor's and `cn` to the project's (keep that when updating it; the CLI also rewrites `ui/button.jsx`, which must be put back). `DatePopover` is shadcn's date picker with time: the Calendar (today marked lightly, since the theme's accent is its blue) and, for a date with a time, a time field under it, for any date (`DateField`: a date badge in a note, a description or a date property).
 - **`Placeholder`** (`ui/placeholder.jsx`): light text for what isn't filled in yet (Untitled, No value).
+- **`EmptyState`** (`components/EmptyState.jsx`): a widget's broken or empty state in its place: a muted message and a secondary button to put it right (Select folder, Select note).
 
 ## Tooltips
 shadcn's (`ui/tooltip.jsx`): dark on light, text-sm, after 300ms (`TooltipProvider` in App), on mouse hover and keyboard focus, never on a tap. The `tooltip` prop of `Button` (`tooltipSide`), `ListRow` and `CardTile` (on the whole row, so a row that can't be opened explains why), or wrap in `Tip`.
