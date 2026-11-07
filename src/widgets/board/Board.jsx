@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { DotsThree, Trash, X, PencilSimple, Tag, Columns, Check, CaretRight, Rows } from '@phosphor-icons/react'
+import { DotsThree, Trash, X, PencilSimple, Tag, Columns, Check, CaretDown, Rows } from '@phosphor-icons/react'
 import {
   DndContext, DragOverlay, MouseSensor, TouchSensor, useSensor, useSensors,
   closestCenter, closestCorners, pointerWithin,
@@ -263,7 +263,7 @@ export default function Board({ id, services, onRemove }) {
   )
 }
 
-// The Columns sheet's Group by: the property the columns come from; it opens a menu on its side of
+// The Columns sheet's Group by: the property the columns come from; it opens a dropdown under it, as wide, of
 // the notes' properties (a new one is added in Properties first), the current one ticked
 function GroupBy({ group, keys, onSelect }) {
   return (
@@ -272,10 +272,10 @@ function GroupBy({ group, keys, onSelect }) {
         <Button variant="outline" className="w-full justify-start gap-3 font-normal">
           <Rows /> Group by
           <span className="ml-auto truncate text-muted-foreground">{group}</span>
-          <CaretRight className="text-muted-foreground" />
+          <CaretDown className="text-muted-foreground" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent side="right" align="start" onCloseAutoFocus={e => e.preventDefault()}>
+      <DropdownMenuContent side="bottom" align="start" className="w-(--radix-dropdown-menu-trigger-width)" onCloseAutoFocus={e => e.preventDefault()}>
         {keys.map(k => (
           <DropdownMenuItem key={k} disabled={k === group} onSelect={() => onSelect(k)}>
             {k === group ? <Check /> : <span className="size-4" />} {k}
