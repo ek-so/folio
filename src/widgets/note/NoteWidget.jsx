@@ -20,8 +20,8 @@ import { notePath, parseNotes, serializeNotes, notesHeight, resizedNotes, addedN
 import { NotePicker } from './NoteSetup.jsx'
 
 // The notes widget (note.js): "Notes" and its ⋯ (Add note…, Edit notes…: order them and take them out, Remove widget)
-// on top, then each note in a grey tray like a board's column, side by side, at least 320px wide (narrower, they wrap
-// onto the next line): its name, Full screen, Edit (✓ when done) and its own ⋯ (Rename note, Remove from widget),
+// on top, then each note in a grey tray like a board's column, in a grid of two equal columns (one on phones; an odd
+// last note keeps its column's width): its name, Full screen, Edit (✓ when done) and its own ⋯ (Rename note, Remove from widget),
 // then its text in a box that scrolls inside; all boxes are one height (resizable on desktop by one handle under them, edge to edge).
 // A double tap edits at the tapped word. Edits save on their own, like on the note's own page; opening one full
 // screen is opening the note, as a board's card does. Taking a note out of the widget keeps the note.
@@ -48,7 +48,7 @@ export default function NoteWidget({ id, services, onRemove }) {
     : !settings ? message("This notes widget's settings can't be read.")
     : !settings.notes.length ? message('No notes yet. Add one from ⋯.')
     : (
-      <div className="relative flex flex-wrap items-start gap-space-sm">
+      <div className="relative grid grid-cols-1 items-start gap-space-sm md:grid-cols-2">
         {settings.notes.map(entry => (
           <NoteTray
             key={`${entry.file}:${services.discards}`} path={entry.file} services={services} height={dragged ?? height}
@@ -121,7 +121,7 @@ function NoteTray({ path, services, height, onTakeOut, onReplace }) {
   const item = { name: path.slice(path.lastIndexOf('/') + 1), path, type: 'file' }
   const open = () => { window.dispatchEvent(new Event('folio:flush')); services.openFile(path) } // typing first
   const tray = (actions, body) => (
-    <Tray className="min-w-0 flex-[1_1_20rem]">
+    <Tray className="min-w-0">
       <div className="flex items-center gap-1">
         <div className="min-w-0 flex-1"><TrayTitle>{displayName(path)}</TrayTitle></div>
         {found && <Button variant="ghost" size="icon" aria-label="Full screen" tooltip="Full screen" className={TRAY_BUTTON} onClick={open}><ArrowsOut /></Button>}
