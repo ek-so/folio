@@ -1,4 +1,4 @@
-import { properties, noteTitle } from '@/lib/frontmatter.js'
+import { properties, noteTitle, DESCRIPTION } from '@/lib/frontmatter.js'
 import { valueDate } from '@/lib/markdown.js'
 import { parseRecurrence, nextOccurrence } from './recurrence.js'
 
@@ -16,6 +16,8 @@ export const DATE = 'date'
 export const REPEAT = 'repeat'
 // The properties every card of a planner has
 export const FIXED = [DATE, REPEAT]
+// The order a card's properties come in, in its file, on the card and on its page: these first, then the rest
+export const ORDER = [DESCRIPTION, DATE, REPEAT]
 
 const strings = list => Array.isArray(list) ? list.filter(s => typeof s === 'string' && !FIXED.includes(s)) : []
 

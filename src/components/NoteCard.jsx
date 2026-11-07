@@ -26,9 +26,12 @@ export const cardClick = (path, files, onOpen, onOpenFolder) => e => {
 // the badges in it are buttons
 const NoteCard = forwardRef(function NoteCard({ path, text, properties, always = [], scopeName, files, menu, onChange, options, onRemoveValue, valueCount, chosen, onEditValue, dateKeys, badges, className, ...props }, ref) {
   const fm = text === undefined ? [] : frontMatter(text)?.props ?? []
-  // `always` first, in that order (a planner's date, then its type), shown empty when the note lacks one; the rest in the file's order
+  // With `always` (a planner's date and repeat): the description first, then those in that order (shown empty when the
+  // note lacks one), then the rest in the file's order; without, all in the file's order
+  const description = always.length ? fm.filter(p => p.key === DESCRIPTION) : []
   const first = text === undefined ? [] : always.map(key => fm.find(p => p.key === key) ?? { key, value: '' })
-  const shown = [...first, ...fm.filter(p => !always.includes(p.key) && (p.key === DESCRIPTION || properties.includes(p.key)))]
+  const rest = fm.filter(p => !always.includes(p.key) && !description.includes(p) && (p.key === DESCRIPTION || properties.includes(p.key)))
+  const shown = [...description, ...first, ...rest]
   return (
     <div
       ref={ref}

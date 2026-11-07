@@ -88,6 +88,28 @@ export function valueColors(key, values, chosen = {}) {
 // A property's value as the strings to show (empty ones left out)
 export const valueList = value => (Array.isArray(value) ? value : [value]).filter(v => v !== '' && v != null)
 
+// `text` with the properties `keys` it has moved to the top of its front matter, in that order (each with its
+// `- item` lines); the other lines keep their order below them. Text without front matter is returned as it is.
+export function withKeysFirst(text, keys) {
+  const fm = frontMatter(text)
+  if (!fm) return text
+  const start = text.match(OPEN)[0].length
+  const lines = text.slice(start, fm.close).split('\n')
+  if (lines.at(-1) === '') lines.pop() // the line break before the closing line
+  const blocks = [] // [{ key, lines }]; lines before the first key stay first
+  for (const line of lines) {
+    const m = line.match(KEY)
+    if (m && !ITEM.test(line)) blocks.push({ key: m[1].trim(), lines: [line] })
+    else if (blocks.length) blocks.at(-1).lines.push(line)
+    else blocks.push({ key: null, lines: [line] })
+  }
+  const lead = blocks.filter(b => b.key === null)
+  const first = keys.flatMap(k => blocks.filter(b => b.key === k))
+  const rest = blocks.filter(b => b.key !== null && !keys.includes(b.key))
+  const body = [...lead, ...first, ...rest].flatMap(b => b.lines).join('\n')
+  return text.slice(0, start) + body + (body ? '\n' : '') + text.slice(fm.close)
+}
+
 // `text` with every key of `keys` it doesn't have yet, empty, at the end of its
 // front matter (a block is added on top when it has none). The rest is untouched.
 export function withKeys(text, keys) {

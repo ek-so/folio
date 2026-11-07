@@ -1,7 +1,14 @@
 import { describe, it, expect } from 'vitest'
-import { frontMatter, properties, withKeys, blankFrontMatter, valueList, noteTitle, withoutKeys, renameKey, keyNameError, withValue, valuesOf, valueColors, withoutValue, countValue, renameValue, withTitle, valueActions, copyTitled } from './frontmatter.js'
+import { frontMatter, properties, withKeys, withKeysFirst, blankFrontMatter, valueList, noteTitle, withoutKeys, renameKey, keyNameError, withValue, valuesOf, valueColors, withoutValue, countValue, renameValue, withTitle, valueActions, copyTitled } from './frontmatter.js'
 
 describe('front matter', () => {
+  it('moves some properties to the top, in order', () => {
+    const text = '---\npriority: high\ntags:\n  - a\n  - b\ndate: 4 Nov 2026\ndescription: Hi\n---\n# T\n'
+    expect(withKeysFirst(text, ['description', 'date', 'repeat'])).toBe('---\ndescription: Hi\ndate: 4 Nov 2026\npriority: high\ntags:\n  - a\n  - b\n---\n# T\n')
+    expect(withKeysFirst('# no front matter\n', ['date'])).toBe('# no front matter\n')
+    expect(withKeysFirst('---\n---\n', ['date'])).toBe('---\n---\n')
+  })
+
   it('reads flat keys, lists and quoted values', () => {
     const text = '---\nstatus: In progress\ntags: [a, "b"]\nowners:\n  - Ann\n  - Bo\ndescription:\ntitle: "x: y"\n---\n# Note\n'
     expect(properties(text)).toEqual({ status: 'In progress', tags: ['a', 'b'], owners: ['Ann', 'Bo'], description: '', title: 'x: y' })

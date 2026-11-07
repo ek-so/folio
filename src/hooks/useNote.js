@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { toast } from 'sonner'
 import { getBlob } from '../lib/github.js'
 import { withFixedDates } from '../lib/markdown.js'
-import { withKeys } from '../lib/frontmatter.js'
+import { withKeys, withKeysFirst } from '../lib/frontmatter.js'
 
 const SAVE_DELAY_MS = 400
 
@@ -13,9 +13,10 @@ const fetchOriginal = sha => sha === null ? Promise.resolve('') : getBlob(sha)
 // onEdit(content, original) after a pause, on close, before a reload and
 // before Sync. Mount once per note. `beginEdit()` and `endEdit()` frame a time in the editor: when it
 // ends, or the note closes before it does, every date in the note is written in one form
-// (`withFixedDates`) and, when the text was changed, the properties `required` (a planner's date and repeat) it lacks come back, empty;
+// (`withFixedDates`) and, when the text was changed, the properties `required` (a planner's date and repeat) it lacks come back, empty
+// (put in `order`, a planner's: description, date, repeat on top);
 // closing the tab saves the typing as it is.
-export function useNote(entry, edited, onEdit, required) {
+export function useNote(entry, edited, onEdit, required, order) {
   const [content, setContent] = useState('')
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState(false)
@@ -28,6 +29,8 @@ export function useNote(entry, edited, onEdit, required) {
   const shaRef = useRef(entry.sha)
   const requiredRef = useRef(required)
   requiredRef.current = required
+  const orderRef = useRef(order)
+  orderRef.current = order
 
   useEffect(() => { onEditRef.current = onEdit }, [onEdit])
 
@@ -92,7 +95,9 @@ export function useNote(entry, edited, onEdit, required) {
     if (!editingRef.current || latest === null) return latest
     try {
       const dated = withFixedDates(latest)
-      return requiredRef.current?.length && latest !== startRef.current ? withKeys(dated, requiredRef.current) : dated
+      if (!requiredRef.current?.length || latest === startRef.current) return dated
+      const kept = withKeys(dated, requiredRef.current)
+      return kept !== dated && orderRef.current?.length ? withKeysFirst(kept, orderRef.current) : kept
     } catch (error) {
       console.error(error)
       toast.error("The dates couldn't be formatted. The note is saved as typed.")

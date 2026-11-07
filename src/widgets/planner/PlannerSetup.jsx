@@ -1,9 +1,9 @@
 import FolderSheet from '@/components/FolderSheet.jsx'
-import { plannerPath, serializePlanner, newPlanner, FIXED } from './planner.js'
-import { withNoteKeys } from '@/lib/folderNotes.js'
-import { DESCRIPTION } from '@/lib/frontmatter.js'
+import { plannerPath, serializePlanner, newPlanner, ORDER } from './planner.js'
+import { editNotes } from '@/lib/folderNotes.js'
+import { withKeys, withKeysFirst } from '@/lib/frontmatter.js'
 
-// A new planner: pick its folder. Its notes get a date and a description, empty, if they lack them.
+// A new planner: pick its folder. Its notes get a description, date and repeat, empty, if they lack them, and have them on top in that order (ORDER).
 export default function PlannerSetup({ services, onCreate, onClose }) {
   const { config, folders, remoteFiles, remoteText } = services
   return (
@@ -11,7 +11,7 @@ export default function PlannerSetup({ services, onCreate, onClose }) {
       title="Planner from folder…"
       folders={['', ...folders]}
       onPick={folder => {
-        onCreate(id => ch => withNoteKeys(config.write(plannerPath(id), serializePlanner(newPlanner(folder)))(ch), remoteFiles, folder, [...FIXED, DESCRIPTION], remoteText))
+        onCreate(id => ch => editNotes(config.write(plannerPath(id), serializePlanner(newPlanner(folder)))(ch), remoteFiles, folder, t => withKeysFirst(withKeys(t, ORDER), ORDER), remoteText))
         return null
       }}
       onClose={onClose}

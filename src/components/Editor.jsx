@@ -17,7 +17,7 @@ import PropertyBadges from './PropertyBadges.jsx'
 // starting where you were reading, and a double tap starts at the tapped
 // word. Edits save on their own; ✓ (same spot) switches back to preview, writing typed dates in one format.
 export default function Editor({ linkedBy, onOpenLink, path, entry, files, notes, onEditNotes, tagColors, edited, onEdit, onNavigate, onOpenFile, onRename, onDuplicate, onDelete, onMove, folders, columns, valueScope, backlinks }) {
-  const { content, change, loading, loadError, beginEdit, endEdit } = useNote(entry, edited, onEdit, valueScope?.required)
+  const { content, change, loading, loadError, beginEdit, endEdit } = useNote(entry, edited, onEdit, valueScope?.required, valueScope?.order)
   const [mode, setMode] = useState('preview')
   const [editedAt, setEditedAt] = useState(null) // offset to show when back in preview
   const textareaRef = useRef()
@@ -101,15 +101,15 @@ export default function Editor({ linkedBy, onOpenLink, path, entry, files, notes
           onDoubleTap={startEditing} onChange={change} onOpenFile={onOpenFile} onNavigate={onNavigate}
           footer={<Backlinks links={backlinks} onOpen={onOpenFile} />}
         >
-          <PropertyBadges props={lockedFirst(frontMatter(content)?.props ?? [], valueScope?.locked)} path={path} files={files} title="Properties" onChange={(key, value) => change(withValue(content, key, value))} options={values.options} onRemoveValue={values.removeValue} valueCount={values.count} scopeName={valueScope?.name ?? "this folder"} chosen={tagColors.colors} onEditValue={tagColors.canEdit ? values.editValue : undefined} badges={valueScope?.badges} className="px-space pt-space" />
+          <PropertyBadges props={ordered(frontMatter(content)?.props ?? [], valueScope?.order)} path={path} files={files} title="Properties" onChange={(key, value) => change(withValue(content, key, value))} options={values.options} onRemoveValue={values.removeValue} valueCount={values.count} scopeName={valueScope?.name ?? "this folder"} chosen={tagColors.colors} onEditValue={tagColors.canEdit ? values.editValue : undefined} badges={valueScope?.badges} className="px-space pt-space" />
         </MarkdownPreview>
       )}
     </FilePage>
   )
 }
 
-// A note's properties with the `locked` ones first, in that order (a planner's date, then its type), the rest as in the file
-function lockedFirst(props, locked = []) {
-  const first = locked.map(k => props.find(p => p.key === k)).filter(Boolean)
-  return [...first, ...props.filter(p => !locked.includes(p.key))]
+// A note's properties with the `order` ones first, in that order (a planner's description, date, repeat), the rest as in the file
+function ordered(props, order = []) {
+  const first = order.map(k => props.find(p => p.key === k)).filter(Boolean)
+  return [...first, ...props.filter(p => !order.includes(p.key))]
 }

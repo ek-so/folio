@@ -1,8 +1,8 @@
 import { useMemo } from 'react'
-import { plannerPath, parsePlanner, serializePlanner, keyDay, droppedDate, doneNext, DATE, REPEAT, FIXED } from './planner.js'
+import { plannerPath, parsePlanner, serializePlanner, keyDay, droppedDate, doneNext, DATE, REPEAT, ORDER } from './planner.js'
 import { ONE_TIME } from './recurrence.js'
 import { formatDate } from '@/lib/dates.js'
-import { DESCRIPTION, properties } from '@/lib/frontmatter.js'
+import { properties } from '@/lib/frontmatter.js'
 import { markedDone } from '@/lib/archive.js'
 import { withNoteKeys } from '@/lib/folderNotes.js'
 import { useFolderNotes } from '@/hooks/useFolderNotes.js'
@@ -25,8 +25,8 @@ export function usePlanner(id, services) {
     missing: !!planner && planner.folder !== '' && !folders.includes(planner.folder),
     ...notes,
     cards,
-    // A new card on the day `key`: its date is that day, its repeat one-time, and it starts with the planner's properties, empty; the planner stays open
-    newCard: key => services.newNote(planner.folder, { keys: [...FIXED, DESCRIPTION, ...planner.properties], values: { [DATE]: formatDate(keyDay(key)), [REPEAT]: ONE_TIME }, stay: true, titled: true }),
+    // A new card on the day `key`: its description (empty), date (that day) and repeat (one-time), then the planner's properties, empty; the planner stays open
+    newCard: key => services.newNote(planner.folder, { keys: [...ORDER, ...planner.properties], values: { [DATE]: formatDate(keyDay(key)), [REPEAT]: ONE_TIME }, stay: true, titled: true }),
     // Mark as done on `today` (a key): a repeating card moves on to its next time (doneNext; its time of day kept); any other,
     // or one past its last time, gets `status: done` and today as `archived` and moves into .archive/ (lib/archive.js).
     // { next: the day it moved to, or null when archived, undo() }, or null when the note isn't on this device
