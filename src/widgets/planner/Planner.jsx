@@ -270,7 +270,7 @@ function Ribbon({ days, today, selected, count, onSelect }) {
     <div className="flex w-max items-center">
       {days.map((key, i) => (
         <Fragment key={key}>
-          {i > 0 && keyDay(key).day === 1 && <Separator orientation="vertical" className="mx-1 data-[orientation=vertical]:h-10" />}
+          {i > 0 && keyDay(key).day === 1 && <Separator orientation="vertical" className="mx-1 data-[orientation=vertical]:h-12" />}
           <Day dayKey={key} today={key === today} selected={key === selected} count={count(key)} onSelect={onSelect} />
         </Fragment>
       ))}
