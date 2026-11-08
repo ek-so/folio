@@ -52,3 +52,29 @@ export const movedIcons = movedMap
 
 // `icons` without the file or folder (`isDir`) at `path`, deleted: a new one there starts with its type icon
 export const removedIcons = removedMap
+
+// The files and folders among `paths` (files' paths) whose own name starts with an emoji that can leave it, shallowest
+// first: [{ path, name, type, emoji, to }], `to` the path without it (the archive and .folio are left alone; a name that
+// would be nothing, or hidden, once the emoji is gone stays). App's `moveEmojisToIcons` uses it to move those emojis to the icons.
+export function emojiNamed(paths) {
+  const folders = new Set()
+  for (const p of paths) {
+    const parts = p.split('/')
+    for (let i = 1; i < parts.length; i++) folders.add(parts.slice(0, i).join('/'))
+  }
+  const named = [...[...paths].map(path => ({ path, type: 'file' })), ...[...folders].map(path => ({ path, type: 'dir' }))]
+  return named
+    .filter(({ path }) => !path.startsWith('.folio') && !path.startsWith('.archive') && !path.split('/').some(s => s.startsWith('.') && s !== ''))
+    .map(({ path, type }) => {
+      const slash = path.lastIndexOf('/') + 1
+      const name = path.slice(slash)
+      const stripped = withoutEmoji(name)
+      return { path, name, type, emoji: leadingEmoji(name), to: path.slice(0, slash) + stripped, ok: stripped !== name && !stripped.startsWith('.') }
+    })
+    .filter(e => e.emoji && e.ok)
+    .map(({ path, name, type, emoji, to }) => ({ path, name, type, emoji, to }))
+    .sort((a, b) => a.path.split('/').length - b.path.split('/').length || a.path.localeCompare(b.path))
+}
+
+// `icons` with `emoji` for `path` unless it already has an icon of its own chosen
+export const withAdoptedIcon = (icons, path, emoji) => Object.hasOwn(icons, path) ? icons : { ...icons, [path]: emoji }

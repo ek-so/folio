@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { searchEmojis } from './emojis.js'
-import { parseIcons, serializeIcons, leadingEmoji, withoutEmoji, iconOf, withIcon, movedIcons, removedIcons } from './icons.js'
+import { emojiNamed, withAdoptedIcon, parseIcons, serializeIcons, leadingEmoji, withoutEmoji, iconOf, withIcon, movedIcons, removedIcons } from './icons.js'
 
 describe('icons', () => {
   it('reads its file, none, or nothing from bad text', () => {
@@ -43,5 +43,21 @@ describe('icons', () => {
     expect(searchEmojis('hom')).toEqual(['🏠'])
     expect(searchEmojis('coffee')).toEqual(['☕'])
     expect(searchEmojis('xyz')).toEqual([])
+  })
+
+  it('finds the names an emoji can leave, shallowest first', () => {
+    const found = emojiNamed(['🌱 Life/📝 Plan.md', 'Life/a.md', '📝.md', '🌱 Life/.gitkeep', '.archive/📝 x.md', '.folio/🔥.json', '🔥 Hot/b.md'])
+    expect(found.map(e => [e.path, e.to, e.type])).toEqual([
+      ['🌱 Life', 'Life', 'dir'],
+      ['🔥 Hot', 'Hot', 'dir'],
+      ['🌱 Life/📝 Plan.md', '🌱 Life/Plan.md', 'file'],
+    ])
+    expect(found[0].emoji).toBe('🌱')
+  })
+
+  it('adopts a name\'s emoji unless an icon is chosen', () => {
+    expect(withAdoptedIcon({}, 'Life', '🌱')).toEqual({ Life: '🌱' })
+    expect(withAdoptedIcon({ Life: '⭐' }, 'Life', '🌱')).toEqual({ Life: '⭐' })
+    expect(withAdoptedIcon({ Life: '' }, 'Life', '🌱')).toEqual({ Life: '' })
   })
 })

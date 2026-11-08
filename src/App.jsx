@@ -38,6 +38,7 @@ import { useConfig } from './hooks/useConfig.js'
 import { useTagColors } from './hooks/useTagColors.js'
 import { useLocks } from './hooks/useLocks.js'
 import { useIcons, IconsContext } from './hooks/useIcons.js'
+import { emojiNamed } from './lib/icons.js'
 import ViewPage from './components/ViewPage.jsx'
 import RenameModal from './components/RenameModal.jsx'
 import DeleteModal from './components/DeleteModal.jsx'
@@ -262,6 +263,28 @@ export default function App() {
     let to = wanted
     for (let n = 2; renameError(ch, filesOf(ch), item, to); n++) to = `${wanted.slice(0, slash)}${stem} ${n}${ext}`
     return to
+  }
+
+  // Every file and folder whose name starts with an emoji loses it, and the emoji becomes its icon (lib/icons.js
+  // `emojiNamed`), in one step: shallowest first (a folder's files follow it), a taken name gets a number, links are
+  // rewritten like any rename, and a chosen icon is kept. Trails follow the renames.
+  const emojiNames = useMemo(() => emojiNamed(Object.keys(shown)), [shown])
+  function moveEmojisToIcons() {
+    window.dispatchEvent(new Event('folio:flush'))
+    const moves = []
+    update(ch => {
+      let next = ch
+      for (let guard = 0; guard < 10000; guard++) {
+        const item = emojiNamed(Object.keys(filesOf(next)).filter(p => !isConfigPath(p)))[0]
+        if (!item) break
+        const to = freeTarget(next, item, item.to)
+        next = icons.adopt(to, item.emoji)(relocated(next, item, to))
+        moves.push([item.path, to])
+      }
+      return next
+    })
+    followTrails(moves.reduce((t, [from, to]) => movedTrails(t, from, to), trails))
+    toast.success(`Moved ${plural(moves.length, 'emoji')} from names to icons`)
   }
 
   // Rename or move `item` to path `to`; the open folder / note follows it
@@ -725,7 +748,7 @@ export default function App() {
           <main ref={mainRef} className="flex flex-col flex-1 min-w-0 min-h-0">
           <TopBar host={mainRef} resetKey={`${page}|${selectedFile}|${folder}`} page={page} pages={pages} viewActions={viewActions} onPage={choosePage} onSearch={() => setSearchOpen(true)} renderSync={renderSync} menu={menu} />
           {page === PAGE.SETTINGS ? (
-            <Settings login={auth.user.login} repo={auth.repo} theme={theme} onTheme={setTheme} />
+            <Settings login={auth.user.login} repo={auth.repo} theme={theme} onTheme={setTheme} emojiNames={icons.canEdit ? { count: emojiNames.length, onMove: moveEmojisToIcons } : null} />
           ) : page === PAGE.DOCS ? (
             <Documentation />
           ) : page === PAGE.ASSETS ? (
