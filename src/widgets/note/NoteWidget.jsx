@@ -13,6 +13,7 @@ import { NO_CALLOUT } from '@/components/NoteCard.jsx'
 import { cn } from '@/lib/utils.js'
 import { useNote } from '@/hooks/useNote.js'
 import { displayName } from '@/lib/files.js'
+import { fileItem } from '@/lib/folderNotes.js'
 import ResizeHandle from '@/components/ResizeHandle.jsx'
 import { Tray, TrayTitle, TRAY_BUTTON } from '@/components/ui/tray.jsx'
 import { NOTE_HEIGHT, clampSize } from '@/lib/resize.js'
@@ -118,7 +119,7 @@ function NoteTray({ path, services, height, onTakeOut, onReplace }) {
   const found = services.noteFile(path)
   const [renaming, setRenaming] = useState(false)
   const [replacing, setReplacing] = useState(false) // picking a note in place of this one, which is gone
-  const item = { name: path.slice(path.lastIndexOf('/') + 1), path, type: 'file' }
+  const item = fileItem(path)
   const open = () => { window.dispatchEvent(new Event('folio:flush')); services.openFile(path) } // typing first
   const tray = body => (
     <Tray className="min-w-0">

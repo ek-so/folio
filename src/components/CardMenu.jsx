@@ -10,6 +10,22 @@ import RenameModal from '@/components/RenameModal.jsx'
 import { copyText } from '@/lib/clipboard.js'
 import { repoLink } from '@/lib/markdown.js'
 import { own } from '@/lib/utils.js'
+import { fileItem, cardTitle } from '@/lib/folderNotes.js'
+import { properties, valueList, DESCRIPTION } from '@/lib/frontmatter.js'
+
+// The CardMenu props every widget's card gives the same way (a board's, a planner's): its title and description, and
+// editing them (`act`: the widget's useFolderNotes actions), renaming, duplicating (`services`: the app's) and removing it.
+// `text`: its note (undefined when it isn't on this device). The widget adds its own (Mark as done, Move to column)
+export const cardActions = (path, text, act, services) => ({
+  path,
+  title: cardTitle(path, text),
+  onTitle: act.canTitle(path) ? title => act.setTitle(path, title) : undefined,
+  description: text === undefined ? '' : valueList(properties(text)[DESCRIPTION] ?? '').join(', '),
+  onDescription: act.canTitle(path) ? value => act.setDescription(path, value) : undefined,
+  onRename: name => services.rename(fileItem(path), name),
+  onDuplicate: () => services.duplicate(fileItem(path)),
+  onDelete: () => act.deleteCard(path),
+})
 
 // A card's ⋯ menu, a board's and a planner's (hidden until the card is hovered with a mouse, always shown on touch):
 // Mark as done (only with `onDone`, a planner's), Edit title (the card's title, not the file's name; only with `onTitle`: a note on this device), Add / Edit
@@ -21,7 +37,7 @@ import { own } from '@/lib/utils.js'
 export default function CardMenu({ path, title, description, columns, column, onDone, onTitle, onDescription, onRename, onDuplicate, onMove, onEditColumns, onDelete }) {
   const [editing, setEditing] = useState(null) // 'title' | 'description' while its dialog is open
   const [renaming, setRenaming] = useState(false)
-  const item = { name: path.slice(path.lastIndexOf('/') + 1), path, type: 'file' }
+  const item = fileItem(path)
   const [deleting, setDeleting] = useState(false)
   return (
     <div className="contents" {...own}>

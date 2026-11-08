@@ -316,7 +316,7 @@ export default function App() {
     update(ch => {
       let next = ch
       for (const [path, folder] of targets) {
-        const item = { path, name: path.slice(path.lastIndexOf('/') + 1), type: 'file' }
+        const item = fileItem(path)
         const [stem, ext] = splitName(item.name)
         const dir = folder ? folder + '/' : ''
         let to = dir + item.name

@@ -17,10 +17,8 @@ import FolderSheet from '@/components/FolderSheet.jsx'
 import RenameModal from '@/components/RenameModal.jsx'
 import ConfirmModal from '@/components/ConfirmModal.jsx'
 import CheckListModal from '@/components/CheckListModal.jsx'
-import CardMenu from '@/components/CardMenu.jsx'
+import CardMenu, { cardActions } from '@/components/CardMenu.jsx'
 import NoteCard, { NO_CALLOUT, ownListeners, cardClick } from '@/components/NoteCard.jsx'
-import { displayName } from '@/lib/files.js'
-import { noteTitle, properties, valueList, DESCRIPTION } from '@/lib/frontmatter.js'
 import { LOOSE, looseName } from './board.js'
 import { KEEP_DAYS } from '@/lib/archive.js'
 import { useBoard } from './useBoard.js'
@@ -128,17 +126,10 @@ export default function Board({ id, services, onRemove }) {
     const moveToColumn = (path, key) => act.placeCard(path, key, items[key].filter(p => p !== path).length)
     const cardMenu = path => off ? undefined : (
       <CardMenu
-        path={path}
-        title={notes[path] === undefined ? displayName(path) : noteTitle(notes[path], displayName(path))}
+        {...cardActions(path, notes[path], act, services)}
         columns={columns} column={columnOf(path)}
-        onTitle={act.canTitle(path) ? title => act.setTitle(path, title) : undefined}
-        description={notes[path] === undefined ? '' : valueList(properties(notes[path])[DESCRIPTION] ?? '').join(', ')}
-        onDescription={act.canTitle(path) ? text => act.setDescription(path, text) : undefined}
-        onRename={name => services.rename({ name: path.slice(path.lastIndexOf('/') + 1), path, type: 'file' }, name)}
-        onDuplicate={() => services.duplicate({ name: path.slice(path.lastIndexOf('/') + 1), path, type: 'file' })}
         onMove={key => moveToColumn(path, key)}
         onEditColumns={() => setChoosing('columns')}
-        onDelete={() => act.deleteCard(path)}
       />
     )
     const byPath = Object.fromEntries(columns.flatMap(c => c.cards.map(card => [card.path, card])))

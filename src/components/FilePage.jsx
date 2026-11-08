@@ -1,3 +1,4 @@
+import { fileItem } from '../lib/folderNotes.js'
 import ItemMenu from './ItemMenu.jsx'
 import PageLayout from './PageLayout.jsx'
 import Surface from './Surface.jsx'
@@ -16,7 +17,7 @@ export default function FilePage({ linkedBy, onOpenLink, path, name, changed, on
           changed={changed}
           badge={<SymlinkedBy links={linkedBy} onOpen={onOpenLink} />}
         >
-          <ItemMenu item={{ name: path.split('/').pop(), path, type: 'file' }} onRename={onRename} onDuplicate={onDuplicate} onDelete={onDelete} onMove={onMove} folders={folders} columns={columns} />
+          <ItemMenu item={fileItem(path)} onRename={onRename} onDuplicate={onDuplicate} onDelete={onDelete} onMove={onMove} folders={folders} columns={columns} />
           {actions}
         </TitleBar>
       }>

@@ -10,7 +10,7 @@ import { ListRow } from '@/components/ui/list-row.jsx'
 import { Tray, TrayTitle, TrayFooter, TRAY_BUTTON, TRAY_ROW } from '@/components/ui/tray.jsx'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu.jsx'
 import NoteCard, { NO_CALLOUT, ownListeners, cardClick } from '@/components/NoteCard.jsx'
-import CardMenu from '@/components/CardMenu.jsx'
+import CardMenu, { cardActions } from '@/components/CardMenu.jsx'
 import CheckListModal from '@/components/CheckListModal.jsx'
 import ConfirmModal from '@/components/ConfirmModal.jsx'
 import Spinner from '@/components/Spinner.jsx'
@@ -19,9 +19,9 @@ import FolderSheet from '@/components/FolderSheet.jsx'
 import DatePopover from '@/components/DatePopover.jsx'
 import { shownCards, hiddenCards, shownLimit } from '@/lib/trayCards.js'
 import { useGridColumns } from '@/hooks/useGridColumns.js'
-import { displayName } from '@/lib/files.js'
+import { cardTitle } from '@/lib/folderNotes.js'
 import { formatDate } from '@/lib/dates.js'
-import { noteTitle, properties, valueList, DESCRIPTION } from '@/lib/frontmatter.js'
+import { properties } from '@/lib/frontmatter.js'
 import { DATE, REPEAT, FIXED, listed, plan, addDays, daysBetween, dayOffsets, dayAt, keyDay, dayKey, cardDate, dateValue, droppedDate, monthLabel } from './planner.js'
 import { usePlanner } from './usePlanner.js'
 import { useToday } from './useToday.js'
@@ -152,7 +152,7 @@ export default function Planner({ id, services, onRemove }) {
     const list = arranged.on(selected)
     const shown = [...FIXED, ...planner.properties]
     // Mark as done (usePlanner), told in a toast with Undo: a repeating card moved on, any other archived
-    const titleOf = path => notes[path] === undefined ? displayName(path) : noteTitle(notes[path], displayName(path))
+    const titleOf = path => cardTitle(path, notes[path])
     // "Yoga moved to tomorrow, Sunday" (`key`: its new day; null: it has no date now), with Undo
     const toastMoved = (path, key, undo) => toast.success(
       key ? `${titleOf(path)} moved to ${shortTitle(key, today).replace(/^[A-Z][a-z]+,/, m => m.toLowerCase())}` : `${titleOf(path)} has no date now`,
@@ -173,17 +173,7 @@ export default function Planner({ id, services, onRemove }) {
       if (day !== (before && dayKey(before))) toastMoved(path, day, () => act.setProperty(path, DATE, old ?? ''))
     }
     const cardMenu = path => off ? undefined : (
-      <CardMenu
-        path={path}
-        title={notes[path] === undefined ? displayName(path) : noteTitle(notes[path], displayName(path))}
-        onTitle={act.canTitle(path) ? title => act.setTitle(path, title) : undefined}
-        description={notes[path] === undefined ? '' : valueList(properties(notes[path])[DESCRIPTION] ?? '').join(', ')}
-        onDescription={act.canTitle(path) ? text => act.setDescription(path, text) : undefined}
-        onRename={name => services.rename({ name: path.slice(path.lastIndexOf('/') + 1), path, type: 'file' }, name)}
-        onDuplicate={() => services.duplicate({ name: path.slice(path.lastIndexOf('/') + 1), path, type: 'file' })}
-        onDone={() => markDone(path)}
-        onDelete={() => act.deleteCard(path)}
-      />
+      <CardMenu {...cardActions(path, notes[path], act, services)} onDone={() => markDone(path)} />
     )
     const cardProps = path => ({
       path, text: notes[path], properties: shown, always: FIXED, dateKeys: [DATE], badges: BADGES, scopeName: 'this planner', files,
@@ -393,7 +383,6 @@ function Day({ dayKey: key, today, selected, count, onSelect }) {
 // calendar with a dot for one-time), its title, its date (and repeat) under it, its ⋯; it opens the note. `dashed`:
 // listed under Today because it has no date or is late
 function TaskRow({ path, text, dashed, menu, onOpen }) {
-  const name = displayName(path)
   const date = text === undefined ? null : cardDate(text)
   const repeat = text === undefined ? '' : properties(text)[REPEAT]
   const repeats = parseRecurrence(repeat)?.kind === 'repeat' // "recurring" without a rule is done like a one-time card
@@ -401,7 +390,7 @@ function TaskRow({ path, text, dashed, menu, onOpen }) {
   return (
     <ListRow
       icon={<Icon className={cn('size-4', repeats ? 'text-primary' : 'text-muted-foreground')} />}
-      title={text === undefined ? name : noteTitle(text, name)}
+      title={cardTitle(path, text)}
       description={`${date ? formatDate(date) : 'No date'}${repeats || parseRecurrence(repeat)?.kind === 'unset' ? ` · ${repeatLabel(repeat)}` : ''}`}
       trailing={menu}
       onClick={() => onOpen(path)}
