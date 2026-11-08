@@ -3,6 +3,7 @@ import { List, SidebarSimple, MagnifyingGlass, LinkBreak, BookOpen, Gear, SignOu
 import { cn } from '@/lib/utils.js'
 import { Button } from './ui/button.jsx'
 import { Separator } from './ui/separator.jsx'
+import { SELECTED } from './ui/list-row.jsx'
 import AccountMenu from './AccountMenu.jsx'
 import { PAGE } from '../lib/pages.js'
 import { storage } from '../lib/storage.js'
@@ -14,8 +15,6 @@ import AppLogo from './AppLogo.jsx'
 import ViewMenu from './ViewMenu.jsx'
 import PageTitle from './PageTitle.jsx'
 
-// The open page's button: light accent fill, accent text
-const ACTIVE = 'bg-primary/15 text-primary-ink hover:bg-primary/20 hover:text-primary-ink'
 
 // The app's primary navigation, in place of a header. `menu`: brokenCount and
 // onSignOut; `page` the open page; `renderSync(compact, bar)` makes the SyncButton (`bar`: the phone's top bar).
@@ -36,7 +35,7 @@ export function NavRail({ page, pages, hrefOf, viewActions, onPage, onSearch, re
   const [collapsed, setCollapsed] = useState(storage.getRailCollapsed)
   const [width, resize] = useResizableWidth(RAIL_WIDTH, storage.getRailWidth, storage.setRailWidth)
   const toggle = () => { setCollapsed(!collapsed); storage.setRailCollapsed(!collapsed) }
-  const item = id => cn('justify-start gap-3 font-normal', collapsed && 'size-control justify-center px-0', page === id && ACTIVE)
+  const item = id => cn('justify-start gap-3 font-normal', collapsed && 'size-control justify-center px-0', page === id && SELECTED)
   // A rail button: icon, and its label unless collapsed (then the label is the tooltip)
   const label = text => collapsed ? <span className="sr-only">{text}</span> : text
   const hint = text => collapsed ? text : undefined

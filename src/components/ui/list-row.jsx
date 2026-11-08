@@ -7,11 +7,14 @@ import { Button } from './button.jsx'
 // open. The row's own button holds `icon` (left), `title` and an optional
 // `description` (a second, muted line; the row grows for it) and does
 // `onClick`. `leading` sits before that button (the tree's indent and
-// chevron), `trailing` after it (⋯, a badge…). `active`: the open item;
+// chevron), `trailing` after it (⋯, a badge…). `active`: the open or selected item, blue like every selection (`SELECTED`);
 // `dimmed`: a hidden file or symlink, its icon and text faded (not the row's
 // hover or ⋯); `changed`: the blue dot of local changes after the title;
 // `disabled`: can't be opened; `tooltip`: on the whole row (ui/tooltip.jsx).
 // `className` and `rowProps` (drag and drop) go on the row itself.
+// A selected item (the open page in the rail, the open item in a list): light accent fill, accent text
+export const SELECTED = 'bg-primary/15 text-primary-ink hover:bg-primary/20 hover:text-primary-ink'
+
 export function ListRow({ icon, title, description, leading, trailing, onClick, active, dimmed, changed, disabled, tooltip, className, rowProps }) {
   // The tooltip is on the whole row, so it also explains a row that can't be opened
   return (
@@ -20,7 +23,7 @@ export function ListRow({ icon, title, description, leading, trailing, onClick, 
       {...rowProps}
       className={cn(
         'group flex min-h-control items-center rounded-sm transition-colors hover:bg-secondary/60 has-[[data-state=open]]:bg-secondary/60',
-        active && 'bg-secondary hover:bg-secondary',
+        active && cn(SELECTED, 'has-[[data-state=open]]:bg-primary/20'),
         className,
       )}
     >
@@ -30,6 +33,7 @@ export function ListRow({ icon, title, description, leading, trailing, onClick, 
         className={cn(
           'h-auto min-h-control min-w-0 flex-1 justify-start gap-3 px-3 py-2 font-normal text-left hover:bg-transparent disabled:cursor-default disabled:opacity-100',
           dimmed && 'opacity-50 disabled:opacity-50',
+          active && 'text-primary-ink hover:text-primary-ink',
         )}
         onClick={onClick}
         disabled={disabled}
