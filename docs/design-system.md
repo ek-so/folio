@@ -42,7 +42,7 @@ Never hardcode colors; use the semantic tokens (light and dark values in `src/in
 | `bg-success` / `text-success-foreground` | Success (green) |
 | `bg-segment` / `bg-segment-active` | Segmented toggle track / selected segment (`Segmented`: fits its content by default, labeled segments 12px on their sides, icon-only ones square, 32px; `stretch`: as wide as its place, segments sharing it equally, 4px on their sides) |
 | `text-folder`, `text-file-image` | Folder and image file icons |
-| `--tag-0`…`--tag-9`, `--tag-tint` (text: `--ink`) | Property badge colors, tinted against `--card` |
+| `--tag-0`…`--tag-9`, `--tag-tint` (text: `--ink`) | Property badge colors. Every colored badge is `Badge` with a `tone` (a value's `--tag-N`, `--destructive` for a late date, `--primary` for a repeat): tinted against `--card` by `--tag-tint` (stronger on hover with `hoverable`), its text and icons the same hue mixed by `--ink`. Never a badge colored with its own classes |
 | `--callout-*` | GitHub alert callouts in the preview |
 | `--radius` | `0.75rem` base radius |
 | `shadow-sm`…`shadow-lg` | Redefined in `src/index.css` (`@theme`): close under the element, a small drop and mostly spread |

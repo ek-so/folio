@@ -38,7 +38,8 @@ export default function RecurrenceField({ prop, props, onChange }) {
   const badge = (
     <Badge
       as={onChange ? 'button' : 'span'} type={onChange ? 'button' : undefined}
-      className={cn('max-w-full gap-1.5', value ? 'bg-primary/10 text-primary-ink' : 'text-muted-foreground', onChange && 'cursor-pointer outline-none focus-visible:ring-1 focus-visible:ring-ring', onChange && (value ? 'hover:bg-primary/15' : 'hover:bg-muted-foreground/15'), !value && PLACEHOLDER)}
+      tone={value ? 'var(--primary)' : undefined} hoverable={!!onChange}
+      className={cn('max-w-full gap-1.5', !value && 'text-muted-foreground', onChange && 'cursor-pointer outline-none focus-visible:ring-1 focus-visible:ring-ring', !value && PLACEHOLDER)}
       {...(onChange ? own : {})}
     >
       <Icon className="size-4 shrink-0" />

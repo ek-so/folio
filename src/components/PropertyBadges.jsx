@@ -18,13 +18,8 @@ import { formatDate, dateLabel } from '../lib/dates.js'
 import { plural } from '../lib/plural.js'
 
 
-// A badge's color: its value's hue within its property (--tag-N, index.css), grey when empty; tinted against the card, a bit
-// stronger on hover. Its text and ▾ are the same hue, mixed toward the text color like all colored text (--ink)
-const tint = color => ({
-  style: { '--tag': color === undefined ? 'var(--muted-foreground)' : `var(--tag-${color})` },
-  className: cn('bg-[color-mix(in_oklab,var(--tag)_var(--tag-tint),var(--card))]', color !== undefined && 'text-[color:color-mix(in_oklab,var(--tag)_var(--ink),var(--foreground))]'),
-})
-const TINT_HOVER = 'hover:bg-[color-mix(in_oklab,var(--tag)_calc(var(--tag-tint)_*_1.7),var(--card))]'
+// A value badge's tone (Badge): its value's hue within its property (--tag-N, index.css); none (grey) when empty
+const toneOf = color => color === undefined ? undefined : `var(--tag-${color})`
 
 // A note's properties (lib/frontmatter.js), in the file's order: its
 // description as muted text with its markdown links (`path`: the note's, `files`:
@@ -74,7 +69,7 @@ export default function PropertyBadges({ props, path, files, clamp, title, class
           : onChange
           ? <EditableBadge key={id} prop={prop} label={label} color={colors[prop.key].get(label)} options={options} onChange={onChange} onManage={(onEditValue || onRemoveValue) && (() => setManaging(prop.key))} />
           : (
-            <Badge key={id} {...tint(colors[prop.key].get(label))}><span className="truncate">{label}</span></Badge>
+            <Badge key={id} tone={toneOf(colors[prop.key].get(label))}><span className="truncate">{label}</span></Badge>
           ))}
       </div>
     ))
@@ -139,14 +134,15 @@ function isDateProp(prop, options, dateKeys) {
 
 // A date property's badge, like a date in the text (DateField: a calendar icon on the left, no ▾): with `onChange`
 // it opens a calendar and a time field to change it (the same day again empties it). While empty, `emptyLabel` (its name, or "No date" for a planner's).
-// `late`: a past date, the whole badge red (a red tint, red text and icon)
+// `late`: a past date, the whole badge red (Badge's red tone: its tint, text and icon)
 function DateValue({ prop, onChange, emptyLabel, late }) {
   const date = valueDate(prop.value)
   const pick = picked => onChange(prop.key, picked ? formatDate(picked) : '')
   return (
     <DateField
       label={date ? dateLabel(date) : emptyLabel} date={date} onPick={onChange && pick}
-      className={cn(!date && PLACEHOLDER, late && 'bg-destructive/10 text-destructive-ink hover:bg-destructive/15')} {...(onChange ? own : {})}
+      tone={late ? 'var(--destructive)' : undefined}
+      className={cn(!date && PLACEHOLDER)} {...(onChange ? own : {})}
     />
   )
 }
@@ -161,8 +157,9 @@ function EditableBadge({ prop, label, color, options, onChange, onManage }) {
         <Badge
           as="button"
           type="button"
-          style={tint(color).style}
-          className={cn('cursor-pointer outline-none focus-visible:ring-1 focus-visible:ring-ring', tint(color).className, TINT_HOVER, label === null && PLACEHOLDER)}
+          tone={toneOf(color)}
+          hoverable
+          className={cn('cursor-pointer outline-none focus-visible:ring-1 focus-visible:ring-ring', label === null && PLACEHOLDER)}
           {...own}
         >
           <span className="truncate">{label ?? prop.key}</span>
