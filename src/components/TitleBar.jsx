@@ -1,5 +1,5 @@
 import { useContext } from 'react'
-import { ArrowLeft } from '@phosphor-icons/react'
+import { ArrowBendLeftUp } from '@phosphor-icons/react'
 import { pageInfo } from '../lib/pages.js'
 import { cn } from '@/lib/utils.js'
 import { NavContext, FolderTreeMenu } from './NavTree.jsx'
@@ -19,7 +19,7 @@ export default function TitleBar({ page, name, nameMenu, changed, badge, childre
       <div className="flex min-h-control items-center gap-space-sm">
         {!page && onBack && (
           <Button variant="ghost-outline" size="icon" aria-label="Back" tooltip="Back" onClick={onBack}>
-            <ArrowLeft />
+            <ArrowBendLeftUp />
           </Button>
         )}
         <div className="flex min-w-0 flex-1 items-center gap-space-sm">
