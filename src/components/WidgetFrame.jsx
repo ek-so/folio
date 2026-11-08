@@ -1,11 +1,11 @@
 import { useState } from 'react'
-import { DotsThree, X, FolderOpen } from '@phosphor-icons/react'
+import { X, FolderOpen } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils.js'
-import { Button } from './ui/button.jsx'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from './ui/dropdown-menu.jsx'
 import Spinner from './Spinner.jsx'
 import EmptyState from './EmptyState.jsx'
 import FolderSheet from './FolderSheet.jsx'
+import MoreButton from './MoreButton.jsx'
 
 // What every widget on a view is framed by (board, planner, notes): its title row, then its body in one of its states.
 // Title row: `title` (bold) with `subtitle` under it (muted: a widget's folder), then `controls` (the widget's own, such
@@ -30,9 +30,7 @@ export default function WidgetFrame({ title, subtitle, noun, controls, menu, rem
         {controls}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost-outline" size="icon" aria-label={`${noun[0].toUpperCase()}${noun.slice(1)} actions`} className="shrink-0 border-muted-foreground/50">
-              <DotsThree weight="bold" size={20} />
-            </Button>
+            <MoreButton aria-label={`${noun[0].toUpperCase()}${noun.slice(1)} actions`} />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" onCloseAutoFocus={e => e.preventDefault()}>
             {menu}

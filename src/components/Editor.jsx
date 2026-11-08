@@ -82,7 +82,7 @@ export default function Editor({ linkedBy, onOpenLink, path, entry, files, notes
       lock={{ locked, onToggle: onToggleLock }}
       actions={<>
         {locked ? (
-          <Button variant="ghost-outline" size="icon" aria-label="Unlock" tooltip="Locked: tap to unlock" disabled={!onToggleLock} onClick={onToggleLock} className="shrink-0 border-muted-foreground/50">
+          <Button variant="ghost-outline" size="icon" aria-label="Unlock" tooltip="Locked: tap to unlock" disabled={!onToggleLock} onClick={onToggleLock}>
             <LockSimple />
           </Button>
         ) : mode === 'edit' ? (

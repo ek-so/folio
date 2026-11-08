@@ -1,7 +1,5 @@
 import { useState } from 'react'
-import { DotsThree, PencilSimple, Trash, Folder, Rows, SquaresFour, Columns, Copy, LinkSimple, Lock, LockOpen } from '@phosphor-icons/react'
-import { cn } from '@/lib/utils.js'
-import { Button } from './ui/button.jsx'
+import { PencilSimple, Trash, Folder, Rows, SquaresFour, Columns, Copy, LinkSimple, Lock, LockOpen } from '@phosphor-icons/react'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from './ui/dropdown-menu.jsx'
 import { Segmented } from './ui/segmented.jsx'
 import RenameModal from './RenameModal.jsx'
@@ -11,6 +9,7 @@ import ColumnSubmenu from './ColumnSubmenu.jsx'
 import { copyText } from '../lib/clipboard.js'
 import { repoLink } from '../lib/markdown.js'
 import { useIsDesktop } from '../hooks/useIsDesktop.js'
+import MoreButton from './MoreButton.jsx'
 
 // ⋯ menu with Rename / Move / Delete for a file or folder ({ name, path, type }).
 // onRename(item, name) returns an error message or null.
@@ -37,17 +36,7 @@ export default function ItemMenu({ item, onRename, onDuplicate, onDelete, onMove
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button
-            variant={inList ? 'ghost' : 'ghost-outline'}
-            size="icon"
-            aria-label="More actions"
-            className={cn(
-              inList ? 'size-control-md shrink-0 text-muted-foreground hover:bg-muted-foreground/10 data-[state=open]:bg-muted-foreground/10' : 'shrink-0 border-muted-foreground/50',
-              hoverReveal && 'pointer-fine:opacity-0 pointer-fine:group-hover:opacity-100 pointer-fine:focus-visible:opacity-100 pointer-fine:data-[state=open]:opacity-100',
-            )}
-          >
-            <DotsThree weight="bold" size={inList ? 16 : 20} />
-          </Button>
+          <MoreButton inRow={inList} reveal={hoverReveal} aria-label="More actions" />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" onCloseAutoFocus={e => e.preventDefault()}>
           {onView && (

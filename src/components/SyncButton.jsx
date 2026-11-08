@@ -48,7 +48,7 @@ export default function SyncButton({ className, compact, bar, syncState, syncing
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         {bar ? (
-          <Button variant="ghost-outline" size="icon" disabled={syncing} aria-label={label} className={cn('relative shrink-0 border-muted-foreground/50', failed && 'text-destructive-ink', className)}>
+          <Button variant="ghost-outline" size="icon" disabled={syncing} aria-label={label} className={cn('relative', failed && 'text-destructive-ink', className)}>
             {icon}{dot}
           </Button>
         ) : (

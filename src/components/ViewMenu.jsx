@@ -1,7 +1,6 @@
-import { DotsThree, PencilSimple, X } from '@phosphor-icons/react'
-import { cn } from '@/lib/utils.js'
-import { Button } from './ui/button.jsx'
+import { PencilSimple, X } from '@phosphor-icons/react'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from './ui/dropdown-menu.jsx'
+import MoreButton from './MoreButton.jsx'
 
 // ⋯ menu of a view in the navigation rail: Rename / Remove. `onRename(view)`
 // and `onDelete(view)` open App's dialogs; `disabled` while the views can't
@@ -11,17 +10,7 @@ export default function ViewMenu({ view, onRename, onDelete, disabled }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          aria-label={`Actions for ${view.title}`}
-          className={cn(
-            'size-control-md shrink-0 text-muted-foreground hover:bg-muted-foreground/10 data-[state=open]:bg-muted-foreground/10',
-            'pointer-fine:opacity-0 pointer-fine:group-hover:opacity-100 pointer-fine:focus-visible:opacity-100 pointer-fine:data-[state=open]:opacity-100',
-          )}
-        >
-          <DotsThree weight="bold" size={16} />
-        </Button>
+        <MoreButton inRow reveal aria-label={`Actions for ${view.title}`} />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" onCloseAutoFocus={e => e.preventDefault()}>
         <DropdownMenuItem disabled={disabled} onSelect={() => onRename(view)}><PencilSimple /> Rename</DropdownMenuItem>

@@ -26,7 +26,7 @@ function TreeRow({ depth, branch, open, onToggle, row }) {
         <span aria-hidden="true" className="shrink-0" style={{ width: `${depth}rem` }} />
         {branch ? (
           <Button
-            variant="ghost" size="icon" className="ml-1 size-control-md shrink-0 text-muted-foreground hover:bg-muted-foreground/10"
+            variant="ghost-quiet" size="icon-md" className="ml-1"
             aria-label={open ? 'Collapse' : 'Expand'} aria-expanded={open}
             onClick={onToggle}
           >

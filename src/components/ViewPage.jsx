@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Plus, X, DotsThree, PencilSimple, SquaresFour } from '@phosphor-icons/react'
+import { Plus, X, PencilSimple, SquaresFour } from '@phosphor-icons/react'
 import PageLayout from './PageLayout.jsx'
 import Surface from './Surface.jsx'
 import ConfirmModal from './ConfirmModal.jsx'
@@ -8,6 +8,7 @@ import EditListModal from './EditListModal.jsx'
 import { Button } from './ui/button.jsx'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from './ui/dropdown-menu.jsx'
 import { WIDGET_TYPES, widgetType } from '../widgets/index.js'
+import MoreButton from './MoreButton.jsx'
 
 // A view (Home…): its title bar with + (Add widget: every kind in widgets/index.js) and ⋯
 // (Edit widgets, Rename, Remove; the navigation's ⋯ keeps only Rename and Remove), over its widgets ({ id, type }), stacked full width (a dashboard),
@@ -31,9 +32,7 @@ export default function ViewPage({ page, widgets = [], error, services, onAdd, o
   const viewMenu = (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost-outline" size="icon" aria-label="View actions" className="shrink-0 border-muted-foreground/50">
-          <DotsThree weight="bold" size={20} />
-        </Button>
+        <MoreButton aria-label="View actions" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" onCloseAutoFocus={e => e.preventDefault()}>
         <DropdownMenuItem disabled={!canEdit} onSelect={() => setEditing(true)}><SquaresFour /> Edit widgets</DropdownMenuItem>

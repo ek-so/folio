@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { DotsThree, PencilSimple, Trash, Columns, Copy, TextT, TextAlignLeft, LinkSimple, CheckCircle, Lock, LockOpen } from '@phosphor-icons/react'
+import { PencilSimple, Trash, Columns, Copy, TextT, TextAlignLeft, LinkSimple, CheckCircle, Lock, LockOpen } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button.jsx'
 import { Input } from '@/components/ui/input.jsx'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu.jsx'
@@ -12,6 +12,7 @@ import { repoLink } from '@/lib/markdown.js'
 import { cn, own } from '@/lib/utils.js'
 import { fileItem, cardTitle } from '@/lib/folderNotes.js'
 import { properties, valueList, DESCRIPTION } from '@/lib/frontmatter.js'
+import MoreButton from './MoreButton.jsx'
 
 // The CardMenu props every widget's card gives the same way (a board's, a planner's): its title and description, and
 // editing them (`act`: the widget's useFolderNotes actions), renaming, duplicating (`services`: the app's) and removing it.
@@ -48,14 +49,7 @@ export default function CardMenu({ path, title, description, columns, column, on
     <div className="contents" {...own}>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label="Card actions"
-            className={cn(!inRow && '-my-1.5 -mr-1.5', 'size-control-md shrink-0 text-muted-foreground hover:bg-muted-foreground/10 data-[state=open]:bg-muted-foreground/10 pointer-fine:opacity-0 pointer-fine:group-hover:opacity-100 pointer-fine:focus-visible:opacity-100 pointer-fine:data-[state=open]:opacity-100')}
-          >
-            <DotsThree weight="bold" size={16} />
-          </Button>
+          <MoreButton inRow reveal aria-label="Card actions" className={cn(!inRow && '-my-1.5 -mr-1.5')} />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" onCloseAutoFocus={e => e.preventDefault()}>
           {onDone && <>

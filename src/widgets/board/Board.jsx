@@ -1,12 +1,12 @@
 import { useState, useMemo } from 'react'
-import { DotsThree, Trash, PencilSimple, Tag, Columns, Check, CaretDown, Rows } from '@phosphor-icons/react'
+import { Trash, PencilSimple, Tag, Columns, Check, CaretDown, Rows } from '@phosphor-icons/react'
 import { DndContext, DragOverlay, closestCenter, closestCorners, pointerWithin } from '@dnd-kit/core'
 import { useDragSensors } from '@/hooks/useDragSensors.js'
 import { SortableContext, useSortable, arrayMove, horizontalListSortingStrategy, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { cn } from '@/lib/utils.js'
 import { Button } from '@/components/ui/button.jsx'
-import { Tray, TrayTitle, TrayFooter, TRAY_BUTTON } from '@/components/ui/tray.jsx'
+import { Tray, TrayTitle, TrayFooter } from '@/components/ui/tray.jsx'
 import { shownCards, hiddenCards } from '@/lib/trayCards.js'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu.jsx'
 import RenameModal from '@/components/RenameModal.jsx'
@@ -20,6 +20,7 @@ import { LOOSE, looseName } from './board.js'
 import { KEEP_DAYS } from '@/lib/archive.js'
 import { useBoard } from './useBoard.js'
 import { plural } from '@/lib/plural.js'
+import MoreButton from '@/components/MoreButton.jsx'
 
 // Drag ids: a column's and a card's
 const colId = key => 'col:' + key
@@ -265,9 +266,7 @@ function Column({ column, canEdit, count, more, onShowMore, onNewCard, onRename,
             <span className="pointer-events-none flex h-control-md min-w-control-md items-center justify-center text-sm tabular-nums text-muted-foreground md:pointer-fine:group-hover/title:opacity-0 md:pointer-fine:group-has-[[data-state=open]]/title:opacity-0 md:pointer-fine:group-has-[:focus-visible]/title:opacity-0">{count}</span>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" aria-label={`Actions for ${column.name}`} disabled={!canEdit} className={cn(TRAY_BUTTON, 'md:pointer-fine:opacity-0 md:pointer-fine:group-hover/title:opacity-100 md:pointer-fine:focus-visible:opacity-100 md:pointer-fine:data-[state=open]:opacity-100')}>
-                  <DotsThree weight="bold" size={16} />
-                </Button>
+                <MoreButton inRow aria-label={`Actions for ${column.name}`} disabled={!canEdit} className="md:pointer-fine:opacity-0 md:pointer-fine:group-hover/title:opacity-100 md:pointer-fine:focus-visible:opacity-100 md:pointer-fine:data-[state=open]:opacity-100" />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" onCloseAutoFocus={e => e.preventDefault()}>
                 <DropdownMenuItem onSelect={onRename}><PencilSimple /> Rename</DropdownMenuItem>

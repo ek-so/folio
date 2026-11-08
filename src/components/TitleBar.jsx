@@ -18,7 +18,7 @@ export default function TitleBar({ page, name, nameMenu, changed, badge, childre
     <div className="shrink-0 border-b border-border px-space py-space-sm">
       <div className="flex min-h-control items-center gap-space-sm">
         {!page && onBack && (
-          <Button variant="ghost-outline" size="icon" aria-label="Back" tooltip="Back" className="shrink-0 border-muted-foreground/50" onClick={onBack}>
+          <Button variant="ghost-outline" size="icon" aria-label="Back" tooltip="Back" onClick={onBack}>
             <ArrowLeft />
           </Button>
         )}

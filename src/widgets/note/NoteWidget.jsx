@@ -1,6 +1,5 @@
 import { useState } from 'react'
-import { DotsThree, PencilSimple, Plus, ListBullets, X, FileText } from '@phosphor-icons/react'
-import { Button } from '@/components/ui/button.jsx'
+import { PencilSimple, Plus, ListBullets, X, FileText } from '@phosphor-icons/react'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu.jsx'
 import Spinner from '@/components/Spinner.jsx'
 import EmptyState from '@/components/EmptyState.jsx'
@@ -19,11 +18,12 @@ import { useNote } from '@/hooks/useNote.js'
 import { displayName } from '@/lib/files.js'
 import { fileItem } from '@/lib/folderNotes.js'
 import ResizeHandle from '@/components/ResizeHandle.jsx'
-import { Tray, TrayTitle, TRAY_BUTTON } from '@/components/ui/tray.jsx'
+import { Tray, TrayTitle } from '@/components/ui/tray.jsx'
 import { NOTE_HEIGHT, clampSize } from '@/lib/resize.js'
 import { notePath, parseNotes, serializeNotes, notesHeight, resizedNotes, addedNote, removedNote, replacedNote, reorderedNote } from './note.js'
 import { NotePicker } from './NoteSetup.jsx'
 import WidgetFrame from '@/components/WidgetFrame.jsx'
+import MoreButton from '@/components/MoreButton.jsx'
 
 // The notes widget (note.js): "Notes" and its ⋯ (Add note…, Edit notes…: order them and take them out, Remove widget)
 // on top, then each note in a grey tray like a board's column, in a grid of two equal columns when each can be at least
@@ -152,9 +152,7 @@ function NoteTray({ path, services, height, canMove, onTakeOut, onReplace }) {
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" aria-label={`Actions for ${displayName(path)}`} className={TRAY_BUTTON}>
-              <DotsThree weight="bold" size={16} />
-            </Button>
+            <MoreButton inRow aria-label={`Actions for ${displayName(path)}`} />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" onCloseAutoFocus={e => e.preventDefault()}>
             <DropdownMenuItem disabled={!found} onSelect={() => setRenaming(true)}><PencilSimple /> Rename note</DropdownMenuItem>

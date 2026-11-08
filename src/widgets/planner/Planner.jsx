@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button.jsx'
 import { Separator } from '@/components/ui/separator.jsx'
 import { Segmented } from '@/components/ui/segmented.jsx'
 import { ListRow } from '@/components/ui/list-row.jsx'
-import { Tray, TrayTitle, TrayFooter, TRAY_BUTTON, TRAY_ROW } from '@/components/ui/tray.jsx'
+import { Tray, TrayTitle, TrayFooter, TRAY_ROW } from '@/components/ui/tray.jsx'
 import { DropdownMenuItem } from '@/components/ui/dropdown-menu.jsx'
 import NoteCard, { NO_CALLOUT, ownListeners, cardClick } from '@/components/NoteCard.jsx'
 import WidgetFrame from '@/components/WidgetFrame.jsx'
@@ -179,7 +179,7 @@ export default function Planner({ id, services, onRemove }) {
     const sectionTitle = (label, key) => (
       <div className="flex items-center gap-1">
         <div className="min-w-0 flex-1"><TrayTitle>{label}</TrayTitle></div>
-        <Button variant="ghost" size="icon" aria-label={`New task: ${label}`} tooltip="New task" disabled={off} className={TRAY_BUTTON} onClick={() => act.newCard(key)}><Plus /></Button>
+        <Button variant="ghost-quiet" size="icon-md" aria-label={`New task: ${label}`} tooltip="New task" disabled={off} onClick={() => act.newCard(key)}><Plus /></Button>
       </div>
     )
     // The list view: every card in grey groups of time (listed), each a white card of rows, its first 7 then Show N more
@@ -221,9 +221,9 @@ export default function Planner({ id, services, onRemove }) {
         <Tray>
           <div className="flex items-center gap-1">
             <div className="min-w-0 flex-1"><TrayTitle>{month}</TrayTitle></div>
-            <Button variant="ghost" size="md" className={cn(TRAY_ROW, 'shrink-0 gap-1.5 px-2', selected !== today && 'text-primary-ink hover:text-primary-ink')} onClick={goToday}><CrosshairSimple /> Today</Button>
+            <Button variant="ghost-quiet" size="md" className={cn(TRAY_ROW, 'shrink-0 gap-1.5 px-2', selected !== today && 'text-primary-ink hover:text-primary-ink')} onClick={goToday}><CrosshairSimple /> Today</Button>
             <DatePopover dayOnly date={keyDay(selected)} onPick={d => d && goToDay(dayKey(d))}>
-              <Button variant="ghost" size="icon" aria-label="Go to a day" className={TRAY_BUTTON}><CalendarBlank /></Button>
+              <Button variant="ghost-quiet" size="icon-md" aria-label="Go to a day"><CalendarBlank /></Button>
             </DatePopover>
           </div>
           <div ref={setScroller} onScroll={onScroll} data-no-pull className="-mx-space-sm -mt-space-sm overflow-x-auto p-space-sm">

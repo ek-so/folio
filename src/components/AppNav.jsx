@@ -126,12 +126,12 @@ export function TopBar({ host, resetKey, page, pages, viewActions, onPage, onSea
       <AccountMenu
         {...menu} current={page} pages={pages} viewActions={viewActions} onNavigate={onPage}
         trigger={
-          <Button variant="ghost-outline" size="icon" aria-label="Menu" className="shrink-0 border-muted-foreground/50">
+          <Button variant="ghost-outline" size="icon" aria-label="Menu">
             <List />
           </Button>
         }
       />
-      <Button variant="ghost-outline" size="icon" aria-label="Search" className="shrink-0 border-muted-foreground/50" onClick={onSearch}>
+      <Button variant="ghost-outline" size="icon" aria-label="Search" onClick={onSearch}>
         <MagnifyingGlass />
       </Button>
       <div className="flex-1" />
