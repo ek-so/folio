@@ -6,12 +6,10 @@ import BottomSheet from './BottomSheet.jsx'
 import { nameFromTitle } from '../lib/changes.js'
 
 // Creates the note or folder locally; it reaches GitHub on the next sync.
-// kind 'view': a new view in the navigation; an empty name is fine (it shows as a light Untitled).
 // `titled` (a board's new card, titled New card): a Title field first, then the File name, which follows the
 // title until it's typed in; `onCreate(name, title)`.
 export default function NewFileModal({ folder, kind, titled, onCreate, onClose }) {
   const isFolder = kind === 'folder'
-  const isView = kind === 'view'
   const [title, setTitle] = useState('')
   const [typedName, setTypedName] = useState(null) // the file name once typed in, else it follows the title
   const [error, setError] = useState('')
@@ -26,7 +24,7 @@ export default function NewFileModal({ folder, kind, titled, onCreate, onClose }
   const nameInput = (
     <Input
       type="text"
-      placeholder={isView ? 'Untitled' : isFolder ? 'Folder name' : titled ? 'File name' : 'Note name'}
+      placeholder={isFolder ? 'Folder name' : titled ? 'File name' : 'Note name'}
       aria-label={titled ? 'File name' : undefined}
       value={name}
       onChange={e => setName(e.target.value)}
@@ -38,7 +36,7 @@ export default function NewFileModal({ folder, kind, titled, onCreate, onClose }
 
   return (
     <BottomSheet
-      title={isView ? 'New view' : isFolder ? 'New folder' : titled ? 'New card' : 'New note'}
+      title={isFolder ? 'New folder' : titled ? 'New card' : 'New note'}
       description={folder ? `in ${folder}` : undefined}
       onClose={onClose}
     >
@@ -56,7 +54,7 @@ export default function NewFileModal({ folder, kind, titled, onCreate, onClose }
         {error && <p className="text-destructive-ink text-xs">{error}</p>}
         <div className="flex justify-end gap-2">
           <Button type="button" variant="secondary" onClick={onClose}>Cancel</Button>
-          <Button type="submit" disabled={!isView && !name.trim()}>Create</Button>
+          <Button type="submit" disabled={!name.trim()}>Create</Button>
         </div>
       </form>
     </BottomSheet>

@@ -1,57 +1,59 @@
 import { useState } from 'react'
-import { Check, Gear, SignOut, LinkBreak, BookOpen, Plus } from '@phosphor-icons/react'
-import { cn } from '../lib/utils.js'
+import { Gear, SignOut, LinkBreak, BookOpen, SlidersHorizontal } from '@phosphor-icons/react'
 import { PAGE } from '../lib/pages.js'
 import ViewMenu from './ViewMenu.jsx'
 import PageTitle from './PageTitle.jsx'
-import {
-  DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator,
-} from './ui/dropdown-menu.jsx'
+import AppLogo from './AppLogo.jsx'
+import { ListRow } from './ui/list-row.jsx'
+import { Separator } from './ui/separator.jsx'
+import { Sheet, SheetTrigger, SheetContent, SheetTitle, SheetDescription } from './ui/sheet.jsx'
 
-// Open page's item: light accent fill, accent text
-const ACTIVE = 'bg-primary/15 text-primary-ink pointer-fine:hover:bg-primary/20 focus-visible:bg-primary/20 focus:text-primary-ink'
-
-// The phone navigation's popover, opened by `trigger` (a Button): the main
-// pages (`pages`): File manager, then the views and Add view, then Graph, then Broken links (count), Settings
-// and Sign out. `current` is the open page, checked. A view has its ⋯ (`ViewMenu`: Rename / Remove
-// in a separate menu beside it, `viewActions`; the nav never swaps its own content for a nested screen). The account and repo are shown in Settings.
+// The phone navigation, opened by `trigger` (a Button): a left sheet that floats 8px from the screen's edges,
+// titled with the app's name (its ✕ is the sheet's own). The main pages (`pages`): File manager, then the views
+// (each with its ⋯: `ViewMenu`, Rename / Remove, `viewActions`) and Views settings, then Graph; then Broken links
+// (count), Documentation, Settings and Sign out. `current` is the open page, highlighted. Choosing a page closes it.
 export default function AccountMenu({ trigger, current, pages, viewActions, onNavigate, brokenCount, onSignOut }) {
   const [open, setOpen] = useState(false)
-  const mark = id => current === id && <Check className="ml-auto" />
-  const fixedItem = p => (
-    <DropdownMenuItem key={p.id} className={current === p.id ? ACTIVE : undefined} onSelect={() => onNavigate(p.id)}>
-      <p.icon /> <PageTitle page={p} />{mark(p.id)}
-    </DropdownMenuItem>
+  const go = fn => () => { setOpen(false); fn() }
+  const page = p => (
+    <li key={p.id}>
+      <ListRow
+        icon={<p.icon />} title={<PageTitle page={p} />} active={current === p.id} onClick={go(() => onNavigate(p.id))}
+        trailing={p.view && <ViewMenu view={p} disabled={!viewActions.canEdit} onRename={v => { setOpen(false); viewActions.onRename(v) }} onDelete={v => { setOpen(false); viewActions.onDelete(v) }} />}
+      />
+    </li>
   )
-  // Inside a menu item: the view's ⋯ must not select the item
-  const own = { onClick: e => e.stopPropagation(), onPointerUp: e => e.stopPropagation(), onKeyDown: e => e.stopPropagation() }
+  const fixed = (id, Icon, title, extra) => (
+    <li><ListRow icon={<Icon />} title={title} active={current === id} onClick={go(() => onNavigate(id))} trailing={extra} /></li>
+  )
+  const separator = <Separator className="my-space-sm" />
   return (
-    <DropdownMenu open={open} onOpenChange={setOpen}>
-      <DropdownMenuTrigger asChild>{trigger}</DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-60" onCloseAutoFocus={e => e.preventDefault()}>
-        {pages.filter(p => p.id === PAGE.FILES).map(fixedItem)}
-        <DropdownMenuSeparator />
-        {pages.filter(p => p.view).map(p => (
-          <DropdownMenuItem key={p.id} className={current === p.id ? ACTIVE : undefined} onSelect={() => onNavigate(p.id)}>
-            <p.icon /> <span className="min-w-0 truncate"><PageTitle page={p} /></span>{mark(p.id)}
-            <span className={cn('-my-1 -mr-2', current !== p.id && 'ml-auto')} {...own}>
-              <ViewMenu sub view={p} disabled={!viewActions.canEdit} onRename={v => { setOpen(false); viewActions.onRename(v) }} onDelete={v => { setOpen(false); viewActions.onDelete(v) }} />
-            </span>
-          </DropdownMenuItem>
-        ))}
-        <DropdownMenuItem disabled={!viewActions.canEdit} onSelect={viewActions.onAdd}><Plus /> Add view</DropdownMenuItem>
-        <DropdownMenuSeparator />
-        {pages.filter(p => !p.view && p.id !== PAGE.FILES).map(fixedItem)}
-        <DropdownMenuSeparator />
-        <DropdownMenuItem className={current === PAGE.LINKS ? ACTIVE : undefined} onSelect={() => onNavigate(PAGE.LINKS)}>
-          <LinkBreak /> Broken links
-          {brokenCount > 0 && <span className="ml-auto pl-4 text-muted-foreground">{brokenCount}</span>}
-          {current === PAGE.LINKS && !brokenCount && mark(PAGE.LINKS)}
-        </DropdownMenuItem>
-        <DropdownMenuItem className={current === PAGE.DOCS ? ACTIVE : undefined} onSelect={() => onNavigate(PAGE.DOCS)}><BookOpen /> Documentation{mark(PAGE.DOCS)}</DropdownMenuItem>
-        <DropdownMenuItem className={current === PAGE.SETTINGS ? ACTIVE : undefined} onSelect={() => onNavigate(PAGE.SETTINGS)}><Gear /> Settings{mark(PAGE.SETTINGS)}</DropdownMenuItem>
-        <DropdownMenuItem variant="destructive" onSelect={onSignOut}><SignOut /> Sign out</DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetTrigger asChild>{trigger}</SheetTrigger>
+      <SheetContent side="left" className="top-[calc(var(--space-sm)+var(--safe-top))] bottom-[calc(var(--space-sm)+var(--safe-bottom))] left-space-sm h-auto w-[calc(100vw-2*var(--space-sm))] gap-0 min-[500px]:w-[85vw] sm:max-w-none overflow-hidden rounded-xl border bg-card">
+        <SheetDescription className="sr-only">Pages and settings</SheetDescription>
+        <div className="flex min-h-control shrink-0 items-center gap-2 border-b border-border p-space-sm pl-space pr-14">
+          <AppLogo className="size-6" />
+          <SheetTitle className="text-base font-bold">Folio</SheetTitle>
+        </div>
+        <nav aria-label="Main" className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain p-space-sm" data-no-pull>
+          <ul>{pages.filter(p => p.id === PAGE.FILES).map(page)}</ul>
+          {separator}
+          <ul>
+            {pages.filter(p => p.view).map(page)}
+            <li><ListRow icon={<SlidersHorizontal />} title="Views settings" disabled={!viewActions.canEdit} onClick={go(viewActions.onSettings)} /></li>
+          </ul>
+          {separator}
+          <ul>{pages.filter(p => !p.view && p.id !== PAGE.FILES).map(page)}</ul>
+          {separator}
+          <ul>
+            {fixed(PAGE.LINKS, LinkBreak, 'Broken links', brokenCount > 0 && <span className="px-2 text-sm text-muted-foreground">{brokenCount}</span>)}
+            {fixed(PAGE.DOCS, BookOpen, 'Documentation')}
+            {fixed(PAGE.SETTINGS, Gear, 'Settings')}
+            <li><ListRow icon={<SignOut className="text-destructive-ink" />} title={<span className="text-destructive-ink">Sign out</span>} onClick={go(onSignOut)} /></li>
+          </ul>
+        </nav>
+      </SheetContent>
+    </Sheet>
   )
 }

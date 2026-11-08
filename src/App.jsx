@@ -7,6 +7,8 @@ import FileViewer from './components/FileViewer.jsx'
 import { fileKind } from './lib/files.js'
 import PullToRefresh from './components/PullToRefresh.jsx'
 import NewFileModal from './components/NewFileModal.jsx'
+import EditListModal from './components/EditListModal.jsx'
+import PageTitle from './components/PageTitle.jsx'
 import ConflictModal from './components/ConflictModal.jsx'
 import SyncButton from './components/SyncButton.jsx'
 import SearchSheet from './components/SearchSheet.jsx'
@@ -37,7 +39,7 @@ import DeleteModal from './components/DeleteModal.jsx'
 import { useTheme } from './hooks/useTheme.js'
 import { storage } from './lib/storage.js'
 import { PAGE, mainPages } from './lib/pages.js'
-import { isConfigPath, addView, renameView, removeView, VIEWS_PATH, DEFAULT_VIEWS, parseViews, serializeViews, addWidget, removeWidget, moveWidget } from './lib/viewsConfig.js'
+import { isConfigPath, addView, renameView, removeView, VIEWS_PATH, DEFAULT_VIEWS, parseViews, serializeViews, addWidget, removeWidget, moveWidget, moveView } from './lib/viewsConfig.js'
 import { withKeys, withValue, copyTitled } from './lib/frontmatter.js'
 import { widgetType } from './widgets/index.js'
 import { urlForPage, pageForUrl, existingView } from './lib/url.js'
@@ -118,7 +120,8 @@ export default function App() {
   const up = view && upView(mainPage, view)
   const goUp = up && (() => up === START ? setTrails(o => ({ ...o, [mainPage]: [] })) : show(up))
   const [newFile, setNewFile] = useState(null) // { folder, kind, keys?, values?, stay?, titled? } while the sheet is open (keys: a new note's properties; stay: don't open it; titled: asks for its title too)
-  const [viewDialog, setViewDialog] = useState(null) // { kind: 'add' } or { kind: 'rename' | 'delete', view } while a view's dialog is open
+  const [viewDialog, setViewDialog] = useState(null) // { kind: 'rename' | 'delete', view } while a view's dialog is open
+  const [viewsSettings, setViewsSettings] = useState(false) // Views settings is open: add, order and remove views
   const [adding, setAdding] = useState(null) // { viewId, type } while a new widget's Setup is open
   const [confirmSignOut, setConfirmSignOut] = useState(false)
   const [confirmDiscard, setConfirmDiscard] = useState(false)
@@ -632,10 +635,10 @@ export default function App() {
 
   // A symlink never opens itself (opening one opens its source instead)
   const entry = selectedFile && !(selectedFile in symlinks) && virtual[selectedFile]
-  // Add view, and Rename / Delete of a view (the dialogs below)
+  // Views settings, and Rename / Delete of a view (the dialogs below)
   const viewActions = {
     canEdit: viewsReady,
-    onAdd: () => setViewDialog({ kind: 'add' }),
+    onSettings: () => setViewsSettings(true),
     onRename: v => setViewDialog({ kind: 'rename', view: v }),
     onDelete: v => setViewDialog({ kind: 'delete', view: v }),
   }
@@ -839,18 +842,17 @@ export default function App() {
           />
         )}
 
-        {viewDialog?.kind === 'add' && (
-          <NewFileModal
-            kind="view"
-            onCreate={name => {
-              const added = addView(views, name)
-              saveViews(added.views)
-              const id = added.id
-              setPage(id)
-              setViewDialog(null)
-              return null
-            }}
-            onClose={() => setViewDialog(null)}
+        {viewsSettings && (
+          <EditListModal
+            title="Views settings"
+            description="Drag them into order. Removing a view removes its widgets; the notes stay."
+            items={pages.filter(p => p.view).map(p => ({ id: p.id, icon: <p.icon />, title: <PageTitle page={p} />, label: p.title, view: p }))}
+            onMove={(from, to) => saveViews(moveView(views, from, to))}
+            onRemove={item => setViewDialog({ kind: 'delete', view: item.view })}
+            addLabel="New view"
+            onAdd={name => { saveViews(addView(views, name).views); return null }}
+            empty="No views"
+            onClose={() => setViewsSettings(false)}
           />
         )}
 

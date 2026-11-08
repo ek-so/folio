@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { parseViews, serializeViews, addView, renameView, removeView, isConfigPath, DEFAULT_VIEWS, addWidget, removeWidget, moveWidget } from './viewsConfig.js'
+import { parseViews, serializeViews, addView, renameView, removeView, isConfigPath, DEFAULT_VIEWS, addWidget, removeWidget, moveWidget, moveView } from './viewsConfig.js'
 
 describe('viewsConfig', () => {
   it('has Home alone without a file, and nothing from text it can\'t read', () => {
@@ -44,5 +44,9 @@ describe('viewsConfig', () => {
     expect(moveWidget(views, 'a', 0, 2)[0].widgets.map(w => w.id)).toEqual(['w2', 'w3', 'w1'])
     expect(moveWidget(views, 'a', 2, 0)[0].widgets.map(w => w.id)).toEqual(['w3', 'w1', 'w2'])
     expect(moveWidget(views, 'b', 0, 1)[1]).toBe(views[1])
+  })
+  it('moves a view', () => {
+    const views = [{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }, { id: 'c', name: 'C' }]
+    expect(moveView(views, 2, 0).map(v => v.id)).toEqual(['c', 'a', 'b'])
   })
 })

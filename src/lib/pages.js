@@ -1,6 +1,6 @@
 import { File, FolderOpen, Graph, Gear, LinkBreak, BookOpen } from '@phosphor-icons/react'
 
-// The app's pages (`page` in App). Home and the views added with "Add view"
+// The app's pages (`page` in App). Home and the views added in Views settings
 // (lib/viewsConfig.js, kept in the repo) are pages too, each with its own id;
 // `HOME` is the first view's id in a repo without a config. File manager and
 // Graph, Settings, Broken links and Documentation are fixed.

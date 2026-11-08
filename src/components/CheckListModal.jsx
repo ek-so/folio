@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input.jsx'
 import { ListRow } from '@/components/ui/list-row.jsx'
 import { Checkbox } from '@/components/ui/checkbox.jsx'
 import BottomSheet from '@/components/BottomSheet.jsx'
+import AddNameField from '@/components/AddNameField.jsx'
 
 // A sheet of names to tick (a board's columns to show, the properties its cards show):
 // `items` in the order listed (`locked`: names listed first, ticked and not to be changed, like a planner's date or a
@@ -16,8 +17,6 @@ import BottomSheet from '@/components/BottomSheet.jsx'
 // or null), `onDelete(item)` a trash button (confirmed by the caller). `empty`:
 // the text when there's nothing to list. `header`: what sits above the list (a board's Group by).
 export default function CheckListModal({ title, description, header, items, locked = [], lockedDescription, selected, onChange, addLabel, onAdd, onOpen, openLabel, onRename, onDelete, empty, onClose }) {
-  const [name, setName] = useState('')
-  const [error, setError] = useState('')
   const [editing, setEditing] = useState(null) // { item, name, error } while a row is renamed
 
   function saveName(e) {
@@ -30,15 +29,6 @@ export default function CheckListModal({ title, description, header, items, lock
   }
   const toggle = item => onChange(selected.includes(item) ? selected.filter(k => k !== item) : [...selected, item])
   const rowButton = 'size-control-md text-muted-foreground hover:bg-muted-foreground/10'
-
-  function addItem(e) {
-    e.preventDefault()
-    const item = name.trim()
-    if (!item) return
-    const err = onAdd(item)
-    if (err) setError(err)
-    else setName('')
-  }
 
   return (
     // Focus goes to the sheet itself, not its first row, so no row opens lit up
@@ -99,22 +89,7 @@ export default function CheckListModal({ title, description, header, items, lock
           ))}
           {!items.length && <p className="py-4 text-center text-sm text-muted-foreground">{empty}</p>}
         </ul>
-        {onAdd && (
-          <form onSubmit={addItem} className="flex flex-col gap-2">
-            <div className="flex gap-2">
-              <Input
-                placeholder={addLabel}
-                value={name}
-                onChange={e => { setName(e.target.value); setError('') }}
-                autoCorrect="off"
-                autoCapitalize="none"
-                className="bg-background border-border"
-              />
-              <Button type="submit" variant="success" size="icon" aria-label="Add" tooltip="Add" disabled={!name.trim()} className="shrink-0"><Check /></Button>
-            </div>
-            {error && <p className="text-destructive-ink text-xs">{error}</p>}
-          </form>
-        )}
+        {onAdd && <AddNameField label={addLabel} onAdd={onAdd} />}
         <div className="flex justify-end">
           <Button onClick={onClose}>Done</Button>
         </div>

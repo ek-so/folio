@@ -1,4 +1,4 @@
-// The views in the navigation (Home and the ones added with "Add view") live
+// The views in the navigation (Home and the ones added in Views settings) live
 // in the repo, like Obsidian's config folder: `.folio/views.json`,
 // { "views": [{ "id", "name", "widgets": [{ "id", "type" }] }] }. A repo without the file has Home alone.
 // A view's widgets show on it, in order; each kind is in src/widgets/ and keeps its own settings
@@ -57,6 +57,13 @@ export function addView(views, name = '') {
 export const renameView = (views, id, name) => views.map(v => v.id === id ? { ...v, name: name.trim() } : v)
 
 export const removeView = (views, id) => views.filter(v => v.id !== id)
+
+// `views` with the view at index `from` moved to index `to`
+export function moveView(views, from, to) {
+  const next = [...views]
+  next.splice(to, 0, ...next.splice(from, 1))
+  return next
+}
 
 // `views` with a new widget of `type` at the end of view `viewId`, and its id
 export function addWidget(views, viewId, type) {

@@ -7,12 +7,14 @@ import { cn } from '@/lib/utils.js'
 import { Button } from './ui/button.jsx'
 import { ListRow } from './ui/list-row.jsx'
 import BottomSheet from './BottomSheet.jsx'
+import AddNameField from './AddNameField.jsx'
 
-// A sheet to edit a list of `items` ([{ id, icon, title }]; a view's widgets): drag them into
+// A sheet to edit a list of `items` ([{ id, icon, title, label? (its name when `title` isn't text) }]; a view's widgets, the views, a Notes widget's notes): drag them into
 // order (with a mouse right away, on touch after holding 0.25s, like a board's cards; each drop
 // calls `onMove(from, to)`, indexes, at once), remove one with its ✕ (`onRemove(item)`, confirmed
-// by the caller). `empty`: the text when there's nothing.
-export default function EditListModal({ title, description, items, onMove, onRemove, empty, onClose }) {
+// by the caller). `addLabel` and `onAdd(name)`: a field under the list to add one by name (returns an error
+// message, or null). `empty`: the text when there's nothing.
+export default function EditListModal({ title, description, items, onMove, onRemove, addLabel, onAdd, empty, onClose }) {
   const sensors = useDragSensors()
   const ids = items.map(i => i.id)
   const onDragEnd = ({ active, over }) => {
@@ -29,6 +31,7 @@ export default function EditListModal({ title, description, items, onMove, onRem
             </ul>
           </SortableContext>
         </DndContext>
+        {onAdd && <AddNameField label={addLabel} onAdd={onAdd} />}
         <div className="flex justify-end">
           <Button onClick={onClose}>Done</Button>
         </div>
@@ -49,7 +52,7 @@ function Row({ item, onRemove }) {
         className={cn('cursor-grab touch-manipulation select-none [-webkit-touch-callout:none] [&_button]:cursor-grab', isDragging && 'bg-secondary shadow-md')}
         rowProps={listeners}
         trailing={
-          <Button variant="ghost-destructive" size="icon" aria-label={`Remove ${item.title}`} tooltip="Remove" className="size-control-md" onPointerDown={e => e.stopPropagation()} onClick={() => onRemove(item)}>
+          <Button variant="ghost-destructive" size="icon" aria-label={`Remove ${item.label ?? item.title}`} tooltip="Remove" className="size-control-md" onPointerDown={e => e.stopPropagation()} onClick={() => onRemove(item)}>
             <X />
           </Button>
         }
