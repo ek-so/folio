@@ -136,8 +136,8 @@ export const GROUPS = [
   { key: 'later', label: 'Later' },
 ]
 
-// `cards` ([{ path, text }]) in the list view's groups as of `today` (a key): [{ key, label, cards: [{ path, overdue,
-// undated }] }], only the groups with cards. Today also has the cards without a date (`undated`, last) and those dated
+// `cards` ([{ path, text }]) in the list view's groups as of `today` (a key): [{ key, label, first, cards: [{ path, overdue,
+// undated }] }], only the groups with cards; `first`: the group's first day (a key; a new task there gets it). Today also has the cards without a date (`undated`, last) and those dated
 // before today (`overdue`, first); This week runs to Sunday, This month and This year to their last day. In a group, by
 // day, time, then title.
 export function listed(cards, today) {
@@ -149,7 +149,7 @@ export function listed(cards, today) {
     dayKey({ year, month, day: new Date(Date.UTC(year, month, 0)).getUTCDate() }),
     `${year}-12-31`,
   ]
-  const groups = GROUPS.map(g => ({ ...g, cards: [] }))
+  const groups = GROUPS.map((g, i) => ({ ...g, first: i ? addDays(ends[i - 1], 1) : today, cards: [] }))
   for (const { path, text } of cards) {
     const date = cardDate(text)
     const key = date ? dayKey(date) : null

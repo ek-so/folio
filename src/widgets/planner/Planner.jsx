@@ -1,6 +1,6 @@
 import { toast } from 'sonner'
 import { Fragment, useState, useMemo, useRef, useCallback, useLayoutEffect } from 'react'
-import { DotsThree, X, Tag, FolderOpen, CalendarBlank, CrosshairSimple, CalendarDots, ListBullets, CalendarDot, ArrowsClockwise } from '@phosphor-icons/react'
+import { DotsThree, X, Tag, Plus, FolderOpen, CalendarBlank, CrosshairSimple, CalendarDots, ListBullets, CalendarDot, ArrowsClockwise } from '@phosphor-icons/react'
 import { DndContext, DragOverlay, MouseSensor, TouchSensor, useSensor, useSensors, useDraggable, useDroppable, pointerWithin } from '@dnd-kit/core'
 import { cn } from '@/lib/utils.js'
 import { Button } from '@/components/ui/button.jsx'
@@ -135,6 +135,9 @@ export default function Planner({ id, services, onRemove }) {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" onCloseAutoFocus={e => e.preventDefault()}>
+          {/* On the day shown: the selected one in the calendar, today in the list */}
+          <DropdownMenuItem disabled={off || !planner || missing} onSelect={() => act.newCard(view === 'list' ? today : selected)}><Plus /> New task</DropdownMenuItem>
+          <DropdownMenuSeparator />
           <DropdownMenuItem disabled={off} onSelect={() => setChoosing(true)}><Tag /> Properties</DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem variant="destructive" disabled={!canEdit} onSelect={onRemove}><X /> Remove planner</DropdownMenuItem>
@@ -203,20 +206,25 @@ export default function Planner({ id, services, onRemove }) {
     const paths = list.map(c => c.path)
     const visible = new Set(shownCards(paths, expanded.has(selected), dragged, limit))
     const more = expanded.has(selected) ? 0 : hiddenCards(paths, dragged, limit).length
-    // The list view: every card in grey groups of time (listed), each a white card of rows; Today always, with New task
-    const newTask = <TrayFooter more={0} newLabel="New task" onNew={() => act.newCard(today)} disabled={off} />
+    // A section's title row (a day, a group of the list): its name and + (New task on `key`, its first day)
+    const sectionTitle = (label, key) => (
+      <div className="flex items-center gap-1">
+        <div className="min-w-0 flex-1"><TrayTitle>{label}</TrayTitle></div>
+        <Button variant="ghost" size="icon" aria-label={`New task: ${label}`} tooltip="New task" disabled={off} className={TRAY_BUTTON} onClick={() => act.newCard(key)}><Plus /></Button>
+      </div>
+    )
+    // The list view: every card in grey groups of time (listed), each a white card of rows; Today always
     if (view === 'list') body = (
       <>
-        {groups[0]?.key !== 'today' && <Tray><TrayTitle>Today</TrayTitle>{newTask}</Tray>}
+        {groups[0]?.key !== 'today' && <Tray>{sectionTitle('Today', today)}</Tray>}
         {groups.map(group => (
           <Tray key={group.key}>
-            <TrayTitle>{group.label}</TrayTitle>
+            {sectionTitle(group.label, group.first)}
             <div className="flex flex-col gap-0.5 rounded-lg border border-border bg-card p-1">
               {group.cards.map(({ path, overdue, undated }) => (
                 <TaskRow key={path} path={path} text={notes[path]} dashed={overdue || undated} menu={cardMenu(path)} onOpen={openFile} />
               ))}
             </div>
-            {group.key === 'today' && newTask}
           </Tray>
         ))}
       </>
@@ -243,19 +251,18 @@ export default function Planner({ id, services, onRemove }) {
             <Ribbon days={days} today={today} selected={selected} count={arranged.count} onSelect={setPicked} />
           </div>
         </Tray>
-        {/* The selected day's cards in a tray like a board's column: its first cards, Show N more, New task; a day without any has only New task */}
+        {/* The selected day's cards in a tray like a board's column, its title with + (New task on that day): its first cards and Show N more; a day without any is empty */}
         <Tray>
-          <TrayTitle>{shortTitle(selected, today)}</TrayTitle>
-          {/* The cards of a row are one height; Show more and New task each on a row of its own, one column wide (all of it on phones) */}
-          <div ref={setGrid} className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,18rem),1fr))] gap-space-sm">
-            {list.filter(c => visible.has(c.path)).map(({ path, overdue, undated }) => (
-              <PlannerCard key={path} {...cardProps(path)} menu={cardMenu(path)} dashed={overdue || undated} onOpen={openFile} onOpenFolder={openFolder} />
-            ))}
-            <TrayFooter
-              grid more={more} onShowMore={() => setExpanded(e => new Set(e).add(selected))}
-              newLabel="New task" onNew={() => act.newCard(selected)} disabled={off}
-            />
-          </div>
+          {sectionTitle(shortTitle(selected, today), selected)}
+          {/* The cards of a row are one height; Show more on a row of its own, one column wide (all of it on phones) */}
+          {list.length > 0 && (
+            <div ref={setGrid} className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,18rem),1fr))] gap-space-sm">
+              {list.filter(c => visible.has(c.path)).map(({ path, overdue, undated }) => (
+                <PlannerCard key={path} {...cardProps(path)} menu={cardMenu(path)} dashed={overdue || undated} onOpen={openFile} onOpenFolder={openFolder} />
+              ))}
+              <TrayFooter grid more={more} onShowMore={() => setExpanded(e => new Set(e).add(selected))} />
+            </div>
+          )}
         </Tray>
         <DragOverlay>
           {dragged && <NoteCard {...cardProps(dragged)} className="rotate-2 border-lift-edge shadow-lg" />}

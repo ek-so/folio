@@ -104,6 +104,7 @@ describe('planner', () => {
       ['year', ['year']],
       ['later', ['later']],
     ])
+    expect(groups.map(g => g.first)).toEqual(['2026-11-07', '2026-11-08', '2026-11-09', '2026-12-01', '2027-01-01'])
     expect(groups[0].cards[0]).toEqual({ path: 'T/late.md', overdue: true, undated: false })
     expect(groups[0].cards[2]).toEqual({ path: 'T/week.md', overdue: false, undated: true })
     expect(listed([card('wed', '11 Nov 2026')], '2026-11-09').map(g => g.key)).toEqual(['week']) // from a Monday

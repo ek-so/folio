@@ -27,19 +27,19 @@ export function TrayTitle({ grip, children }) {
 export const TRAY_ROW = 'justify-start gap-2 px-3 text-sm font-normal text-muted-foreground hover:bg-muted-foreground/10'
 
 // What a tray of cards ends with: Show `more` more (`onShowMore`; nothing when 0), a separator, then `newLabel`
-// (`onNew`; `disabled` when it can't be changed). `grid`: inside the cards' grid of columns (a planner's day), each
+// (`onNew`; `disabled` when it can't be changed). Without `onNew` (a planner: its + is in the title), only Show more. `grid`: inside the cards' grid of columns (a planner's day), each
 // button on a row of its own, one column wide, and the separator across them all
 export function TrayFooter({ more, onShowMore, newLabel, onNew, disabled, grid }) {
   const row = cn(TRAY_ROW, grid && 'col-start-1 w-full self-start')
   return (
     <>
-      {more > 0 && <>
-        <Button variant="ghost" className={row} onClick={onShowMore}><CaretDown /> Show {more} more</Button>
-        <Separator className={cn('mx-space-xs data-[orientation=horizontal]:w-auto', grid && 'col-span-full')} />
-      </>}
-      <Button variant="ghost" disabled={disabled} className={row} onClick={onNew}>
-        <Plus /> {newLabel}
-      </Button>
+      {more > 0 && <Button variant="ghost" className={row} onClick={onShowMore}><CaretDown /> Show {more} more</Button>}
+      {more > 0 && onNew && <Separator className={cn('mx-space-xs data-[orientation=horizontal]:w-auto', grid && 'col-span-full')} />}
+      {onNew && (
+        <Button variant="ghost" disabled={disabled} className={row} onClick={onNew}>
+          <Plus /> {newLabel}
+        </Button>
+      )}
     </>
   )
 }
