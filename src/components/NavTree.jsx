@@ -112,12 +112,13 @@ function ViewTree({ nodes }) {
 }
 
 // The look of a title that opens a menu: an outlined button in the buttons' own font, with the item's
-// `icon` (FileIcon), its name and ▾ on the right (the folder tree here, RepoMenu at File manager's root)
-export const TitleMenuButton = forwardRef(function TitleMenuButton({ icon, children, className, ...props }, ref) {
+// `icon` (FileIcon), its name, the blue dot of unsaved changes (`changed`) right after it, and ▾ on the right (the folder tree here, RepoMenu at File manager's root)
+export const TitleMenuButton = forwardRef(function TitleMenuButton({ icon, children, changed, className, ...props }, ref) {
   return (
     <Button ref={ref} variant="outline" className={cn('min-w-0 max-w-full gap-space-sm px-3', className)} {...props}>
       {icon}
       <span className="truncate">{children}</span>
+      {changed && <span aria-label="Unsaved changes" className="size-1.5 shrink-0 rounded-full bg-primary" />}
       <CaretDown className="text-muted-foreground" />
     </Button>
   )
@@ -126,7 +127,7 @@ export const TitleMenuButton = forwardRef(function TitleMenuButton({ icon, child
 // The title of a file or folder: its `name` as a button that opens a popover with the tree of the folder
 // you're in (the open folder, or the open file's), its subfolders expandable; on a view's page, the view's own
 // tree instead (`viewTree`: its widgets and what they show). Choosing a note or folder opens it and closes the popover.
-export function FolderTreeMenu({ name }) {
+export function FolderTreeMenu({ name, changed }) {
   const nav = useContext(NavContext)
   const [open, setOpen] = useState(false)
   if (!nav) return name
@@ -136,7 +137,7 @@ export function FolderTreeMenu({ name }) {
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <TitleMenuButton icon={<FileIcon path={nav.current ?? ''} dir={nav.current !== nav.file} />}>{withoutEmoji(name)}</TitleMenuButton>
+        <TitleMenuButton icon={<FileIcon path={nav.current ?? ''} dir={nav.current !== nav.file} />} changed={changed}>{withoutEmoji(name)}</TitleMenuButton>
       </PopoverTrigger>
       <PopoverContent className="w-80 p-space-sm" onCloseAutoFocus={e => e.preventDefault()}>
         <div className="max-h-[60vh] overflow-y-auto overscroll-y-contain" data-no-pull>
