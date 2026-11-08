@@ -3,6 +3,8 @@
 ## Item actions
 Rename / Move / Remove for any file or folder (the only way to rename) go through `ItemMenu` (⋯) on list rows, tree rows and the title bar. A file's ⋯ also has Duplicate: a copy next to it ("x 2.md", `freePath`), a note's text with " (copy)" after its title (`copyTitled`), else (a file, or a note not on this device) the same bytes (`duplicate` in lib/changes.js; a blob GitHub already has isn't uploaded again on push); a symlink can't be duplicated. Every ⋯ of a file or folder (and a board card's) has Copy link: a markdown link to it from the repo's root (`[Name](/path/to/Name.md)`, `repoLink`) to paste in another note; it follows renames like any link. `SearchSheet` finds visible files by path, and the app's Search folders too (listed first); with no query it lists recently opened files. The app's Search always opens what you pick in File manager.
 
+The square behind a card's icon in File manager's Cards takes the emoji's own color (`lib/emojiColor.js`: its pixels averaged, once per emoji, a light mix of it that darkens on hover; `iconTint`).
+
 ## Moving emojis from names to icons
 Settings → Emoji in names → Move to icons (after a confirmation sheet; `moveEmojisToIcons` in App, `emojiNamed` in `lib/icons.js`) takes the emoji off every file and folder name that starts with one and makes it that item's icon, in one step: shallowest first (a folder's files follow it), a taken name gets a number ("Plan 2.md"), links are rewritten like any rename, an icon already chosen is kept, and `.folio`, `.archive` and hidden names are left alone. Notes' `title` properties and headings are never touched. Nothing is pushed until Sync.
 

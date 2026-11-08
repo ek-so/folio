@@ -20,9 +20,11 @@ import { cn } from '@/lib/utils.js'
 import { Separator } from './ui/separator.jsx'
 import { columnFolders } from '../lib/columns.js'
 import { useIsDesktop } from '../hooks/useIsDesktop.js'
+import { useIconsContext } from '../hooks/useIcons.js'
 import { EmptyMessage } from './EmptyState.jsx'
 
 export default function FileBrowser({ path, onNavigate, listDir, loading, error, notice, onSelect, onNewFile, onRename, onDuplicate, onDelete, onMove, folders, onUpload, onDropMove, symlinks = {}, linkedBy, onOpenLink }) {
+  const { iconOf } = useIconsContext()
   // Symlinked folders sort with the folders
   const isFolder = i => i.type === 'dir' || symlinks[i.path]?.kind === 'folder'
   const sorted = dir => { const listed = loading ? [] : listDir(dir); return [...listed.filter(isFolder), ...listed.filter(i => !isFolder(i))] }
@@ -79,6 +81,7 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
     const base = withoutEmoji(name)
     const isLink = item.path in symlinks
     const link = symlinks[item.path] // undefined while loading
+    const tintPath = isLink ? (link?.path ?? item.path) : item.path // the icon's: a link's source's
     const openable = isLink ? !!link?.kind : item.type === 'dir' || fileKind(item.path) !== 'file'
     const isDraggedItem = dragging?.path === item.path
     const Item = layout === 'cards' ? CardTile : ListRow
@@ -139,7 +142,7 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
             {isLink && <span className="text-muted-foreground"> (symlink)</span>}
             {link?.error && <span className={cn('text-sm text-muted-foreground', !cards && 'ml-space-sm')}>{LINK_ERRORS[link.error]}</span>}
           </>}
-          tint={cards ? iconTint(isLink ? (link?.path ?? item.path) : item.path, isLink ? link?.kind === 'folder' : item.type === 'dir') : undefined}
+          tint={cards ? iconTint(tintPath, isLink ? link?.kind === 'folder' : item.type === 'dir', iconOf(tintPath)) : undefined}
           tall={cards ? tall : undefined}
           changed={item.changed}
           onClick={() => navigate(item)}

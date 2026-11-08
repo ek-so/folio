@@ -4,7 +4,7 @@ import { Tip } from './tooltip.jsx'
 // One tile of the cards layout (File manager): `icon` large on top, `title` under
 // it (`tall`: two lines tall even for a short name, so tiles are the same height; File manager
 // sets it when any name in the folder wraps), `trailing` (⋯) in the top right corner. Takes the same
-// props as ListRow (plus `tint`: background classes of the square behind the icon), so a list and its cards show the same things.
+// props as ListRow (plus `tint`: { className, style } of the square behind the icon), so a list and its cards show the same things.
 // `className` and `tileProps` (drag and drop) go on the tile itself.
 export function CardTile({ icon, title, trailing, onClick, tint, tall, dimmed, changed, disabled, tooltip, className, tileProps }) {
   // The tooltip is on the whole row, so it also explains a row that can't be opened
@@ -26,7 +26,7 @@ export function CardTile({ icon, title, trailing, onClick, tint, tall, dimmed, c
           dimmed && 'opacity-50',
         )}
       >
-        <span className={cn('flex size-12 items-center justify-center rounded-sm transition-colors', tint)}>{icon}</span>
+        <span style={tint?.style} className={cn('flex size-12 items-center justify-center rounded-sm transition-colors', tint?.className)}>{icon}</span>
         <span className={cn('line-clamp-2 w-full break-words', tall && 'min-h-[2lh]')}>
           <span data-card-label>
             {title}

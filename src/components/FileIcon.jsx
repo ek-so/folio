@@ -1,6 +1,7 @@
 import { Folder, FileText, FilePdf, FileImage, File, ArrowUpRight } from '@phosphor-icons/react'
 import { fileKind } from '../lib/files.js'
 import { cn } from '@/lib/utils.js'
+import { emojiColor } from '../lib/emojiColor.js'
 import { useIconsContext } from '../hooks/useIcons.js'
 
 // kind: [icon, icon color, tint of the square behind a card's icon (light, darker while its card is hovered)]
@@ -12,8 +13,13 @@ const ICONS = {
 }
 const FOLDER_TINT = 'bg-folder/10 group-hover:bg-folder/20'
 
-// Background of the square behind a card's icon, matching the icon's color
-export const iconTint = (path, dir) => dir ? FOLDER_TINT : ICONS[fileKind(path)][2]
+// Background of the square behind a card's icon, matching the icon's color: { className, style }. An emoji's square takes
+// the emoji's own color (lib/emojiColor.js: a light mix of it, darker while its card is hovered).
+export function iconTint(path, dir, emoji) {
+  const color = emoji && emojiColor(emoji)
+  if (color) return { className: 'bg-[color-mix(in_srgb,var(--tint)_14%,transparent)] group-hover:bg-[color-mix(in_srgb,var(--tint)_26%,transparent)]', style: { '--tint': `rgb(${color})` } }
+  return { className: dir ? FOLDER_TINT : ICONS[fileKind(path)][2] }
+}
 
 // Text color of an item's icon
 const iconColor = (path, dir) => dir ? 'text-folder' : ICONS[fileKind(path)][1]
