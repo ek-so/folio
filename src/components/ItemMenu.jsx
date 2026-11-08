@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { DotsThree, PencilSimple, Trash, Folder, Rows, SquaresFour, Copy, LinkSimple } from '@phosphor-icons/react'
+import { DotsThree, PencilSimple, Trash, Folder, Rows, SquaresFour, Copy, LinkSimple, Lock, LockOpen } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils.js'
 import { Button } from './ui/button.jsx'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from './ui/dropdown-menu.jsx'
@@ -21,11 +21,12 @@ import { repoLink } from '../lib/markdown.js'
 // default (title bar of the open folder or file): ghost-outline with a more visible border
 // hoverReveal (with inList): with a mouse, hidden until its row (`group`) is hovered, it's focused or its menu is open; always shown on touch
 // columns (an open card of a board opened from its view): { columns, column, onSelect } for a Move to column submenu
+// lock ({ locked, onToggle }; a note's page): Lock / Unlock (lib/locks.js); a locked file has no Move to column and no Remove
 // view / onView (File manager's title bar): an icon-only List | Cards switch on top of the menu;
 // with no `item` (the root folder, which can't be renamed, moved or deleted) it's all the menu has
 const VIEWS = [['list', 'List', Rows], ['cards', 'Cards', SquaresFour]]
 
-export default function ItemMenu({ item, onRename, onDuplicate, onDelete, onMove, folders, inList, hoverReveal, view, onView, columns }) {
+export default function ItemMenu({ item, onRename, onDuplicate, onDelete, onMove, folders, inList, hoverReveal, view, onView, columns, lock }) {
   const [renaming, setRenaming] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [moving, setMoving] = useState(false)
@@ -55,11 +56,12 @@ export default function ItemMenu({ item, onRename, onDuplicate, onDelete, onMove
           {onView && item && <DropdownMenuSeparator />}
           {item && <>
             <DropdownMenuItem onSelect={() => setRenaming(true)}><PencilSimple /> Rename</DropdownMenuItem>
-            {columns && <ColumnSubmenu columns={columns.columns} column={columns.column} onSelect={columns.onSelect} />}
+            {columns && !lock?.locked && <ColumnSubmenu columns={columns.columns} column={columns.column} onSelect={columns.onSelect} />}
             {onMove && <DropdownMenuItem onSelect={() => setMoving(true)}><Folder /> Move to…</DropdownMenuItem>}
             {onDuplicate && item.type !== 'dir' && <DropdownMenuItem onSelect={() => onDuplicate(item)}><Copy /> Duplicate</DropdownMenuItem>}
             <DropdownMenuItem onSelect={() => copyText(repoLink(item.path), 'Link copied')}><LinkSimple /> Copy link</DropdownMenuItem>
-            <DropdownMenuItem variant="destructive" onSelect={() => setDeleting(true)}><Trash /> Remove</DropdownMenuItem>
+            {lock && <DropdownMenuItem disabled={!lock.onToggle} onSelect={lock.onToggle}>{lock.locked ? <><LockOpen /> Unlock</> : <><Lock /> Lock</>}</DropdownMenuItem>}
+            {!lock?.locked && <DropdownMenuItem variant="destructive" onSelect={() => setDeleting(true)}><Trash /> Remove</DropdownMenuItem>}
           </>}
         </DropdownMenuContent>
       </DropdownMenu>

@@ -106,7 +106,7 @@ export default function Board({ id, services, onRemove }) {
     const cardMenu = path => off ? undefined : (
       <CardMenu
         {...cardActions(path, notes[path], act, services)}
-        columns={columns} column={columnOf(path)}
+        columns={services.locked(path) ? undefined : columns} column={columnOf(path)}
         onMove={key => moveToColumn(path, key)}
         onEditColumns={() => setChoosing('columns')}
       />
@@ -133,7 +133,10 @@ export default function Board({ id, services, onRemove }) {
                 onRename={() => setRenaming(c)} onDelete={() => setDeleting(c)}
               >
                 <SortableContext items={shownCards(items[c.key], expanded.has(c.key), drag?.path).map(cardId)} strategy={verticalListSortingStrategy}>
-                  {shownCards(items[c.key], expanded.has(c.key), drag?.path).map(path => <Card key={path} path={path} menu={cardMenu(path)} text={notes[path]} board={board} files={files} onOpen={openFile} onOpenFolder={openFolder} onChange={off ? undefined : act.setProperty} options={act.valuesOf} onRemoveValue={off ? undefined : act.removeValue} valueCount={act.valueCount} chosen={services.tagColors.colors} onEditValue={off || !services.tagColors.canEdit ? undefined : act.editValue} />)}
+                  {shownCards(items[c.key], expanded.has(c.key), drag?.path).map(path => {
+                    const still = off || services.locked(path) // a locked card: no value changes, no dragging
+                    return <Card key={path} path={path} locked={services.locked(path)} menu={cardMenu(path)} text={notes[path]} board={board} files={files} onOpen={openFile} onOpenFolder={openFolder} onChange={still ? undefined : act.setProperty} options={act.valuesOf} onRemoveValue={still ? undefined : act.removeValue} valueCount={act.valueCount} chosen={services.tagColors.colors} onEditValue={still || !services.tagColors.canEdit ? undefined : act.editValue} />
+                  })}
                 </SortableContext>
               </Column>
             ))}
@@ -280,20 +283,22 @@ function Column({ column, canEdit, count, more, onShowMore, onNewCard, onRename,
   )
 }
 
-function Card({ menu, path, text, board, files, onOpen, onOpenFolder, onChange, options, onRemoveValue, valueCount, chosen, onEditValue }) {
+// `locked` (lib/locks.js): it can't be dragged to another column (that changes its status)
+function Card({ menu, path, locked, text, board, files, onOpen, onOpenFolder, onChange, options, onRemoveValue, valueCount, chosen, onEditValue }) {
   const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
     id: cardId(path),
     data: { type: 'card', path },
+    disabled: locked,
   })
   return (
     <NoteCard
       ref={setNodeRef}
-      path={path} text={text} properties={board.properties} scopeName="this board" files={files} menu={menu}
+      path={path} locked={locked} text={text} properties={board.properties} scopeName="this board" files={files} menu={menu}
       onChange={onChange && ((key, value) => onChange(path, key, value))} options={options} onRemoveValue={onRemoveValue} valueCount={valueCount} chosen={chosen} onEditValue={onEditValue}
       style={{ transform: CSS.Translate.toString(transform), transition }}
       className={cn(isDragging && 'opacity-40')}
       onClick={cardClick(path, files, onOpen, onOpenFolder)}
-      {...attributes} {...ownListeners(listeners)}
+      {...attributes} aria-disabled={undefined} {...ownListeners(listeners)}
     />
   )
 }

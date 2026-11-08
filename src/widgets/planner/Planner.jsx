@@ -1,6 +1,6 @@
 import { toast } from 'sonner'
 import { Fragment, useState, useMemo, useRef, useCallback, useLayoutEffect } from 'react'
-import { Tag, Plus, CalendarBlank, CrosshairSimple, CalendarDots, ListBullets, ArrowsClockwise } from '@phosphor-icons/react'
+import { Tag, Plus, LockSimple, CalendarBlank, CrosshairSimple, CalendarDots, ListBullets, ArrowsClockwise } from '@phosphor-icons/react'
 import { DndContext, DragOverlay, useDraggable, useDroppable, pointerWithin } from '@dnd-kit/core'
 import { useDragSensors } from '@/hooks/useDragSensors.js'
 import { cn } from '@/lib/utils.js'
@@ -150,14 +150,18 @@ export default function Planner({ id, services, onRemove }) {
       if (day !== (before && dayKey(before))) toastMoved(path, day, () => act.setProperty(path, DATE, old ?? ''))
     }
     const cardMenu = (path, inRow) => off ? undefined : (
-      <CardMenu {...cardActions(path, notes[path], act, services)} onDone={() => markDone(path)} inRow={inRow} />
+      <CardMenu {...cardActions(path, notes[path], act, services)} onDone={services.locked(path) ? undefined : () => markDone(path)} inRow={inRow} />
     )
-    const cardProps = path => ({
-      path, text: notes[path], properties: shown, always: FIXED, dateKeys: [DATE], badges: BADGES, scopeName: 'this planner', files,
-      onChange: off ? undefined : (key, value) => key === DATE ? reschedule(path, value) : act.setProperty(path, key, value), options: act.valuesOf,
-      onRemoveValue: off ? undefined : act.removeValue, valueCount: act.valueCount,
-      chosen: services.tagColors.colors, onEditValue: off || !services.tagColors.canEdit ? undefined : act.editValue,
-    })
+    // A locked card (lib/locks.js): no value changes, no dragging to another day
+    const cardProps = path => {
+      const still = off || services.locked(path)
+      return {
+        path, text: notes[path], properties: shown, always: FIXED, dateKeys: [DATE], badges: BADGES, scopeName: 'this planner', files,
+        onChange: still ? undefined : (key, value) => key === DATE ? reschedule(path, value) : act.setProperty(path, key, value), options: act.valuesOf,
+        onRemoveValue: still ? undefined : act.removeValue, valueCount: act.valueCount,
+        chosen: services.tagColors.colors, onEditValue: still || !services.tagColors.canEdit ? undefined : act.editValue,
+      }
+    }
     // A card dropped on a day gets that day as its date (its time is kept; text that isn't a day is replaced)
     const onDragEnd = ({ active, over }) => {
       setDragged(null)
@@ -195,7 +199,7 @@ export default function Planner({ id, services, onRemove }) {
               {sectionTitle(group.label, group.first)}
               <div className="flex flex-col gap-0.5 rounded-lg border border-border bg-card p-1">
                 {group.cards.filter(c => rows.has(c.path)).map(({ path, overdue }) => (
-                  <TaskRow key={path} path={path} text={notes[path]} overdue={overdue} menu={cardMenu(path, true)} onOpen={openFile} />
+                  <TaskRow key={path} path={path} text={notes[path]} overdue={overdue} locked={services.locked(path)} menu={cardMenu(path, true)} onOpen={openFile} />
                 ))}
               </div>
               <TrayFooter more={hidden} onShowMore={() => setExpanded(e => new Set(e).add(`list:${group.key}`))} />
@@ -233,7 +237,7 @@ export default function Planner({ id, services, onRemove }) {
           {list.length > 0 && (
             <div ref={setGrid} className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,18rem),1fr))] gap-space-sm">
               {list.filter(c => visible.has(c.path)).map(({ path, overdue, undated }) => (
-                <PlannerCard key={path} {...cardProps(path)} menu={cardMenu(path)} overdue={overdue} dashed={overdue || undated} onOpen={openFile} onOpenFolder={openFolder} />
+                <PlannerCard key={path} {...cardProps(path)} menu={cardMenu(path)} overdue={overdue} dashed={overdue || undated} locked={services.locked(path)} onOpen={openFile} onOpenFolder={openFolder} />
               ))}
               <TrayFooter grid more={more} onShowMore={() => setExpanded(e => new Set(e).add(selected))} />
             </div>
@@ -327,13 +331,13 @@ function Day({ dayKey: key, today, selected, count, onSelect }) {
 // A card as a row of the list view (ListRow): its title, its date under it and, when it repeats, a small circling-arrows
 // icon (grey, like the line) and how often right after it; its ⋯; it opens the note. `overdue` (dated before today, listed
 // under Today): its title faded and its date red
-function TaskRow({ path, text, overdue, menu, onOpen }) {
+function TaskRow({ path, text, overdue, locked, menu, onOpen }) {
   const date = text === undefined ? null : cardDate(text)
   const repeat = text === undefined ? '' : properties(text)[REPEAT]
   const kind = parseRecurrence(repeat)?.kind
   return (
     <ListRow
-      title={<span className={cn(overdue && 'opacity-50')}>{cardTitle(path, text)}</span>}
+      title={<span className={cn(overdue && 'opacity-50')}>{locked && <LockSimple aria-label="Locked" className="mr-1 inline size-3.5 align-[-0.125em] text-muted-foreground" />}{cardTitle(path, text)}</span>}
       description={<>
         <span className={cn(overdue && 'text-destructive-ink')}>{date ? dateLabel(date) : 'No date'}</span>
         {(kind === 'repeat' || kind === 'unset') && <> · <ArrowsClockwise className="inline size-3 align-[-0.125em]" /> {repeatLabel(repeat)}</>}
@@ -347,15 +351,15 @@ function TaskRow({ path, text, overdue, menu, onOpen }) {
 // A card of the selected day, dragged by a press on it (dropped on a day of the ribbon). One only listed under today
 // because it has no date or is late (`dashed`) has a dashed outline; a late one (`overdue`) also its title faded and its
 // date red (NoteCard)
-function PlannerCard({ path, dashed, onOpen, onOpenFolder, files, ...props }) {
-  const { setNodeRef, attributes, listeners, isDragging } = useDraggable({ id: dayCardId(path), data: { path } })
+function PlannerCard({ path, dashed, locked, onOpen, onOpenFolder, files, ...props }) {
+  const { setNodeRef, attributes, listeners, isDragging } = useDraggable({ id: dayCardId(path), data: { path }, disabled: !!locked })
   return (
     <NoteCard
       ref={setNodeRef}
-      path={path} files={files} {...props}
+      path={path} locked={locked} files={files} {...props}
       className={cn(NO_CALLOUT, dashed && 'border-dashed border-muted-foreground/50', isDragging && 'opacity-40')}
       onClick={cardClick(path, files, onOpen, onOpenFolder)}
-      {...attributes} {...ownListeners(listeners)}
+      {...attributes} aria-disabled={undefined} {...ownListeners(listeners)}
     />
   )
 }

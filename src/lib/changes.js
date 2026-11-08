@@ -367,6 +367,25 @@ export function commitMessage(ch) {
   return `Update ${lines.length} files\n\n${lines.map(l => `- ${l}`).join('\n')}`
 }
 
+// `next` with the text of the files `origs` (original paths, see above) as `prev` had it: whatever changed it in
+// between (a widget's edit of a locked note) is undone; their moves and everything else in `next` stay
+export function keptEdits(prev, next, origs) {
+  let out = next
+  for (const orig of origs) {
+    if (next.edits[orig] === prev.edits[orig]) continue
+    out = out === next ? clone(next) : out
+    if (orig in prev.edits) {
+      out.edits[orig] = prev.edits[orig]
+      touch(out, orig, prev.base[orig])
+    } else {
+      delete out.edits[orig]
+      if (orig in prev.base && !(orig in out.base)) out.base[orig] = prev.base[orig]
+      if (!(orig in prev.base)) tidy(out, orig)
+    }
+  }
+  return out
+}
+
 // `ch` with `edit(text)` applied to the note at `path` (in `ch`'s files); `remoteText(sha)`: GitHub's text of
 // a note (undefined when it isn't on this device: that note is left as it is)
 export function editNote(ch, files, path, edit, remoteText) {

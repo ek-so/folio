@@ -1,6 +1,6 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { flushSync } from 'react-dom'
-import { Check, PencilSimple } from '@phosphor-icons/react'
+import { Check, PencilSimple, LockSimple } from '@phosphor-icons/react'
 import { Button } from './ui/button.jsx'
 import Spinner from './Spinner.jsx'
 import FilePage from './FilePage.jsx'
@@ -16,7 +16,10 @@ import PropertyBadges from './PropertyBadges.jsx'
 // whole markdown shown as preview; ✏️ in the title bar edits the markdown,
 // starting where you were reading, and a double tap starts at the tapped
 // word. Edits save on their own; ✓ (same spot) switches back to preview, writing typed dates in one format.
-export default function Editor({ linkedBy, onOpenLink, path, entry, files, notes, onEditNotes, tagColors, edited, onEdit, onNavigate, onOpenFile, onRename, onDuplicate, onDelete, onMove, folders, columns, valueScope, backlinks }) {
+// `locked` (lib/locks.js): nothing in it can be changed (no ✏️, double tap, ticks, list dragging, badges' values or
+// links' edits); a lock icon takes ✏️'s place and unlocks it (`onToggleLock`, also Lock / Unlock in ⋯; none when the
+// locks can't be saved). Renaming, moving and duplicating stay.
+export default function Editor({ linkedBy, onOpenLink, path, entry, files, notes, onEditNotes, tagColors, edited, onEdit, onNavigate, onOpenFile, onRename, onDuplicate, onDelete, onMove, folders, columns, valueScope, backlinks, locked, onToggleLock }) {
   const { content, change, loading, loadError, beginEdit, endEdit } = useNote(entry, edited, onEdit, valueScope?.required, valueScope?.order)
   const [mode, setMode] = useState('preview')
   const [editedAt, setEditedAt] = useState(null) // offset to show when back in preview
@@ -56,6 +59,10 @@ export default function Editor({ linkedBy, onOpenLink, path, entry, files, notes
     onEditNotes(nearby.filter(p => p !== path), edit, first)
   }, tagColors.set)
 
+  // Locked while editing (from ⋯): back to the preview, its typing saved
+  useEffect(() => { if (locked && mode === 'edit') finishEditing() }, [locked])
+  const changeUnlocked = locked ? undefined : change // nothing changes a locked note
+
   const fileName = displayName(path)
   const ready = !loading && !loadError
 
@@ -71,9 +78,14 @@ export default function Editor({ linkedBy, onOpenLink, path, entry, files, notes
       onDelete={onDelete}
       onMove={onMove}
       folders={folders}
-      columns={columns}
+      columns={locked ? undefined : columns}
+      lock={{ locked, onToggle: onToggleLock }}
       actions={<>
-        {mode === 'edit' ? (
+        {locked ? (
+          <Button variant="ghost-outline" size="icon" aria-label="Unlock" tooltip="Locked: tap to unlock" disabled={!onToggleLock} onClick={onToggleLock} className="shrink-0 border-muted-foreground/50">
+            <LockSimple />
+          </Button>
+        ) : mode === 'edit' ? (
           <Button variant="success" size="icon" onClick={finishEditing} aria-label="Done" className="shrink-0">
             <Check />
           </Button>
@@ -98,10 +110,10 @@ export default function Editor({ linkedBy, onOpenLink, path, entry, files, notes
         <MarkdownPreview
           ref={previewRef}
           content={content} path={path} files={files} scrollTo={editedAt}
-          onDoubleTap={startEditing} onChange={change} onOpenFile={onOpenFile} onNavigate={onNavigate}
+          onDoubleTap={locked ? undefined : startEditing} onChange={changeUnlocked} onOpenFile={onOpenFile} onNavigate={onNavigate}
           footer={<Backlinks links={backlinks} onOpen={onOpenFile} />}
         >
-          <PropertyBadges props={ordered(frontMatter(content)?.props ?? [], valueScope?.order)} path={path} files={files} title="Properties" onChange={(key, value) => change(withValue(content, key, value))} options={values.options} onRemoveValue={values.removeValue} valueCount={values.count} scopeName={valueScope?.name ?? "this folder"} chosen={tagColors.colors} onEditValue={tagColors.canEdit ? values.editValue : undefined} badges={valueScope?.badges} className="px-space pt-space" />
+          <PropertyBadges props={ordered(frontMatter(content)?.props ?? [], valueScope?.order)} path={path} files={files} title="Properties" onChange={locked ? undefined : (key, value) => change(withValue(content, key, value))} options={values.options} onRemoveValue={locked ? undefined : values.removeValue} valueCount={values.count} scopeName={valueScope?.name ?? "this folder"} chosen={tagColors.colors} onEditValue={tagColors.canEdit && !locked ? values.editValue : undefined} badges={valueScope?.badges} className="px-space pt-space" />
         </MarkdownPreview>
       )}
     </FilePage>

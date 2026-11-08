@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import {
   empty, count, virtualFiles, add, setEdit, rename, remove, conflicts, settle, treeEntries, filesAfter,
   upload, replaceUpload, normalize, freePath, duplicate, commitMessage,
-  renameTarget, renameError, canMoveTo, createError, getAllFolders, nameError,
+  renameTarget, renameError, canMoveTo, createError, getAllFolders, nameError, keptEdits,
 } from './changes.js'
 
 const files = {
@@ -163,5 +163,16 @@ describe('getAllFolders', () => {
     expect(canMoveTo(dir, '')).toBe(true)
     expect(canMoveTo({ path: 'x.md', type: 'file' }, '')).toBe(false)
     expect(canMoveTo({ path: 'x.md', type: 'file' }, 'a')).toBe(true)
+  })
+
+  it('keeps a locked note\'s text as it was, whatever changed it', () => {
+    const files = { 'a.md': { sha: 'A', mode: '100644' }, 'b.md': { sha: 'B', mode: '100644' } }
+    const prev = setEdit(empty(), virtualFiles(files, empty())['a.md'], 'mine', 'orig')
+    const next = setEdit(setEdit(prev, virtualFiles(files, prev)['a.md'], 'theirs', 'orig'), virtualFiles(files, prev)['b.md'], 'b2', 'origB')
+    const kept = keptEdits(prev, next, ['a.md'])
+    expect(kept.edits).toEqual({ 'a.md': 'mine', 'b.md': 'b2' })
+    // A note with no edit before: the new one goes, and so does its entry when nothing else changed it
+    const fresh = setEdit(empty(), virtualFiles(files, empty())['a.md'], 'new', 'orig')
+    expect(keptEdits(empty(), fresh, ['a.md'])).toEqual(empty())
   })
 })

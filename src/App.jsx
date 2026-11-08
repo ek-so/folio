@@ -31,6 +31,7 @@ import { useAuth } from './hooks/useAuth.js'
 import { useRepo } from './hooks/useRepo.js'
 import { useConfig } from './hooks/useConfig.js'
 import { useTagColors } from './hooks/useTagColors.js'
+import { useLocks } from './hooks/useLocks.js'
 import ViewPage from './components/ViewPage.jsx'
 import RenameModal from './components/RenameModal.jsx'
 import DeleteModal from './components/DeleteModal.jsx'
@@ -51,7 +52,7 @@ import { archiveDay, inArchive, staleArchiveDays, KEEP_DAYS } from './lib/archiv
 import { fileItem } from './lib/folderNotes.js'
 import {
   listDir, nameError, renameTarget, renameError, createError, add, setEdit, rename, remove, getAllFolders,
-  upload, replaceUpload, freePath, virtualFiles, splitName, editNote, duplicate, MAX_UPLOAD_BYTES,
+  upload, replaceUpload, freePath, virtualFiles, splitName, editNote, duplicate, keptEdits, MAX_UPLOAD_BYTES,
 } from './lib/changes.js'
 import { plural } from './lib/plural.js'
 
@@ -71,6 +72,7 @@ export default function App() {
   // The app's settings in the repo's .folio/: the views in the navigation (Home…) and their widgets' own
   const config = useConfig(repo)
   const tagColors = useTagColors(config)
+  const locks = useLocks(config) // files locked against editing (lib/locks.js)
   const viewsFile = config.read(VIEWS_PATH)
   const parsedViews = viewsFile.ready ? parseViews(viewsFile.text) : undefined
   const views = parsedViews ?? DEFAULT_VIEWS
@@ -247,8 +249,14 @@ export default function App() {
       const type = widgetType(w.type)
       if (type?.moved) next = type.moved(next, w.id, item.path, to, item.type === 'dir', widgetServices)
     }
-    return next
+    return locks.moved(item.path, to, item.type === 'dir')(next) // a lock goes where its file goes (the archive too)
   }
+
+  // `fn` (ch => ch) as a change that never edits a locked note's text: what it changed there is put back (keptEdits).
+  // Every edit that isn't the app's own (renames, moves, link rewrites) goes through it: widgets, a note's values
+  const guarded = fn => ch => keptEdits(ch, fn(ch), Object.entries(filesOf(ch)).filter(([path]) => locks.isLocked(path)).map(([, e]) => e.orig))
+  // Locked: `item` itself, or for a folder a file in it
+  const lockedIn = item => locks.isLocked(item.path) || (item.type === 'dir' && Object.keys(virtual).some(p => p.startsWith(item.path + '/') && locks.isLocked(p)))
 
   // The first path `item` can move to: `wanted` itself, else with a number ("x 2.md", "folder 2"); a path it was moved
   // away from counts as free for it (renameError), so an undo puts it back in its own place
@@ -333,6 +341,10 @@ export default function App() {
   // settings files, and the app's own ways to change and open files
   const widgetServices = {
     canEdit: viewsReady && !!repo.remote,
+    // Locked files (lib/locks.js): `locked(path)`; Lock / Unlock in a card's ⋯ (`toggleLock`, only when `canLock`)
+    locked: path => locks.isLocked(path),
+    canLock: locks.canEdit,
+    toggleLock: path => update(locks.toggle(path)),
     files: Object.keys(shown),
     folders: allFolders,
     notes: links.notes,
@@ -341,7 +353,7 @@ export default function App() {
     repoName: auth.repo?.split('/')[1] ?? '',
     config,
     tagColors,
-    update,
+    update: fn => update(guarded(fn)), // a widget never edits a locked note
     openFile: path => setSelectedFile(path),
     openFolder: path => openFolder(path),
     // A move that's refused shows as a toast; true when it's done
@@ -445,8 +457,10 @@ export default function App() {
   }
 
   // Remove: a file or folder goes to the archive, with a toast to undo it; one already in the archive is deleted for good
+  // A locked file (or a folder with one in it) isn't removed: a message says so
   function handleDelete(item) {
-    if (inArchive(item.path)) return update(ch => remove(ch, filesOf(ch), item.path, item.type === 'dir'))
+    if (lockedIn(item)) return toast.error(`“${item.name}” ${item.type === 'dir' ? 'has locked files' : 'is locked'}. Unlock ${item.type === 'dir' ? 'them' : 'it'} to remove it.`)
+    if (inArchive(item.path)) return update(ch => locks.removed(item.path, item.type === 'dir')(remove(ch, filesOf(ch), item.path, item.type === 'dir')))
     const { to } = archive(item)
     toast.success(`“${item.name}” moved to the archive`, {
       action: { label: 'Undo', onClick: () => unarchive({ ...item, path: to, name: to.slice(to.lastIndexOf('/') + 1) }, item.path) },
@@ -751,7 +765,7 @@ export default function App() {
               files={virtual}
               notes={links.notes}
               tagColors={tagColors}
-              onEditNotes={(paths, edit, first = ch => ch) => update(ch => paths.reduce((c, p) => editNote(c, repo.remote?.files ?? {}, p, edit, links.remoteText), first(ch)))}
+              onEditNotes={(paths, edit, first = ch => ch) => update(guarded(ch => paths.reduce((c, p) => editNote(c, repo.remote?.files ?? {}, p, edit, links.remoteText), first(ch))))}
               edited={changes.edits[entry.orig]}
               onEdit={(content, original) =>
                 update(ch => setEdit(ch, virtual[selectedFile], content, original))}
@@ -765,6 +779,8 @@ export default function App() {
               columns={fileMoves}
               valueScope={valueScope}
               backlinks={links.index.backlinks[selectedFile]}
+              locked={locks.isLocked(selectedFile)}
+              onToggleLock={locks.canEdit ? () => update(locks.toggle(selectedFile)) : undefined}
             />
           ) : (
             <FileBrowser

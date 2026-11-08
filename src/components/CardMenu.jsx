@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { DotsThree, PencilSimple, Trash, Columns, Copy, TextT, TextAlignLeft, LinkSimple, CheckCircle } from '@phosphor-icons/react'
+import { DotsThree, PencilSimple, Trash, Columns, Copy, TextT, TextAlignLeft, LinkSimple, CheckCircle, Lock, LockOpen } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button.jsx'
 import { Input } from '@/components/ui/input.jsx'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu.jsx'
@@ -16,16 +16,21 @@ import { properties, valueList, DESCRIPTION } from '@/lib/frontmatter.js'
 // The CardMenu props every widget's card gives the same way (a board's, a planner's): its title and description, and
 // editing them (`act`: the widget's useFolderNotes actions), renaming, duplicating (`services`: the app's) and removing it.
 // `text`: its note (undefined when it isn't on this device). The widget adds its own (Mark as done, Move to column)
-export const cardActions = (path, text, act, services) => ({
-  path,
-  title: cardTitle(path, text),
-  onTitle: act.canTitle(path) ? title => act.setTitle(path, title) : undefined,
-  description: text === undefined ? '' : valueList(properties(text)[DESCRIPTION] ?? '').join(', '),
-  onDescription: act.canTitle(path) ? value => act.setDescription(path, value) : undefined,
-  onRename: name => services.rename(fileItem(path), name),
-  onDuplicate: () => services.duplicate(fileItem(path)),
-  onDelete: () => act.deleteCard(path),
-})
+// A locked card (lib/locks.js) has no Edit title / description and no Remove; Lock / Unlock toggles it.
+export const cardActions = (path, text, act, services) => {
+  const locked = services.locked(path)
+  return {
+    path,
+    title: cardTitle(path, text),
+    onTitle: act.canTitle(path) && !locked ? title => act.setTitle(path, title) : undefined,
+    description: text === undefined ? '' : valueList(properties(text)[DESCRIPTION] ?? '').join(', '),
+    onDescription: act.canTitle(path) && !locked ? value => act.setDescription(path, value) : undefined,
+    onRename: name => services.rename(fileItem(path), name),
+    onDuplicate: () => services.duplicate(fileItem(path)),
+    onDelete: locked ? undefined : () => act.deleteCard(path),
+    lock: { locked, onToggle: services.canLock ? () => services.toggleLock(path) : undefined },
+  }
+}
 
 // A card's ⋯ menu, a board's and a planner's (hidden until the card is hovered with a mouse, always shown on touch):
 // Mark as done (only with `onDone`, a planner's), Edit title (the card's title, not the file's name; only with `onTitle`: a note on this device), Add / Edit
@@ -34,7 +39,7 @@ export const cardActions = (path, text, act, services) => ({
 // columns, then Edit columns… that opens its Columns dialog) and Remove (the file, to the archive like anywhere else, confirmed). `columns`: [{ key, name }] shown,
 // `column`: the card's key. `inRow`: in a list row (a planner's list view), which has its own padding: none pulled into the corner. Its dialogs are in a `contents` div so a click in them stays
 // theirs, never the card's.
-export default function CardMenu({ path, title, description, columns, column, onDone, onTitle, onDescription, onRename, onDuplicate, onMove, onEditColumns, onDelete, inRow }) {
+export default function CardMenu({ path, title, description, columns, column, onDone, onTitle, onDescription, onRename, onDuplicate, onMove, onEditColumns, onDelete, inRow, lock }) {
   const [editing, setEditing] = useState(null) // 'title' | 'description' while its dialog is open
   const [renaming, setRenaming] = useState(false)
   const item = fileItem(path)
@@ -62,14 +67,17 @@ export default function CardMenu({ path, title, description, columns, column, on
           <DropdownMenuItem onSelect={() => setRenaming(true)}><PencilSimple /> Rename file</DropdownMenuItem>
           <DropdownMenuItem onSelect={onDuplicate}><Copy /> Duplicate</DropdownMenuItem>
           <DropdownMenuItem onSelect={() => copyText(repoLink(path), 'Link copied')}><LinkSimple /> Copy link</DropdownMenuItem>
+          {lock && <DropdownMenuItem disabled={!lock.onToggle} onSelect={lock.onToggle}>{lock.locked ? <><LockOpen /> Unlock</> : <><Lock /> Lock</>}</DropdownMenuItem>}
           {columns && (
             <ColumnSubmenu columns={columns} column={column} onSelect={onMove}>
               <DropdownMenuSeparator />
               <DropdownMenuItem onSelect={onEditColumns}><Columns /> Edit columns…</DropdownMenuItem>
             </ColumnSubmenu>
           )}
-          <DropdownMenuSeparator />
-          <DropdownMenuItem variant="destructive" onSelect={() => setDeleting(true)}><Trash /> Remove</DropdownMenuItem>
+          {onDelete && <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem variant="destructive" onSelect={() => setDeleting(true)}><Trash /> Remove</DropdownMenuItem>
+          </>}
         </DropdownMenuContent>
       </DropdownMenu>
       {editing === 'title' && (
