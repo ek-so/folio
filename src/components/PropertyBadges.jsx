@@ -139,14 +139,14 @@ function isDateProp(prop, options, dateKeys) {
 
 // A date property's badge, like a date in the text (DateField: a calendar icon on the left, no ▾): with `onChange`
 // it opens a calendar and a time field to change it (the same day again empties it). While empty, `emptyLabel` (its name, or "No date" for a planner's).
-// `late`: a past date, in red
+// `late`: a past date, the whole badge red (a red tint, red text and icon)
 function DateValue({ prop, onChange, emptyLabel, late }) {
   const date = valueDate(prop.value)
   const pick = picked => onChange(prop.key, picked ? formatDate(picked) : '')
   return (
     <DateField
       label={date ? dateLabel(date) : emptyLabel} date={date} onPick={onChange && pick}
-      className={cn(!date && PLACEHOLDER, late && 'text-destructive-ink')} {...(onChange ? own : {})}
+      className={cn(!date && PLACEHOLDER, late && 'bg-destructive/10 text-destructive-ink hover:bg-destructive/15')} {...(onChange ? own : {})}
     />
   )
 }
