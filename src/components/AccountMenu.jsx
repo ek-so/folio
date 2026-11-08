@@ -32,9 +32,13 @@ export default function AccountMenu({ trigger, current, pages, viewActions, onNa
       <SheetTrigger asChild>{trigger}</SheetTrigger>
       <SheetContent side="left" className="top-[calc(var(--space-sm)+var(--safe-top))] bottom-[calc(var(--space-sm)+var(--safe-bottom))] left-space-sm h-auto w-[calc(100vw-2*var(--space-sm))] gap-0 min-[500px]:w-[85vw] sm:max-w-none overflow-hidden rounded-xl border bg-card">
         <SheetDescription className="sr-only">Pages and settings</SheetDescription>
-        <div className="flex min-h-control shrink-0 items-center gap-2 border-b border-border p-space-sm pl-space pr-14">
-          <AppLogo className="size-6" />
-          <SheetTitle className="text-base font-bold">Folio</SheetTitle>
+        {/* As tall as a title bar (base height and 8px above and below), level with the sheet's ✕; the logo centered on
+            the rows' icons and the name lined up with their labels */}
+        <div className="shrink-0 border-b border-border p-space-sm pr-14">
+          <div className="flex min-h-control items-center gap-2 px-3">
+            <AppLogo className="-ml-1 size-6 shrink-0" />
+            <SheetTitle className="text-base font-bold">Folio</SheetTitle>
+          </div>
         </div>
         <nav aria-label="Main" className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain p-space-sm" data-no-pull>
           <ul>{pages.filter(p => p.id === PAGE.FILES).map(page)}</ul>
