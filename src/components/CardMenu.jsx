@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { PencilSimple, Trash, Columns, Copy, TextT, TextAlignLeft, LinkSimple, CheckCircle, Lock, LockOpen } from '@phosphor-icons/react'
+import { PencilSimple, Trash, Columns, Copy, TextAlignLeft, LinkSimple, CheckCircle, Lock, LockOpen } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button.jsx'
 import { Input } from '@/components/ui/input.jsx'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu.jsx'
@@ -10,23 +10,21 @@ import RenameModal from '@/components/RenameModal.jsx'
 import { copyText } from '@/lib/clipboard.js'
 import { repoLink } from '@/lib/markdown.js'
 import { cn, own } from '@/lib/utils.js'
-import { fileItem, cardTitle } from '@/lib/folderNotes.js'
+import { fileItem } from '@/lib/folderNotes.js'
 import { properties, valueList, DESCRIPTION } from '@/lib/frontmatter.js'
 import MoreButton from './MoreButton.jsx'
 
-// The CardMenu props every widget's card gives the same way (a board's, a planner's): its title and description, and
-// editing them (`act`: the widget's useFolderNotes actions), renaming, duplicating (`services`: the app's) and removing it.
+// The CardMenu props every widget's card gives the same way (a board's, a planner's): its description, and
+// editing it (`act`: the widget's useFolderNotes actions), renaming (title and file name together), duplicating (`services`: the app's) and removing it.
 // `text`: its note (undefined when it isn't on this device). The widget adds its own (Mark as done, Move to column)
-// A locked card (lib/locks.js) has no Edit title / description and no Remove; Lock / Unlock toggles it.
+// A locked card (lib/locks.js) has no Edit description and no Remove; Lock / Unlock toggles it.
 export const cardActions = (path, text, act, services) => {
   const locked = services.locked(path)
   return {
     path,
-    title: cardTitle(path, text),
-    onTitle: act.canTitle(path) && !locked ? title => act.setTitle(path, title) : undefined,
     description: text === undefined ? '' : valueList(properties(text)[DESCRIPTION] ?? '').join(', '),
-    onDescription: act.canTitle(path) && !locked ? value => act.setDescription(path, value) : undefined,
-    onRename: name => services.rename(fileItem(path), name),
+    onDescription: act.canEditText(path) && !locked ? value => act.setDescription(path, value) : undefined,
+    onRename: (name, title) => services.rename(fileItem(path), name, title),
     onDuplicate: () => services.duplicate(fileItem(path)),
     onDelete: locked ? undefined : () => act.deleteCard(path),
     lock: { locked, onToggle: services.canLock ? () => services.toggleLock(path) : undefined },
@@ -34,14 +32,14 @@ export const cardActions = (path, text, act, services) => {
 }
 
 // A card's ⋯ menu, a board's and a planner's (hidden until the card is hovered with a mouse, always shown on touch):
-// Mark as done (only with `onDone`, a planner's), Edit title (the card's title, not the file's name; only with `onTitle`: a note on this device), Add / Edit
-// description (`description`, its text; only with `onDescription`, a note on this device), Rename file (its file's
-// name, `RenameModal`; `onRename(name)` returns an error or null), Duplicate (a copy of the file next to it), Copy link (`repoLink`), Move to column (only with `columns`, a board's: a submenu of its
+// Mark as done (only with `onDone`, a planner's), Add / Edit
+// description (`description`, its text; only with `onDescription`, a note on this device), Rename (its title and file
+// name together, `RenameModal`; `onRename(name, title)` returns an error or null), Duplicate (a copy of the file next to it), Copy link (`repoLink`), Move to column (only with `columns`, a board's: a submenu of its
 // columns, then Edit columns… that opens its Columns dialog) and Remove (the file, to the archive like anywhere else, confirmed). `columns`: [{ key, name }] shown,
 // `column`: the card's key. `inRow`: in a list row (a planner's list view), which has its own padding: none pulled into the corner. Its dialogs are in a `contents` div so a click in them stays
 // theirs, never the card's.
-export default function CardMenu({ path, title, description, columns, column, onDone, onTitle, onDescription, onRename, onDuplicate, onMove, onEditColumns, onDelete, inRow, lock }) {
-  const [editing, setEditing] = useState(null) // 'title' | 'description' while its dialog is open
+export default function CardMenu({ path, description, columns, column, onDone, onDescription, onRename, onDuplicate, onMove, onEditColumns, onDelete, inRow, lock }) {
+  const [editing, setEditing] = useState(null) // 'description' while its dialog is open
   const [renaming, setRenaming] = useState(false)
   const item = fileItem(path)
   const [deleting, setDeleting] = useState(false)
@@ -56,9 +54,8 @@ export default function CardMenu({ path, title, description, columns, column, on
             <DropdownMenuItem onSelect={onDone}><CheckCircle /> Mark as done</DropdownMenuItem>
             <DropdownMenuSeparator />
           </>}
-          {onTitle && <DropdownMenuItem onSelect={() => setEditing('title')}><TextT /> Edit title</DropdownMenuItem>}
           {onDescription && <DropdownMenuItem onSelect={() => setEditing('description')}><TextAlignLeft /> {description ? 'Edit' : 'Add'} description</DropdownMenuItem>}
-          <DropdownMenuItem onSelect={() => setRenaming(true)}><PencilSimple /> Rename file</DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => setRenaming(true)}><PencilSimple /> Rename</DropdownMenuItem>
           <DropdownMenuItem onSelect={onDuplicate}><Copy /> Duplicate</DropdownMenuItem>
           <DropdownMenuItem onSelect={() => copyText(repoLink(path), 'Link copied')}><LinkSimple /> Copy link</DropdownMenuItem>
           {lock && <DropdownMenuItem disabled={!lock.onToggle} onSelect={lock.onToggle}>{lock.locked ? <><LockOpen /> Unlock</> : <><Lock /> Lock</>}</DropdownMenuItem>}
@@ -74,16 +71,13 @@ export default function CardMenu({ path, title, description, columns, column, on
           </>}
         </DropdownMenuContent>
       </DropdownMenu>
-      {editing === 'title' && (
-        <TextModal title="Edit title" description="Changes the card's title, not the file's name." label="Title" value={title} onSave={value => { setEditing(null); onTitle(value) }} onClose={() => setEditing(null)} />
-      )}
       {editing === 'description' && (
         <TextModal title={description ? 'Edit description' : 'Add description'} label="Description" value={description} onSave={value => { setEditing(null); onDescription(value) }} onClose={() => setEditing(null)} />
       )}
       {renaming && (
         <RenameModal
           item={item}
-          onRename={name => { const err = onRename(name); if (!err) setRenaming(false); return err }}
+          onRename={(name, title) => { const err = onRename(name, title); if (!err) setRenaming(false); return err }}
           onClose={() => setRenaming(false)}
         />
       )}
@@ -98,8 +92,7 @@ export default function CardMenu({ path, title, description, columns, column, on
   )
 }
 
-// One line of the card's note to edit: its title (the `title` property; empty: the note's first heading,
-// else its file name, is shown again; the file keeps its name) or its description
+// The card's description, one line of its note to edit
 function TextModal({ title, description, label, value: initial, onSave, onClose }) {
   const [value, setValue] = useState(initial)
   return (

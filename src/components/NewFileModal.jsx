@@ -1,60 +1,40 @@
 import { useState } from 'react'
 import { Button } from './ui/button.jsx'
-import { Label } from './ui/label.jsx'
 import { Input } from './ui/input.jsx'
 import BottomSheet from './BottomSheet.jsx'
-import { nameFromTitle } from '../lib/changes.js'
+import TitleNameFields from './TitleNameFields.jsx'
+import { useTitleName } from '../hooks/useTitleName.js'
 
 // Creates the note or folder locally; it reaches GitHub on the next sync.
-// `titled` (a board's new card, titled New card): a Title field first, then the File name, which follows the
-// title until it's typed in; `onCreate(name, title)`.
-export default function NewFileModal({ folder, kind, titled, onCreate, onClose }) {
+// A note asks for both its Title and its File name (`TitleNameFields`: the name follows the title until it's typed in);
+// a folder only its name. `onCreate(name, title)`.
+export default function NewFileModal({ folder, kind, onCreate, onClose }) {
   const isFolder = kind === 'folder'
-  const [title, setTitle] = useState('')
-  const [typedName, setTypedName] = useState(null) // the file name once typed in, else it follows the title
+  const fields = useTitleName()
+  const [folderName, setFolderName] = useState('')
   const [error, setError] = useState('')
-  const name = typedName ?? (titled ? nameFromTitle(title) : '')
-  const setName = value => { setTypedName(value); setError('') }
+  const name = isFolder ? folderName : fields.name
+  const ready = name.trim() && (isFolder || fields.title.trim())
 
   function handleCreate(e) {
     e.preventDefault()
-    setError(onCreate(name.trim(), title.trim()) || '')
+    setError(onCreate(name.trim(), fields.title.trim()) || '')
   }
-
-  const nameInput = (
-    <Input
-      type="text"
-      placeholder={isFolder ? 'Folder name' : titled ? 'File name' : 'Note name'}
-      aria-label={titled ? 'File name' : undefined}
-      value={name}
-      onChange={e => setName(e.target.value)}
-      autoCorrect="off"
-      autoCapitalize="words"
-      className="bg-background border-border font-normal"
-    />
-  )
 
   return (
     <BottomSheet
-      title={isFolder ? 'New folder' : titled ? 'New card' : 'New note'}
+      title={isFolder ? 'New folder' : 'New note'}
       description={folder ? `in ${folder}` : undefined}
       onClose={onClose}
     >
       <form onSubmit={handleCreate} className="flex flex-col gap-3">
-        {titled ? <>
-          <Label className="flex-col items-start gap-1.5 leading-5">
-            Title
-            <Input type="text" placeholder="Title" value={title} onChange={e => { setTitle(e.target.value); setError('') }} autoCorrect="off" autoCapitalize="sentences" className="bg-background border-border font-normal" />
-          </Label>
-          <Label className="flex-col items-start gap-1.5 leading-5">
-            File name
-            {nameInput}
-          </Label>
-        </> : nameInput}
+        {isFolder
+          ? <Input type="text" placeholder="Folder name" aria-label="Folder name" value={folderName} onChange={e => { setFolderName(e.target.value); setError('') }} autoCorrect="off" autoCapitalize="words" className="bg-background border-border font-normal" />
+          : <TitleNameFields fields={fields} onEdit={() => setError('')} />}
         {error && <p className="text-destructive-ink text-xs">{error}</p>}
         <div className="flex justify-end gap-space-sm">
           <Button type="button" variant="secondary" onClick={onClose}>Cancel</Button>
-          <Button type="submit" disabled={!name.trim()}>Create</Button>
+          <Button type="submit" disabled={!ready}>Create</Button>
         </div>
       </form>
     </BottomSheet>

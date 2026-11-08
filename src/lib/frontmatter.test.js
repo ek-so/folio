@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { frontMatter, properties, withKeys, withKeysFirst, blankFrontMatter, valueList, noteTitle, withoutKeys, renameKey, keyNameError, withValue, valuesOf, valueColors, withoutValue, countValue, renameValue, withTitle, valueActions, copyTitled } from './frontmatter.js'
+import { frontMatter, properties, withKeys, withKeysFirst, blankFrontMatter, valueList, noteTitle, withoutKeys, renameKey, keyNameError, withValue, valuesOf, valueColors, withoutValue, countValue, renameValue, withTitle, withNoteTitle, valueActions, copyTitled } from './frontmatter.js'
 
 describe('front matter', () => {
   it('moves some properties to the top, in order', () => {
@@ -144,5 +144,19 @@ describe('front matter', () => {
     expect(withKeysFirst(t, ['date'])).toBe('---\ndate: 1 Nov 2026\ntitle: X\ntags:\n- a\n- b\n---\nbody\n')
     expect(withValue(t, 'tags', ['a', 'c'])).toBe('---\ntitle: X\ntags:\n- a\n- c\ndate: 1 Nov 2026\n---\nbody\n')
     expect(withoutKeys(t, ['tags'])).toBe('---\ntitle: X\ndate: 1 Nov 2026\n---\nbody\n')
+  })
+})
+
+describe('withNoteTitle', () => {
+  it('changes the heading when the title comes from it', () => {
+    expect(withNoteTitle('# Old ##\n\nBody # not\n', 'New')).toBe('# New ##\n\nBody # not\n')
+    expect(noteTitle(withNoteTitle('---\nstatus: a\n---\nIntro\n\n# Old\n', 'New'), 'f')).toBe('New')
+  })
+  it('changes the title property when there is one', () => {
+    expect(noteTitle(withNoteTitle('---\ntitle: Old\n---\n# Heading\n', 'New'), 'f')).toBe('New')
+    expect(withNoteTitle('---\ntitle: Old\n---\n# Heading\n', 'New')).toContain('# Heading')
+  })
+  it('adds a title property when there is no heading', () => {
+    expect(noteTitle(withNoteTitle('Just text\n', 'New'), 'f')).toBe('New')
   })
 })

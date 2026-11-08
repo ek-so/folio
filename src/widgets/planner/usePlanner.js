@@ -29,7 +29,7 @@ export function usePlanner(id, services) {
     ...notes,
     cards,
     // A new card on the day `key`: its description (empty), date (that day) and repeat (one-time), then the planner's properties, empty; the planner stays open
-    newCard: key => services.newNote(planner.folder, { keys: [...ORDER, ...planner.properties], values: { [DATE]: formatDate(keyDay(key)), [REPEAT]: ONE_TIME }, stay: true, titled: true }),
+    newCard: key => services.newNote(planner.folder, { keys: [...ORDER, ...planner.properties], values: { [DATE]: formatDate(keyDay(key)), [REPEAT]: ONE_TIME }, stay: true }),
     // Mark as done on `today` (a key): a repeating card moves on to its next time (doneNext; its time of day kept); any other,
     // or one past its last time, gets `status: done` and today as `archived` and moves into .archive/ (lib/archive.js).
     // { next: the day it moved to, or null when archived, undo() }, or null when the note isn't on this device

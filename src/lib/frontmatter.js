@@ -197,6 +197,19 @@ export function renameValue(text, key, from, to) {
 // `text` with `title` as its title property; an empty one takes the property out (the heading or file name shows again)
 export const withTitle = (text, title) => title.trim() ? withValue(text, 'title', title) : withoutKeys(text, ['title'])
 
+// `text` with its title changed to `title`, where the title comes from (noteTitle): its `title` property if it has one,
+// else its first "# heading" (the text after the # is replaced, nothing else), else a `title` property
+export function withNoteTitle(text, title) {
+  const clean = title.trim()
+  const fm = frontMatter(text)
+  if (fm?.props.some(p => p.key === 'title' && typeof p.value === 'string' && p.value.trim())) return withTitle(text, clean)
+  const rest = text.slice(fm?.end ?? 0)
+  const heading = /^( {0,3}#[ \t]+)(.+?)([ \t#]*)$/m.exec(rest)
+  if (!heading || !clean) return withTitle(text, clean)
+  const at = (fm?.end ?? 0) + heading.index
+  return text.slice(0, at) + heading[1] + clean + heading[3] + text.slice(at + heading[0].length)
+}
+
 // What a property's values can do in a set of notes (`texts`: the scope, a folder or a board), the
 // same for the note preview and the board: `options(key)` the values to choose from, `count(key,
 // value)` how many notes have it, `removeValue` and `editValue` (rename and recolor) edits through

@@ -74,8 +74,8 @@ export default function ItemMenu({ item, onReveal, onRename, onDuplicate, onDele
       {renaming && (
         <RenameModal
           item={item}
-          onRename={name => {
-            const err = onRename(item, name)
+          onRename={(name, title) => {
+            const err = onRename(item, name, title)
             if (!err) setRenaming(false)
             return err
           }}

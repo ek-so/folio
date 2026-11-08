@@ -42,8 +42,8 @@ export function NotePicker({ services, onPick, onClose, title = 'Add note' }) {
     <NewFileModal
       folder={folder}
       kind="note"
-      onCreate={name => {
-        const made = services.addNote(folder, name)
+      onCreate={(name, title) => {
+        const made = services.addNote(folder, name, title)
         if (made.error) return made.error
         onPick(made.path, made.change)
         return null

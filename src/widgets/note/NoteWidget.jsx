@@ -166,8 +166,8 @@ function NoteTray({ path, services, height, canMove, onTakeOut, onReplace }) {
       {renaming && found && (
         <RenameModal
           item={item}
-          onRename={name => {
-            const error = services.rename(item, name)
+          onRename={(name, title) => {
+            const error = services.rename(item, name, title)
             if (!error) setRenaming(false)
             return error
           }}

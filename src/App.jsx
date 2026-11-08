@@ -46,7 +46,7 @@ import { useTheme } from './hooks/useTheme.js'
 import { storage } from './lib/storage.js'
 import { PAGE, mainPages } from './lib/pages.js'
 import { isConfigPath, addView, renameView, removeView, VIEWS_PATH, DEFAULT_VIEWS, parseViews, serializeViews, addWidget, removeWidget, moveWidget, moveView, setViewIcon } from './lib/viewsConfig.js'
-import { withKeys, withValue, copyTitled } from './lib/frontmatter.js'
+import { withKeys, withValue, copyTitled, withNoteTitle, noteTitle } from './lib/frontmatter.js'
 import { widgetType } from './widgets/index.js'
 import { urlForPage, pageForUrl, existingView } from './lib/url.js'
 import { fileView, folderView, startTrails, currentView, openView, trailTo, movedTrails, keptTrails, upView, START } from './lib/views.js'
@@ -128,7 +128,7 @@ export default function App() {
   // ← in the title bar (lib/views.js `upView`): in File manager a level up, elsewhere the page's start
   const up = view && upView(mainPage, view)
   const goUp = up && (() => up === START ? setTrails(o => ({ ...o, [mainPage]: [] })) : show(up))
-  const [newFile, setNewFile] = useState(null) // { folder, kind, keys?, values?, stay?, titled? } while the sheet is open (keys: a new note's properties; stay: don't open it; titled: asks for its title too)
+  const [newFile, setNewFile] = useState(null) // { folder, kind, keys?, values?, stay? } while the sheet is open (keys: a new note's properties; stay: don't open it)
   const [viewDialog, setViewDialog] = useState(null) // { kind: 'rename' | 'delete', view } while a view's dialog is open
   const [viewsSettings, setViewsSettings] = useState(false) // Views settings is open: add, order and remove views
   const [adding, setAdding] = useState(null) // { viewId, type } while a new widget's Setup is open
@@ -288,17 +288,19 @@ export default function App() {
   }
 
   // Rename or move `item` to path `to`; the open folder / note follows it
-  function relocate(item, to) {
+  // `then` (ch => ch): a change made after the move, to the item at its new path
+  function relocate(item, to, then = ch => ch) {
     window.dispatchEvent(new Event('folio:flush')) // typing in an open note first
-    update(ch => relocated(ch, item, to))
+    update(ch => then(relocated(ch, item, to)))
     followTrails(movedTrails(trails, item.path, to)) // the same files and folders, not newly opened ones
   }
 
-  function handleRename(item, name) {
+  // `title`: a note's new title (undefined: unchanged), written into the note in the same change as the rename
+  function handleRename(item, name, title) {
     const to = renameTarget(item, name)
     const error = nameError(name) || renameError(changes, virtual, item, to)
     if (error) return error
-    relocate(item, to)
+    relocate(item, to, title === undefined ? undefined : guarded(ch => editNote(ch, repo.remote?.files ?? {}, to, t => withNoteTitle(t, title), links.remoteText)))
     return null
   }
 
@@ -378,7 +380,7 @@ export default function App() {
     // A move that's refused shows as a toast; true when it's done
     move: (item, folder) => { const error = handleMove(item, folder); if (error) toast.error(error); return !error },
     moveAll,
-    rename: (item, name) => handleRename(item, name),
+    rename: (item, name, title) => handleRename(item, name, title),
     duplicate: item => handleDuplicate(item),
     remove: item => handleDelete(item),
     // Several files to the archive at once (a board column's cards), told in one toast
@@ -388,10 +390,10 @@ export default function App() {
     },
     createFolder: (parent, name) => createFolder(parent, name),
     // `keys`: the properties it starts with, empty; `stay`: don't open it
-    newNote: (folder, { keys, values, stay, titled } = {}) => setNewFile({ folder, kind: 'note', keys, values, stay, titled }),
+    newNote: (folder, { keys, values, stay } = {}) => setNewFile({ folder, kind: 'note', keys, values, stay }),
     // A note widget's note: its new note, made in one step with the widget (noteToAdd); its file
     // ({ entry, edited: this device's text, if edited }, or null when it's gone) and its typing saved
-    addNote: (folder, name) => noteToAdd(folder, name),
+    addNote: (folder, name, title) => noteToAdd(folder, name, [], title),
     noteFile: path => shown[path] ? { entry: shown[path], edited: changes.edits[shown[path].orig] } : null,
     saveNote: (path, content, original) => update(ch => {
       const entry = virtualFiles(repo.remote.files, ch)[path]
@@ -500,7 +502,7 @@ export default function App() {
 
   // A new note `name` in `folder`, starting with the properties `keys`, empty, or with `values` ({ key: value }): { path, change }
   // (ch => ch that adds it), or { error }
-  // `title`: its first heading when it isn't the file's name (a board's new card)
+  // `title`: its first heading
   function noteToAdd(folder, name, keys = [], title = '', values = {}) {
     if (!repo.remote) return { error: 'Files are still loading.' }
     const path = `${folder ? `${folder}/${name}` : name}.md`
@@ -511,7 +513,7 @@ export default function App() {
 
   function handleCreate(name, title) {
     if (!repo.remote) return 'Files are still loading.'
-    const error = nameError(name)
+    const error = nameError(name) || (newFile.kind !== 'folder' && !title ? 'Enter a title.' : null)
     if (error) return error
     if (newFile.kind === 'folder') {
       const err = createFolder(newFile.folder, name)
@@ -705,6 +707,8 @@ export default function App() {
 
   // For the Rename / Move sheets: how many notes' links a change would touch
   const linkInfo = {
+    // A note's title for its rename dialog; undefined when it can't be changed here (not on this device yet, or locked)
+    titleOf: path => links.notes[path] === undefined || locks.isLocked(path) ? undefined : noteTitle(links.notes[path], splitName(path.slice(path.lastIndexOf('/') + 1))[0]),
     rewriteCount: (item, to) => linkRewrites(item, to, changes.edits).size,
     linkedFrom: item => new Set(Object.entries(links.index.backlinks)
       .filter(([target]) => target === item.path || target.startsWith(item.path + '/'))
@@ -945,7 +949,6 @@ export default function App() {
           <NewFileModal
             folder={newFile.folder}
             kind={newFile.kind}
-            titled={newFile.titled}
             onCreate={handleCreate}
             onClose={() => setNewFile(null)}
           />

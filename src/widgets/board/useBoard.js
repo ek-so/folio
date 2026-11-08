@@ -75,7 +75,7 @@ export function useBoard(id, services) {
     },
     // A new card starts with the column as its grouping property's value and the board's properties, empty; the board stays open
     newCard: column => services.newNote(board.folder, {
-      keys: [board.group, DESCRIPTION, ...board.properties], values: column === LOOSE ? {} : { [board.group]: column }, stay: true, titled: true,
+      keys: [board.group, DESCRIPTION, ...board.properties], values: column === LOOSE ? {} : { [board.group]: column }, stay: true,
     }),
     // The column's name and the grouping property of every card in it (an error message, or null)
     renameColumn(column, name) {
