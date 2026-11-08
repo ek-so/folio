@@ -1,18 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from './ui/sheet.jsx'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog.jsx'
 import { useKeyboardInset } from '../hooks/useKeyboardInset.js'
-
-function useIsDesktop() {
-  const [isDesktop, setIsDesktop] = useState(() => window.matchMedia('(min-width: 768px)').matches)
-  useEffect(() => {
-    const mq = window.matchMedia('(min-width: 768px)')
-    const handler = e => setIsDesktop(e.matches)
-    mq.addEventListener('change', handler)
-    return () => mq.removeEventListener('change', handler)
-  }, [])
-  return isDesktop
-}
+import { useIsDesktop } from '../hooks/useIsDesktop.js'
 
 // Radix locks the page while a dialog is open. If a lock outlives every open
 // dialog (overlapping menus/dialogs can cause that), nothing reacts until a

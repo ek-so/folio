@@ -22,7 +22,8 @@
 - The repo menu (`RepoMenu`) is File manager's root title: the repos used on this device (the open one checked; another opens the app there, keeping the page and starting its trails and recent files afresh), Switch repository… (disabled while a sync runs), Open on GitHub.
 
 ## File manager
-Items as a list (`ListRow`) or cards (`CardTile`): the icon-only List | Cards switch is on top of the title bar's ⋯ menu, cards by default, one choice for every folder, remembered. The root has a menu with only the switch.
+Items as a list (`ListRow`), cards (`CardTile`) or columns: the icon-only List | Cards | Columns switch is on top of the title bar's ⋯ menu, cards by default, one choice for every folder, remembered. The root has a menu with only the switch.
+- **Columns** (from 768px; phones show cards, keeping the choice): always three columns split by `Separator`s, like a Mac's column view. The open folder is the last one, after its parents (`columnFolders` in `lib/columns.js`; near the root the columns after it stay empty). Each lists its folder as rows, folders first with a chevron; the row of the folder open in the next column is highlighted. A folder opens on a click, so the columns move along; a file opens as anywhere else.
 
 ## Trails and pages
 - Each main page has its own trail (`trails` in App, rules in `lib/views.js`): the files and folders opened in that page, remembered across reloads. Empty is the page's start (Home's dashboard, Graph, File manager's root).

@@ -42,10 +42,10 @@ export const storage = {
   setRailWidth: (width) => write(localStorage, RAIL_WIDTH_KEY, String(width)),
   getRailCollapsed: () => read(localStorage, RAIL_KEY) === '1',
   setRailCollapsed: (collapsed) => write(localStorage, RAIL_KEY, collapsed ? '1' : null),
-  // File manager's layout: 'list' | 'cards'
-  // Cards unless the list was chosen
-  getFilesView: () => read(localStorage, FILES_VIEW_KEY) === 'list' ? 'list' : 'cards',
-  setFilesView: (view) => write(localStorage, FILES_VIEW_KEY, view === 'list' ? 'list' : null),
+  // File manager's layout: 'list' | 'cards' | 'columns' (desktop only)
+  // Cards unless another was chosen
+  getFilesView: () => ['list', 'columns'].includes(read(localStorage, FILES_VIEW_KEY)) ? read(localStorage, FILES_VIEW_KEY) : 'cards',
+  setFilesView: (view) => write(localStorage, FILES_VIEW_KEY, ['list', 'columns'].includes(view) ? view : null),
   // A planner's view (`id`: its widget's) picked on this device: 'calendar' | 'list', null when none was
   getPlannerView: (id) => read(localStorage, PLANNER_VIEW_KEY + id),
   setPlannerView: (id, view) => write(localStorage, PLANNER_VIEW_KEY + id, view),

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { DotsThree, PencilSimple, Trash, Folder, Rows, SquaresFour, Copy, LinkSimple, Lock, LockOpen } from '@phosphor-icons/react'
+import { DotsThree, PencilSimple, Trash, Folder, Rows, SquaresFour, Columns, Copy, LinkSimple, Lock, LockOpen } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils.js'
 import { Button } from './ui/button.jsx'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from './ui/dropdown-menu.jsx'
@@ -10,6 +10,7 @@ import MoveModal from './MoveModal.jsx'
 import ColumnSubmenu from './ColumnSubmenu.jsx'
 import { copyText } from '../lib/clipboard.js'
 import { repoLink } from '../lib/markdown.js'
+import { useIsDesktop } from '../hooks/useIsDesktop.js'
 
 // ⋯ menu with Rename / Move / Delete for a file or folder ({ name, path, type }).
 // onRename(item, name) returns an error message or null.
@@ -22,14 +23,15 @@ import { repoLink } from '../lib/markdown.js'
 // hoverReveal (with inList): with a mouse, hidden until its row (`group`) is hovered, it's focused or its menu is open; always shown on touch
 // columns (an open card of a board opened from its view): { columns, column, onSelect } for a Move to column submenu
 // lock ({ locked, onToggle }; a note's page): Lock / Unlock (lib/locks.js); a locked file has no Move to column and no Remove
-// view / onView (File manager's title bar): an icon-only List | Cards switch on top of the menu;
+// view / onView (File manager's title bar): an icon-only List | Cards | Columns switch on top of the menu (Columns from 768px);
 // with no `item` (the root folder, which can't be renamed, moved or deleted) it's all the menu has
-const VIEWS = [['list', 'List', Rows], ['cards', 'Cards', SquaresFour]]
+const VIEWS = [['list', 'List', Rows], ['cards', 'Cards', SquaresFour], ['columns', 'Columns', Columns]]
 
 export default function ItemMenu({ item, onRename, onDuplicate, onDelete, onMove, folders, inList, hoverReveal, view, onView, columns, lock }) {
   const [renaming, setRenaming] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [moving, setMoving] = useState(false)
+  const desktop = useIsDesktop()
 
   return (
     <>
@@ -50,7 +52,7 @@ export default function ItemMenu({ item, onRename, onDuplicate, onDelete, onMove
         <DropdownMenuContent align="end" onCloseAutoFocus={e => e.preventDefault()}>
           {onView && (
             <div className="p-1">
-              <Segmented stretch value={view} onChange={onView} options={VIEWS} label="View" iconOnly />
+              <Segmented stretch value={view} onChange={onView} options={desktop ? VIEWS : VIEWS.filter(([v]) => v !== 'columns')} label="View" iconOnly />
             </div>
           )}
           {onView && item && <DropdownMenuSeparator />}
