@@ -3,6 +3,7 @@ import { Gear, SignOut, LinkBreak, BookOpen, SlidersHorizontal } from '@phosphor
 import { PAGE } from '../lib/pages.js'
 import ViewMenu from './ViewMenu.jsx'
 import PageTitle from './PageTitle.jsx'
+import PageIcon from './PageIcon.jsx'
 import AppLogo from './AppLogo.jsx'
 import { ListRow } from './ui/list-row.jsx'
 import { Separator } from './ui/separator.jsx'

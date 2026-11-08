@@ -14,6 +14,7 @@ import { useHideOnScroll } from '../hooks/useHideOnScroll.js'
 import AppLogo from './AppLogo.jsx'
 import ViewMenu from './ViewMenu.jsx'
 import PageTitle from './PageTitle.jsx'
+import PageIcon from './PageIcon.jsx'
 
 
 // The app's primary navigation, in place of a header. `menu`: brokenCount and
