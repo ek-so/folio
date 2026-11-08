@@ -1,11 +1,19 @@
 import { describe, it, expect } from 'vitest'
-import { findDates, formatDate, dateLabel } from './dates.js'
+import { findDates, formatDate, dateLabel, daysAgo } from './dates.js'
 import { withFixedDates, dateSpans, withDate, valueDate } from './markdown.js'
 
 const now = new Date(2026, 5, 1)
 const fixed = text => withFixedDates(text, now)
 
 describe('dates', () => {
+  it('says how many days ago a past day was', () => {
+    const now = new Date(2026, 10, 8, 15)
+    expect(daysAgo({ year: 2026, month: 11, day: 7 }, now)).toBe('1 day ago')
+    expect(daysAgo({ year: 2026, month: 10, day: 30, hour: 9, minute: 0 }, now)).toBe('9 days ago')
+    expect(daysAgo({ year: 2026, month: 11, day: 8 }, now)).toBeNull()
+    expect(daysAgo({ hour: 9, minute: 0 }, now)).toBeNull()
+  })
+
   it('writes every clear format the same way, day first', () => {
     expect(fixed('2026-10-17')).toBe('17 Oct 2026')
     expect(fixed('2026-10-17T14:30')).toBe('17 Oct 2026, 14:30')

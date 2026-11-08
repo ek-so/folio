@@ -88,6 +88,14 @@ export function dateLabel(date, thisYear = new Date().getFullYear()) {
   return date.year === thisYear ? formatDate(date).replace(` ${thisYear}`, '') : formatDate(date)
 }
 
+// How a past day reads on a late card's badge: "3 days ago" (days between the date's day and `now`'s; "1 day ago"), or
+// null for a date with no day, or one that isn't before today
+export function daysAgo(date, now = new Date()) {
+  if (date.year === undefined) return null
+  const n = Math.round((Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) - Date.UTC(date.year, date.month - 1, date.day)) / 86400000)
+  return n > 0 ? `${n} day${n === 1 ? '' : 's'} ago` : null
+}
+
 // "17 Oct 2026, 14:30", or "17 Oct 2026" without a time, or "14:30" without a day
 export function formatDate({ year, month, day, hour, minute }) {
   if (year === undefined) return `${pad(hour)}:${pad(minute)}`
