@@ -18,12 +18,12 @@ const isStart = (page, view) => !view || (page === PAGE.FILES && !view.file && !
 // Marks the page's start as where ← leads
 export const START = 'start'
 
-// Where ← leads from `view` in `page`, a level up: a file's folder, a folder's parent; from the root folder the
-// page's start (START), except in File manager, whose start it is (null: nowhere)
+// Where ← leads from `view` in `page`: in File manager a level up (a file's folder, a folder's parent; null from
+// the root, its start); in any other page (a view, Graph) back to the page's own start (START)
 export function upView(page, view) {
+  if (page !== PAGE.FILES) return START
   if (view.file) return folderView(view.folder)
-  if (view.folder) return folderView(parentOf(view.folder))
-  return page === PAGE.FILES ? null : START
+  return view.folder ? folderView(parentOf(view.folder)) : null
 }
 
 // Every main page (their ids) at its start

@@ -11,6 +11,8 @@ import planner from './planner/index.js'
 //                             onCreate(id => change) with the changes that set it up (ch => ch)
 //   moved(ch, id, from, to, isDir, services)  `ch` after a file or folder moved (renames and moves anywhere)
 //   removed(ch, id, services)                 `ch` after the widget is removed (its settings go)
+//   tree(id, services)                        optional: what it shows, for the title bar's view tree: nodes
+//                                             { key, name, icon (Phosphor) or path (a note), children? } (NavTree.jsx)
 //   fileMoves(id, path, services)             optional: for the file open on this widget's view, the columns it can move
 //                                             to ({ columns: [{ key, name }], column, onSelect(key) }) or null; the file's ⋯ shows them
 // `services` is all a widget gets from the app (App's `widgetServices`): what the repo holds,

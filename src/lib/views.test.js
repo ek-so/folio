@@ -36,6 +36,7 @@ describe('views', () => {
     expect(upView(PAGE.FILES, folderView('a/b'))).toEqual(folderView('a'))
     expect(upView(PAGE.FILES, folderView('a'))).toEqual(folderView(''))
     expect(upView(PAGE.FILES, folderView(''))).toBe(null)
-    expect(upView(PAGE.HOME, folderView(''))).toBe(START)
+    expect(upView(PAGE.HOME, fileView('a/b.md'))).toBe(START)
+    expect(upView(PAGE.HOME, folderView('a'))).toBe(START)
   })
 })

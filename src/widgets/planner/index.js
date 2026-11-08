@@ -4,6 +4,7 @@ import PlannerSetup from './PlannerSetup.jsx'
 import { BADGES } from './RecurrenceField.jsx'
 import { plannerPath, plannerTitle, parsePlanner, serializePlanner, movedPlanner, FIXED, ORDER } from './planner.js'
 import { isTechnical } from '@/lib/folderNotes.js'
+import { displayName } from '@/lib/files.js'
 
 // The planner widget: see planner.js. Its settings are .folio/planners/<id>.json.
 export default {
@@ -16,6 +17,17 @@ export default {
     const file = config.read(plannerPath(id))
     const planner = file.ready && file.text !== undefined ? parsePlanner(file.text) : null
     return planner ? plannerTitle(planner, repoName) : 'Planner'
+  },
+  // Its notes, by name
+  tree(id, services) {
+    const file = services.config.read(plannerPath(id))
+    const planner = file.ready && file.text !== undefined ? parsePlanner(file.text) : null
+    if (!planner) return []
+    const prefix = planner.folder ? planner.folder + '/' : ''
+    return services.files
+      .filter(p => p.startsWith(prefix) && p.toLowerCase().endsWith('.md') && !isTechnical(p.slice(prefix.length)))
+      .map(p => ({ key: p, name: displayName(p), path: p }))
+      .sort((a, b) => a.name.localeCompare(b.name))
   },
   // Its folder follows renames and moves
   moved(ch, id, from, to, isDir, { config }) {

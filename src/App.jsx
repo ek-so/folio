@@ -114,7 +114,7 @@ export default function App() {
     if (id === page && id !== PAGE.FILES && trailOf(id).length) setTrails(o => ({ ...o, [id]: [] }))
     setPage(id)
   }
-  // ← in the title bar: a level up (lib/views.js `upView`): a file's folder, a folder's parent, or the page's start
+  // ← in the title bar (lib/views.js `upView`): in File manager a level up, elsewhere the page's start
   const up = view && upView(mainPage, view)
   const goUp = up && (() => up === START ? setTrails(o => ({ ...o, [mainPage]: [] })) : show(up))
   const [newFile, setNewFile] = useState(null) // { folder, kind, keys?, values?, stay?, titled? } while the sheet is open (keys: a new note's properties; stay: don't open it; titled: asks for its title too)
@@ -675,6 +675,11 @@ export default function App() {
         current: selectedFile ?? (folder || null),
         file: selectedFile,
         dir: folder,
+        // On a view's page, what its widgets show (lazily: read when the title's tree opens)
+        viewTree: views.some(v => v.id === mainPage) ? () => (views.find(v => v.id === mainPage).widgets ?? []).map(w => {
+          const type = widgetType(w.type)
+          return { key: w.id, name: type ? type.title?.(w.id, widgetServices) ?? type.label : 'Unknown widget', icon: type?.icon, children: type?.tree?.(w.id, widgetServices) ?? [] }
+        }) : null,
         expanded,
         onToggle: toggleFolder,
         itemActions: { onRename: handleRename, onDuplicate: handleDuplicate, onDelete: handleDelete, onMove: handleMove, folders: allFolders },

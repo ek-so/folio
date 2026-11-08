@@ -1,4 +1,5 @@
-import { Kanban } from '@phosphor-icons/react'
+import { Kanban, Columns } from '@phosphor-icons/react'
+import { displayName } from '@/lib/files.js'
 import Board from './Board.jsx'
 import BoardSetup from './BoardSetup.jsx'
 import { boardPath, boardTitle, parseBoard, serializeBoard, movedBoard, boardColumns, isCard, looseName, LOOSE } from './board.js'
@@ -15,6 +16,18 @@ export default {
     const file = config.read(boardPath(id))
     const board = file.ready && file.text !== undefined ? parseBoard(file.text) : null
     return board ? boardTitle(board, repoName) : 'Board'
+  },
+  // Its shown columns (No status first, when it has cards) and their cards, in their order
+  tree(id, services) {
+    const file = services.config.read(boardPath(id))
+    const board = file.ready && file.text !== undefined ? parseBoard(file.text) : null
+    const data = board && boardColumns(board, services.files, services.notes)
+    if (!data || data.missing) return []
+    const all = [...(data.loose.length ? [{ key: LOOSE, name: looseName(board), cards: data.loose }] : []), ...data.columns.filter(c => !board.hidden.includes(c.name))]
+    return all.map(c => ({
+      key: `${id}:${c.key}`, name: c.name, icon: Columns,
+      children: c.cards.map(card => ({ key: card.path, name: displayName(card.path), path: card.path })),
+    }))
   },
   // Its folder and card order follow renames and moves
   moved(ch, id, from, to, isDir, { config }) {
