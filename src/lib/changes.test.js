@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import {
   empty, count, virtualFiles, add, setEdit, rename, remove, conflicts, settle, treeEntries, filesAfter,
   upload, replaceUpload, normalize, freePath, duplicate, commitMessage,
-  renameTarget, renameError, canMoveTo, createError, getAllFolders, nameError, keptEdits,
+  renameTarget, renameError, canMoveTo, createError, getAllFolders, nameError, keptEdits, nameFromTitle,
 } from './changes.js'
 
 const files = {
@@ -124,6 +124,12 @@ describe('duplicate', () => {
 })
 
 describe('name checks', () => {
+  it('suggests a kebab-case name from a title', () => {
+    expect(nameFromTitle('Use Lidl coupon')).toBe('use-lidl-coupon')
+    expect(nameFromTitle('  Fix: a/b & c!  ')).toBe('fix-a-b-c')
+    expect(nameFromTitle('Café Zürich')).toBe('café-zürich')
+  })
+
   it('allows names starting with a dot, like GitHub', () => {
     expect(nameError('.assets')).toBe(null)
     expect(nameError('..')).not.toBe(null)

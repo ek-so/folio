@@ -107,8 +107,9 @@ function affected(virtual, path, isDir) {
   return Object.entries(virtual).filter(([p]) => p.startsWith(path + '/'))
 }
 
-// A file name from a note's title: "/" can't be in one
-export const nameFromTitle = title => title.replace(/\//g, '-').trim()
+// A file name from a note's title, in kebab-case: "Use Lidl coupon" gives "use-lidl-coupon" (letters and digits of any
+// language stay; every other run of characters becomes one "-", none at the ends)
+export const nameFromTitle = title => title.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-+|-+$/g, '')
 
 // Problem with a new file or folder name, or null if it's fine.
 export function nameError(name) {
