@@ -40,7 +40,7 @@ Never hardcode colors; use the semantic tokens (light and dark values in `src/in
 | `text-primary-ink` / `text-destructive-ink` / `text-success-ink` | Every colored text (links, Today, red menu items and errors, green text): the color mixed with the text color by `--ink` (70%), so it's darker on light and lighter on dark. Badge values (`--tag-N`) and callout titles mix the same way. Never `text-primary` for text |
 | `bg-destructive` | Errors, danger |
 | `bg-success` / `text-success-foreground` | Success (green) |
-| `bg-segment` / `bg-segment-active` | Segmented toggle track / selected segment (`Segmented`; `iconOnly`: each segment square, 32px) |
+| `bg-segment` / `bg-segment-active` | Segmented toggle track / selected segment (`Segmented`: labeled segments 12px on their sides; `iconOnly`: each segment square, 32px) |
 | `text-folder`, `text-file-image` | Folder and image file icons |
 | `--tag-0`…`--tag-9`, `--tag-tint` (text: `--ink`) | Property badge colors, tinted against `--card` |
 | `--callout-*` | GitHub alert callouts in the preview |
