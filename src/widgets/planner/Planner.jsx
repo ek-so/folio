@@ -195,7 +195,7 @@ export default function Planner({ id, services, onRemove }) {
               {sectionTitle(group.label, group.first)}
               <div className="flex flex-col gap-0.5 rounded-lg border border-border bg-card p-1">
                 {group.cards.filter(c => rows.has(c.path)).map(({ path, overdue, undated }) => (
-                  <TaskRow key={path} path={path} text={notes[path]} dashed={overdue || undated} menu={cardMenu(path, true)} onOpen={openFile} />
+                  <TaskRow key={path} path={path} text={notes[path]} overdue={overdue} menu={cardMenu(path, true)} onOpen={openFile} />
                 ))}
               </div>
               <TrayFooter more={hidden} onShowMore={() => setExpanded(e => new Set(e).add(`list:${group.key}`))} />
@@ -325,22 +325,21 @@ function Day({ dayKey: key, today, selected, count, onSelect }) {
 }
 
 // A card as a row of the list view (ListRow): its title, its date under it and, when it repeats, a small circling-arrows
-// icon (grey, like the line) and how often right after it; its ⋯; it opens the note. `dashed`: listed under Today because it
-// has no date or is late
-function TaskRow({ path, text, dashed, menu, onOpen }) {
+// icon (grey, like the line) and how often right after it; its ⋯; it opens the note. `overdue` (dated before today, listed
+// under Today): its title faded and its date red
+function TaskRow({ path, text, overdue, menu, onOpen }) {
   const date = text === undefined ? null : cardDate(text)
   const repeat = text === undefined ? '' : properties(text)[REPEAT]
   const kind = parseRecurrence(repeat)?.kind
   return (
     <ListRow
-      title={cardTitle(path, text)}
+      title={<span className={cn(overdue && 'opacity-50')}>{cardTitle(path, text)}</span>}
       description={<>
-        {date ? dateLabel(date) : 'No date'}
+        <span className={cn(overdue && 'text-destructive-ink')}>{date ? dateLabel(date) : 'No date'}</span>
         {(kind === 'repeat' || kind === 'unset') && <> · <ArrowsClockwise className="inline size-3 align-[-0.125em]" /> {repeatLabel(repeat)}</>}
       </>}
       trailing={menu}
       onClick={() => onOpen(path)}
-      className={cn(dashed && 'border border-dashed border-muted-foreground/50')}
     />
   )
 }
