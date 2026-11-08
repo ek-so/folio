@@ -24,7 +24,7 @@ export const BADGES = { [REPEAT]: RecurrenceField }
 // A rule to start from when Repeats is picked: weekly, on the card's own weekday
 const WEEKLY = { kind: 'repeat', every: 1, unit: 'week', weekdays: [], until: null }
 
-// A planner card's repeat (recurrence.js) as a badge, blue once it has a value: a calendar with a dot for one-time, circling arrows for a repeat,
+// A planner card's repeat (recurrence.js) as a badge, accent-colored once it has a value: a calendar with a dot for one-time, circling arrows for a repeat,
 // then its words, short (repeatLabel: "3 months", "Mon, Wed"); no ▾. With `onChange(key, value)` it opens a popover: One-time or Repeats
 // and, repeating, every how many days, weeks, months or years, the weekdays (weekly) and when it ends. Each choice is
 // written at once (the number when it's left or on Enter). `props`: the card's properties, for its date (an end can't be before it).

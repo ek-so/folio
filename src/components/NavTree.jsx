@@ -120,7 +120,7 @@ function ViewTree({ nodes }) {
 }
 
 // The look of a title that opens a menu: an outlined button in the buttons' own font, with the item's
-// `icon` (FileIcon), its name, the blue dot of unsaved changes (`changed`) right after it, and ▾ on the right (the folder tree here, RepoMenu at File manager's root); `bare`: no outline of its own, for a button inside
+// `icon` (FileIcon), its name, the accent dot of unsaved changes (`changed`) right after it, and ▾ on the right (the folder tree here, RepoMenu at File manager's root); `bare`: no outline of its own, for a button inside
 // a box that has one (`FolderTreeMenu` with badges)
 export const TitleMenuButton = forwardRef(function TitleMenuButton({ icon, children, changed, bare, className, ...props }, ref) {
   return (

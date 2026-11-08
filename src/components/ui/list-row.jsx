@@ -7,9 +7,9 @@ import { Button } from './button.jsx'
 // open. The row's own button holds `icon` (left), `title` and an optional
 // `description` and does `onClick`. A description is muted: in a row narrower than 640px (a phone, a dialog like Search) a second line under the title (the row grows for it);
 // from 640px wide (a page's list: the row's own width, a container query) it moves to the right, next to `trailing`, in the title's size, at most half the row (cut with …). `leading` sits before that button (the tree's indent and
-// chevron), `trailing` after it (⋯, a badge…). `active`: the open or selected item, blue like every selection (`SELECTED`);
+// chevron), `trailing` after it (⋯, a badge…). `active`: the open or selected item, accent-colored like every selection (`SELECTED`);
 // `dimmed`: a hidden file or symlink, its icon and text faded (not the row's
-// hover or ⋯); `changed`: the blue dot of local changes after the title;
+// hover or ⋯); `changed`: the accent dot of local changes after the title;
 // `disabled`: can't be opened; `tooltip`: on the whole row (ui/tooltip.jsx).
 // `className` and `rowProps` (drag and drop) go on the row itself.
 // A selected item (the open page in the rail, the open item in a list): light accent fill, accent text
