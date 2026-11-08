@@ -752,7 +752,7 @@ export default function App() {
           ) : page === PAGE.DOCS ? (
             <Documentation />
           ) : page === PAGE.ASSETS ? (
-            <Assets files={shown} added={assets.added} backlinks={links.index.backlinks} onOpen={path => setSelectedFile(path, PAGE.FILES)} />
+            <Assets files={shown} added={assets.added} backlinks={links.index.backlinks} onOpen={path => setSelectedFile(path, PAGE.FILES)} onReveal={path => openFolder(path.slice(0, Math.max(path.lastIndexOf('/'), 0)), PAGE.FILES)} itemActions={{ onRename: handleRename, onDuplicate: handleDuplicate, onDelete: handleDelete, onMove: handleMove, folders: allFolders }} />
           ) : !view && page === PAGE.GRAPH ? (
             <EmptyPage page={page} />
           ) : !view ? (

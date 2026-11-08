@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { PencilSimple, Trash, Folder, Rows, SquaresFour, Columns, Copy, LinkSimple, Lock, LockOpen, Smiley } from '@phosphor-icons/react'
+import { PencilSimple, Trash, Folder, Rows, SquaresFour, Columns, Copy, LinkSimple, Lock, LockOpen, Smiley, FolderOpen } from '@phosphor-icons/react'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent } from './ui/dropdown-menu.jsx'
 import { Segmented } from './ui/segmented.jsx'
 import RenameModal from './RenameModal.jsx'
@@ -24,13 +24,14 @@ import MoreButton from './MoreButton.jsx'
 // hoverReveal (with inList): with a mouse, hidden until its row (`group`) is hovered, it's focused or its menu is open; always shown on touch
 // columns (an open card of a board opened from its view): { columns, column, onSelect } for a Move to column submenu
 // lock ({ locked, onToggle }; a note's page): Lock / Unlock (lib/locks.js); a locked file has no Move to column and no Remove
+// onReveal(item): Show in folder (the Assets page: opens the item's folder in File manager)
 // Emoji (every file and folder): a sub menu with the emoji picker (`EmojiGrid`) for its icon (lib/icons.js, `IconsContext`);
 // disabled while the icons can't be saved
 // view / onView (File manager's title bar): an icon-only List | Cards | Columns switch on top of the menu (Columns from 768px);
 // with no `item` (the root folder, which can't be renamed, moved or deleted) it's all the menu has
 const VIEWS = [['list', 'List', Rows], ['cards', 'Cards', SquaresFour], ['columns', 'Columns', Columns]]
 
-export default function ItemMenu({ item, onRename, onDuplicate, onDelete, onMove, folders, inList, hoverReveal, view, onView, columns, lock }) {
+export default function ItemMenu({ item, onReveal, onRename, onDuplicate, onDelete, onMove, folders, inList, hoverReveal, view, onView, columns, lock }) {
   const [renaming, setRenaming] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [moving, setMoving] = useState(false)
@@ -52,6 +53,7 @@ export default function ItemMenu({ item, onRename, onDuplicate, onDelete, onMove
           )}
           {onView && item && <DropdownMenuSeparator />}
           {item && <>
+            {onReveal && <DropdownMenuItem onSelect={() => onReveal(item)}><FolderOpen /> Show in folder</DropdownMenuItem>}
             <DropdownMenuItem onSelect={() => setRenaming(true)}><PencilSimple /> Rename</DropdownMenuItem>
             <DropdownMenuSub>
               <DropdownMenuSubTrigger disabled={!icons.onSet}><Smiley /> Emoji</DropdownMenuSubTrigger>

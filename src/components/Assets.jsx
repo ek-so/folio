@@ -9,13 +9,15 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuIte
 import { PAGE } from '../lib/pages.js'
 import { assetList } from '../lib/assets.js'
 import { plural } from '../lib/plural.js'
-import { displayName } from '../lib/files.js'
+import ItemMenu from './ItemMenu.jsx'
+import { displayName, fileKind } from '../lib/files.js'
+import { fileItem } from '../lib/folderNotes.js'
 
 // Page listing every file in the repo that isn't a note (images, PDFs, uploads: lib/assets.js), newest added first, each
 // as a row (ListRow): its name and under it its path; a row opens the file. On the right, a button opens the note that
 // uses it (`backlinks`, the link index's: the notes that link to it): one opens at once, several list in a menu, none
-// shows no button.
-export default function Assets({ files, added, backlinks, onOpen }) {
+// shows no button, then the file's ⋯ (`ItemMenu` with `itemActions`, plus Show in folder: `onReveal`).
+export default function Assets({ files, added, backlinks, onOpen, onReveal, itemActions }) {
   const paths = assetList(Object.keys(files), added)
   return (
     <PageLayout>
@@ -32,7 +34,10 @@ export default function Assets({ files, added, backlinks, onOpen }) {
               <ul className="flex flex-col gap-0.5">
                 {paths.map(path => (
                   <li key={path}>
-                    <ListRow icon={<FileIcon path={path} />} title={path.split('/').pop()} description={path} onClick={() => onOpen(path)} trailing={<UsedIn notes={[...new Set((backlinks[path] ?? []).map(l => l.from))]} onOpen={onOpen} />} />
+                    <ListRow icon={<FileIcon path={path} />} title={path.split('/').pop()} description={path} onClick={() => onOpen(path)} disabled={fileKind(path) === 'file'} trailing={<>
+                      <UsedIn notes={[...new Set((backlinks[path] ?? []).map(l => l.from))]} onOpen={onOpen} />
+                      <ItemMenu item={fileItem(path)} {...itemActions} onReveal={() => onReveal(path)} inList hoverReveal />
+                    </>} />
                   </li>
                 ))}
               </ul>
