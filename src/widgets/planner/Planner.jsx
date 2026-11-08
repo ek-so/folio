@@ -218,7 +218,7 @@ export default function Planner({ id, services, onRemove }) {
         onDragCancel={() => setDragged(null)}
       >
         {/* The ribbon in a tray like the cards' below, under a title row like a column's: the month in view, Today and a
-            calendar to pick any day; it scrolls sideways to the tray's edges, with room above and below for a lifted day's shadow */}
+            calendar to pick any day; it scrolls sideways to the tray's edges, fading out at both (a mask), with room above and below for a lifted day's shadow */}
         <Tray>
           <div className="flex items-center gap-space-xs">
             <div className="min-w-0 flex-1"><TrayTitle>{month}</TrayTitle></div>
@@ -227,7 +227,7 @@ export default function Planner({ id, services, onRemove }) {
               <Button variant="ghost-quiet" size="icon-md" aria-label="Go to a day"><CalendarBlank /></Button>
             </DatePopover>
           </div>
-          <div ref={setScroller} onScroll={onScroll} data-no-pull className="-mx-space-sm -mt-space-sm overflow-x-auto p-space-sm">
+          <div ref={setScroller} onScroll={onScroll} data-no-pull className="-mx-space-sm -mt-space-sm overflow-x-auto p-space-sm [mask-image:linear-gradient(to_right,transparent,black_2rem,black_calc(100%-2rem),transparent)]">
             <Ribbon days={days} today={today} selected={selected} count={arranged.count} onSelect={setPicked} />
           </div>
         </Tray>
