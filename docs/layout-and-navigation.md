@@ -20,7 +20,7 @@
 ## Folder tree (`NavTree.jsx`)
 - No tree panel. A file's or folder's name in its title bar is a button (`FolderTreeMenu`) that opens a popover with the tree of the folder you're in (the open folder, or the open file's).
 - On a view's page it shows the view's own tree instead (`viewTree` in App): its widgets, then what each shows (a widget kind's `tree`: a Notes widget's notes, a board's shown columns and their cards, a planner's notes); the nodes holding the open note start expanded. A widget or column row only expands and collapses; a note opens in the view.
-- The chevron only expands and collapses (open folders remembered for the session); choosing a folder or file opens it in the page you're on and closes the popover (a symlink opens its source). Each row has the same ⋯ (`ItemMenu`, `inList`) as file manager, shown only on hover with a mouse. The open item is highlighted.
+- The chevron only expands and collapses (open folders remembered for the session); choosing a folder or file opens it in the page you're on and closes the popover (a symlink opens its source). Each row has the same ⋯ (`ItemMenu`, `inList`) as file manager, shown only on hover with a mouse. The open item is highlighted, and the popover opens scrolled so it shows in the middle (`showCurrent`).
 - The repo menu (`RepoMenu`) is File manager's root title: the repos used on this device (the open one checked; another opens the app there, keeping the page and starting its trails and recent files afresh), Switch repository… (disabled while a sync runs), Open on GitHub.
 
 ## File manager

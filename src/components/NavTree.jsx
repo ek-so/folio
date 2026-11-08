@@ -24,6 +24,7 @@ export const NavContext = createContext(null)
 function TreeRow({ depth, branch, open, onToggle, row }) {
   return (
     <ListRow
+      rowProps={row.active ? { 'data-current': '' } : undefined}
       leading={<>
         <span aria-hidden="true" className="shrink-0" style={{ width: `${depth}rem` }} />
         {branch ? (
@@ -103,6 +104,13 @@ const holding = (nodes, path) => nodes.flatMap(n => {
   return inner.length || n.children?.some(c => c.path === path) ? [n.key, ...inner] : []
 })
 
+// The popover's scroll box, on opening: scrolls the open item (`data-current`, see TreeRow) to its middle.
+// Positions come from offsetTop, so the popover's opening animation doesn't skew them
+const showCurrent = box => {
+  const row = box?.querySelector('[data-current]')
+  if (row) box.scrollTop = row.offsetTop - (box.clientHeight - row.offsetHeight) / 2
+}
+
 // A view's tree in the popover, the nodes holding the open note expanded
 function ViewTree({ nodes }) {
   const nav = useContext(NavContext)
@@ -127,7 +135,7 @@ export const TitleMenuButton = forwardRef(function TitleMenuButton({ icon, child
 
 // The title of a file or folder: its `name` as a button that opens a popover with the tree of the folder
 // you're in (the open folder, or the open file's), its subfolders expandable; `badge` (symlinks pointing here) sits inside the button's outline, after ▾; on a view's page, the view's own
-// tree instead (`viewTree`: its widgets and what they show). Choosing a note or folder opens it and closes the popover.
+// tree instead (`viewTree`: its widgets and what they show). It opens scrolled to the open item. Choosing a note or folder opens it and closes the popover.
 export function FolderTreeMenu({ name, changed, badge }) {
   const nav = useContext(NavContext)
   const [open, setOpen] = useState(false)
@@ -144,7 +152,7 @@ export function FolderTreeMenu({ name, changed, badge }) {
     <Popover open={open} onOpenChange={setOpen}>
       {badge ? <span className="flex h-control min-w-0 max-w-full items-center gap-space-xs rounded-sm border border-input pr-space-xs shadow-sm">{trigger}{badge}</span> : trigger}
       <PopoverContent className="w-80 p-space-sm" onCloseAutoFocus={e => e.preventDefault()}>
-        <div className="max-h-[60vh] overflow-y-auto overscroll-y-contain" data-no-pull>
+        <div ref={showCurrent} className="relative max-h-[60vh] overflow-y-auto overscroll-y-contain" data-no-pull>
           {empty
             ? <EmptyMessage size="sm">{nav.viewTree ? 'Nothing on this view yet' : 'Empty folder'}</EmptyMessage>
             : (
