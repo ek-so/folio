@@ -4,6 +4,7 @@ import { Button } from './ui/button.jsx'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from './ui/dropdown-menu.jsx'
 import BottomSheet from './BottomSheet.jsx'
 import RepoForm from './RepoForm.jsx'
+import FileIcon from './FileIcon.jsx'
 import { NavContext, TitleMenuButton } from './NavTree.jsx'
 
 // The repo's name as File manager's root title, as a menu: the repos used on this
@@ -19,7 +20,7 @@ export default function RepoMenu() {
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <TitleMenuButton>{name}</TitleMenuButton>
+          <TitleMenuButton icon={<FileIcon path="" dir />}>{name}</TitleMenuButton>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="max-w-[min(20rem,calc(100vw-2*var(--space)))]" onCloseAutoFocus={e => e.preventDefault()}>
           {nav.repos.map(repo => (

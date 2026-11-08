@@ -678,6 +678,7 @@ export default function App() {
         views,
         symlinks,
         current: selectedFile ?? (folder || null),
+        file: selectedFile,
         dir: folder,
         expanded,
         onToggle: toggleFolder,

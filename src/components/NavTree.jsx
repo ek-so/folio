@@ -9,7 +9,7 @@ import { ListRow } from './ui/list-row.jsx'
 import { LINK_ERRORS } from '../lib/files.js'
 
 // What the title bar's folder tree needs from App: `listDir(dir)`, `symlinks`, the `current`
-// path (open file or folder), `dir` (the open folder, or the open file's), the open folders
+// path (open file or folder), the open `file` (null for a folder), `dir` (the open folder, or the open file's), the open folders
 // (`expanded`, `onToggle`), `onOpenFolder` / `onOpenFile`, `itemActions` for each row's ⋯
 // (ItemMenu's onRename / onDuplicate / onDelete / onMove / folders, as in File manager), the title
 // bar's `onBack` (null without a step back), and for the root's RepoMenu the open `repo`, the `repos` used on
@@ -57,11 +57,12 @@ function Rows({ dir, depth }) {
   })
 }
 
-// The look of a title that opens a menu: the name in bold in an outlined button, ▾ on its right
-// (the folder tree here, RepoMenu at File manager's root)
-export const TitleMenuButton = forwardRef(function TitleMenuButton({ children, className, ...props }, ref) {
+// The look of a title that opens a menu: an outlined button in the buttons' own font, with the item's
+// `icon` (FileIcon), its name and ▾ on the right (the folder tree here, RepoMenu at File manager's root)
+export const TitleMenuButton = forwardRef(function TitleMenuButton({ icon, children, className, ...props }, ref) {
   return (
-    <Button ref={ref} variant="outline" className={cn('min-w-0 max-w-full gap-1.5 px-3 text-base font-bold', className)} {...props}>
+    <Button ref={ref} variant="outline" className={cn('min-w-0 max-w-full gap-2 px-3', className)} {...props}>
+      {icon}
       <span className="truncate">{children}</span>
       <CaretDown className="text-muted-foreground" />
     </Button>
@@ -80,7 +81,7 @@ export function FolderTreeMenu({ name }) {
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <TitleMenuButton>{name}</TitleMenuButton>
+        <TitleMenuButton icon={<FileIcon path={nav.current ?? ''} dir={nav.current !== nav.file} />}>{name}</TitleMenuButton>
       </PopoverTrigger>
       <PopoverContent className="w-80 p-space-sm" onCloseAutoFocus={e => e.preventDefault()}>
         <div className="max-h-[60vh] overflow-y-auto overscroll-y-contain" data-no-pull>
