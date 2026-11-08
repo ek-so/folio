@@ -1,5 +1,5 @@
-import { createContext, useContext, useState } from 'react'
-import { ArrowLeft, CaretDown, CaretRight } from '@phosphor-icons/react'
+import { createContext, forwardRef, useContext, useState } from 'react'
+import { CaretDown, CaretRight } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils.js'
 import { Button } from './ui/button.jsx'
 import { Popover, PopoverTrigger, PopoverContent } from './ui/popover.jsx'
@@ -11,8 +11,8 @@ import { LINK_ERRORS } from '../lib/files.js'
 // What the title bar's folder tree needs from App: `listDir(dir)`, `symlinks`, the `current`
 // path (open file or folder), `dir` (the open folder, or the open file's), the open folders
 // (`expanded`, `onToggle`), `onOpenFolder` / `onOpenFile`, `itemActions` for each row's ⋯
-// (ItemMenu's onRename / onDuplicate / onDelete / onMove / folders, as in File manager), `onBack`
-// (null without a step back), and for the root's RepoMenu the open `repo`, the `repos` used on
+// (ItemMenu's onRename / onDuplicate / onDelete / onMove / folders, as in File manager), the title
+// bar's `onBack` (null without a step back), and for the root's RepoMenu the open `repo`, the `repos` used on
 // this device and `onSwitchRepo(repo)`.
 export const NavContext = createContext(null)
 
@@ -57,39 +57,42 @@ function Rows({ dir, depth }) {
   })
 }
 
-// The title bar's split button for a file or folder: ← goes back a step in the page (disabled
-// without one); ▾ opens a popover with the tree of the folder you're in (the open folder, or
-// the open file's), its subfolders expandable. Choosing a row opens it and closes the popover.
-// A split button isn't in shadcn/ui: two Buttons joined, sharing one outline.
-export function BackTreeButton() {
+// The look of a title that opens a menu: the name in bold in an outlined button, ▾ on its right
+// (the folder tree here, RepoMenu at File manager's root)
+export const TitleMenuButton = forwardRef(function TitleMenuButton({ children, className, ...props }, ref) {
+  return (
+    <Button ref={ref} variant="outline" className={cn('min-w-0 max-w-full gap-1.5 px-3 text-base font-bold', className)} {...props}>
+      <span className="truncate">{children}</span>
+      <CaretDown className="text-muted-foreground" />
+    </Button>
+  )
+})
+
+// The title of a file or folder: its `name` as a button that opens a popover with the tree of the folder
+// you're in (the open folder, or the open file's), its subfolders expandable. Choosing a row opens it and
+// closes the popover.
+export function FolderTreeMenu({ name }) {
   const nav = useContext(NavContext)
   const [open, setOpen] = useState(false)
-  if (!nav) return null
+  if (!nav) return name
   const close = fn => path => { setOpen(false); fn(path) }
   const empty = !nav.listDir(nav.dir).length
   return (
-    <div className="flex shrink-0 rounded-sm bg-secondary">
-      <Button variant="ghost-outline" size="icon" aria-label="Back" tooltip="Back" disabled={!nav.onBack} className="rounded-r-none" onClick={nav.onBack}>
-        <ArrowLeft />
-      </Button>
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
-          <Button variant="ghost-outline" size="icon" aria-label="Folder tree" tooltip="Folder tree" className="w-control-md rounded-l-none border-l border-background">
-            <CaretDown />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-80 p-space-sm" onCloseAutoFocus={e => e.preventDefault()}>
-          <div className="max-h-[60vh] overflow-y-auto overscroll-y-contain" data-no-pull>
-            {empty
-              ? <p className="py-4 text-center text-sm text-muted-foreground">Empty folder</p>
-              : (
-                <NavContext.Provider value={{ ...nav, onOpenFolder: close(nav.onOpenFolder), onOpenFile: close(nav.onOpenFile) }}>
-                  <ul><Rows dir={nav.dir} depth={0} /></ul>
-                </NavContext.Provider>
-              )}
-          </div>
-        </PopoverContent>
-      </Popover>
-    </div>
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <TitleMenuButton>{name}</TitleMenuButton>
+      </PopoverTrigger>
+      <PopoverContent className="w-80 p-space-sm" onCloseAutoFocus={e => e.preventDefault()}>
+        <div className="max-h-[60vh] overflow-y-auto overscroll-y-contain" data-no-pull>
+          {empty
+            ? <p className="py-4 text-center text-sm text-muted-foreground">Empty folder</p>
+            : (
+              <NavContext.Provider value={{ ...nav, onOpenFolder: close(nav.onOpenFolder), onOpenFile: close(nav.onOpenFile) }}>
+                <ul><Rows dir={nav.dir} depth={0} /></ul>
+              </NavContext.Provider>
+            )}
+        </div>
+      </PopoverContent>
+    </Popover>
   )
 }

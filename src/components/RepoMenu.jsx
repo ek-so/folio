@@ -1,10 +1,10 @@
 import { useContext, useRef, useState } from 'react'
-import { ArrowSquareOut, CaretDown, Check, GitBranch } from '@phosphor-icons/react'
+import { ArrowSquareOut, Check, GitBranch } from '@phosphor-icons/react'
 import { Button } from './ui/button.jsx'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from './ui/dropdown-menu.jsx'
 import BottomSheet from './BottomSheet.jsx'
 import RepoForm from './RepoForm.jsx'
-import { NavContext } from './NavTree.jsx'
+import { NavContext, TitleMenuButton } from './NavTree.jsx'
 
 // The repo's name as File manager's root title, as a menu: the repos used on this
 // device (the open one checked; another one opens the app there), Switch
@@ -19,10 +19,7 @@ export default function RepoMenu() {
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="min-w-0 max-w-full text-base font-bold">
-            <span className="truncate">{name}</span>
-            <CaretDown className="text-muted-foreground" />
-          </Button>
+          <TitleMenuButton>{name}</TitleMenuButton>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="max-w-[min(20rem,calc(100vw-2*var(--space)))]" onCloseAutoFocus={e => e.preventDefault()}>
           {nav.repos.map(repo => (
