@@ -30,17 +30,17 @@ export default function AccountMenu({ trigger, current, pages, viewActions, onNa
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>{trigger}</SheetTrigger>
-      <SheetContent side="left" className="top-[calc(var(--space-sm)+var(--safe-top))] bottom-[calc(var(--space-sm)+var(--safe-bottom))] left-space-sm h-auto w-[calc(100vw-2*var(--space-sm))] gap-0 min-[500px]:w-[85vw] sm:max-w-none overflow-hidden rounded-xl border bg-card">
+      <SheetContent side="left" className="top-[calc(var(--space-sm)+var(--safe-top))] bottom-[calc(var(--space-sm)+var(--safe-bottom))] left-space-sm h-auto w-[calc(100vw-2*var(--space-sm))] gap-0 min-[500px]:w-[85vw] sm:max-w-none overflow-hidden rounded-xl border bg-card" closeClassName="right-space">
         <SheetDescription className="sr-only">Pages and settings</SheetDescription>
-        {/* As tall as a title bar (base height and 8px above and below), level with the sheet's ✕; the logo centered on
-            the rows' icons and the name lined up with their labels */}
-        <div className="shrink-0 border-b border-border p-space-sm pr-14">
+        {/* Like a title bar: base height, 8px above and below, 16px at the sides, level with the sheet's ✕ (16px from
+            the right too); the logo centered on the rows' icons and the name lined up with their labels */}
+        <div className="shrink-0 border-b border-border py-space-sm pl-space pr-[calc(var(--spacing-space)+var(--spacing-control)+var(--spacing-space-sm))]">
           <div className="flex min-h-control items-center gap-2 px-3">
             <AppLogo className="-ml-1 size-6 shrink-0" />
             <SheetTitle className="text-base font-bold">Folio</SheetTitle>
           </div>
         </div>
-        <nav aria-label="Main" className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain p-space-sm" data-no-pull>
+        <nav aria-label="Main" className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain p-space" data-no-pull>
           <ul>{pages.filter(p => p.id === PAGE.FILES).map(page)}</ul>
           {separator}
           <ul>

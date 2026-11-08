@@ -35,7 +35,8 @@ const SheetOverlay = React.forwardRef(function SheetOverlay({ className, ...prop
   )
 })
 
-function SheetContent({ className, children, side = 'right', ...props }) {
+// `closeClassName`: where its ✕ sits, when not 8px from the top right corner
+function SheetContent({ className, closeClassName, children, side = 'right', ...props }) {
   return (
     <SheetPortal>
       <SheetOverlay />
@@ -57,7 +58,7 @@ function SheetContent({ className, children, side = 'right', ...props }) {
       >
         {children}
         <SheetPrimitive.Close asChild>
-          <Button variant="ghost" size="icon" aria-label="Close" className="absolute top-2 right-2 text-muted-foreground hover:text-foreground">
+          <Button variant="ghost" size="icon" aria-label="Close" className={cn('absolute top-2 right-2 text-muted-foreground hover:text-foreground', closeClassName)}>
             <X />
           </Button>
         </SheetPrimitive.Close>
