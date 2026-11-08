@@ -27,11 +27,14 @@ import { BADGES } from './RecurrenceField.jsx'
 import { WEEKDAYS, parseRecurrence, repeatLabel } from './recurrence.js'
 import { plural } from '@/lib/plural.js'
 import LockMark from '@/components/LockMark.jsx'
+import { EmptyBox } from '@/components/EmptyState.jsx'
 
 // The ribbon: each day takes DAY_WIDTH (its box and the gap around it), and a line between months MONTH_GAP (a box that
 // wide with the 1px line in its middle: the days' gap on each side), so the scrolling sums match what's drawn; it starts
 // with a window of days around a day (today, or one picked far away) and grows by MORE_DAYS on either side as it's
 // scrolled near an end (EDGE), so it never ends
+// Today with nothing to do (no cards, no overdue ones), in its tray
+const SORTED = { emoji: '☕', text: 'All sorted for today' }
 const DAY_WIDTH = 80
 const MONTH_GAP = 9
 const MORE_DAYS = 60
@@ -192,7 +195,7 @@ export default function Planner({ id, services, onRemove }) {
     }
     if (view === 'list') body = (
       <>
-        {groups[0]?.key !== 'today' && <Tray>{sectionTitle('Today', today)}</Tray>}
+        {groups[0]?.key !== 'today' && <Tray>{sectionTitle('Today', today)}<EmptyBox emoji={SORTED.emoji}>{SORTED.text}</EmptyBox></Tray>}
         {groups.map(group => {
           const { shown: rows, more: hidden } = groupCards(group)
           return (
@@ -235,6 +238,7 @@ export default function Planner({ id, services, onRemove }) {
         <Tray>
           {sectionTitle(shortTitle(selected, today), selected)}
           {/* The cards of a row are one height; Show more on a row of its own, one column wide (all of it on phones) */}
+          {list.length === 0 && selected === today && <EmptyBox emoji={SORTED.emoji}>{SORTED.text}</EmptyBox>}
           {list.length > 0 && (
             <div ref={setGrid} className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,18rem),1fr))] gap-space-sm">
               {list.filter(c => visible.has(c.path)).map(({ path, overdue, undated }) => (

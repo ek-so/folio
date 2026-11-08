@@ -19,3 +19,13 @@ export default function EmptyState({ message, action }) {
     </div>
   )
 }
+
+// A white box in a tray (like a card's look) for a day with nothing to do: an `emoji` over a muted line, centered
+export function EmptyBox({ emoji, children }) {
+  return (
+    <div className="flex flex-col items-center gap-space-xs rounded-lg border border-border bg-card px-space py-space-lg text-center">
+      <span aria-hidden="true" className="text-2xl">{emoji}</span>
+      <EmptyMessage className="py-0">{children}</EmptyMessage>
+    </div>
+  )
+}
