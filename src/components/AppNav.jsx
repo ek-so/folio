@@ -123,12 +123,15 @@ export function NavRail({ page, pages, hrefOf, viewActions, onPage, onSearch, re
 
 // Phones: a bar at the top with ☰ (every page, then the rest), the file-tree
 // button (`tree`: on the main pages), Search and Sync. It slides away while
-// the content scrolls down and returns on scrolling up (`useHideOnScroll`).
+// the content scrolls down and returns on scrolling up (`useHideOnScroll`): its row folds in 300ms with a gentle ease while
+// what's in it slides up and fades, so the page under it moves softly.
 export function TopBar({ host, resetKey, page, pages, viewActions, onPage, onSearch, renderSync, menu, tree }) {
   const hidden = useHideOnScroll(host, resetKey)
   return (
-    <div className={cn('grid shrink-0 transition-[grid-template-rows,visibility] duration-200 md:hidden', hidden ? 'grid-rows-[0fr] invisible' : 'grid-rows-[1fr]')}>
+    <div className={cn('grid shrink-0 transition-[grid-template-rows,visibility] duration-300 ease-[cubic-bezier(0.2,0,0,1)] md:hidden', hidden ? 'grid-rows-[0fr] invisible' : 'grid-rows-[1fr]')}>
     <nav aria-label="Main" className="min-h-0 overflow-hidden">
+    {/* The bar's row folds while its content slides up and fades with it, rather than being cut off */}
+    <div className={cn('transition-[translate,opacity] duration-300 ease-[cubic-bezier(0.2,0,0,1)]', hidden && '-translate-y-full opacity-0')}>
     <div className="flex items-center gap-2 px-space-sm py-space">
       <AccountMenu
         {...menu} current={page} pages={pages} viewActions={viewActions} onNavigate={onPage}
@@ -144,6 +147,7 @@ export function TopBar({ host, resetKey, page, pages, viewActions, onPage, onSea
       </Button>
       <div className="flex-1" />
       {renderSync(false, true)}
+    </div>
     </div>
     </nav>
     </div>

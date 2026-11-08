@@ -14,7 +14,7 @@
 ## Phones (`TopBar`, above the `Surface`)
 - ☰ (`AccountMenu`: the views and Add view, File manager and Graph, Broken links, Documentation, Settings, Sign out; the open one checked), the file-tree button (`NavDrawerButton`, on the three main pages), Search and Sync.
 - A view's ⋯ in ☰ is always shown and opens its Rename / Remove (`ViewMenu`) as a sub popover on its side.
-- The bar slides away while the content scrolls down and returns on scrolling up (`useHideOnScroll`), leaving only the title bar fixed.
+- The bar slides away while the content scrolls down (at least 16px in one go) and returns on scrolling up (`useHideOnScroll`), leaving only the title bar fixed: its row folds in 300ms with a gentle ease while what's in it slides up and fades, so the page under it moves softly.
 
 ## File tree (`NavTree.jsx`)
 - Every main page's `Surface` (`tree`) has the repo's folders and files in its own `bg-card` box to its left from 768px: 300px by default, a drag handle in the 16px gap (also ←/→ keys, saved when let go; double click resets), 200–480px, remembered in `storage` (`ResizeHandle`, `useResizableWidth`, limits in `lib/resize.js`; at most 35% of the window, the rail 25%).

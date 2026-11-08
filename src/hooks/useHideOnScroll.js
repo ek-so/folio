@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 
 const SHOW_ABOVE = 56 // always shown near the top of the content
-const STEP = 8 // scrolled this far in one direction before it switches
-const SETTLE_MS = 300 // the bar's slide resizes the content: its scroll events aren't the user's
+const STEP = 16 // scrolled this far in one direction before it switches (a clear scroll, not a nudge)
+const SETTLE_MS = 400 // the bar's slide (300ms) resizes the content: its scroll events aren't the user's
 
 // True while the phone top bar should be hidden: scrolling down inside `host`
 // (any scroll area in it) hides it, scrolling up shows it. `resetKey` (the
