@@ -10,6 +10,10 @@ import EditListModal from '@/components/EditListModal.jsx'
 import FileIcon from '@/components/FileIcon.jsx'
 import MarkdownPreview from '@/components/MarkdownPreview.jsx'
 import { NO_CALLOUT } from '@/components/NoteCard.jsx'
+import { DndContext, DragOverlay, closestCenter } from '@dnd-kit/core'
+import { SortableContext, useSortable, rectSortingStrategy } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
+import { useDragSensors } from '@/hooks/useDragSensors.js'
 import { cn } from '@/lib/utils.js'
 import { useNote } from '@/hooks/useNote.js'
 import { displayName } from '@/lib/files.js'
@@ -26,7 +30,7 @@ import WidgetFrame from '@/components/WidgetFrame.jsx'
 // 320px (the widget at least 40.5rem wide: a container query), else one; an odd last note keeps its column's width: its name and its own ⋯ (Rename note, Remove from widget),
 // then the note as a card: its preview, cut off; all cards are one height (resizable on desktop by one handle under them,
 // edge to edge). The card is only a picture of the note: a tap anywhere on it opens the note, as a board's card does.
-// Taking a note out of the widget keeps the note.
+// A tray's title (with its drag indicator) moves it among the others, as a board's column. Taking a note out of the widget keeps the note.
 export default function NoteWidget({ id, services, onRemove }) {
   const file = services.config.read(notePath(id))
   const settings = file.ready && file.text !== undefined ? parseNotes(file.text) : null
@@ -36,6 +40,16 @@ export default function NoteWidget({ id, services, onRemove }) {
   const [listing, setListing] = useState(false) // Edit notes is open
   const [removing, setRemoving] = useState(null) // the index of the note whose removal is being confirmed
   const [dragged, setDragged] = useState(null) // the boxes' height while an edge is dragged, until it's saved
+  const [moving, setMoving] = useState(null) // the note whose tray is being dragged
+  const sensors = useDragSensors()
+  // A tray dropped on another takes its place
+  const onDragEnd = ({ active, over }) => {
+    setMoving(null)
+    const files = settings.notes.map(n => n.file)
+    const from = files.indexOf(active.id)
+    const to = over ? files.indexOf(over.id) : -1
+    if (from >= 0 && to >= 0 && from !== to) save(reorderedNote(settings, from, to))
+  }
   const height = settings ? notesHeight(settings) : NOTE_HEIGHT.default
   // Any box's bottom edge resizes them all (one height for the widget); null when it can't be saved
   const resize = canEdit ? (px, done = true) => {
@@ -48,17 +62,34 @@ export default function NoteWidget({ id, services, onRemove }) {
   // Only when its settings are read (WidgetFrame shows the other states)
   const body = () => !settings.notes.length ? <p className="py-6 text-center text-sm text-muted-foreground">No notes yet. Add one from ⋯.</p>
     : (
+      <DndContext
+        sensors={canEdit ? sensors : []}
+        collisionDetection={closestCenter}
+        onDragStart={({ active }) => setMoving(active.id)}
+        onDragEnd={onDragEnd}
+        onDragCancel={() => setMoving(null)}
+      >
       <div className="relative grid grid-cols-1 items-start gap-space-sm @min-[40.5rem]:grid-cols-2">
+        <SortableContext items={settings.notes.map(n => n.file)} strategy={rectSortingStrategy}>
         {settings.notes.map(entry => (
           <NoteTray
-            key={`${entry.file}:${services.discards}`} path={entry.file} services={services} height={dragged ?? height}
+            key={`${entry.file}:${services.discards}`} path={entry.file} services={services} height={dragged ?? height} canMove={canEdit}
             onTakeOut={canEdit ? () => setRemoving(settings.notes.indexOf(entry)) : null}
             onReplace={canEdit ? (to, first = ch => ch) => services.update(ch => services.config.write(notePath(id), serializeNotes(replacedNote(settings, entry.file, to)))(first(ch))) : null}
           />
         ))}
+        </SortableContext>
         {/* One handle under them all, edge to edge: their one height */}
         {resize && <ResizeHandle vertical label="Resize notes" size={dragged ?? height} limits={NOTE_HEIGHT} className="hidden md:flex" onResize={resize} />}
       </div>
+      <DragOverlay>
+        {moving && (
+          <Tray className="rotate-1 bg-secondary shadow-lg">
+            <TrayTitle grip>{displayName(moving)}</TrayTitle>
+          </Tray>
+        )}
+      </DragOverlay>
+      </DndContext>
     )
 
   const menu = <>
@@ -104,17 +135,21 @@ export default function NoteWidget({ id, services, onRemove }) {
   </>
 }
 
-// One note's tray: its name and ⋯ over its card, `height` tall on desktop (the widget's). `onTakeOut` (null: it can't be) asks to remove it from the widget
-function NoteTray({ path, services, height, onTakeOut, onReplace }) {
+// One note's tray: its name and ⋯ over its card, `height` tall on desktop (the widget's). `onTakeOut` (null: it can't be) asks to remove it from the widget.
+// Its title, with the drag indicator, moves it (`canMove`; the tray stays in place, faded, while its overlay is dragged)
+function NoteTray({ path, services, height, canMove, onTakeOut, onReplace }) {
+  const { setNodeRef, setActivatorNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({ id: path, disabled: !canMove })
   const found = services.noteFile(path)
   const [renaming, setRenaming] = useState(false)
   const [replacing, setReplacing] = useState(false) // picking a note in place of this one, which is gone
   const item = fileItem(path)
   const open = () => { window.dispatchEvent(new Event('folio:flush')); services.openFile(path) } // typing first
   const tray = body => (
-    <Tray className="min-w-0">
+    <Tray ref={setNodeRef} style={{ transform: CSS.Translate.toString(transform), transition }} className={cn('min-w-0', isDragging && 'opacity-40')}>
       <div className="flex items-center gap-1">
-        <div className="min-w-0 flex-1"><TrayTitle>{displayName(path)}</TrayTitle></div>
+        <div ref={setActivatorNodeRef} {...attributes} {...listeners} className={cn('min-w-0 flex-1', canMove && 'cursor-grab touch-manipulation select-none', NO_CALLOUT)}>
+          <TrayTitle grip={canMove}>{displayName(path)}</TrayTitle>
+        </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" aria-label={`Actions for ${displayName(path)}`} className={TRAY_BUTTON}>
