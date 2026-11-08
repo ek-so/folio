@@ -10,8 +10,8 @@ import { Separator } from './ui/separator.jsx'
 import { Sheet, SheetTrigger, SheetContent, SheetTitle, SheetDescription } from './ui/sheet.jsx'
 
 // The phone navigation, opened by `trigger` (a Button): a left sheet that floats 8px from the screen's edges,
-// titled with the app's name (its ✕ is the sheet's own). The main pages (`pages`): File manager, then the views
-// (each with its ⋯: `ViewMenu`, Rename / Remove, `viewActions`) and Views settings, then Graph; then Broken links
+// titled with the app's name (its ✕ is the sheet's own). The main pages (`pages`): File manager, Assets and Graph, then the views
+// (each with its ⋯: `ViewMenu`, Rename / Remove, `viewActions`) and Views settings; then Broken links
 // (count), Documentation, Settings and Sign out. `current` is the open page, highlighted. Choosing a page closes it.
 export default function AccountMenu({ trigger, current, pages, viewActions, onNavigate, brokenCount, onSignOut }) {
   const [open, setOpen] = useState(false)
@@ -45,14 +45,13 @@ export default function AccountMenu({ trigger, current, pages, viewActions, onNa
           <ul>
             {pages.filter(p => p.id === PAGE.FILES).map(page)}
             {fixed(PAGE.ASSETS, Images, 'Assets')}
+            {pages.filter(p => p.id === PAGE.GRAPH).map(page)}
           </ul>
           {separator}
           <ul>
             {pages.filter(p => p.view).map(page)}
             <li><ListRow icon={<SlidersHorizontal />} title="Views settings" disabled={!viewActions.canEdit} onClick={go(viewActions.onSettings)} /></li>
           </ul>
-          {separator}
-          <ul>{pages.filter(p => !p.view && p.id !== PAGE.FILES).map(page)}</ul>
           {separator}
           <ul>
             {fixed(PAGE.LINKS, LinkBreak, 'Broken links', brokenCount > 0 && <span className="px-space-sm text-sm text-muted-foreground">{brokenCount}</span>)}
