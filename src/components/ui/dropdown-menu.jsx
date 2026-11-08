@@ -2,6 +2,7 @@ import * as React from 'react'
 import * as DropdownMenuPrimitive from '@radix-ui/react-dropdown-menu'
 import { CaretRight } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
+import { useKeepOnScreen } from '@/hooks/useKeepOnScreen.js'
 import { useOverlayOpen } from '@/hooks/useOverlayOpen.js'
 
 // The menu's [open, setOpen], for its trigger
@@ -100,17 +101,19 @@ function DropdownMenuSubTrigger({ className, children, ...props }) {
   )
 }
 
-// Never wider or taller than the room on its side (Radix's available-width / -height), so on a phone it shrinks and scrolls
-// rather than running off the screen
+// Where it doesn't fit beside its parent (a phone) it overlays the parent, shifted onto the screen (useKeepOnScreen);
+// never taller than the room it has (it scrolls)
 function DropdownMenuSubContent({ className, sideOffset = 4, collisionPadding = 8, ...props }) {
+  const keepOnScreen = useKeepOnScreen()
   return (
     <DropdownMenuPrimitive.Portal>
       <DropdownMenuPrimitive.SubContent
+        ref={keepOnScreen}
         data-slot="dropdown-menu-sub-content"
         sideOffset={sideOffset}
         collisionPadding={collisionPadding}
         className={cn(
-          'bg-popover text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-50 min-w-[11rem] max-w-[var(--radix-dropdown-menu-content-available-width)] max-h-[var(--radix-dropdown-menu-content-available-height)] overflow-x-hidden overflow-y-auto overscroll-y-contain rounded-md border border-border p-1 shadow-md',
+          'bg-popover text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-50 min-w-[11rem] max-w-[calc(100vw-1rem)] max-h-[var(--radix-dropdown-menu-content-available-height)] overflow-x-hidden overflow-y-auto overscroll-y-contain rounded-md border border-border p-1 shadow-md',
           className
         )}
         {...props}
