@@ -22,7 +22,6 @@ import { useLinkIndex, LinksContext } from './hooks/useLinkIndex.js'
 import { useSymlinks } from './hooks/useSymlinks.js'
 import { rewriteLinks, retargetLink, extractLinks, SYMLINK_MODE } from './lib/links.js'
 import { NavContext } from './components/NavTree.jsx'
-import { foldersToOpen } from './lib/tree.js'
 import { NavRail, TopBar } from './components/AppNav.jsx'
 import EmptyPage from './components/EmptyPage.jsx'
 import Settings from './components/Settings.jsx'
@@ -97,18 +96,19 @@ export default function App() {
   const view = currentView(mainPage, trailOf(mainPage))
   const selectedFile = view?.file ?? null
   const folder = view?.folder ?? ''
-  const show = v => { setPage(mainPage); setTrails(o => ({ ...o, [mainPage]: openView(mainPage, o[mainPage], v) })) }
+  // `target`: the page it opens in (the page you're on unless given; Search opens in File manager)
+  const show = (v, target = mainPage) => { setPage(target); setTrails(o => ({ ...o, [target]: openView(target, o[target], v) })) }
   // Opening a symlink (from the list, search or a note's link) opens its
   // source: the folder, or the file
-  function setSelectedFile(path) {
+  function setSelectedFile(path, target) {
     const link = symlinks[path]
-    if (link?.kind === 'folder') { openFolder(link.path); return }
+    if (link?.kind === 'folder') { openFolder(link.path, target); return }
     if (link?.path) path = link.path
     else if (path in symlinks) return // broken or still loading: nothing to open
     storage.addRecentFile(path)
-    show(fileView(path))
+    show(fileView(path), target)
   }
-  const openFolder = path => show(folderView(path))
+  const openFolder = (path, target) => show(folderView(path), target)
   // The navigation: choosing the page you're on again takes Home and Graph back to their own content
   function choosePage(id) {
     if (id === page && id !== PAGE.FILES && trailOf(id).length) setTrails(o => ({ ...o, [id]: [] }))
@@ -139,19 +139,9 @@ export default function App() {
   useEffect(() => { storage.setTrails(trails) }, [trails])
   useEffect(() => { storage.setPage(page) }, [page])
 
-  // File tree: the open folders; the open file or folder is always revealed
+  // The title bar's folder tree: the folders open in it
   const [expanded, setExpanded] = useState(() => new Set(storage.getExpanded()))
-  const treeCurrent = selectedFile ?? (folder || null)
   useEffect(() => { storage.setExpanded([...expanded]) }, [expanded])
-  useEffect(() => {
-    if (!treeCurrent) return
-    const open = foldersToOpen(treeCurrent, !selectedFile)
-    setExpanded(prev => open.every(f => prev.has(f)) ? prev : new Set([...prev, ...open]))
-  }, [treeCurrent, selectedFile])
-  // The desktop file tree panel, hidden with the button in its title and shown again from the rail
-  const [treeCollapsed, setTreeCollapsed] = useState(storage.getTreeCollapsed)
-  useEffect(() => { storage.setTreeCollapsed(treeCollapsed) }, [treeCollapsed])
-  const toggleTree = () => setTreeCollapsed(c => !c)
   const toggleFolder = path => setExpanded(prev => {
     const next = new Set(prev)
     if (!next.delete(path)) next.add(path)
@@ -192,7 +182,7 @@ export default function App() {
     return () => window.removeEventListener('popstate', onPop)
   }, [])
 
-  // What File manager, the file tree and Search show: the config folder stays out of them
+  // What File manager, the folder tree and Search show: the config folder stays out of them
   const shown = useMemo(() => Object.fromEntries(Object.entries(virtual).filter(([path]) => !isConfigPath(path))), [virtual])
   const allFolders = useMemo(() => getAllFolders(shown), [shown])
   // Files and folders that are gone (deleted, discarded, removed by a Pull or
@@ -291,7 +281,7 @@ export default function App() {
     return null
   }
 
-  // A move by drag and drop (file list, file tree): a refusal shows as a toast
+  // A move by drag and drop (file list): a refusal shows as a toast
   function handleDropMove(item, targetFolder) {
     const error = handleMove(item, targetFolder)
     if (error) toast.error(error)
@@ -647,7 +637,6 @@ export default function App() {
 
   // A symlink never opens itself (opening one opens its source instead)
   const entry = selectedFile && !(selectedFile in symlinks) && virtual[selectedFile]
-  const repoName = auth.repo.split('/')[1]
   // Add view, and Rename / Delete of a view (the dialogs below)
   const viewActions = {
     canEdit: viewsReady,
@@ -688,19 +677,14 @@ export default function App() {
         listDir: dir => listDir(shown, dir, repo.changed),
         views,
         symlinks,
-        current: treeCurrent,
+        current: selectedFile ?? (folder || null),
+        dir: folder,
         expanded,
         onToggle: toggleFolder,
-        onCollapseAll: () => setExpanded(new Set()),
         itemActions: { onRename: handleRename, onDuplicate: handleDuplicate, onDelete: handleDelete, onMove: handleMove, folders: allFolders },
         onOpenFolder: openFolder,
         onOpenFile: setSelectedFile,
-        treeCollapsed,
-        onToggleTree: toggleTree,
         onBack: page === mainPage && trailOf(mainPage).length ? goBack : null,
-        onDropMove: handleDropMove,
-        onUpload: handleUpload,
-        loading: !repo.remote && !repo.error,
         repo: auth.repo,
         repos: auth.repos,
         onSwitchRepo: switchRepo,
@@ -712,9 +696,9 @@ export default function App() {
         <Toaster theme={theme} />
         <PullToRefresh onRefresh={() => window.location.reload()}>
           <div className="flex flex-1 min-h-0">
-          <NavRail page={page} pages={pages} hrefOf={id => urlForPage(BASE, id, currentView(id, trailOf(id)))} viewActions={viewActions} onPage={choosePage} onSearch={() => setSearchOpen(true)} renderSync={renderSync} menu={menu} onShowTree={treeCollapsed && page === mainPage ? toggleTree : null} />
+          <NavRail page={page} pages={pages} hrefOf={id => urlForPage(BASE, id, currentView(id, trailOf(id)))} viewActions={viewActions} onPage={choosePage} onSearch={() => setSearchOpen(true)} renderSync={renderSync} menu={menu} />
           <main ref={mainRef} className="flex flex-col flex-1 min-w-0 min-h-0">
-          <TopBar host={mainRef} resetKey={`${page}|${selectedFile}|${folder}`} tree={page === mainPage} page={page} pages={pages} viewActions={viewActions} onPage={choosePage} onSearch={() => setSearchOpen(true)} renderSync={renderSync} menu={menu} />
+          <TopBar host={mainRef} resetKey={`${page}|${selectedFile}|${folder}`} page={page} pages={pages} viewActions={viewActions} onPage={choosePage} onSearch={() => setSearchOpen(true)} renderSync={renderSync} menu={menu} />
           {page === PAGE.SETTINGS ? (
             <Settings login={auth.user.login} repo={auth.repo} theme={theme} onTheme={setTheme} />
           ) : page === PAGE.DOCS ? (
@@ -799,7 +783,6 @@ export default function App() {
               onNewFile={(f, kind) => setNewFile({ folder: f, kind })}
               onUpload={handleUpload}
               onDropMove={handleDropMove}
-              repoName={repoName}
               symlinks={symlinks}
               linkedBy={folder ? linkedBy[folder] : undefined}
               onOpenLink={openLink}
@@ -932,7 +915,10 @@ export default function App() {
         {searchOpen && (
           <SearchSheet
             onClose={() => setSearchOpen(false)}
-            onSelect={setSelectedFile}
+            onSelect={path => setSelectedFile(path, PAGE.FILES)}
+            folders={allFolders}
+            onSelectFolder={path => openFolder(path, PAGE.FILES)}
+            placeholder="Search files and folders…"
             virtual={shown}
             changes={changes}
             recent={storage.getRecentFiles()}

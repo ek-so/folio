@@ -6,7 +6,7 @@ import BottomSheet from './BottomSheet.jsx'
 import RepoForm from './RepoForm.jsx'
 import { NavContext } from './NavTree.jsx'
 
-// The repo's name atop the file tree, as a menu: the repos used on this
+// The repo's name as File manager's root title, as a menu: the repos used on this
 // device (the open one checked; another one opens the app there), Switch
 // repository… (a sheet with the owner/repo field) and Open on GitHub.
 // Switching waits while a sync runs, so it's never cut off.

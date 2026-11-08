@@ -17,7 +17,7 @@ App flow: **Auth → RepoSetup → FileBrowser / Editor / FileViewer**. `App.jsx
 - `viewsConfig.js` — views and their widgets in `.folio/views.json`, `isConfigPath`. Tested.
 - `views.js` — each main page's trail (`openView`, `currentView`, `trailTo`). Tested.
 - `pages.js` — page ids and the title and icon of every page.
-- `tree.js` (which folders the tree opens), `url.js` (address bar), `resize.js`, `files.js`, `cache.js` (IndexedDB), `storage.js` (localStorage), `syncErrors.js`, `updates.js`, `viewport.js`, `plural.js` ("3 notes").
+- `url.js` (address bar), `resize.js`, `files.js`, `cache.js` (IndexedDB), `storage.js` (localStorage), `syncErrors.js`, `updates.js`, `viewport.js`, `plural.js` ("3 notes").
 
 **`hooks/`**
 - `useAuth`, `useRepo` (remote tree, local changes, sync), `useNote` (a note's text, saved as you type; `beginEdit` / `endEdit`), `useLinkIndex`, `useSymlinks`, `useBlob`, `useRepoImages`, `useTheme`, `useSingleOpen`, `useOverlayOpen` (a popover's or menu's open state; a scroll by touch closes it).

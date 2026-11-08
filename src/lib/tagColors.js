@@ -3,7 +3,7 @@
 // { "<property>": { "<value>": 0 … PROPERTY_COLORS - 1 } }. A value without one
 // has the color its name gives it (valueColors in lib/frontmatter.js).
 // The file is a normal local change, committed by Sync, and never shows in
-// File manager, the file tree or Search (`isConfigPath`).
+// File manager, the folder tree or Search (`isConfigPath`).
 import { PROPERTY_COLORS } from './frontmatter.js'
 
 export const TAG_COLORS_PATH = '.folio/colors.json'

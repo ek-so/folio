@@ -1,5 +1,4 @@
-// Sizes of what can be resized on desktop (px): default and limits. The two panels' widths,
-export const TREE_WIDTH = { default: 300, min: 200, max: 480 }
+// Sizes of what can be resized on desktop (px): default and limits. The rail's width,
 export const RAIL_WIDTH = { default: 240, min: 160, max: 320 }
 // a note widget's height
 export const NOTE_HEIGHT = { default: 200, min: 120, max: 1200 }

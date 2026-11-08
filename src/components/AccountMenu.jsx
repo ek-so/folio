@@ -12,18 +12,25 @@ import {
 const ACTIVE = 'bg-primary/15 text-primary-ink pointer-fine:hover:bg-primary/20 focus-visible:bg-primary/20 focus:text-primary-ink'
 
 // The phone navigation's popover, opened by `trigger` (a Button): the main
-// pages (`pages`): the views and Add view, then File manager and Graph, then Broken links (count), Settings
+// pages (`pages`): File manager, then the views and Add view, then Graph, then Broken links (count), Settings
 // and Sign out. `current` is the open page, checked. A view has its ⋯ (`ViewMenu`: Rename / Remove
 // in a separate menu beside it, `viewActions`; the nav never swaps its own content for a nested screen). The account and repo are shown in Settings.
 export default function AccountMenu({ trigger, current, pages, viewActions, onNavigate, brokenCount, onSignOut }) {
   const [open, setOpen] = useState(false)
   const mark = id => current === id && <Check className="ml-auto" />
+  const fixedItem = p => (
+    <DropdownMenuItem key={p.id} className={current === p.id ? ACTIVE : undefined} onSelect={() => onNavigate(p.id)}>
+      <p.icon /> <PageTitle page={p} />{mark(p.id)}
+    </DropdownMenuItem>
+  )
   // Inside a menu item: the view's ⋯ must not select the item
   const own = { onClick: e => e.stopPropagation(), onPointerUp: e => e.stopPropagation(), onKeyDown: e => e.stopPropagation() }
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>{trigger}</DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-60" onCloseAutoFocus={e => e.preventDefault()}>
+        {pages.filter(p => p.id === PAGE.FILES).map(fixedItem)}
+        <DropdownMenuSeparator />
         {pages.filter(p => p.view).map(p => (
           <DropdownMenuItem key={p.id} className={current === p.id ? ACTIVE : undefined} onSelect={() => onNavigate(p.id)}>
             <p.icon /> <span className="min-w-0 truncate"><PageTitle page={p} /></span>{mark(p.id)}
@@ -34,11 +41,7 @@ export default function AccountMenu({ trigger, current, pages, viewActions, onNa
         ))}
         <DropdownMenuItem disabled={!viewActions.canEdit} onSelect={viewActions.onAdd}><Plus /> Add view</DropdownMenuItem>
         <DropdownMenuSeparator />
-        {pages.filter(p => !p.view).map(p => (
-          <DropdownMenuItem key={p.id} className={current === p.id ? ACTIVE : undefined} onSelect={() => onNavigate(p.id)}>
-            <p.icon /> <PageTitle page={p} />{mark(p.id)}
-          </DropdownMenuItem>
-        ))}
+        {pages.filter(p => !p.view && p.id !== PAGE.FILES).map(fixedItem)}
         <DropdownMenuSeparator />
         <DropdownMenuItem className={current === PAGE.LINKS ? ACTIVE : undefined} onSelect={() => onNavigate(PAGE.LINKS)}>
           <LinkBreak /> Broken links

@@ -11,7 +11,7 @@ import TitleBar from './TitleBar.jsx'
 export default function FilePage({ linkedBy, onOpenLink, path, name, changed, onRename, onDuplicate, onDelete, onMove, folders, columns, lock, actions, children }) {
   return (
     <PageLayout>
-      <Surface tree title={
+      <Surface title={
         <TitleBar
           name={name}
           changed={changed}

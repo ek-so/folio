@@ -4,7 +4,7 @@
 // A view's widgets show on it, in order; each kind is in src/widgets/ and keeps its own settings
 // (a board: .folio/boards/<id>.json). A kind this version doesn't know is kept as it is.
 // The file is a normal local change, committed by Sync; it never shows in
-// File manager, the file tree or Search (`isConfigPath`).
+// File manager, the folder tree or Search (`isConfigPath`).
 
 export const VIEWS_PATH = '.folio/views.json'
 export const DEFAULT_VIEWS = [{ id: 'home', name: 'Home' }]

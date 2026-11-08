@@ -45,7 +45,7 @@ export default function ViewPage({ page, widgets = [], error, services, onAdd, o
   )
   return (
     <PageLayout>
-      <Surface tree wide title={
+      <Surface wide title={
         <TitleBar page={page}>
           {viewMenu}
           {addMenu(<Button size="icon" aria-label="Add widget" tooltip="Add widget" disabled={!canEdit} className="shrink-0"><Plus /></Button>)}

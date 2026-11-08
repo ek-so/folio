@@ -2,7 +2,7 @@ import { cn } from '@/lib/utils'
 import { Tip } from './tooltip.jsx'
 import { Button } from './button.jsx'
 
-// One row of any list (file manager, file tree, search, move, backlinks): a
+// One row of any list (file manager, folder tree, search, move, backlinks): a
 // base-height (40px), rounded row, highlighted on hover or while its ⋯ menu is
 // open. The row's own button holds `icon` (left), `title` and an optional
 // `description` (a second, muted line; the row grows for it) and does

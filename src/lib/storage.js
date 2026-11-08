@@ -7,10 +7,8 @@ const THEME_KEY = 'folio_theme'
 const TRAILS_KEY = 'folio_trails'
 const PAGE_KEY = 'folio_page'
 const EXPANDED_KEY = 'folio_expanded'
-const TREE_WIDTH_KEY = 'folio_tree_width'
 const RAIL_WIDTH_KEY = 'folio_rail_width'
 const RAIL_KEY = 'folio_rail_collapsed'
-const TREE_KEY = 'folio_tree_collapsed'
 const FILES_VIEW_KEY = 'folio_files_view'
 const CHANGES_KEY = 'folio_changes_'
 const PLANNER_VIEW_KEY = 'folio_planner_view_'
@@ -40,14 +38,10 @@ export const storage = {
     try { return JSON.parse(read(localStorage, USER_KEY)) } catch { return null }
   },
   setUser: (user) => write(localStorage, USER_KEY, user && JSON.stringify({ login: user.login })),
-  getTreeWidth: () => read(localStorage, TREE_WIDTH_KEY),
-  setTreeWidth: (width) => write(localStorage, TREE_WIDTH_KEY, String(width)),
   getRailWidth: () => read(localStorage, RAIL_WIDTH_KEY),
   setRailWidth: (width) => write(localStorage, RAIL_WIDTH_KEY, String(width)),
   getRailCollapsed: () => read(localStorage, RAIL_KEY) === '1',
   setRailCollapsed: (collapsed) => write(localStorage, RAIL_KEY, collapsed ? '1' : null),
-  getTreeCollapsed: () => read(localStorage, TREE_KEY) === '1',
-  setTreeCollapsed: (collapsed) => write(localStorage, TREE_KEY, collapsed ? '1' : null),
   // File manager's layout: 'list' | 'cards'
   // Cards unless the list was chosen
   getFilesView: () => read(localStorage, FILES_VIEW_KEY) === 'list' ? 'list' : 'cards',
@@ -66,7 +60,7 @@ export const storage = {
   // Open page ('home' | 'files' | 'graph' | 'settings' | 'links' | 'docs'), null when unset
   getPage: () => read(sessionStorage, PAGE_KEY),
   setPage: (page) => write(sessionStorage, PAGE_KEY, page),
-  // Folders open in the file tree
+  // Folders open in the title bar's folder tree
   getExpanded: () => {
     try { return JSON.parse(read(sessionStorage, EXPANDED_KEY)) || [] } catch { return [] }
   },

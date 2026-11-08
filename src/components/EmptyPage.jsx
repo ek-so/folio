@@ -6,7 +6,7 @@ import TitleBar from './TitleBar.jsx'
 export default function EmptyPage({ page }) {
   return (
     <PageLayout>
-      <Surface tree title={<TitleBar page={page} />} />
+      <Surface title={<TitleBar page={page} />} />
     </PageLayout>
   )
 }

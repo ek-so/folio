@@ -4,6 +4,7 @@ import { Button } from './ui/button.jsx'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from './ui/dropdown-menu.jsx'
 import Surface from './Surface.jsx'
 import TitleBar from './TitleBar.jsx'
+import RepoMenu from './RepoMenu.jsx'
 import ItemMenu from './ItemMenu.jsx'
 import { ListRow } from './ui/list-row.jsx'
 import { CardTile } from './ui/card-tile.jsx'
@@ -16,7 +17,7 @@ import Spinner from './Spinner.jsx'
 import PageLayout from './PageLayout.jsx'
 import { cn } from '@/lib/utils.js'
 
-export default function FileBrowser({ path, onNavigate, listDir, loading, error, notice, onSelect, onNewFile, repoName, onRename, onDuplicate, onDelete, onMove, folders, onUpload, onDropMove, symlinks = {}, linkedBy, onOpenLink }) {
+export default function FileBrowser({ path, onNavigate, listDir, loading, error, notice, onSelect, onNewFile, onRename, onDuplicate, onDelete, onMove, folders, onUpload, onDropMove, symlinks = {}, linkedBy, onOpenLink }) {
   // Symlinked folders sort with the folders
   const isFolder = i => i.type === 'dir' || symlinks[i.path]?.kind === 'folder'
   const listed = loading ? [] : listDir(path)
@@ -66,9 +67,9 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
 
   return (
     <PageLayout>
-      <Surface tree title={
+      <Surface title={
         <TitleBar
-          name={path ? currentFolder : repoName}
+          name={path ? currentFolder : <RepoMenu />}
           badge={<SymlinkedBy links={linkedBy} onOpen={onOpenLink} />}
         >
           <ItemMenu item={path ? { name: currentFolder, path, type: 'dir' } : null} onRename={onRename} onDelete={onDelete} onMove={onMove} folders={folders} view={view} onView={setView} />
