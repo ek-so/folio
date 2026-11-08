@@ -43,10 +43,11 @@ const TINT_HOVER = 'hover:bg-[color-mix(in_oklab,var(--tag)_calc(var(--tag-tint)
 // scope) or remove it (a 🗑 that asks first, then empties that value everywhere it's used);
 // `valueCount(key, value)`: in how many notes; `scopeName`: where, "this folder";
 // `chosen` ({ key: { value: color } }, lib/tagColors.js) are the colors picked so far.
-// `dateKeys`: properties that are always dates (a planner's date), a calendar even while none has a value yet, reading "No date" while empty or not a day.
+// `dateKeys`: properties that are always dates (a planner's date), a calendar even while none has a value yet, reading "No date" while empty or not a day;
+// `overdue`: their dates are past (a planner's late card): red.
 // `badges` ({ key: Component }): properties a widget shows its own way (a planner's type: widgets/planner/RecurrenceField.jsx),
 // one badge for the property, given `prop`, all `props` and `onChange`.
-export default function PropertyBadges({ props, path, files, clamp, title, className, onChange, options, onRemoveValue, valueCount, scopeName, onEditValue, chosen, dateKeys, badges }) {
+export default function PropertyBadges({ props, path, files, clamp, title, className, onChange, options, onRemoveValue, valueCount, scopeName, onEditValue, chosen, dateKeys, badges, overdue }) {
   const [removing, setRemoving] = useState(null) // { key, value } being confirmed
   const [managing, setManaging] = useState(null) // the key whose values are in the dialog
   const parts = [] // [{ text }] or [{ badges: [{ id, prop, label }] }], in order
@@ -69,7 +70,7 @@ export default function PropertyBadges({ props, path, files, clamp, title, class
         {part.badges.map(({ id, prop, label }) => badges?.[prop.key]
           ? <Custom key={id} as={badges[prop.key]} prop={prop} props={props} onChange={onChange} />
           : isDateProp(prop, options, dateKeys)
-          ? <DateValue key={id} prop={prop} onChange={onChange} emptyLabel={dateKeys?.includes(prop.key) ? 'No date' : prop.key} />
+          ? <DateValue key={id} prop={prop} onChange={onChange} emptyLabel={dateKeys?.includes(prop.key) ? 'No date' : prop.key} late={overdue && dateKeys?.includes(prop.key)} />
           : onChange
           ? <EditableBadge key={id} prop={prop} label={label} color={colors[prop.key].get(label)} options={options} onChange={onChange} onManage={(onEditValue || onRemoveValue) && (() => setManaging(prop.key))} />
           : (
@@ -137,14 +138,15 @@ function isDateProp(prop, options, dateKeys) {
 }
 
 // A date property's badge, like a date in the text (DateField: a calendar icon on the left, no ▾): with `onChange`
-// it opens a calendar and a time field to change it (the same day again empties it). While empty, `emptyLabel` (its name, or "No date" for a planner's)
-function DateValue({ prop, onChange, emptyLabel }) {
+// it opens a calendar and a time field to change it (the same day again empties it). While empty, `emptyLabel` (its name, or "No date" for a planner's).
+// `late`: a past date, in red
+function DateValue({ prop, onChange, emptyLabel, late }) {
   const date = valueDate(prop.value)
   const pick = picked => onChange(prop.key, picked ? formatDate(picked) : '')
   return (
     <DateField
       label={date ? dateLabel(date) : emptyLabel} date={date} onPick={onChange && pick}
-      className={cn(!date && PLACEHOLDER)} {...(onChange ? own : {})}
+      className={cn(!date && PLACEHOLDER, late && 'text-destructive-ink')} {...(onChange ? own : {})}
     />
   )
 }

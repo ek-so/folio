@@ -22,9 +22,10 @@ export const cardClick = (path, files, onOpen, onOpenFolder) => e => {
   openLink(link.getAttribute('href'), { path, files, onOpenFile: onOpen, onNavigate: onOpenFolder })
 }
 
-// What a card of a board or a planner shows: the note's title, its description, the chosen `properties`' values. A div, not a button:
+// What a card of a board or a planner shows: the note's title, its description, the chosen `properties`' values (`overdue`:
+// a planner's late card, its title faded and its date red). A div, not a button:
 // the badges in it are buttons
-const NoteCard = forwardRef(function NoteCard({ path, text, properties, always = [], scopeName, files, menu, onChange, options, onRemoveValue, valueCount, chosen, onEditValue, dateKeys, badges, className, ...props }, ref) {
+const NoteCard = forwardRef(function NoteCard({ path, text, properties, always = [], scopeName, files, menu, onChange, options, onRemoveValue, valueCount, chosen, onEditValue, dateKeys, badges, overdue, className, ...props }, ref) {
   const fm = text === undefined ? [] : frontMatter(text)?.props ?? []
   // With `always` (a planner's date and repeat): the description first, then those in that order (shown empty when the
   // note lacks one), then the rest in the file's order; without, all in the file's order
@@ -42,10 +43,10 @@ const NoteCard = forwardRef(function NoteCard({ path, text, properties, always =
       {...props}
     >
       <div className="flex items-start gap-1">
-        <span className="min-w-0 flex-1 break-words text-sm font-medium">{text === undefined ? displayName(path) : noteTitle(text, displayName(path))}</span>
+        <span className={cn('min-w-0 flex-1 break-words text-sm font-medium', overdue && 'opacity-50')}>{text === undefined ? displayName(path) : noteTitle(text, displayName(path))}</span>
         {menu}
       </div>
-      <PropertyBadges props={shown} path={path} files={files} clamp className="pt-1" onChange={onChange} options={options} onRemoveValue={onRemoveValue} valueCount={valueCount} scopeName={scopeName} chosen={chosen} onEditValue={onEditValue} dateKeys={dateKeys} badges={badges} />
+      <PropertyBadges props={shown} path={path} files={files} clamp className="pt-1" onChange={onChange} options={options} onRemoveValue={onRemoveValue} valueCount={valueCount} scopeName={scopeName} chosen={chosen} onEditValue={onEditValue} dateKeys={dateKeys} badges={badges} overdue={overdue} />
       {text !== undefined && <TaskProgress {...taskProgress(text)} />}
     </div>
   )
