@@ -6,12 +6,14 @@ import { withoutEmoji } from '../lib/icons.js'
 import FileIcon from './FileIcon.jsx'
 import { ListRow } from './ui/list-row.jsx'
 import { EmptyMessage } from './EmptyState.jsx'
+import { searchNotes } from '../lib/search.js'
 
 // Command-palette style search. Shows recently opened files when no query is typed (without `recent`:
 // the first files), then filters every visible file in the repo (notes, images, PDFs, …) by path.
 // `only(path)`: the files it can find (a Notes widget's picker: notes); `top`: a row above the results
-// (New note…); `title`, `placeholder`. With `folders` (paths) and `onSelectFolder`, a query finds folders too, listed first.
-export default function SearchSheet({ onClose, onSelect, virtual, changes, recent, only = () => true, top, title = 'Search', placeholder = 'Search files…', folders = [], onSelectFolder }) {
+// (New note…); `title`, `placeholder`. With `folders` (paths) and `onSelectFolder`, a query finds folders too, listed first. With `texts` ({ path: text }, lib/search.js), it
+// also finds notes by what they say, after the ones found by name, each with a snippet of its text under its name.
+export default function SearchSheet({ onClose, onSelect, virtual, changes, recent, only = () => true, top, title = 'Search', placeholder = 'Search files…', folders = [], onSelectFolder, texts }) {
   const [query, setQuery] = useState('')
   const inputRef = useRef()
 
@@ -23,6 +25,7 @@ export default function SearchSheet({ onClose, onSelect, virtual, changes, recen
   const found = q ? [
     ...(onSelectFolder ? folders : []).filter(p => p.toLowerCase().includes(q)).map(path => ({ path, dir: true })),
     ...allFiles.filter(p => p.toLowerCase().includes(q)).map(path => ({ path })),
+    ...(texts ? searchNotes(Object.fromEntries(allFiles.filter(p => p in texts).map(p => [p, texts[p]])), q, p => p.toLowerCase().includes(q)) : []),
   ] : recentFiles.map(path => ({ path }))
   const results = found.slice(0, q ? 30 : 12)
 
@@ -57,7 +60,7 @@ export default function SearchSheet({ onClose, onSelect, virtual, changes, recen
           ) : (
             <ul className="flex flex-col gap-0.5">
               {results.map(result => {
-                const { path, dir } = result
+                const { path, dir, match } = result
                 const parts = path.split('/')
                 const fileName = parts.pop()
                 const base = withoutEmoji(dir ? fileName : splitName(fileName)[0])
@@ -66,7 +69,7 @@ export default function SearchSheet({ onClose, onSelect, virtual, changes, recen
                 const hasEdit = changes?.edits && virtual[path]?.orig in changes.edits
                 return (
                   <li key={path}>
-                    <ListRow icon={<FileIcon path={path} dir={dir} />} title={base} changed={hasEdit} description={folder} onClick={() => select(result)} />
+                    <ListRow icon={<FileIcon path={path} dir={dir} />} title={base} changed={hasEdit} description={match === undefined ? folder : <><span>{result.before}</span><mark className="rounded-sm bg-primary/15 text-foreground">{match}</mark><span>{result.after}</span></>} onClick={() => select(result)} />
                   </li>
                 )
               })}

@@ -938,7 +938,8 @@ export default function App() {
             onSelect={path => setSelectedFile(path, PAGE.FILES)}
             folders={allFolders}
             onSelectFolder={path => openFolder(path, PAGE.FILES)}
-            placeholder="Search files and folders…"
+            placeholder="Search files, folders and notes…"
+            texts={links.notes}
             virtual={shown}
             changes={changes}
             recent={storage.getRecentFiles()}

@@ -3,6 +3,9 @@
 ## Item actions
 Rename / Move / Remove for any file or folder (the only way to rename) go through `ItemMenu` (⋯) on list rows, tree rows and the title bar. A file's ⋯ also has Duplicate: a copy next to it ("x 2.md", `freePath`), a note's text with " (copy)" after its title (`copyTitled`), else (a file, or a note not on this device) the same bytes (`duplicate` in lib/changes.js; a blob GitHub already has isn't uploaded again on push); a symlink can't be duplicated. Every ⋯ of a file or folder (and a board card's) has Copy link: a markdown link to it from the repo's root (`[Name](/path/to/Name.md)`, `repoLink`) to paste in another note; it follows renames like any link. `SearchSheet` finds visible files by path, and the app's Search folders too (listed first); with no query it lists recently opened files. The app's Search always opens what you pick in File manager.
 
+## Search
+`SearchSheet` (rail, ☰): a query finds folders, then files, by path, then notes by what they say (`lib/search.js` `searchNotes`: any case, from two letters, up to 20; each under its name with a snippet of its text, the match highlighted). It reads the texts the link index already holds (`notes`: local edits, else the offline copy), so only notes on this device are searched; PDFs and images are found by name only. Other pickers (Notes' Add note…) search names only.
+
 ## Automatic sync
 Folio syncs once by itself when it opens or reloads (or, if it opened offline, when it's back online): the same Sync as the button, with no "Synced" toast when it works. Conflicts and failures show as they do for Sync (conflicts, the error sheet); offline says nothing (the button does); broken links stop it with a "Not synced" message and Review, not a sheet opening on its own.
 

@@ -13,6 +13,7 @@ App flow: **Auth → RepoSetup → FileBrowser / Editor / FileViewer**. `App.jsx
 - `tagColors.js` — picked value colors in `.folio/colors.json`. Tested.
 - `locks.js` — files locked against editing, `.folio/locks.json` (`toggledLock`, `movedLocks`, `removedLocks`). Tested.
 - `icons.js` — the emoji that replaces a file's or folder's icon, `.folio/icons.json` (`iconOf`, `withIcon`, `movedIcons`, `removedIcons`), and `leadingEmoji` / `withoutEmoji` for names that start with one. Tested.
+- `search.js` — notes found by what they say, with a snippet (`searchNotes`). Tested.
 - `archive.js` — the archive: what's removed moves into `.archive/<day>/` (`archiveDay`, `inArchive`), `markedDone` (a planner card's `status: done`) and `staleArchiveDays` (day folders older than 30 days: App removes them when Folio opens, as local changes). Tested.
 - `links.js` — internal links: backlink and broken-link index, rewriting links on moves, Fix suggestions, `resolveSymlink`. Tested.
 - `viewsConfig.js` — views and their widgets in `.folio/views.json`, `isConfigPath`. Tested.
