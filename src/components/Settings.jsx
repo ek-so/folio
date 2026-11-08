@@ -23,7 +23,7 @@ export default function Settings({ login, repo, theme, onTheme }) {
         <div className="flex-1 min-h-0 overflow-y-auto">
           <div className="flex flex-col gap-2 px-4 py-3 border-b border-border">
             <span className="text-sm text-muted-foreground">Theme</span>
-            <Segmented value={theme} onChange={onTheme} options={THEMES} label="Theme" />
+            <Segmented stretch value={theme} onChange={onTheme} options={THEMES} label="Theme" />
           </div>
           <Row label="Signed in as">@{login}</Row>
           <Row label="Repository">{repo}</Row>

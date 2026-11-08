@@ -126,9 +126,7 @@ export default function Planner({ id, services, onRemove }) {
     <div className="flex shrink-0 items-center gap-space-sm">
       {/* Calendar or list, saved in the planner's settings (where it can't be, on this screen only) */}
       {planner && !missing && (
-        <div className="w-24">
-          <Segmented iconOnly label="View" value={view} onChange={pickView} options={[['calendar', 'Calendar', CalendarDots], ['list', 'List', ListBullets]]} />
-        </div>
+        <Segmented iconOnly label="View" value={view} onChange={pickView} options={[['calendar', 'Calendar', CalendarDots], ['list', 'List', ListBullets]]} />
       )}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>

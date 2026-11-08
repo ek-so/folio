@@ -49,7 +49,7 @@ export default function ItemMenu({ item, onRename, onDuplicate, onDelete, onMove
         <DropdownMenuContent align="end" onCloseAutoFocus={e => e.preventDefault()}>
           {onView && (
             <div className="p-1">
-              <Segmented value={view} onChange={onView} options={VIEWS} label="View" iconOnly />
+              <Segmented stretch value={view} onChange={onView} options={VIEWS} label="View" iconOnly />
             </div>
           )}
           {onView && item && <DropdownMenuSeparator />}

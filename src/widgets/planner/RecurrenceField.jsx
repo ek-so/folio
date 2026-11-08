@@ -78,7 +78,7 @@ function RecurrenceChooser({ rule, start, onChange }) {
   }
   return (
     <div className="flex flex-col gap-space">
-      <Segmented
+      <Segmented stretch
         label="How often" options={KINDS}
         value={rule && rule.kind !== 'one-time' ? 'repeat' : 'one-time'}
         onChange={kind => onChange(kind === 'repeat' ? WEEKLY : { kind: ONE_TIME })}
@@ -96,7 +96,7 @@ function RecurrenceChooser({ rule, start, onChange }) {
               className="w-16 shrink-0"
             />
             <div className="min-w-0 flex-1">
-              <Segmented label="Unit" value={repeat?.unit ?? 'week'} options={UNITS.map(u => [u, UNIT_NAMES[u]])} onChange={unit => set({ unit, weekdays: [] })} />
+              <Segmented stretch label="Unit" value={repeat?.unit ?? 'week'} options={UNITS.map(u => [u, UNIT_NAMES[u]])} onChange={unit => set({ unit, weekdays: [] })} />
             </div>
           </div>
         </div>
@@ -116,7 +116,7 @@ function RecurrenceChooser({ rule, start, onChange }) {
         )}
         <div className="flex flex-col gap-space-xs">
           <span className="text-sm text-muted-foreground">Ends</span>
-          <Segmented label="Ends" value={repeat?.until ? 'on' : 'never'} options={ENDS} onChange={end => set({ until: end === 'never' ? null : (repeat?.until ?? addDays(earliest, 365)) })} />
+          <Segmented stretch label="Ends" value={repeat?.until ? 'on' : 'never'} options={ENDS} onChange={end => set({ until: end === 'never' ? null : (repeat?.until ?? addDays(earliest, 365)) })} />
           {repeat?.until && (
             <DateField
               label={formatDate(keyDay(repeat.until))} date={keyDay(repeat.until)} dayOnly
