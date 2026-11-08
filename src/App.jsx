@@ -120,9 +120,9 @@ export default function App() {
     show(fileView(path), target)
   }
   const openFolder = (path, target) => show(folderView(path), target)
-  // The navigation: choosing the page you're on again takes Home and Graph back to their own content
+  // The navigation: choosing the page you're on again takes it back to its start (a view's or Graph's own content, File manager's root)
   function choosePage(id) {
-    if (id === page && id !== PAGE.FILES && trailOf(id).length) setTrails(o => ({ ...o, [id]: [] }))
+    if (id === page && trailOf(id).length) setTrails(o => ({ ...o, [id]: [] }))
     setPage(id)
   }
   // ← in the title bar (lib/views.js `upView`): in File manager a level up, elsewhere the page's start
