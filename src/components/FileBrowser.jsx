@@ -172,7 +172,7 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
         <TitleBar
           name={currentFolder}
           nameMenu={path ? undefined : <RepoMenu />}
-          badge={<SymlinkedBy links={linkedBy} onOpen={onOpenLink} />}
+          badge={linkedBy?.length ? <SymlinkedBy links={linkedBy} onOpen={onOpenLink} /> : null}
         >
           <ItemMenu item={path ? { name: currentFolder, path, type: 'dir' } : null} onRename={onRename} onDelete={onDelete} onMove={onMove} folders={folders} view={layout} onView={setView} />
           <DropdownMenu>

@@ -15,7 +15,7 @@ export default function FilePage({ linkedBy, onOpenLink, path, name, changed, on
         <TitleBar
           name={name}
           changed={changed}
-          badge={<SymlinkedBy links={linkedBy} onOpen={onOpenLink} />}
+          badge={linkedBy?.length ? <SymlinkedBy links={linkedBy} onOpen={onOpenLink} /> : null}
         >
           <ItemMenu item={fileItem(path)} onRename={onRename} onDuplicate={onDuplicate} onDelete={onDelete} onMove={onMove} folders={folders} columns={columns} lock={lock} />
           {actions}
