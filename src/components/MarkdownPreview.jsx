@@ -3,7 +3,7 @@ import DOMPurify from 'dompurify'
 import { renderBlocks, tapOffset, taskOffsets, resolveImage, linkSpans, listsIn, moveListItem, firstWord } from '../lib/markdown.js'
 import { useRepoImages } from '../hooks/useRepoImages.js'
 import { linkSpots, openLink } from '../lib/previewLinks.js'
-import { isPortaled } from '../lib/utils.js'
+import { cn, isPortaled } from '../lib/utils.js'
 import { CaretRight } from '@phosphor-icons/react'
 import { createPortal } from 'react-dom'
 import LinkBadge from './LinkBadge.jsx'
@@ -91,12 +91,13 @@ const repoImages = (root, notePath) => [...root.querySelectorAll('img')]
 // Rendered note, read-only apart from task checkboxes, links' Edit link / Remove and dragging
 // list items into another order (with `onChange`). Double-tapping (or
 // double-clicking) text calls onDoubleTap with the markdown offset of the
-// tapped word (empty space: the end of the note). On mount, scrolls the block holding `scrollTo` (a markdown
+// tapped word (empty space: the end of the note). `clip`: it doesn't scroll, what doesn't fit is cut off (a Notes widget's card).
+// On mount, scrolls the block holding `scrollTo` (a markdown
 // offset) into view. The ref's
 // visibleOffset() is the markdown offset of the first block on screen, where
 // editing starts. `children` render above the note (a double tap there edits
 // from the start of the file) and `footer` below it; both scroll with it.
-const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, files, scrollTo, onDoubleTap, onChange, onOpenFile, onNavigate, footer, children }, handle) {
+const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, files, scrollTo, onDoubleTap, onChange, onOpenFile, onNavigate, footer, children, clip }, handle) {
   const ref = useRef()
   const scrollRef = useRef()
   const lastTap = useRef(null) // { time, x, y } of the previous tap on text
@@ -264,7 +265,7 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
 
   return (
     <div
-      ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden"
+      ref={scrollRef} className={cn('flex-1 min-h-0 overflow-x-hidden', clip ? 'overflow-y-hidden' : 'overflow-y-auto')}
       // The empty space under a short note: a double tap edits from its end
       onClick={e => { if (e.target === e.currentTarget && isDoubleTap(e)) onDoubleTap?.(content.length) }}
     >
