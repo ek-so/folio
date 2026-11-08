@@ -232,8 +232,8 @@ export default function Planner({ id, services, onRemove }) {
           {/* The cards of a row are one height; Show more on a row of its own, one column wide (all of it on phones) */}
           {list.length > 0 && (
             <div ref={setGrid} className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,18rem),1fr))] gap-space-sm">
-              {list.filter(c => visible.has(c.path)).map(({ path, overdue }) => (
-                <PlannerCard key={path} {...cardProps(path)} menu={cardMenu(path)} overdue={overdue} onOpen={openFile} onOpenFolder={openFolder} />
+              {list.filter(c => visible.has(c.path)).map(({ path, overdue, undated }) => (
+                <PlannerCard key={path} {...cardProps(path)} menu={cardMenu(path)} overdue={overdue} dashed={overdue || undated} onOpen={openFile} onOpenFolder={openFolder} />
               ))}
               <TrayFooter grid more={more} onShowMore={() => setExpanded(e => new Set(e).add(selected))} />
             </div>
@@ -344,15 +344,16 @@ function TaskRow({ path, text, overdue, menu, onOpen }) {
   )
 }
 
-// A card of the selected day, dragged by a press on it (dropped on a day of the ribbon); a late one (`overdue`,
-// listed under today) has its title faded and its date red (NoteCard)
-function PlannerCard({ path, onOpen, onOpenFolder, files, ...props }) {
+// A card of the selected day, dragged by a press on it (dropped on a day of the ribbon). One only listed under today
+// because it has no date or is late (`dashed`) has a dashed outline; a late one (`overdue`) also its title faded and its
+// date red (NoteCard)
+function PlannerCard({ path, dashed, onOpen, onOpenFolder, files, ...props }) {
   const { setNodeRef, attributes, listeners, isDragging } = useDraggable({ id: dayCardId(path), data: { path } })
   return (
     <NoteCard
       ref={setNodeRef}
       path={path} files={files} {...props}
-      className={cn(NO_CALLOUT, isDragging && 'opacity-40')}
+      className={cn(NO_CALLOUT, dashed && 'border-dashed border-muted-foreground/50', isDragging && 'opacity-40')}
       onClick={cardClick(path, files, onOpen, onOpenFolder)}
       {...attributes} {...ownListeners(listeners)}
     />
