@@ -34,3 +34,20 @@ const isAsset = path => !path.endsWith('.md') && !isConfigPath(path) && !path.st
 export function assetList(paths, added) {
   return paths.filter(isAsset).sort((a, b) => (added[b] ?? '').localeCompare(added[a] ?? '') || a.localeCompare(b))
 }
+
+// A file's type for the filter: its extension in lowercase ("png"), '' when it has none (a dot first, as in ".env", isn't one)
+export function assetType(path) {
+  const name = path.split('/').pop()
+  const dot = name.lastIndexOf('.')
+  return dot > 0 ? name.slice(dot + 1).toLowerCase() : ''
+}
+
+// The types among `paths` with how many files each has, the most files first, then by name: [['png', 12], ['pdf', 3]]
+export function assetTypes(paths) {
+  const counts = new Map()
+  for (const path of paths) counts.set(assetType(path), (counts.get(assetType(path)) ?? 0) + 1)
+  return [...counts].sort(([a, x], [b, y]) => y - x || a.localeCompare(b))
+}
+
+// `paths` of one `type` (null: all of them)
+export const filterAssets = (paths, type) => type === null ? paths : paths.filter(path => assetType(path) === type)
