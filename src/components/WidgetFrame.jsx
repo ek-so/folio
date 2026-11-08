@@ -6,6 +6,7 @@ import Spinner from './Spinner.jsx'
 import EmptyState from './EmptyState.jsx'
 import FolderSheet from './FolderSheet.jsx'
 import MoreButton from './MoreButton.jsx'
+import { EmptyMessage } from './EmptyState.jsx'
 
 // What every widget on a view is framed by (board, planner, notes): its title row, then its body in one of its states.
 // Title row: `title` (bold) with `subtitle` under it (muted: a widget's folder), then `controls` (the widget's own, such
@@ -17,7 +18,7 @@ import MoreButton from './MoreButton.jsx'
 export default function WidgetFrame({ title, subtitle, noun, controls, menu, removeLabel, onRemove, canEdit, ready, readable, folder, className, children }) {
   const [relocating, setRelocating] = useState(false) // picking another folder, its own being gone
   const body = !ready ? <div className="flex justify-center py-12"><Spinner /></div>
-    : !readable ? <p className="py-6 text-center text-sm text-muted-foreground">This {noun}'s settings can't be read.</p>
+    : !readable ? <EmptyMessage>This {noun}'s settings can't be read.</EmptyMessage>
     : folder?.missing ? <EmptyState message={`Its folder “${folder.name}” is gone.`} action={{ label: 'Select folder', icon: <FolderOpen />, onClick: () => setRelocating(true), disabled: !canEdit }} />
     : children()
   return (

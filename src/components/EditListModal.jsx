@@ -5,9 +5,10 @@ import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-
 import { CSS } from '@dnd-kit/utilities'
 import { cn } from '@/lib/utils.js'
 import { Button } from './ui/button.jsx'
-import { ListRow } from './ui/list-row.jsx'
+import { ListRow, ListBox } from './ui/list-row.jsx'
 import BottomSheet from './BottomSheet.jsx'
 import AddNameField from './AddNameField.jsx'
+import { EmptyMessage } from './EmptyState.jsx'
 
 // A sheet to edit a list of `items` ([{ id, icon, title, label? (its name when `title` isn't text) }]; a view's widgets, the views, a Notes widget's notes): drag them into
 // order (with a mouse right away, on touch after holding 0.25s, like a board's cards; each drop
@@ -25,10 +26,10 @@ export default function EditListModal({ title, description, items, onMove, onRem
       <div className="flex flex-col gap-3">
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
           <SortableContext items={ids} strategy={verticalListSortingStrategy}>
-            <ul className="-mx-1 flex max-h-64 flex-col gap-0.5 overflow-y-auto" data-no-pull>
+            <ListBox>
               {items.map(item => <Row key={item.id} item={item} onRemove={onRemove} />)}
-              {!items.length && <p className="py-4 text-center text-sm text-muted-foreground">{empty}</p>}
-            </ul>
+              {!items.length && <EmptyMessage size="sm">{empty}</EmptyMessage>}
+            </ListBox>
           </SortableContext>
         </DndContext>
         {onAdd && <AddNameField label={addLabel} onAdd={onAdd} />}
@@ -52,7 +53,7 @@ function Row({ item, onRemove }) {
         className={cn('cursor-grab touch-manipulation select-none [-webkit-touch-callout:none] [&_button]:cursor-grab', isDragging && 'bg-secondary shadow-md')}
         rowProps={listeners}
         trailing={
-          <Button variant="ghost-destructive" size="icon" aria-label={`Remove ${item.label ?? item.title}`} tooltip="Remove" className="size-control-md" onPointerDown={e => e.stopPropagation()} onClick={() => onRemove(item)}>
+          <Button variant="ghost-destructive" size="icon-md" aria-label={`Remove ${item.label ?? item.title}`} tooltip="Remove" onPointerDown={e => e.stopPropagation()} onClick={() => onRemove(item)}>
             <X />
           </Button>
         }

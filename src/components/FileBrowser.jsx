@@ -19,6 +19,7 @@ import { cn } from '@/lib/utils.js'
 import { Separator } from './ui/separator.jsx'
 import { columnFolders } from '../lib/columns.js'
 import { useIsDesktop } from '../hooks/useIsDesktop.js'
+import { EmptyMessage } from './EmptyState.jsx'
 
 export default function FileBrowser({ path, onNavigate, listDir, loading, error, notice, onSelect, onNewFile, onRename, onDuplicate, onDelete, onMove, folders, onUpload, onDropMove, symlinks = {}, linkedBy, onOpenLink }) {
   // Symlinked folders sort with the folders
@@ -213,7 +214,7 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
         {error && <p className="text-destructive-ink text-sm text-center pt-4 px-4">{error}</p>}
         {notice && <p className="text-muted-foreground text-xs text-center pt-3 px-4">{notice}</p>}
         {!loading && !error && items.length === 0 && layout !== 'columns' && (
-          <p className="text-muted-foreground text-sm text-center py-12">No notes yet</p>
+          <EmptyMessage size="lg">No notes yet</EmptyMessage>
         )}
         {!loading && (layout === 'columns' ? (
           // Columns: the open folder last, after its parents; each lists its folder, the next one's row highlighted
@@ -223,7 +224,7 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
                 {i > 0 && <Separator orientation="vertical" />}
                 <ul className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-y-contain p-space-sm">
                   {dir !== null && sorted(dir).map(item => renderItem(item, dirs[i + 1] === item.path))}
-                  {dir !== null && !sorted(dir).length && <p className="py-12 text-center text-sm text-muted-foreground">Empty folder</p>}
+                  {dir !== null && !sorted(dir).length && <EmptyMessage size="lg">Empty folder</EmptyMessage>}
                 </ul>
               </div>
             ))}

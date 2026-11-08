@@ -3,6 +3,7 @@ import Spinner from './Spinner.jsx'
 import PdfView from './PdfView.jsx'
 import { useBlob } from '../hooks/useBlob.js'
 import { fileKind, imageMime } from '../lib/files.js'
+import { EmptyMessage } from './EmptyState.jsx'
 
 const MESSAGES = {
   offline: "Couldn't open this file. It isn't saved on this device yet — connect to the internet and pull to refresh.",
@@ -18,7 +19,7 @@ export default function FileViewer({ path, entry, ...page }) {
   return (
     <FilePage path={path} name={name} {...page}>
       {error ? (
-        <p className="text-muted-foreground text-sm text-center py-12 px-6">{MESSAGES[error]}</p>
+        <EmptyMessage size="lg" className="px-space">{MESSAGES[error]}</EmptyMessage>
       ) : !base64 ? (
         <div className="flex justify-center py-12"><Spinner /></div>
       ) : kind === 'pdf' ? (

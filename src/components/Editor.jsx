@@ -11,6 +11,7 @@ import { useNote } from '../hooks/useNote.js'
 import { displayName } from '../lib/files.js'
 import { frontMatter, withValue, valueActions } from '../lib/frontmatter.js'
 import PropertyBadges from './PropertyBadges.jsx'
+import { EmptyMessage } from './EmptyState.jsx'
 
 // A note: its file name in the TitleBar (editing it renames the file), the
 // whole markdown shown as preview; ✏️ in the title bar edits the markdown,
@@ -100,9 +101,9 @@ export default function Editor({ linkedBy, onOpenLink, path, entry, files, notes
         loading ? (
           <div className="flex justify-center py-12"><Spinner /></div>
         ) : (
-          <p className="text-muted-foreground text-sm text-center py-12 px-6">
+          <EmptyMessage size="lg" className="px-space">
             Couldn't open this note. It isn't saved on this device yet — connect to the internet and pull to refresh.
-          </p>
+          </EmptyMessage>
         )
       ) : mode === 'edit' ? (
         <MarkdownEditor ref={textareaRef} content={content} onChange={change} onDone={finishEditing} locked={valueScope?.locked} />

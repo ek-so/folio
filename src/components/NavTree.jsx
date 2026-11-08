@@ -8,6 +8,7 @@ import ItemMenu from './ItemMenu.jsx'
 import { ListRow } from './ui/list-row.jsx'
 import { LINK_ERRORS } from '../lib/files.js'
 import { fileItem } from '../lib/folderNotes.js'
+import { EmptyMessage } from './EmptyState.jsx'
 
 // What the title bar's folder tree needs from App: `listDir(dir)`, `symlinks`, the `current`
 // path (open file or folder), the open `file` (null for a folder), `dir` (the open folder, or the open file's), the open folders
@@ -139,7 +140,7 @@ export function FolderTreeMenu({ name }) {
       <PopoverContent className="w-80 p-space-sm" onCloseAutoFocus={e => e.preventDefault()}>
         <div className="max-h-[60vh] overflow-y-auto overscroll-y-contain" data-no-pull>
           {empty
-            ? <p className="py-4 text-center text-sm text-muted-foreground">{nav.viewTree ? 'Nothing on this view yet' : 'Empty folder'}</p>
+            ? <EmptyMessage size="sm">{nav.viewTree ? 'Nothing on this view yet' : 'Empty folder'}</EmptyMessage>
             : (
               <NavContext.Provider value={{ ...nav, onOpenFolder: close(nav.onOpenFolder), onOpenFile: close(nav.onOpenFile) }}>
                 {viewTree ? <ViewTree nodes={viewTree} /> : <ul><Rows dir={nav.dir} depth={0} /></ul>}

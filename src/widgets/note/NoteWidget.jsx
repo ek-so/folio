@@ -24,6 +24,7 @@ import { notePath, parseNotes, serializeNotes, notesHeight, resizedNotes, addedN
 import { NotePicker } from './NoteSetup.jsx'
 import WidgetFrame from '@/components/WidgetFrame.jsx'
 import MoreButton from '@/components/MoreButton.jsx'
+import { EmptyMessage } from '@/components/EmptyState.jsx'
 
 // The notes widget (note.js): "Notes" and its ⋯ (Add note…, Edit notes…: order them and take them out, Remove widget)
 // on top, then each note in a grey tray like a board's column, in a grid of two equal columns when each can be at least
@@ -60,7 +61,7 @@ export default function NoteWidget({ id, services, onRemove }) {
   } : null
 
   // Only when its settings are read (WidgetFrame shows the other states)
-  const body = () => !settings.notes.length ? <p className="py-6 text-center text-sm text-muted-foreground">No notes yet. Add one from ⋯.</p>
+  const body = () => !settings.notes.length ? <EmptyMessage>No notes yet. Add one from ⋯.</EmptyMessage>
     : (
       <DndContext
         sensors={canEdit ? sensors : []}
@@ -190,7 +191,7 @@ function NoteTray({ path, services, height, canMove, onTakeOut, onReplace }) {
 function NoteBox({ found, path, services, tray, height, onOpen }) {
   const { content, loading, loadError } = useNote(found.entry, found.edited, (text, original) => services.saveNote(path, text, original))
   const body = loading ? <div className="flex flex-1 items-center justify-center"><Spinner /></div>
-    : loadError ? <p className="px-6 py-12 text-center text-sm text-muted-foreground">Couldn't open this note. It isn't saved on this device yet — connect to the internet and pull to refresh.</p>
+    : loadError ? <EmptyMessage size="lg" className="px-space">Couldn't open this note. It isn't saved on this device yet — connect to the internet and pull to refresh.</EmptyMessage>
     : <MarkdownPreview clip compact content={content} path={path} files={services.virtual} />
   // Phones: the default height; desktop: the widget's
   return tray(

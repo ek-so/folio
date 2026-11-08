@@ -3,6 +3,7 @@ import { Input } from './ui/input.jsx'
 import BottomSheet from './BottomSheet.jsx'
 import FileIcon from './FileIcon.jsx'
 import { ListRow } from './ui/list-row.jsx'
+import { EmptyMessage } from './EmptyState.jsx'
 
 // A sheet listing `folders` ('' is the root) with a search field, to pick one
 // (Move to…, a board's folder). `onPick(folder)` returns an error message, or
@@ -42,7 +43,7 @@ export default function FolderSheet({ title, folders, onPick, onClose, children 
             </li>
           ))}
           {filtered.length === 0 && (
-            <p className="text-muted-foreground text-sm text-center py-4">No folders found</p>
+            <EmptyMessage size="sm">No folders found</EmptyMessage>
           )}
         </ul>
       </div>

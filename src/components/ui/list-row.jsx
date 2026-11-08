@@ -52,3 +52,9 @@ export function ListRow({ icon, title, description, leading, trailing, onClick, 
     </Tip>
   )
 }
+
+// The scrolling list of rows in a dialog or popover (Properties, Edit widgets, Edit values): up to 256px tall, then it scrolls,
+// reaching 4px past its box so the rows' hover fill lines up with the dialog's padding. Pull to refresh stays off.
+export function ListBox({ className, ...props }) {
+  return <ul data-no-pull className={cn('-mx-1 flex max-h-64 flex-col gap-0.5 overflow-y-auto', className)} {...props} />
+}

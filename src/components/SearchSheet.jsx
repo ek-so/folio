@@ -4,6 +4,7 @@ import BottomSheet from './BottomSheet.jsx'
 import { splitName } from '../lib/changes.js'
 import FileIcon from './FileIcon.jsx'
 import { ListRow } from './ui/list-row.jsx'
+import { EmptyMessage } from './EmptyState.jsx'
 
 // Command-palette style search. Shows recently opened files when no query is typed (without `recent`:
 // the first files), then filters every visible file in the repo (notes, images, PDFs, …) by path.
@@ -49,9 +50,9 @@ export default function SearchSheet({ onClose, onSelect, virtual, changes, recen
         <div className="overflow-y-auto max-h-64 -mx-1" data-no-pull>
           {top && <div className="mb-0.5">{top}</div>}
           {!q && recentFiles.length === 0 ? (
-            <p className="text-muted-foreground text-sm text-center py-4">No recent files</p>
+            <EmptyMessage size="sm">No recent files</EmptyMessage>
           ) : results.length === 0 ? (
-            <p className="text-muted-foreground text-sm text-center py-4">No files found</p>
+            <EmptyMessage size="sm">No files found</EmptyMessage>
           ) : (
             <ul className="flex flex-col gap-0.5">
               {results.map(result => {

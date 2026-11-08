@@ -1,11 +1,13 @@
 import { useState } from 'react'
-import { Check, PencilSimple, Trash, X } from '@phosphor-icons/react'
+import { Check, PencilSimple, Trash } from '@phosphor-icons/react'
 import { Button } from './ui/button.jsx'
 import { Input } from './ui/input.jsx'
-import { ListRow } from './ui/list-row.jsx'
+import { ListRow, ListBox } from './ui/list-row.jsx'
+import InlineRename from './InlineRename.jsx'
 import BottomSheet from './BottomSheet.jsx'
 import ColorPicker from './ColorPicker.jsx'
 import { plural } from '../lib/plural.js'
+import { EmptyMessage } from './EmptyState.jsx'
 
 // The dialog behind a property popover's Edit values: every value of the property `name`
 // (`values`, each with its color in `colors`, a Map) in one list, a field to add a new one
@@ -58,28 +60,19 @@ export default function ValuesModal({ name, values, colors, count, scopeName, re
           <Button type="submit" variant="success" size="icon" aria-label="Add" tooltip="Add" disabled={!query} className="shrink-0"><Check /></Button>
         </form>
         {replaces && query && query !== replaces && <p className="-mt-1 px-1 text-xs text-muted-foreground">Adding it replaces “{replaces}” on this note.</p>}
-        <ul className="-mx-1 flex max-h-64 flex-col gap-0.5 overflow-y-auto" data-no-pull>
+        <ListBox>
           {values.map(v => editing?.value === v ? (
             <li key={v}>
-              <form onSubmit={save} className="flex flex-col gap-1 px-1 py-1">
-                <div className="flex items-center gap-1">
-                  <Input
-                    autoFocus
-                    value={editing.name}
-                    onChange={e => setEditing({ ...editing, name: e.target.value })}
-                    onKeyDown={e => { if (e.key === 'Escape') { e.stopPropagation(); setEditing(null) } }}
-                    autoCorrect="off"
-                    aria-label={`New name for ${v}`}
-                    className="bg-background border-border"
-                  />
-                  <Button type="submit" variant="success-light" size="icon" aria-label="Save" tooltip="Save" disabled={!editing.name.trim()} className="shrink-0"><Check /></Button>
-                  <Button type="button" variant="destructive-light" size="icon" aria-label="Cancel" tooltip="Cancel" className="shrink-0" onClick={() => setEditing(null)}><X /></Button>
-                </div>
-                <p className="px-1 text-xs text-muted-foreground">
+              <InlineRename
+                value={editing.name} onChange={name => setEditing({ ...editing, name })}
+                onSubmit={save} onCancel={() => setEditing(null)}
+                label={`New name for ${v}`} canSave={!!editing.name.trim()}
+              >
+                <p className="px-space-xs text-xs text-muted-foreground">
                   {values.some(o => o !== v && o === editing.name.trim()) ? `“${editing.name.trim()}” already exists. They become one value. ` : ''}
                   {plural(count(v), 'note')} with it in {scopeName}.
                 </p>
-              </form>
+              </InlineRename>
             </li>
           ) : (
             <li key={v}>
@@ -88,14 +81,14 @@ export default function ValuesModal({ name, values, colors, count, scopeName, re
                 title={v}
                 trailing={<>
                   {onEdit && <ColorPicker label={`Color of ${v}`} color={colors.get(v) ?? 0} onChange={color => onEdit(v, v, color)} className="size-control-md" />}
-                  {onEdit && <Button variant="ghost" size="icon" aria-label={`Edit ${v}`} tooltip="Edit" className="size-control-md" onClick={() => setEditing({ value: v, name: v })}><PencilSimple /></Button>}
-                  {onRemove && <Button variant="ghost-destructive" size="icon" aria-label={`Remove ${v}`} tooltip="Remove" className="size-control-md" onClick={() => onRemove(v)}><Trash /></Button>}
+                  {onEdit && <Button variant="ghost-quiet" size="icon-md" aria-label={`Edit ${v}`} tooltip="Edit" onClick={() => setEditing({ value: v, name: v })}><PencilSimple /></Button>}
+                  {onRemove && <Button variant="ghost-destructive" size="icon-md" aria-label={`Remove ${v}`} tooltip="Remove" onClick={() => onRemove(v)}><Trash /></Button>}
                 </>}
               />
             </li>
           ))}
-          {!values.length && <p className="py-4 text-center text-sm text-muted-foreground">No values yet. Type one to add it.</p>}
-        </ul>
+          {!values.length && <EmptyMessage size="sm">No values yet. Type one to add it.</EmptyMessage>}
+        </ListBox>
         <div className="flex justify-end"><Button variant="secondary" onClick={onClose}>Done</Button></div>
       </div>
     </BottomSheet>
