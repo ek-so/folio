@@ -91,13 +91,13 @@ const repoImages = (root, notePath) => [...root.querySelectorAll('img')]
 // Rendered note, read-only apart from task checkboxes, links' Edit link / Remove and dragging
 // list items into another order (with `onChange`). Double-tapping (or
 // double-clicking) text calls onDoubleTap with the markdown offset of the
-// tapped word (empty space: the end of the note). `clip`: it doesn't scroll, what doesn't fit is cut off (a Notes widget's card).
+// tapped word (empty space: the end of the note). `clip`: it doesn't scroll, what doesn't fit is cut off; `compact`: smaller text and headings, less space (both: a Notes widget's card; App.css).
 // On mount, scrolls the block holding `scrollTo` (a markdown
 // offset) into view. The ref's
 // visibleOffset() is the markdown offset of the first block on screen, where
 // editing starts. `children` render above the note (a double tap there edits
 // from the start of the file) and `footer` below it; both scroll with it.
-const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, files, scrollTo, onDoubleTap, onChange, onOpenFile, onNavigate, footer, children, clip }, handle) {
+const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, files, scrollTo, onDoubleTap, onChange, onOpenFile, onNavigate, footer, children, clip, compact }, handle) {
   const ref = useRef()
   const scrollRef = useRef()
   const lastTap = useRef(null) // { time, x, y } of the previous tap on text
@@ -273,7 +273,7 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
       {children && <div onClick={e => { if (!isPortaled(e) && !e.target.closest('a') && isDoubleTap(e)) onDoubleTap?.(0) }}>{children}</div>}
       <div
         ref={ref}
-        className="editor-preview min-w-0 break-words p-space text-base leading-relaxed touch-manipulation [&_img]:max-w-full [&_img]:h-auto [&_img]:rounded-md"
+        className={cn('editor-preview min-w-0 break-words leading-relaxed touch-manipulation [&_img]:max-w-full [&_img]:h-auto [&_img]:rounded-md', compact ? 'compact p-space-sm px-space text-sm' : 'p-space text-base')}
         onClick={handleClick}
         dangerouslySetInnerHTML={{ __html: withImages || '<p class="text-muted-foreground italic">Nothing to preview yet.</p>' }}
       />

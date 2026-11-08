@@ -167,7 +167,7 @@ function NoteBox({ found, path, services, tray, height, onOpen }) {
   const { content, loading, loadError } = useNote(found.entry, found.edited, (text, original) => services.saveNote(path, text, original))
   const body = loading ? <div className="flex flex-1 items-center justify-center"><Spinner /></div>
     : loadError ? <p className="px-6 py-12 text-center text-sm text-muted-foreground">Couldn't open this note. It isn't saved on this device yet — connect to the internet and pull to refresh.</p>
-    : <MarkdownPreview clip content={content} path={path} files={services.virtual} />
+    : <MarkdownPreview clip compact content={content} path={path} files={services.virtual} />
   // Phones: the default height; desktop: the widget's
   return tray(
     <div style={{ '--note-h': `${height}px` }} className="h-80 md:h-(--note-h)">
