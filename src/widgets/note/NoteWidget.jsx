@@ -204,7 +204,7 @@ function NoteBox({ found, path, services, tray, height, onOpen }) {
         className={cn('hover-lift relative flex h-full cursor-pointer select-none touch-manipulation flex-col overflow-hidden rounded-lg border border-border bg-card outline-none focus-visible:ring-1 focus-visible:ring-ring', NO_CALLOUT)}
       >
         <div inert="" className="pointer-events-none flex min-h-0 flex-1 flex-col">{body}</div>
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 max-h-32 bg-linear-to-t from-card from-15%" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/2 max-h-48 bg-linear-to-t from-card from-15%" />
       </div>
     </div>
   )
