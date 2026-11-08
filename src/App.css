@@ -59,7 +59,7 @@
 .editor-preview hr { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
 .editor-preview strong { font-weight: 600; }
 .editor-preview em { font-style: italic; }
-/* A wide table scrolls inside itself, never the page; a column is at least 7rem wide; cells wrap at words, long words get <wbr> break points (MarkdownPreview) */
+/* A wide table scrolls inside itself, never the page; a column is at least 10rem wide; cells wrap at words, long words get <wbr> break points (MarkdownPreview) */
 .editor-preview table { display: block; width: fit-content; max-width: 100%; overflow-x: auto; border-collapse: collapse; margin: 0 0 14px; font-size: 14px; }
-.editor-preview th, .editor-preview td { padding: 6px 8px; min-width: 7rem; border: 1px solid var(--border); text-align: left; vertical-align: top; }
+.editor-preview th, .editor-preview td { padding: 6px 8px; min-width: 10rem; border: 1px solid var(--border); text-align: left; vertical-align: top; }
 .editor-preview th { background: var(--secondary); font-weight: 600; }
