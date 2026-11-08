@@ -4,7 +4,8 @@ import { parseRecurrence, nextOccurrence } from './recurrence.js'
 
 // A planner widget: a folder whose notes are cards, each on the day of its `date`
 // property, shown on a ribbon of days. Each planner's settings live in the repo, beside the views:
-// `.folio/planners/<id>.json`, { "folder", "properties": [keys shown on cards besides the date], "view": "calendar" | "list" }.
+// `.folio/planners/<id>.json`, { "folder", "properties": [keys shown on cards besides the date] }. Calendar or list
+// (VIEWS) is this device's choice, not a setting (usePlanner).
 // The date and repeat (one-time or how it repeats: recurrence.js) are always shown, can't be turned off, renamed or removed, and come back
 // into a card's note when it's saved without them.
 
@@ -24,7 +25,8 @@ export const asCard = text => withKeysFirst(withKeys(text, ORDER), ORDER)
 
 const strings = list => Array.isArray(list) ? list.filter(s => typeof s === 'string' && !FIXED.includes(s)) : []
 
-// How a planner shows its cards: a ribbon of days with the selected day's cards, or every card in groups of time (listed)
+// How a planner shows its cards: a ribbon of days with the selected day's cards, or every card in groups of time (listed);
+// the first unless another was picked on this device
 export const VIEWS = ['calendar', 'list']
 
 // The planner a file's text holds, or null when it can't be read as one
@@ -32,7 +34,7 @@ export function parsePlanner(text) {
   try {
     const data = JSON.parse(text)
     if (typeof data?.folder !== 'string') return null
-    return { folder: data.folder, properties: strings(data.properties), view: VIEWS.includes(data.view) ? data.view : VIEWS[0] }
+    return { folder: data.folder, properties: strings(data.properties) } // an older one's "view" is left out
   } catch {
     return null
   }
@@ -40,7 +42,7 @@ export function parsePlanner(text) {
 
 export const serializePlanner = planner => JSON.stringify(planner, null, 2) + '\n'
 
-export const newPlanner = folder => ({ folder, properties: [], view: VIEWS[0] })
+export const newPlanner = folder => ({ folder, properties: [] })
 
 export const plannerTitle = (planner, repoName) => planner.folder.split('/').pop() || repoName
 

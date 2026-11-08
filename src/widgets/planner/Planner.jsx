@@ -63,9 +63,7 @@ export default function Planner({ id, services, onRemove }) {
   const limit = shownLimit(useGridColumns(grid)) // its cards shown before Show more: whole rows on desktop
   const [choosing, setChoosing] = useState(false) // the Properties sheet
   const [relocating, setRelocating] = useState(false) // picking another folder, its own being gone
-  const [viewHere, setViewHere] = useState(null) // calendar or list picked where it can't be saved (read only): this screen only
-  const view = viewHere ?? planner?.view
-  const pickView = next => { if (off) setViewHere(next); else { setViewHere(null); act.setView(next) } }
+  const { view, setView: pickView } = act // calendar or list, this device's choice
   const [dropping, setDropping] = useState(null) // the property whose removal is being confirmed
   const [jumping, setJumping] = useState(null) // a day picked in the calendar, scrolled to once the ribbon has it
   const [month, setMonth] = useState(() => monthLabel(today)) // the month of the day in the middle of the ribbon, its title

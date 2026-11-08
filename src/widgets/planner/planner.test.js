@@ -7,10 +7,9 @@ describe('planner', () => {
   it('reads its settings, or nothing from bad text; the date is never a chosen property', () => {
     expect(parsePlanner('nope')).toBeNull()
     expect(parsePlanner('{}')).toBeNull()
-    expect(parsePlanner('{"folder":"T","properties":["date","tags"]}')).toEqual({ folder: 'T', properties: ['tags'], view: 'calendar' })
-    expect(parsePlanner('{"folder":"T","properties":[],"view":"list"}').view).toBe('list')
-    expect(parsePlanner('{"folder":"T","view":"grid"}').view).toBe('calendar')
-    expect(parsePlanner('{"folder":"T","properties":["priority","repeat"]}')).toEqual({ folder: 'T', properties: ['priority'], view: 'calendar' })
+    expect(parsePlanner('{"folder":"T","properties":["date","tags"]}')).toEqual({ folder: 'T', properties: ['tags'] })
+    expect(parsePlanner('{"folder":"T","properties":[],"view":"list"}')).toEqual({ folder: 'T', properties: [] }) // an older one's view isn't kept
+    expect(parsePlanner('{"folder":"T","properties":["priority","repeat"]}')).toEqual({ folder: 'T', properties: ['priority'] })
     const p = { ...newPlanner('T'), properties: ['tags'] }
     expect(parsePlanner(serializePlanner(p))).toEqual(p)
   })

@@ -1,5 +1,6 @@
-import { useMemo } from 'react'
-import { plannerPath, parsePlanner, serializePlanner, keyDay, droppedDate, doneNext, asCard, DATE, REPEAT, ORDER } from './planner.js'
+import { useMemo, useState } from 'react'
+import { plannerPath, parsePlanner, serializePlanner, keyDay, droppedDate, doneNext, asCard, DATE, REPEAT, ORDER, VIEWS } from './planner.js'
+import { storage } from '@/lib/storage.js'
 import { ONE_TIME } from './recurrence.js'
 import { formatDate } from '@/lib/dates.js'
 import { properties } from '@/lib/frontmatter.js'
@@ -18,6 +19,8 @@ export function usePlanner(id, services) {
   const notes = useFolderNotes(services, planner ? planner.folder : null)
   const cards = useMemo(() => notes.entries.map(([path, text]) => ({ path, text })), [notes.entries])
   const write = next => config.write(plannerPath(id), serializePlanner(next))
+  // Calendar or list: this device's choice, kept here (never in .folio, which holds no state of a screen)
+  const [view, setViewState] = useState(() => VIEWS.includes(storage.getPlannerView(id)) ? storage.getPlannerView(id) : VIEWS[0])
 
   return {
     ready: file.ready,
@@ -44,8 +47,9 @@ export function usePlanner(id, services) {
     },
     // Another folder (its own is gone), its notes made cards as when the planner was set up
     setFolder: folder => update(ch => editNotes(write({ ...planner, folder })(ch), services.remoteFiles, folder, asCard, services.remoteText)),
-    // Calendar or list (planner.js VIEWS), saved in its settings
-    setView: view => update(write({ ...planner, view })),
+    // Calendar or list (planner.js VIEWS), remembered on this device
+    view,
+    setView: next => { setViewState(next); storage.setPlannerView(id, next) },
     // The properties cards show besides the date; a newly chosen one is added, empty, to the notes that lack it
     setProperties(keys) {
       const added = keys.filter(k => !planner.properties.includes(k))

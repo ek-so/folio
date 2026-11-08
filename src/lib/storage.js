@@ -13,6 +13,7 @@ const RAIL_KEY = 'folio_rail_collapsed'
 const TREE_KEY = 'folio_tree_collapsed'
 const FILES_VIEW_KEY = 'folio_files_view'
 const CHANGES_KEY = 'folio_changes_'
+const PLANNER_VIEW_KEY = 'folio_planner_view_'
 
 function read(store, key) {
   try { return store.getItem(key) } catch { return null }
@@ -51,6 +52,9 @@ export const storage = {
   // Cards unless the list was chosen
   getFilesView: () => read(localStorage, FILES_VIEW_KEY) === 'list' ? 'list' : 'cards',
   setFilesView: (view) => write(localStorage, FILES_VIEW_KEY, view === 'list' ? 'list' : null),
+  // A planner's view (`id`: its widget's) picked on this device: 'calendar' | 'list', null when none was
+  getPlannerView: (id) => read(localStorage, PLANNER_VIEW_KEY + id),
+  setPlannerView: (id, view) => write(localStorage, PLANNER_VIEW_KEY + id, view),
   getTheme: () => read(localStorage, THEME_KEY),
   setTheme: (theme) => write(localStorage, THEME_KEY, theme),
   // Session-only, so a reload keeps the current folder, open note and page
