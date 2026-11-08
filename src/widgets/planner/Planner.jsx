@@ -56,7 +56,7 @@ export default function Planner({ id, services, onRemove }) {
   const [picked, setPicked] = useState(null) // the day chosen on the ribbon; none follows today
   const selected = picked ?? today
   const [anchor, setAnchor] = useState(today) // the ribbon's days are counted from where it started, so a new day doesn't shift them
-  const [expanded, setExpanded] = useState(() => new Set()) // keys of the days showing all their cards
+  const [expanded, setExpanded] = useState(() => new Set()) // keys of the days showing all their cards (`list:` and a group's key: a list group)
   const [range, setRange] = useState({ before: MORE_DAYS, after: MORE_DAYS * 2 }) // days shown before and after today
   const [dragged, setDragged] = useState(null) // the path of the card being dragged
   const [grid, setGrid] = useState(null) // the selected day's grid of cards, whose columns are counted
@@ -213,20 +213,30 @@ export default function Planner({ id, services, onRemove }) {
         <Button variant="ghost" size="icon" aria-label={`New task: ${label}`} tooltip="New task" disabled={off} className={TRAY_BUTTON} onClick={() => act.newCard(key)}><Plus /></Button>
       </div>
     )
-    // The list view: every card in grey groups of time (listed), each a white card of rows; Today always
+    // The list view: every card in grey groups of time (listed), each a white card of rows, its first 7 then Show N more
+    // (as a day's cards: `expanded` holds `list:` and the group's key); Today always
+    const groupCards = group => {
+      const all = expanded.has(`list:${group.key}`)
+      const paths = group.cards.map(c => c.path)
+      return { shown: new Set(shownCards(paths, all)), more: all ? 0 : hiddenCards(paths).length }
+    }
     if (view === 'list') body = (
       <>
         {groups[0]?.key !== 'today' && <Tray>{sectionTitle('Today', today)}</Tray>}
-        {groups.map(group => (
-          <Tray key={group.key}>
-            {sectionTitle(group.label, group.first)}
-            <div className="flex flex-col gap-0.5 rounded-lg border border-border bg-card p-1">
-              {group.cards.map(({ path, overdue, undated }) => (
-                <TaskRow key={path} path={path} text={notes[path]} dashed={overdue || undated} menu={cardMenu(path)} onOpen={openFile} />
-              ))}
-            </div>
-          </Tray>
-        ))}
+        {groups.map(group => {
+          const { shown: rows, more: hidden } = groupCards(group)
+          return (
+            <Tray key={group.key}>
+              {sectionTitle(group.label, group.first)}
+              <div className="flex flex-col gap-0.5 rounded-lg border border-border bg-card p-1">
+                {group.cards.filter(c => rows.has(c.path)).map(({ path, overdue, undated }) => (
+                  <TaskRow key={path} path={path} text={notes[path]} dashed={overdue || undated} menu={cardMenu(path)} onOpen={openFile} />
+                ))}
+              </div>
+              <TrayFooter more={hidden} onShowMore={() => setExpanded(e => new Set(e).add(`list:${group.key}`))} />
+            </Tray>
+          )
+        })}
       </>
     )
     else body = (
