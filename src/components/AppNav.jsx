@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { List, SidebarSimple, MagnifyingGlass, LinkBreak, BookOpen, Gear, SignOut, SlidersHorizontal } from '@phosphor-icons/react'
+import { List, SidebarSimple, MagnifyingGlass, Images, LinkBreak, BookOpen, Gear, SignOut, SlidersHorizontal } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils.js'
 import { Button } from './ui/button.jsx'
 import { Separator } from './ui/separator.jsx'
@@ -69,12 +69,15 @@ export function NavRail({ page, pages, hrefOf, viewActions, onPage, onSearch, re
         </div>
         {separator}
       </>}
-      {/* File manager on top, then Search and Sync, plain items like the others */}
-      {pages.filter(p => p.id === PAGE.FILES).map(p => <div key={p.id}>{pageButton(p)}</div>)}
+      {/* Search on top, then Sync, File manager and Assets: plain items like the others */}
       <Button variant="ghost" tooltip={hint('Search')} tooltipSide="right" className={cn('justify-start gap-3 font-normal', collapsed && 'size-control justify-center px-0')} onClick={onSearch}>
         <MagnifyingGlass /> {label('Search')}
       </Button>
       {renderSync(collapsed)}
+      {pages.filter(p => p.id === PAGE.FILES).map(p => <div key={p.id}>{pageButton(p)}</div>)}
+      <Button variant="ghost" tooltip={hint('Assets')} tooltipSide="right" aria-current={page === PAGE.ASSETS ? 'page' : undefined} className={item(PAGE.ASSETS)} onClick={() => onPage(PAGE.ASSETS)}>
+        <Images /> {label('Assets')}
+      </Button>
       {separator}
       {pages.filter(p => p.view).map(p => (
         <div key={p.id} className="group relative">

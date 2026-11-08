@@ -3,6 +3,8 @@
 // file, not what it says: deleting .folio only brings the type icons back. A file or folder whose own name starts with an
 // emoji shows it as its icon (and the name without it) until one is chosen; "" is a chosen "no emoji".
 
+import { movedMap, removedMap } from './pathMap.js'
+
 export const ICONS_PATH = '.folio/icons.json'
 
 // One emoji at the start of a name: a flag, or a pictograph with its modifiers, joiners and variation selectors
@@ -45,12 +47,8 @@ export function withIcon(icons, path, emoji) {
   return leadingEmoji(baseOf(path)) ? { ...rest, [path]: '' } : rest
 }
 
-const within = (p, path, isDir) => p === path || (isDir && p.startsWith(path + '/'))
-
 // `icons` after the file or folder (`isDir`) at `from` moved to `to`: the icons go with what they were chosen for
-export const movedIcons = (icons, from, to, isDir) =>
-  Object.fromEntries(Object.entries(icons).map(([p, e]) => [within(p, from, isDir) ? to + p.slice(from.length) : p, e]))
+export const movedIcons = movedMap
 
 // `icons` without the file or folder (`isDir`) at `path`, deleted: a new one there starts with its type icon
-export const removedIcons = (icons, path, isDir) =>
-  Object.fromEntries(Object.entries(icons).filter(([p]) => !within(p, path, isDir)))
+export const removedIcons = removedMap

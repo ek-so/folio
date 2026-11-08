@@ -10,6 +10,8 @@ import NewFileModal from './components/NewFileModal.jsx'
 import EditListModal from './components/EditListModal.jsx'
 import PageTitle from './components/PageTitle.jsx'
 import PageIcon from './components/PageIcon.jsx'
+import Assets from './components/Assets.jsx'
+import { useAssets } from './hooks/useAssets.js'
 import EmojiPicker from './components/EmojiPicker.jsx'
 import ConflictModal from './components/ConflictModal.jsx'
 import SyncButton from './components/SyncButton.jsx'
@@ -78,6 +80,7 @@ export default function App() {
   const tagColors = useTagColors(config)
   const locks = useLocks(config) // files locked against editing (lib/locks.js)
   const icons = useIcons(config) // the emoji icons of files and folders (lib/icons.js)
+  const assets = useAssets(config) // when files were added, for the Assets page (lib/assets.js)
   const viewsFile = config.read(VIEWS_PATH)
   const parsedViews = viewsFile.ready ? parseViews(viewsFile.text) : undefined
   const views = parsedViews ?? DEFAULT_VIEWS
@@ -89,7 +92,7 @@ export default function App() {
   const { theme, setTheme } = useTheme()
   const [openPage, setPage] = useState(() => (reloaded && storage.getPage()) || (deepLink ? deepLink.page : storage.getPage() || PAGE.HOME))
   // A view that's gone (deleted here or on another device) falls back to the first page; until the config is read, the remembered page stays
-  const fixedPage = openPage === PAGE.SETTINGS || openPage === PAGE.LINKS || openPage === PAGE.DOCS
+  const fixedPage = openPage === PAGE.SETTINGS || openPage === PAGE.LINKS || openPage === PAGE.DOCS || openPage === PAGE.ASSETS
   const page = fixedPage || !viewsFile.ready || pages.some(p => p.id === openPage) ? openPage : pages[0].id
   // The main page files and folders open in (File manager when Settings / Broken links / Documentation is open)
   const mainPage = fixedPage ? PAGE.FILES : page
@@ -241,7 +244,7 @@ export default function App() {
       const type = widgetType(w.type)
       if (type?.moved) next = type.moved(next, w.id, item.path, to, item.type === 'dir', widgetServices)
     }
-    return icons.moved(item.path, to, item.type === 'dir')(locks.moved(item.path, to, item.type === 'dir')(next)) // a lock and an emoji go where their file goes (the archive too)
+    return assets.moved(item.path, to, item.type === 'dir')(icons.moved(item.path, to, item.type === 'dir')(locks.moved(item.path, to, item.type === 'dir')(next))) // a lock, an emoji and when it was added go where their file goes (the archive too)
   }
 
   // `fn` (ch => ch) as a change that never edits a locked note's text: what it changed there is put back (keptEdits).
@@ -452,7 +455,7 @@ export default function App() {
   // A locked file (or a folder with one in it) isn't removed: a message says so
   function handleDelete(item) {
     if (lockedIn(item)) return toast.error(`“${item.name}” ${item.type === 'dir' ? 'has locked files' : 'is locked'}. Unlock ${item.type === 'dir' ? 'them' : 'it'} to remove it.`)
-    if (inArchive(item.path)) return update(ch => icons.removed(item.path, item.type === 'dir')(locks.removed(item.path, item.type === 'dir')(remove(ch, filesOf(ch), item.path, item.type === 'dir'))))
+    if (inArchive(item.path)) return update(ch => assets.removed(item.path, item.type === 'dir')(icons.removed(item.path, item.type === 'dir')(locks.removed(item.path, item.type === 'dir')(remove(ch, filesOf(ch), item.path, item.type === 'dir')))))
     const { to } = archive(item)
     toast.success(`“${item.name}” moved to the archive`, {
       action: { label: 'Undo', onClick: () => unarchive({ ...item, path: to, name: to.slice(to.lastIndexOf('/') + 1) }, item.path) },
@@ -533,7 +536,8 @@ export default function App() {
         // stored): the file it replaces, if it's still there, else the first free name
         const apply = c => {
           const now = virtualFiles(remoteFiles, c)
-          return replace && now[path] ? replaceUpload(c, now[path], sha) : upload(c, remoteFiles, freePath(c, now, path), sha)
+          const target = replace && now[path] ? path : freePath(c, now, path)
+          return assets.record(target)(replace && now[path] ? replaceUpload(c, now[path], sha) : upload(c, remoteFiles, target, sha))
         }
         ch = apply(ch)
         update(apply)
@@ -724,6 +728,8 @@ export default function App() {
             <Settings login={auth.user.login} repo={auth.repo} theme={theme} onTheme={setTheme} />
           ) : page === PAGE.DOCS ? (
             <Documentation />
+          ) : page === PAGE.ASSETS ? (
+            <Assets files={shown} added={assets.added} onOpen={path => setSelectedFile(path, PAGE.FILES)} />
           ) : !view && page === PAGE.GRAPH ? (
             <EmptyPage page={page} />
           ) : !view ? (

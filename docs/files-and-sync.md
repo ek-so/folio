@@ -3,6 +3,9 @@
 ## Item actions
 Rename / Move / Remove for any file or folder (the only way to rename) go through `ItemMenu` (⋯) on list rows, tree rows and the title bar. A file's ⋯ also has Duplicate: a copy next to it ("x 2.md", `freePath`), a note's text with " (copy)" after its title (`copyTitled`), else (a file, or a note not on this device) the same bytes (`duplicate` in lib/changes.js; a blob GitHub already has isn't uploaded again on push); a symlink can't be duplicated. Every ⋯ of a file or folder (and a board card's) has Copy link: a markdown link to it from the repo's root (`[Name](/path/to/Name.md)`, `repoLink`) to paste in another note; it follows renames like any link. `SearchSheet` finds visible files by path, and the app's Search folders too (listed first); with no query it lists recently opened files. The app's Search always opens what you pick in File manager.
 
+## Assets
+Assets (rail, ☰; a fixed page like Settings, `components/Assets.jsx`) lists every file that isn't a note, with its path under its name, newest added first (`assetList` in `lib/assets.js`; `.folio`, `.archive` and `.gitkeep` left out); a row opens the file in File manager. When a file was added is noted when it's uploaded here, in `.folio/assets.json` (`useAssets`): it only orders the list, follows moves, the archive and deletes (`lib/pathMap.js`, shared with the emoji icons), and a file added elsewhere sorts after the rest by path. No sizes: git's tree isn't read for them.
+
 ## Search
 `SearchSheet` (rail, ☰): a query finds folders, then files, by path, then notes by what they say (`lib/search.js` `searchNotes`: any case, from two letters, up to 20; each under its name with a snippet of its text, the match highlighted). It reads the texts the link index already holds (`notes`: local edits, else the offline copy), so only notes on this device are searched; PDFs and images are found by name only. Other pickers (Notes' Add note…) search names only.
 

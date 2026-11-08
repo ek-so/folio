@@ -44,7 +44,7 @@ export function urlForPage(base, page, view) {
 export function pageForUrl(base, pathname, search) {
   const params = new URLSearchParams(search)
   const page = params.get('page') ?? PAGE.FILES
-  if (page === PAGE.SETTINGS || page === PAGE.LINKS || !/^[\w-]+$/.test(page)) return null
+  if (page === PAGE.SETTINGS || page === PAGE.LINKS || page === PAGE.ASSETS || !/^[\w-]+$/.test(page)) return null
   const view = viewForUrl(base, pathname)
   if (!view) return null
   const own = page !== PAGE.FILES && !view.file && !view.folder && !params.has('root')

@@ -8,13 +8,13 @@
 ## Rail (from 768px, `NavRail`)
 - Items in a group touch; every separator has 16px on both sides.
 - Top: logo (`AppLogo`) and name, and a button that collapses the rail to icons only (collapsed: the button shows the logo, turning into its sidebar icon on hover or focus; labels become tooltips; remembered in `storage`). Expanded, its right edge is a drag handle (160–320px). The collapse button is plain `ghost`.
-- Then: File manager, Search and Sync (`SyncButton`), a separator, the views and Views settings, a separator, Graph (the open page in accent), and at the bottom Broken links (count), Documentation, Settings and Sign out.
+- Then: Search, Sync (`SyncButton`), File manager and Assets, a separator, the views and Views settings, a separator, Graph (the open page in accent), and at the bottom Broken links (count), Documentation, Settings and Sign out.
 - A view's emoji (`PageIcon`) replaces its icon, in the rail, ☰ and Views settings, where the icon of each row opens the emoji picker (`EmojiPicker`, a sub popover like a color swatch). Kept in the view's `icon` in `.folio/views.json`; a name starting with an emoji is the icon until one is chosen.
 - A view's row shows ⋯ (`ViewMenu`: Rename / Remove) on hover; File manager and Graph have none.
 
 ## Phones (`TopBar`, above the `Surface`)
 - 16px from the screen's sides. ☰, Search and Sync.
-- ☰ (`AccountMenu`) opens a left `Sheet` that floats 8px from the screen's edges (as wide as the screen less 16px; 85% from 500px), titled Folio with its logo in a header like a title bar, ✕ at the right; 16px padding inside, header and list alike: list rows (`ListRow`) for File manager, the views and Views settings, Graph, then Broken links (count), Documentation, Settings and Sign out (red), separated by `Separator`s; the open page highlighted. Choosing one closes it. A view's ⋯ (`ViewMenu`: Rename / Remove) is always shown on touch.
+- ☰ (`AccountMenu`) opens a left `Sheet` that floats 8px from the screen's edges (as wide as the screen less 16px; 85% from 500px), titled Folio with its logo in a header like a title bar, ✕ at the right; 16px padding inside, header and list alike: list rows (`ListRow`) for File manager and Assets, the views and Views settings, Graph, then Broken links (count), Documentation, Settings and Sign out (red), separated by `Separator`s; the open page highlighted. Choosing one closes it. A view's ⋯ (`ViewMenu`: Rename / Remove) is always shown on touch.
 - The bar slides away while the content scrolls down (at least 16px in one go) and returns on scrolling up (`useHideOnScroll`), leaving only the title bar fixed: its row folds in 300ms with a gentle ease while what's in it slides up and fades, so the page under it moves softly.
 
 ## Folder tree (`NavTree.jsx`)

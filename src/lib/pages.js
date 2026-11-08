@@ -1,14 +1,15 @@
-import { File, FolderOpen, Graph, Gear, LinkBreak, BookOpen } from '@phosphor-icons/react'
+import { File, FolderOpen, Graph, Gear, LinkBreak, BookOpen, Images } from '@phosphor-icons/react'
 import { leadingEmoji, withoutEmoji } from './icons.js'
 
 // The app's pages (`page` in App). Home and the views added in Views settings
 // (lib/viewsConfig.js, kept in the repo) are pages too, each with its own id;
 // `HOME` is the first view's id in a repo without a config. File manager and
-// Graph, Settings, Broken links and Documentation are fixed.
-export const PAGE = { HOME: 'home', FILES: 'files', GRAPH: 'graph', SETTINGS: 'settings', LINKS: 'links', DOCS: 'docs' }
+// Graph, Assets, Settings, Broken links and Documentation are fixed (Assets, Settings, Broken links and Documentation are not in `mainPages`).
+export const PAGE = { HOME: 'home', FILES: 'files', GRAPH: 'graph', SETTINGS: 'settings', LINKS: 'links', DOCS: 'docs', ASSETS: 'assets' }
 
 const FIXED = [
   { id: PAGE.FILES, title: 'File manager', icon: FolderOpen },
+  { id: PAGE.ASSETS, title: 'Assets', icon: Images },
   { id: PAGE.GRAPH, title: 'Graph', icon: Graph },
   { id: PAGE.SETTINGS, title: 'Settings', icon: Gear },
   { id: PAGE.LINKS, title: 'Broken links', icon: LinkBreak },

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Gear, SignOut, LinkBreak, BookOpen, SlidersHorizontal } from '@phosphor-icons/react'
+import { Gear, SignOut, LinkBreak, BookOpen, SlidersHorizontal, Images } from '@phosphor-icons/react'
 import { PAGE } from '../lib/pages.js'
 import ViewMenu from './ViewMenu.jsx'
 import PageTitle from './PageTitle.jsx'
@@ -42,7 +42,10 @@ export default function AccountMenu({ trigger, current, pages, viewActions, onNa
           </div>
         </div>
         <nav aria-label="Main" className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain p-space" data-no-pull>
-          <ul>{pages.filter(p => p.id === PAGE.FILES).map(page)}</ul>
+          <ul>
+            {pages.filter(p => p.id === PAGE.FILES).map(page)}
+            {fixed(PAGE.ASSETS, Images, 'Assets')}
+          </ul>
           {separator}
           <ul>
             {pages.filter(p => p.view).map(page)}
