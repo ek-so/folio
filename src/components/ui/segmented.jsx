@@ -4,7 +4,7 @@ import { ToggleGroup, ToggleGroupItem } from './toggle-group.jsx'
 
 // Segmented toggle: a track of control height (p-1) with segments filling it (a shadcn ToggleGroup).
 // options: [value, label, Icon]. Two kinds: fitting its content (the default: as wide as its segments, each a labeled
-// one 12px on its sides, an icon-only one square) or `stretch` (as wide as its place, its segments sharing it equally).
+// one 12px on its sides, an icon-only one square) or `stretch` (as wide as its place, its segments sharing it equally, 4px on their sides so narrow ones still fit).
 // iconOnly: shows just the icons; the label stays as each segment's name and tooltip
 export function Segmented({ value, onChange, options, label, iconOnly, stretch }) {
   return (
@@ -18,7 +18,7 @@ export function Segmented({ value, onChange, options, label, iconOnly, stretch }
     >
       {options.map(([v, text, Icon]) => (
         <Tip key={v} content={iconOnly ? text : undefined}>
-          <ToggleGroupItem value={v} variant="segmented" aria-label={iconOnly ? text : undefined} className={stretch ? 'flex-1 px-3' : iconOnly ? 'aspect-square flex-none' : 'flex-none px-3'}>
+          <ToggleGroupItem value={v} variant="segmented" aria-label={iconOnly ? text : undefined} className={stretch ? 'px-1' : iconOnly ? 'aspect-square flex-none' : 'flex-none px-3'}>
             {Icon && <Icon />}{!iconOnly && text}
           </ToggleGroupItem>
         </Tip>
