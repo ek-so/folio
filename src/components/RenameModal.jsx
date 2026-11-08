@@ -4,6 +4,7 @@ import { Input } from './ui/input.jsx'
 import BottomSheet from './BottomSheet.jsx'
 import { splitName, renameTarget } from '../lib/changes.js'
 import { LinksContext } from '../hooks/useLinkIndex.js'
+import { plural } from '../lib/plural.js'
 
 // kind: what's renamed when it's not a file or folder (a view): no file extension, no links to update
 export default function RenameModal({ item, onRename, onClose, kind }) {
@@ -44,7 +45,7 @@ export default function RenameModal({ item, onRename, onClose, kind }) {
         </div>
         {error && <p className="text-destructive-ink text-xs">{error}</p>}
         {linkCount > 0 && (
-          <p className="text-muted-foreground text-xs">Also updates links in {linkCount} note{linkCount === 1 ? '' : 's'}.</p>
+          <p className="text-muted-foreground text-xs">Also updates links in {plural(linkCount, 'note')}.</p>
         )}
         <div className="flex justify-end gap-2">
           <Button type="button" variant="secondary" onClick={onClose}>Cancel</Button>

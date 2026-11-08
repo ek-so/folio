@@ -14,7 +14,7 @@ import { keyDay, dayKey, addDays, daysBetween } from './planner.js'
 // last day when it's shorter, and from then on that day), yearly on that day of that month.
 
 export const ONE_TIME = 'one-time'
-export const UNSET = 'recurring'
+const UNSET = 'recurring'
 export const UNITS = ['day', 'week', 'month', 'year']
 export const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 const WEEK_ORDER = [1, 2, 3, 4, 5, 6, 0] // weekdays are written Mon … Sun

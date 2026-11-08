@@ -15,6 +15,7 @@ import InlineMarkdown from './InlineMarkdown.jsx'
 import { DateField } from './DateBadge.jsx'
 import { valueDate } from '../lib/markdown.js'
 import { formatDate, dateLabel } from '../lib/dates.js'
+import { plural } from '../lib/plural.js'
 
 
 // A badge's color: its value's hue within its property (--tag-N, index.css), grey when empty; tinted against the card, a bit
@@ -79,7 +80,7 @@ export default function PropertyBadges({ props, path, files, clamp, title, class
   const confirm = removing && (
     <ConfirmModal
       title={`Remove “${removing.value}” from ${removing.key}?`}
-      description={`It becomes empty in ${valueCount(removing.key, removing.value)} note${valueCount(removing.key, removing.value) === 1 ? '' : 's'} in ${scopeName}. It changes on GitHub when you sync.`}
+      description={`It becomes empty in ${plural(valueCount(removing.key, removing.value), 'note')} in ${scopeName}. It changes on GitHub when you sync.`}
       onConfirm={() => { onRemoveValue(removing.key, removing.value); setRemoving(null) }}
       onClose={() => setRemoving(null)}
     />

@@ -129,7 +129,7 @@ export function doneNext(text, today) {
 }
 
 // The list view's groups, in order: a card's day decides its group; each is the time after the one before it
-export const GROUPS = [
+const GROUPS = [
   { key: 'today', label: 'Today' },
   { key: 'tomorrow', label: 'Tomorrow' },
   { key: 'week', label: 'This week' },

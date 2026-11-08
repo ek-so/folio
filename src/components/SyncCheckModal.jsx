@@ -1,6 +1,7 @@
 import { Button } from './ui/button.jsx'
 import BottomSheet from './BottomSheet.jsx'
 import BrokenLinkList from './BrokenLinkList.jsx'
+import { plural } from '../lib/plural.js'
 
 // Shown when Sync is tapped while the repo has broken links: fix them here,
 // go to the Broken links page, or sync anyway.
@@ -8,7 +9,7 @@ export default function SyncCheckModal({ broken, files, onFix, onOpenNote, onOpe
   const n = broken.length
   return (
     <BottomSheet
-      title={`${n} broken link${n === 1 ? '' : 's'}`}
+      title={plural(n, 'broken link')}
       description="Fix them before syncing, or sync anyway."
       onClose={onClose}
     >

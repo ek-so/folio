@@ -41,13 +41,7 @@ export function useBoard(id, services) {
     placeCard: (path, column, index) => placeCardVia(services, id, board, data, path, column, index),
     moveColumn: (name, index) => save(moveColumn(board, data, name, index)),
     // The properties cards show; a newly chosen one is added, empty, to the board's notes that lack it
-    setProperties(keys) {
-      const added = keys.filter(k => !board.properties.includes(k))
-      update(ch => {
-        const next = write({ ...board, properties: keys })(ch)
-        return added.length ? withNoteKeys(next, services.remoteFiles, board.folder, added, services.remoteText) : next
-      })
-    },
+    setProperties: keys => notes.showProperties(keys, board.properties, write({ ...board, properties: keys })),
     // The columns shown (`shown`: names); the others are hidden (still listed in the Columns sheet)
     showColumns: shown => save({ ...board, hidden: data.columns.map(c => c.name).filter(n => !shown.includes(n)) }),
     // What its notes do (hooks/useFolderNotes.js): property keys and values, a card's title, description and removal

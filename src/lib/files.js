@@ -12,8 +12,6 @@ export function imageMime(path) {
   return IMAGE_MIME[extension(path)]
 }
 
-export const isImage = path => imageMime(path) !== undefined
-
 // What a file is, for its icon and how it opens: 'note' (markdown, edited),
 // 'image' and 'pdf' (viewed), or 'file' (can't be opened)
 export function fileKind(path) {

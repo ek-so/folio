@@ -5,6 +5,7 @@ import { Input } from './ui/input.jsx'
 import { ListRow } from './ui/list-row.jsx'
 import BottomSheet from './BottomSheet.jsx'
 import ColorPicker from './ColorPicker.jsx'
+import { plural } from '../lib/plural.js'
 
 // The dialog behind a property popover's Edit values: every value of the property `name`
 // (`values`, each with its color in `colors`, a Map) in one list, a field to add a new one
@@ -76,7 +77,7 @@ export default function ValuesModal({ name, values, colors, count, scopeName, re
                 </div>
                 <p className="px-1 text-xs text-muted-foreground">
                   {values.some(o => o !== v && o === editing.name.trim()) ? `“${editing.name.trim()}” already exists. They become one value. ` : ''}
-                  {count(v)} note{count(v) === 1 ? '' : 's'} with it in {scopeName}.
+                  {plural(count(v), 'note')} with it in {scopeName}.
                 </p>
               </form>
             </li>

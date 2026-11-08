@@ -13,7 +13,8 @@ export const DESCRIPTION = 'description'
 const OPEN = /^---[ \t]*\r?\n/
 const CLOSE = /^(?:---|\.\.\.)[ \t]*$/
 const KEY = /^([^\s:#-][^:]*?):(?:[ \t]+(.*?))?[ \t]*$/
-const ITEM = /^[ \t]+-[ \t]+(.*?)[ \t]*$/
+// A `- item` line of a list, indented or not (both are YAML; a key never starts with "-")
+const ITEM = /^[ \t]*-[ \t]+(.*?)[ \t]*$/
 
 const unquote = s => /^(["']).*\1$/.test(s) ? s.slice(1, -1) : s
 const parseValue = s => {
@@ -161,12 +162,13 @@ export function withValue(text, key, value) {
   while (end < lines.length && (ITEM.test(bare(lines[end])) || /^[ \t]+\S/.test(bare(lines[end])))) end++
   const eol = lines[at].match(/\r?\n$/)?.[0] ?? '\n'
   const wasItems = lines.slice(at + 1, end).some(l => ITEM.test(bare(l)))
+  const indent = lines.slice(at + 1, end).map(l => bare(l).match(/^([ \t]*)-[ \t]/)?.[1]).find(i => i !== undefined) ?? '  ' // its items' own
   let out
   if (Array.isArray(value)) {
     const items = value.map(v => v.trim()).filter(Boolean)
     if (!items.length) out = `${key}:${eol}`
     else if (!wasItems && items.every(i => !/[,[\]]/.test(i))) out = `${key}: [${items.map(quoted).join(', ')}]${eol}`
-    else out = `${key}:${eol}` + items.map(i => `  - ${quoted(i)}${eol}`).join('')
+    else out = `${key}:${eol}` + items.map(i => `${indent}- ${quoted(i)}${eol}`).join('')
   } else {
     const v = value.trim()
     out = `${key}:${v ? ' ' + quoted(v) : ''}${eol}`

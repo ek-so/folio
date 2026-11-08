@@ -11,21 +11,24 @@ export const LinksContext = createContext(null)
 // comparing rewritten text. `missing` counts notes not on this device yet.
 export function useLinkIndex(virtual, changes) {
   const textsRef = useRef(new Map()) // blob sha -> text
+  const loading = useRef(new Set()) // shas being read: each is asked for once at a time, whatever changes meanwhile
+  const live = useRef(true) // still on the page: what's read is shown
   const [loaded, setLoaded] = useState(0)
+  useEffect(() => { live.current = true; return () => { live.current = false } }, [])
 
   useEffect(() => {
     const shas = [...new Set(Object.entries(virtual)
-      .filter(([path, e]) => path.endsWith('.md') && e.sha && !textsRef.current.has(e.sha))
+      .filter(([path, e]) => path.endsWith('.md') && e.sha && !textsRef.current.has(e.sha) && !loading.current.has(e.sha))
       .map(([, e]) => e.sha))]
     if (!shas.length) return
-    let cancelled = false
+    shas.forEach(sha => loading.current.add(sha))
     ;(async () => {
       for (const sha of shas) {
-        try { textsRef.current.set(sha, await getBlob(sha)) } catch { /* not on device yet */ }
+        try { textsRef.current.set(sha, await getBlob(sha)) } catch { /* not on device yet: asked again on the next change */ }
+        loading.current.delete(sha)
       }
-      if (!cancelled) setLoaded(n => n + 1)
+      if (live.current) setLoaded(n => n + 1)
     })()
-    return () => { cancelled = true }
   }, [virtual])
 
   const remoteText = sha => sha === null ? '' : textsRef.current.get(sha)

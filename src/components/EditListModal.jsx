@@ -1,5 +1,6 @@
 import { DotsSixVertical, X } from '@phosphor-icons/react'
-import { DndContext, MouseSensor, TouchSensor, useSensor, useSensors, closestCenter } from '@dnd-kit/core'
+import { DndContext, closestCenter } from '@dnd-kit/core'
+import { useDragSensors } from '../hooks/useDragSensors.js'
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { cn } from '@/lib/utils.js'
@@ -12,10 +13,7 @@ import BottomSheet from './BottomSheet.jsx'
 // calls `onMove(from, to)`, indexes, at once), remove one with its ✕ (`onRemove(item)`, confirmed
 // by the caller). `empty`: the text when there's nothing.
 export default function EditListModal({ title, description, items, onMove, onRemove, empty, onClose }) {
-  const sensors = useSensors(
-    useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 8 } }),
-  )
+  const sensors = useDragSensors()
   const ids = items.map(i => i.id)
   const onDragEnd = ({ active, over }) => {
     if (over && active.id !== over.id) onMove(ids.indexOf(active.id), ids.indexOf(over.id))

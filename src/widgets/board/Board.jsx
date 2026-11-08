@@ -1,9 +1,7 @@
 import { useState, useMemo } from 'react'
 import { DotsThree, Trash, PencilSimple, Tag, Columns, Check, CaretDown, Rows } from '@phosphor-icons/react'
-import {
-  DndContext, DragOverlay, MouseSensor, TouchSensor, useSensor, useSensors,
-  closestCenter, closestCorners, pointerWithin,
-} from '@dnd-kit/core'
+import { DndContext, DragOverlay, closestCenter, closestCorners, pointerWithin } from '@dnd-kit/core'
+import { useDragSensors } from '@/hooks/useDragSensors.js'
 import { SortableContext, useSortable, arrayMove, horizontalListSortingStrategy, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { cn } from '@/lib/utils.js'
@@ -14,12 +12,14 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuIte
 import RenameModal from '@/components/RenameModal.jsx'
 import ConfirmModal from '@/components/ConfirmModal.jsx'
 import CheckListModal from '@/components/CheckListModal.jsx'
+import PropertiesDialog from '@/components/PropertiesDialog.jsx'
 import WidgetFrame from '@/components/WidgetFrame.jsx'
 import CardMenu, { cardActions } from '@/components/CardMenu.jsx'
 import NoteCard, { NO_CALLOUT, ownListeners, cardClick } from '@/components/NoteCard.jsx'
 import { LOOSE, looseName } from './board.js'
 import { KEEP_DAYS } from '@/lib/archive.js'
 import { useBoard } from './useBoard.js'
+import { plural } from '@/lib/plural.js'
 
 // Drag ids: a column's and a card's
 const colId = key => 'col:' + key
@@ -49,14 +49,10 @@ export default function Board({ id, services, onRemove }) {
   const { ready, board, data, ...act } = useBoard(id, services)
   const { notes, canEdit, openFile, openFolder } = services
   const files = useMemo(() => Object.fromEntries(services.files.map(f => [f, true])), [services.files]) // as the preview's links want them
-  const sensors = useSensors(
-    useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 8 } }),
-  )
+  const sensors = useDragSensors()
   const [drag, setDrag] = useState(null) // { id, type, items } while dragging: each column's cards as shown meanwhile
   const [renaming, setRenaming] = useState(null) // the column whose Rename / Remove sheet is open
   const [deleting, setDeleting] = useState(null) // the column whose Remove is being confirmed
-  const [dropping, setDropping] = useState(null) // the property whose removal is being confirmed
   const [expanded, setExpanded] = useState(() => new Set()) // keys of the columns showing all their cards
   const [choosing, setChoosing] = useState(null) // the open checklist: 'columns' | 'properties'
   const off = !canEdit || !board || data?.missing
@@ -190,42 +186,19 @@ export default function Board({ id, services, onRemove }) {
           onClose={() => setChoosing(null)}
         />
       )}
-      {choosing === 'properties' && board && (
-        <CheckListModal
-          title="Properties"
+      {board && (
+        <PropertiesDialog
+          open={choosing === 'properties'} noun="board" shown={board.properties} locked={[board.group]} act={act}
           description={`Their values show on the cards, without names. The description always shows. The columns are grouped by ${board.group}, so cards don't repeat it.`}
-          locked={[board.group]}
           lockedDescription="Grouped by: its values are the columns"
-          items={[...board.properties, ...act.propertyKeys().filter(k => !board.properties.includes(k))]}
-          selected={board.properties}
-          onChange={act.setProperties}
-          addLabel="New property"
-          onAdd={key => {
-            const error = act.keyError(key)
-            if (error) return error
-            if (!board.properties.includes(key)) act.setProperties([...board.properties, key])
-            return null
-          }}
-          onRename={(from, to) => act.renameProperty(from, to)}
-          onDelete={key => { setChoosing(null); setDropping(key) }}
-          empty="Its notes have no other properties yet."
           onClose={() => setChoosing(null)}
-        />
-      )}
-      {dropping && (
-        <ConfirmModal
-          title={`Remove property “${dropping}”?`}
-          description={`It's removed, with its value, from ${act.notesWith(dropping)} note${act.notesWith(dropping) === 1 ? '' : 's'} in this board's folder. It's removed from GitHub when you sync.`}
-          confirm="Remove"
-          onConfirm={() => { act.removeProperty(dropping); setDropping(null) }}
-          onClose={() => setDropping(null)}
         />
       )}
       {deleting && (
         <ConfirmModal
           title={`Remove column “${deleting.name}”?`}
           description={deleting.cards.length
-            ? `It has ${deleting.cards.length} card${deleting.cards.length === 1 ? '' : 's'}. Remove their files too (they move to the archive, where you can recover them for ${KEEP_DAYS} days), or move them to ${looseName(board)} (their ${board.group} is emptied)?`
+            ? `It has ${plural(deleting.cards.length, 'card')}. Remove their files too (they move to the archive, where you can recover them for ${KEEP_DAYS} days), or move them to ${looseName(board)} (their ${board.group} is emptied)?`
             : 'No card has this status.'}
           confirm={deleting.cards.length ? 'Remove with cards' : 'Remove'}
           onConfirm={() => { setDeleting(null); act.deleteColumn(deleting, false) }}

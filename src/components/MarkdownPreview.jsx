@@ -11,7 +11,8 @@ import { DateField } from './DateBadge.jsx'
 import { useDateEdits } from '../hooks/useDateEdits.js'
 import { useLinkEdits } from '../hooks/useLinkEdits.jsx'
 import ListGrip from './ListGrip.jsx'
-import { DndContext, MouseSensor, TouchSensor, useSensor, useSensors, closestCenter } from '@dnd-kit/core'
+import { DndContext, closestCenter } from '@dnd-kit/core'
+import { useDragSensors } from '../hooks/useDragSensors.js'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 
 // Text node and offset under a screen point
@@ -106,10 +107,7 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
   const [links, setLinks] = useState([]) // link spots for LinkBadge
   const [dates, setDates] = useState([]) // date spots for DateBadge
   const [grips, setGrips] = useState([]) // list item spots for ListGrip
-  const sensors = useSensors(
-    useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 8 } }),
-  )
+  const sensors = useDragSensors()
 
   useImperativeHandle(handle, () => ({
     visibleOffset() {

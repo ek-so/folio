@@ -53,6 +53,7 @@ import {
   listDir, nameError, renameTarget, renameError, createError, add, setEdit, rename, remove, getAllFolders,
   upload, replaceUpload, freePath, virtualFiles, splitName, editNote, duplicate, MAX_UPLOAD_BYTES,
 } from './lib/changes.js'
+import { plural } from './lib/plural.js'
 
 const BASE = import.meta.env.BASE_URL
 // The page and view the address the app was opened at names (not the bare root)
@@ -352,7 +353,7 @@ export default function App() {
     // Several files to the archive at once (a board column's cards), told in one toast
     removeAll: items => {
       items.forEach(item => archive(item))
-      if (items.length) toast.success(`${items.length} file${items.length === 1 ? '' : 's'} moved to the archive`)
+      if (items.length) toast.success(`${plural(items.length, 'file')} moved to the archive`)
     },
     createFolder: (parent, name) => createFolder(parent, name),
     // `keys`: the properties it starts with, empty; `stay`: don't open it
@@ -818,7 +819,7 @@ export default function App() {
 
         {confirmDiscard && (
           <ConfirmModal
-            title={`Discard ${repo.changeCount} change${repo.changeCount === 1 ? '' : 's'}?`}
+            title={`Discard ${plural(repo.changeCount, 'change')}?`}
             description="They're removed from this device and can't be recovered."
             confirm="Discard"
             onConfirm={discardChanges}
@@ -830,7 +831,7 @@ export default function App() {
           <ConfirmModal
             title="Sign out?"
             description={repo.changeCount
-              ? `You have ${repo.changeCount} unsynced change${repo.changeCount === 1 ? '' : 's'}. Signing out removes them from this device.`
+              ? `You have ${plural(repo.changeCount, 'unsynced change')}. Signing out removes them from this device.`
               : 'The offline copies of your notes are removed from this device, and you\'ll need your token to sign in again.'}
             confirm="Sign out"
             onConfirm={signOut}

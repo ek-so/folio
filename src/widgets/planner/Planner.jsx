@@ -1,7 +1,8 @@
 import { toast } from 'sonner'
 import { Fragment, useState, useMemo, useRef, useCallback, useLayoutEffect } from 'react'
 import { Tag, Plus, CalendarBlank, CrosshairSimple, CalendarDots, ListBullets, CalendarDot, ArrowsClockwise } from '@phosphor-icons/react'
-import { DndContext, DragOverlay, MouseSensor, TouchSensor, useSensor, useSensors, useDraggable, useDroppable, pointerWithin } from '@dnd-kit/core'
+import { DndContext, DragOverlay, useDraggable, useDroppable, pointerWithin } from '@dnd-kit/core'
+import { useDragSensors } from '@/hooks/useDragSensors.js'
 import { cn } from '@/lib/utils.js'
 import { Button } from '@/components/ui/button.jsx'
 import { Separator } from '@/components/ui/separator.jsx'
@@ -12,8 +13,7 @@ import { DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdow
 import NoteCard, { NO_CALLOUT, ownListeners, cardClick } from '@/components/NoteCard.jsx'
 import WidgetFrame from '@/components/WidgetFrame.jsx'
 import CardMenu, { cardActions } from '@/components/CardMenu.jsx'
-import CheckListModal from '@/components/CheckListModal.jsx'
-import ConfirmModal from '@/components/ConfirmModal.jsx'
+import PropertiesDialog from '@/components/PropertiesDialog.jsx'
 import DatePopover from '@/components/DatePopover.jsx'
 import { shownCards, hiddenCards, shownLimit } from '@/lib/trayCards.js'
 import { useGridColumns } from '@/hooks/useGridColumns.js'
@@ -25,6 +25,7 @@ import { usePlanner } from './usePlanner.js'
 import { useToday } from './useToday.js'
 import { BADGES } from './RecurrenceField.jsx'
 import { WEEKDAYS, parseRecurrence, repeatLabel } from './recurrence.js'
+import { plural } from '@/lib/plural.js'
 
 // The ribbon: each day takes DAY_WIDTH (its box and the gap around it), and a line between months MONTH_GAP (a box that
 // wide with the 1px line in its middle: the days' gap on each side), so the scrolling sums match what's drawn; it starts
@@ -61,17 +62,13 @@ export default function Planner({ id, services, onRemove }) {
   const limit = shownLimit(useGridColumns(grid)) // its cards shown before Show more: whole rows on desktop
   const [choosing, setChoosing] = useState(false) // the Properties sheet
   const { view, setView: pickView } = act // calendar or list, this device's choice
-  const [dropping, setDropping] = useState(null) // the property whose removal is being confirmed
   const [jumping, setJumping] = useState(null) // a day picked in the calendar, scrolled to once the ribbon has it
   const [month, setMonth] = useState(() => monthLabel(today)) // the month of the day in the middle of the ribbon, its title
   const scroller = useRef(null)
   const grown = useRef(false) // days were added before the first: the view moves by their width to keep its place
   const centered = useRef(false)
   const off = !canEdit || !planner || missing
-  const sensors = useSensors(
-    useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 8 } }),
-  )
+  const sensors = useDragSensors()
 
   const days = useMemo(() => Array.from({ length: range.before + range.after + 1 }, (_, i) => addDays(anchor, i - range.before)), [anchor, range])
   const offsets = useMemo(() => dayOffsets(days, DAY_WIDTH, MONTH_GAP), [days])
@@ -257,35 +254,13 @@ export default function Planner({ id, services, onRemove }) {
       removeLabel="Remove planner" onRemove={onRemove} canEdit={canEdit} ready={ready} readable={!!planner}
       folder={planner && { name: planner.folder, missing, folders: ['', ...services.folders], sheetTitle: 'Planner from folder…', sheetText: 'Its notes become cards, each on the day of its date.', onPick: act.setFolder }}
     >{() => body}</WidgetFrame>
-      {choosing && planner && (
-        <CheckListModal
-          title="Properties"
+      {planner && (
+        <PropertiesDialog
+          open={choosing} noun="planner" shown={planner.properties} locked={FIXED} act={act}
           description="Their values show on the cards, without names. The date, repeat and description always show."
           lockedDescription="Every card has it; it comes back if removed"
-          locked={FIXED}
-          items={[...planner.properties, ...act.propertyKeys().filter(k => !FIXED.includes(k) && !planner.properties.includes(k))]}
-          selected={planner.properties}
-          onChange={act.setProperties}
-          addLabel="New property"
-          onAdd={key => {
-            const error = FIXED.includes(key) ? `The ${key} is always shown.` : act.keyError(key)
-            if (error) return error
-            if (!planner.properties.includes(key)) act.setProperties([...planner.properties, key])
-            return null
-          }}
-          onRename={(from, to) => FIXED.includes(to) ? `The ${to} is always shown.` : act.renameProperty(from, to)}
-          onDelete={key => { setChoosing(false); setDropping(key) }}
-          empty="Its notes have no other properties yet."
+          lockedError={key => FIXED.includes(key) ? `The ${key} is always shown.` : null}
           onClose={() => setChoosing(false)}
-        />
-      )}
-      {dropping && (
-        <ConfirmModal
-          title={`Remove property “${dropping}”?`}
-          description={`It's removed, with its value, from ${act.notesWith(dropping)} note${act.notesWith(dropping) === 1 ? '' : 's'} in this planner's folder. It's removed from GitHub when you sync.`}
-          confirm="Remove"
-          onConfirm={() => { act.removeProperty(dropping); setDropping(null) }}
-          onClose={() => setDropping(null)}
         />
       )}
   </>
@@ -338,7 +313,7 @@ function Day({ dayKey: key, today, selected, count, onSelect }) {
         ref={setNodeRef}
         variant={selected ? 'default' : 'ghost'}
         aria-pressed={selected}
-        aria-label={`${dayTitle(key)}${today ? ', today' : ''}${count ? `, ${count} card${count === 1 ? '' : 's'}` : ''}`}
+        aria-label={`${dayTitle(key)}${today ? ', today' : ''}${count ? `, ${plural(count, 'card')}` : ''}`}
         onClick={() => onSelect(key)}
         className={cn('h-auto w-full flex-col gap-0.5 rounded-lg border px-0 py-2.5 font-normal', selected ? 'border-transparent' : cn('hover-lift border-border hover:text-foreground', isOver ? 'bg-secondary hover:bg-secondary' : 'bg-card hover:bg-card'), today && 'border-primary ring-1 ring-inset ring-primary hover:border-primary')}
       >

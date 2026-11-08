@@ -373,9 +373,9 @@ export function keyLines(text, keys) {
   const out = []
   let inKey = false // the line belongs to one of `keys`
   for (let i = 1; i < close; i++) {
-    const m = lines[i].match(/^([^\s#][^:]*):/)
+    const m = lines[i].match(/^([^\s#-][^:]*):/) // a key never starts with "-": that's an item, indented or not
     if (m) inKey = keys.includes(m[1].trim())
-    else if (!/^\s+-\s/.test(lines[i])) inKey = false
+    else if (!/^\s*-\s/.test(lines[i])) inKey = false
     if (inKey) out.push(i)
   }
   return out

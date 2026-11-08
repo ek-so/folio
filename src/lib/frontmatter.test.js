@@ -137,4 +137,12 @@ describe('front matter', () => {
     expect(copyTitled('Intro\n# Head #\n## Sub\n')).toBe('Intro\n# Head (copy) #\n## Sub\n')
     expect(copyTitled('no title')).toBe('no title')
   })
+
+  it('reads, moves, sets and removes lists whose items aren\'t indented', () => {
+    const t = '---\ntitle: X\ntags:\n- a\n- b\ndate: 1 Nov 2026\n---\nbody\n'
+    expect(frontMatter(t).props).toEqual([{ key: 'title', value: 'X' }, { key: 'tags', value: ['a', 'b'] }, { key: 'date', value: '1 Nov 2026' }])
+    expect(withKeysFirst(t, ['date'])).toBe('---\ndate: 1 Nov 2026\ntitle: X\ntags:\n- a\n- b\n---\nbody\n')
+    expect(withValue(t, 'tags', ['a', 'c'])).toBe('---\ntitle: X\ntags:\n- a\n- c\ndate: 1 Nov 2026\n---\nbody\n')
+    expect(withoutKeys(t, ['tags'])).toBe('---\ntitle: X\ndate: 1 Nov 2026\n---\nbody\n')
+  })
 })

@@ -4,7 +4,7 @@ import { withValue } from './frontmatter.js'
 // repo's root, into a folder for the day it was archived (`.archive/2026-11-07/haircut.md`), so a file or folder carries
 // its day without a property. When Folio opens, the day folders older than KEEP_DAYS are removed as local changes (shown
 // before Sync, so they can still be discarded). Removing something that's already in the archive deletes it for good.
-export const ARCHIVE = '.archive'
+const ARCHIVE = '.archive'
 export const KEEP_DAYS = 30
 
 const pad = n => String(n).padStart(2, '0')

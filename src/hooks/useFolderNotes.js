@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { fileItem, isTechnical, editNotes } from '@/lib/folderNotes.js'
+import { fileItem, isTechnical, editNotes, withNoteKeys } from '@/lib/folderNotes.js'
 import { editNote } from '@/lib/changes.js'
 import { DESCRIPTION, frontMatter, withoutKeys, renameKey, keyNameError, withValue, withTitle, valueActions } from '@/lib/frontmatter.js'
 
@@ -56,6 +56,12 @@ export function useFolderNotes(services, folder) {
       if (error) return error
       editAll(t => renameKey(t, from, to), first)
       return null
+    },
+    // The properties its cards show set to `keys` (from `shown`), together with `first` (its settings written): a newly
+    // shown one is added, empty, to the notes that lack it
+    showProperties(keys, shown, first) {
+      const added = keys.filter(k => !shown.includes(k))
+      update(ch => added.length && folder !== null ? withNoteKeys(first(ch), services.remoteFiles, folder, added, services.remoteText) : first(ch))
     },
     // The property `key`, with its value, out of every note (confirmed first), together with `first`
     removeProperty: (key, first) => editAll(t => withoutKeys(t, [key]), first),

@@ -1,11 +1,12 @@
 import { Button } from './ui/button.jsx'
 import BottomSheet from './BottomSheet.jsx'
+import { plural } from '../lib/plural.js'
 
 // Files that couldn't be added from the device, each with the reason.
 export default function UploadErrorsModal({ errors, onClose }) {
   return (
     <BottomSheet
-      title={`Couldn't add ${errors.length} file${errors.length === 1 ? '' : 's'}`}
+      title={`Couldn't add ${plural(errors.length, 'file')}`}
       onClose={onClose}
     >
       <ul className="flex flex-col gap-2 text-sm">

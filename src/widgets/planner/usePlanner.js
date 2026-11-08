@@ -5,7 +5,7 @@ import { ONE_TIME } from './recurrence.js'
 import { formatDate } from '@/lib/dates.js'
 import { properties } from '@/lib/frontmatter.js'
 import { markedDone } from '@/lib/archive.js'
-import { withNoteKeys, editNotes } from '@/lib/folderNotes.js'
+import { editNotes } from '@/lib/folderNotes.js'
 import { useFolderNotes } from '@/hooks/useFolderNotes.js'
 
 // Planner `id` as its widget shows and changes it, through the app's `services`: `ready` (its
@@ -51,13 +51,7 @@ export function usePlanner(id, services) {
     view,
     setView: next => { setViewState(next); storage.setPlannerView(id, next) },
     // The properties cards show besides the date; a newly chosen one is added, empty, to the notes that lack it
-    setProperties(keys) {
-      const added = keys.filter(k => !planner.properties.includes(k))
-      update(ch => {
-        const next = write({ ...planner, properties: keys })(ch)
-        return added.length ? withNoteKeys(next, services.remoteFiles, planner.folder, added, services.remoteText) : next
-      })
-    },
+    setProperties: keys => notes.showProperties(keys, planner.properties, write({ ...planner, properties: keys })),
     // The property `from` renamed `to` in every note of the folder (and in its settings); refused when a note already has `to`
     renameProperty: (from, to) => notes.renameProperty(from, to,
       write({ ...planner, properties: planner.properties.map(k => k === from ? to : k) })),
