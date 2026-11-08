@@ -36,7 +36,7 @@ Never hardcode colors; use the semantic tokens (light and dark values in `src/in
 | `bg-secondary` | Hover, subtle fills |
 | `border-border` | Dividers, input borders |
 | `text-foreground` / `text-muted-foreground` | Primary / secondary text |
-| `bg-primary` / `text-primary` | Accent (a muted green): fills and icons |
+| `bg-primary` / `text-primary` | Accent (a muted teal green): fills and icons |
 | `text-primary-ink` / `text-destructive-ink` / `text-success-ink` | Every colored text (links, Today, red menu items and errors, green text): the color mixed with the text color by `--ink` (70%), so it's darker on light and lighter on dark. Badge values (`--tag-N`) and callout titles mix the same way. Never `text-primary` for text |
 | `bg-destructive` | Errors, danger |
 | `bg-success` / `text-success-foreground` | Success (green) |
