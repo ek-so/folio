@@ -325,7 +325,7 @@ function Day({ dayKey: key, today, selected, count, onSelect }) {
 }
 
 // A card as a row of the list view (ListRow): its title, its date under it and, when it repeats, a small circling-arrows
-// icon (accent color) and how often right after it; its ⋯; it opens the note. `dashed`: listed under Today because it
+// icon (grey, like the line) and how often right after it; its ⋯; it opens the note. `dashed`: listed under Today because it
 // has no date or is late
 function TaskRow({ path, text, dashed, menu, onOpen }) {
   const date = text === undefined ? null : cardDate(text)
@@ -336,7 +336,7 @@ function TaskRow({ path, text, dashed, menu, onOpen }) {
       title={cardTitle(path, text)}
       description={<>
         {date ? dateLabel(date) : 'No date'}
-        {(kind === 'repeat' || kind === 'unset') && <> · <ArrowsClockwise className="inline size-3 align-[-0.125em] text-primary" /> {repeatLabel(repeat)}</>}
+        {(kind === 'repeat' || kind === 'unset') && <> · <ArrowsClockwise className="inline size-3 align-[-0.125em]" /> {repeatLabel(repeat)}</>}
       </>}
       trailing={menu}
       onClick={() => onOpen(path)}
