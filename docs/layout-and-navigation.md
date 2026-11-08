@@ -9,6 +9,7 @@
 - Items in a group touch; every separator has 16px on both sides.
 - Top: logo (`AppLogo`) and name, and a button that collapses the rail to icons only (collapsed: the button shows the logo, turning into its sidebar icon on hover or focus; labels become tooltips; remembered in `storage`). Expanded, its right edge is a drag handle (160–320px). The collapse button is plain `ghost`.
 - Then: File manager, Search and Sync (`SyncButton`), a separator, the views and Views settings, a separator, Graph (the open page in accent), and at the bottom Broken links (count), Documentation, Settings and Sign out.
+- A view's emoji (`PageIcon`) replaces its icon, in the rail, ☰ and Views settings, where the icon of each row opens the emoji picker (`EmojiPicker`, a sub popover like a color swatch). Kept in the view's `icon` in `.folio/views.json`; a name starting with an emoji is the icon until one is chosen.
 - A view's row shows ⋯ (`ViewMenu`: Rename / Remove) on hover; File manager and Graph have none.
 
 ## Phones (`TopBar`, above the `Surface`)

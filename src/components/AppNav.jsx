@@ -42,7 +42,7 @@ export function NavRail({ page, pages, hrefOf, viewActions, onPage, onSearch, re
   const pageButton = p => (
     <Button asChild variant="ghost" tooltip={hint(p.title)} tooltipSide="right" aria-current={page === p.id ? 'page' : undefined} className={cn(item(p.id), !collapsed && 'w-full', !collapsed && p.view && 'pr-10')}>
       <a href={hrefOf(p.id)} onClick={e => { if (plainClick(e)) { e.preventDefault(); onPage(p.id) } }}>
-        <p.icon /> {collapsed ? label(p.title) : <span className="min-w-0 truncate"><PageTitle page={p} /></span>}
+        <PageIcon page={p} /> {collapsed ? label(p.title) : <span className="min-w-0 truncate"><PageTitle page={p} /></span>}
       </a>
     </Button>
   )

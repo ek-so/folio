@@ -1,11 +1,13 @@
 import { useState } from 'react'
-import { PencilSimple, Trash, Folder, Rows, SquaresFour, Columns, Copy, LinkSimple, Lock, LockOpen } from '@phosphor-icons/react'
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from './ui/dropdown-menu.jsx'
+import { PencilSimple, Trash, Folder, Rows, SquaresFour, Columns, Copy, LinkSimple, Lock, LockOpen, Smiley } from '@phosphor-icons/react'
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent } from './ui/dropdown-menu.jsx'
 import { Segmented } from './ui/segmented.jsx'
 import RenameModal from './RenameModal.jsx'
 import DeleteModal from './DeleteModal.jsx'
 import MoveModal from './MoveModal.jsx'
 import ColumnSubmenu from './ColumnSubmenu.jsx'
+import { EmojiGrid } from './EmojiPicker.jsx'
+import { useIconsContext } from '../hooks/useIcons.js'
 import { copyText } from '../lib/clipboard.js'
 import { repoLink } from '../lib/markdown.js'
 import { useIsDesktop } from '../hooks/useIsDesktop.js'
@@ -22,6 +24,8 @@ import MoreButton from './MoreButton.jsx'
 // hoverReveal (with inList): with a mouse, hidden until its row (`group`) is hovered, it's focused or its menu is open; always shown on touch
 // columns (an open card of a board opened from its view): { columns, column, onSelect } for a Move to column submenu
 // lock ({ locked, onToggle }; a note's page): Lock / Unlock (lib/locks.js); a locked file has no Move to column and no Remove
+// Emoji (every file and folder): a sub menu with the emoji picker (`EmojiGrid`) for its icon (lib/icons.js, `IconsContext`);
+// disabled while the icons can't be saved
 // view / onView (File manager's title bar): an icon-only List | Cards | Columns switch on top of the menu (Columns from 768px);
 // with no `item` (the root folder, which can't be renamed, moved or deleted) it's all the menu has
 const VIEWS = [['list', 'List', Rows], ['cards', 'Cards', SquaresFour], ['columns', 'Columns', Columns]]
@@ -30,11 +34,13 @@ export default function ItemMenu({ item, onRename, onDuplicate, onDelete, onMove
   const [renaming, setRenaming] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [moving, setMoving] = useState(false)
+  const [open, setOpen] = useState(false)
   const desktop = useIsDesktop()
+  const icons = useIconsContext()
 
   return (
     <>
-      <DropdownMenu>
+      <DropdownMenu open={open} onOpenChange={setOpen}>
         <DropdownMenuTrigger asChild>
           <MoreButton inRow={inList} reveal={hoverReveal} aria-label="More actions" />
         </DropdownMenuTrigger>
@@ -47,6 +53,12 @@ export default function ItemMenu({ item, onRename, onDuplicate, onDelete, onMove
           {onView && item && <DropdownMenuSeparator />}
           {item && <>
             <DropdownMenuItem onSelect={() => setRenaming(true)}><PencilSimple /> Rename</DropdownMenuItem>
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger disabled={!icons.onSet}><Smiley /> Emoji</DropdownMenuSubTrigger>
+              <DropdownMenuSubContent className="p-space-sm">
+                <EmojiGrid value={icons.iconOf(item.path)} onPick={emoji => icons.onSet(item.path, emoji)} onDone={() => setOpen(false)} />
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
             {columns && !lock?.locked && <ColumnSubmenu columns={columns.columns} column={columns.column} onSelect={columns.onSelect} />}
             {onMove && <DropdownMenuItem onSelect={() => setMoving(true)}><Folder /> Move to…</DropdownMenuItem>}
             {onDuplicate && item.type !== 'dir' && <DropdownMenuItem onSelect={() => onDuplicate(item)}><Copy /> Duplicate</DropdownMenuItem>}

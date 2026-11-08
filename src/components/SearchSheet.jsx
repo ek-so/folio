@@ -2,6 +2,7 @@ import { useState, useRef } from 'react'
 import { Input } from './ui/input.jsx'
 import BottomSheet from './BottomSheet.jsx'
 import { splitName } from '../lib/changes.js'
+import { withoutEmoji } from '../lib/icons.js'
 import FileIcon from './FileIcon.jsx'
 import { ListRow } from './ui/list-row.jsx'
 import { EmptyMessage } from './EmptyState.jsx'
@@ -59,7 +60,7 @@ export default function SearchSheet({ onClose, onSelect, virtual, changes, recen
                 const { path, dir } = result
                 const parts = path.split('/')
                 const fileName = parts.pop()
-                const [base] = dir ? [fileName] : splitName(fileName)
+                const base = withoutEmoji(dir ? fileName : splitName(fileName)[0])
                 const folder = parts.join('/')
                 // Edits are keyed by the file's original path, which differs after a rename
                 const hasEdit = changes?.edits && virtual[path]?.orig in changes.edits

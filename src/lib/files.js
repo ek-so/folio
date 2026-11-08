@@ -1,3 +1,4 @@
+import { withoutEmoji } from './icons.js'
 // File-type helpers shared by the file list and the note preview.
 
 const IMAGE_MIME = {
@@ -21,10 +22,11 @@ export function fileKind(path) {
   return IMAGE_MIME[ext] ? 'image' : 'file'
 }
 
-// A note's name as shown in the app: last path segment without ".md"
-export function displayName(path) {
-  return path.split('/').pop().replace(/\.md$/, '')
-}
+// A note's own name: last path segment without ".md" (what a link to it says)
+export const fileName = path => path.split('/').pop().replace(/\.md$/, '')
+
+// A note's name as shown in the app: its own name without the emoji it starts with (that shows as its icon, lib/icons.js)
+export const displayName = path => withoutEmoji(fileName(path))
 
 // Why a symlink can't be opened
 export const LINK_ERRORS = {

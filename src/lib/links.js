@@ -1,5 +1,5 @@
 import { resolveImage } from './markdown.js'
-import { displayName } from './files.js'
+import { fileName } from './files.js'
 
 // Internal markdown links between files in the repo: finding them, the
 // backlink / broken-link index, and rewriting them when files move.
@@ -156,7 +156,7 @@ export function rewriteLinks(text, oldNotePath, newNotePath, mapPath, files) {
     const raw = out.slice(l.targetStart, l.targetEnd)
     if (written !== raw) out = out.slice(0, l.targetStart) + written + out.slice(l.targetEnd)
     if (l.text !== null && baseOf(newPath) !== baseOf(oldPath)) {
-      const renamed = l.text === displayName(oldPath) ? displayName(newPath)
+      const renamed = l.text === fileName(oldPath) ? fileName(newPath)
         : l.text === baseOf(oldPath) ? baseOf(newPath) : null
       if (renamed !== null) out = out.slice(0, l.textStart) + renamed + out.slice(l.textEnd)
     }

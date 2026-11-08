@@ -18,7 +18,7 @@ export default function AccountMenu({ trigger, current, pages, viewActions, onNa
   const page = p => (
     <li key={p.id}>
       <ListRow
-        icon={<p.icon />} title={<PageTitle page={p} />} active={current === p.id} onClick={go(() => onNavigate(p.id))}
+        icon={<PageIcon page={p} />} title={<PageTitle page={p} />} active={current === p.id} onClick={go(() => onNavigate(p.id))}
         trailing={p.view && <ViewMenu view={p} disabled={!viewActions.canEdit} onRename={v => { setOpen(false); viewActions.onRename(v) }} onDelete={v => { setOpen(false); viewActions.onDelete(v) }} />}
       />
     </li>

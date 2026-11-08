@@ -1,3 +1,4 @@
+import { withoutEmoji } from "./icons.js"
 // A note's properties: the front matter block at its very top, as in Obsidian
 // and Jekyll:
 //   ---
@@ -260,11 +261,11 @@ export function copyTitled(text) {
 }
 
 // A note's title: its `title` property, else its first "# heading" (outside
-// the front matter), else `fallback` (its file name)
+// the front matter), else `fallback` (its file name); without an emoji it starts with (icons show in lib/icons.js)
 export function noteTitle(text, fallback) {
   const fm = frontMatter(text)
   const title = fm?.props.find(p => p.key === 'title')?.value
-  if (typeof title === 'string' && title.trim()) return title.trim()
+  if (typeof title === 'string' && title.trim()) return withoutEmoji(title.trim())
   const heading = text.slice(fm?.end ?? 0).match(/^ {0,3}#[ \t]+(.+?)[ \t#]*$/m)
-  return heading ? heading[1] : fallback
+  return heading ? withoutEmoji(heading[1]) : fallback
 }

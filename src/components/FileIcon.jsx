@@ -1,6 +1,7 @@
 import { Folder, FileText, FilePdf, FileImage, File, ArrowUpRight } from '@phosphor-icons/react'
 import { fileKind } from '../lib/files.js'
 import { cn } from '@/lib/utils.js'
+import { useIconsContext } from '../hooks/useIcons.js'
 
 // kind: [icon, icon color, tint of the square behind a card's icon (light, darker while its card is hovered)]
 const ICONS = {
@@ -22,14 +23,18 @@ const iconColor = (path, dir) => dir ? 'text-folder' : ICONS[fileKind(path)][1]
 // `link`: a symlink — the icon of what it points to (`path` / `dir`), with a
 // small ↗ in the corner, like an alias on a Mac.
 // `large`: 24px, for cards.
+// A file or folder with an emoji (lib/icons.js) shows it in place of its type icon (a link's: its source's).
 export default function FileIcon({ path, dir, link, large }) {
-  const Icon = dir ? Folder : ICONS[fileKind(path)][0]
-  const color = iconColor(path, dir)
+  const emoji = useIconsContext().iconOf(path)
+  const Type = dir ? Folder : ICONS[fileKind(path)][0]
   const size = large ? 'size-6' : 'size-5'
-  if (!link) return <Icon className={cn(size, 'shrink-0', color)} />
+  const icon = emoji
+    ? <span aria-hidden className={cn(size, 'flex shrink-0 items-center justify-center leading-none', large ? 'text-xl' : 'text-base')}>{emoji}</span>
+    : <Type className={cn(size, 'shrink-0', iconColor(path, dir))} />
+  if (!link) return icon
   return (
     <span className={cn('relative flex shrink-0', size)}>
-      <Icon className={cn(size, color)} />
+      {icon}
       <span className="absolute -bottom-0.5 -left-0.5 flex size-2.5 items-center justify-center rounded-[3px] bg-background text-foreground">
         <ArrowUpRight weight="bold" className="size-2" />
       </span>

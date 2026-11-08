@@ -1,4 +1,5 @@
 import { File, FolderOpen, Graph, Gear, LinkBreak, BookOpen } from '@phosphor-icons/react'
+import { leadingEmoji, withoutEmoji } from './icons.js'
 
 // The app's pages (`page` in App). Home and the views added in Views settings
 // (lib/viewsConfig.js, kept in the repo) are pages too, each with its own id;
@@ -15,13 +16,15 @@ const FIXED = [
 ]
 
 // Title and icon of a page; `views` are the configured views (an unknown id has no title). A view with no name
-// is titled Untitled (`untitled`: shown light, a `Placeholder`)
+// is titled Untitled (`untitled`: shown light, a `Placeholder`). A view's `emoji` (its chosen icon, else the one its name
+// starts with, which the title then leaves out) shows in place of `icon`
 export function pageInfo(id, views = []) {
   const fixed = FIXED.find(p => p.id === id)
   if (fixed) return fixed
   const view = views.find(v => v.id === id)
-  const name = view?.name.trim()
-  return { id, title: view ? name || 'Untitled' : '', untitled: !!view && !name, icon: File, view: true }
+  const name = view ? withoutEmoji(view.name.trim()) : ''
+  const emoji = view ? view.icon ?? leadingEmoji(view.name.trim()) : ''
+  return { id, title: view ? name || 'Untitled' : '', untitled: !!view && !name, icon: File, emoji, view: true }
 }
 
 // The main pages, in the navigation's order: the views, File manager, Graph

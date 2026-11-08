@@ -9,6 +9,8 @@ import PullToRefresh from './components/PullToRefresh.jsx'
 import NewFileModal from './components/NewFileModal.jsx'
 import EditListModal from './components/EditListModal.jsx'
 import PageTitle from './components/PageTitle.jsx'
+import PageIcon from './components/PageIcon.jsx'
+import EmojiPicker from './components/EmojiPicker.jsx'
 import ConflictModal from './components/ConflictModal.jsx'
 import SyncButton from './components/SyncButton.jsx'
 import SearchSheet from './components/SearchSheet.jsx'
@@ -33,13 +35,14 @@ import { useRepo } from './hooks/useRepo.js'
 import { useConfig } from './hooks/useConfig.js'
 import { useTagColors } from './hooks/useTagColors.js'
 import { useLocks } from './hooks/useLocks.js'
+import { useIcons, IconsContext } from './hooks/useIcons.js'
 import ViewPage from './components/ViewPage.jsx'
 import RenameModal from './components/RenameModal.jsx'
 import DeleteModal from './components/DeleteModal.jsx'
 import { useTheme } from './hooks/useTheme.js'
 import { storage } from './lib/storage.js'
 import { PAGE, mainPages } from './lib/pages.js'
-import { isConfigPath, addView, renameView, removeView, VIEWS_PATH, DEFAULT_VIEWS, parseViews, serializeViews, addWidget, removeWidget, moveWidget, moveView } from './lib/viewsConfig.js'
+import { isConfigPath, addView, renameView, removeView, VIEWS_PATH, DEFAULT_VIEWS, parseViews, serializeViews, addWidget, removeWidget, moveWidget, moveView, setViewIcon } from './lib/viewsConfig.js'
 import { withKeys, withValue, copyTitled } from './lib/frontmatter.js'
 import { widgetType } from './widgets/index.js'
 import { urlForPage, pageForUrl, existingView } from './lib/url.js'
@@ -74,6 +77,7 @@ export default function App() {
   const config = useConfig(repo)
   const tagColors = useTagColors(config)
   const locks = useLocks(config) // files locked against editing (lib/locks.js)
+  const icons = useIcons(config) // the emoji icons of files and folders (lib/icons.js)
   const viewsFile = config.read(VIEWS_PATH)
   const parsedViews = viewsFile.ready ? parseViews(viewsFile.text) : undefined
   const views = parsedViews ?? DEFAULT_VIEWS
@@ -237,7 +241,7 @@ export default function App() {
       const type = widgetType(w.type)
       if (type?.moved) next = type.moved(next, w.id, item.path, to, item.type === 'dir', widgetServices)
     }
-    return locks.moved(item.path, to, item.type === 'dir')(next) // a lock goes where its file goes (the archive too)
+    return icons.moved(item.path, to, item.type === 'dir')(locks.moved(item.path, to, item.type === 'dir')(next)) // a lock and an emoji go where their file goes (the archive too)
   }
 
   // `fn` (ch => ch) as a change that never edits a locked note's text: what it changed there is put back (keptEdits).
@@ -448,7 +452,7 @@ export default function App() {
   // A locked file (or a folder with one in it) isn't removed: a message says so
   function handleDelete(item) {
     if (lockedIn(item)) return toast.error(`“${item.name}” ${item.type === 'dir' ? 'has locked files' : 'is locked'}. Unlock ${item.type === 'dir' ? 'them' : 'it'} to remove it.`)
-    if (inArchive(item.path)) return update(ch => locks.removed(item.path, item.type === 'dir')(remove(ch, filesOf(ch), item.path, item.type === 'dir')))
+    if (inArchive(item.path)) return update(ch => icons.removed(item.path, item.type === 'dir')(locks.removed(item.path, item.type === 'dir')(remove(ch, filesOf(ch), item.path, item.type === 'dir'))))
     const { to } = archive(item)
     toast.success(`“${item.name}” moved to the archive`, {
       action: { label: 'Undo', onClick: () => unarchive({ ...item, path: to, name: to.slice(to.lastIndexOf('/') + 1) }, item.path) },
@@ -661,6 +665,7 @@ export default function App() {
   )
 
   // For the Rename / Move sheets: how many notes' links a change would touch
+  const iconsInfo = { iconOf: icons.iconOf, onSet: icons.canEdit ? (path, emoji) => update(icons.set(path, emoji)) : undefined }
   const linkInfo = {
     rewriteCount: (item, to) => linkRewrites(item, to, changes.edits).size,
     linkedFrom: item => new Set(Object.entries(links.index.backlinks)
@@ -671,6 +676,7 @@ export default function App() {
 
   return (
     <LinksContext.Provider value={linkInfo}>
+      <IconsContext.Provider value={iconsInfo}>
       <NavContext.Provider value={{
         listDir: dir => listDir(shown, dir, repo.changed),
         views,
@@ -846,7 +852,7 @@ export default function App() {
           <EditListModal
             title="Views settings"
             description="Drag them into order. Removing a view removes its widgets; the notes stay."
-            items={pages.filter(p => p.view).map(p => ({ id: p.id, icon: <p.icon />, title: <PageTitle page={p} />, label: p.title, view: p }))}
+            items={pages.filter(p => p.view).map(p => ({ id: p.id, icon: <span onPointerDown={e => e.stopPropagation()}><EmojiPicker emoji={p.emoji} label={`Emoji of ${p.title}`} fallback={<PageIcon page={p} />} onChange={emoji => saveViews(setViewIcon(views, p.id, emoji))} className="size-control-md" /></span>, title: <PageTitle page={p} />, label: p.title, view: p }))}
             onMove={(from, to) => saveViews(moveView(views, from, to))}
             onRemove={item => setViewDialog({ kind: 'delete', view: item.view })}
             addLabel="New view"
@@ -931,6 +937,7 @@ export default function App() {
         </SingleOpenProvider>
       </TooltipProvider>
       </NavContext.Provider>
+      </IconsContext.Provider>
     </LinksContext.Provider>
   )
 }

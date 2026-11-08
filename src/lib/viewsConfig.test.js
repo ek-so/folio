@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { parseViews, serializeViews, addView, renameView, removeView, isConfigPath, DEFAULT_VIEWS, addWidget, removeWidget, moveWidget, moveView } from './viewsConfig.js'
+import { parseViews, serializeViews, addView, renameView, removeView, isConfigPath, DEFAULT_VIEWS, addWidget, removeWidget, moveWidget, moveView, setViewIcon } from './viewsConfig.js'
 
 describe('viewsConfig', () => {
   it('has Home alone without a file, and nothing from text it can\'t read', () => {
@@ -22,6 +22,15 @@ describe('viewsConfig', () => {
     expect(parseViews(serializeViews(views))).toEqual(views)
     expect(renameView(views, id, '  Work ')[1].name).toBe('Work')
     expect(removeView(views, 'home')).toEqual([views[1]])
+  })
+
+  it('keeps a view\'s emoji, and a name\'s own as its icon when renamed', () => {
+    const views = [{ id: 'a', name: '🌱 Garden' }, { id: 'b', name: 'Work' }]
+    expect(setViewIcon(views, 'b', '💼')[1]).toEqual({ id: 'b', name: 'Work', icon: '💼' })
+    expect(setViewIcon(setViewIcon(views, 'b', '💼'), 'b', '')[1]).toEqual({ id: 'b', name: 'Work' })
+    expect(setViewIcon(views, 'a', '')[0].icon).toBe('')
+    expect(renameView(views, 'a', 'Yard')[0]).toEqual({ id: 'a', name: 'Yard', icon: '🌱' })
+    expect(parseViews(serializeViews(setViewIcon(views, 'b', '💼')))[1].icon).toBe('💼')
   })
 
   it('adds and removes widgets, keeping kinds it doesn\'t know', () => {

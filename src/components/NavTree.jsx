@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils.js'
 import { Button } from './ui/button.jsx'
 import { Popover, PopoverTrigger, PopoverContent } from './ui/popover.jsx'
 import FileIcon from './FileIcon.jsx'
+import { withoutEmoji } from '../lib/icons.js'
 import ItemMenu from './ItemMenu.jsx'
 import { ListRow } from './ui/list-row.jsx'
 import { LINK_ERRORS } from '../lib/files.js'
@@ -54,7 +55,7 @@ function Rows({ dir, depth }) {
           icon: isLink
             ? <FileIcon path={link?.path ?? item.path} dir={link?.kind === 'folder'} link />
             : <FileIcon path={item.path} dir={folder} />,
-          title: item.name,
+          title: withoutEmoji(item.name),
           changed: item.changed,
           dimmed: item.name.startsWith('.') || isLink,
           disabled: !openable,
@@ -135,7 +136,7 @@ export function FolderTreeMenu({ name }) {
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <TitleMenuButton icon={<FileIcon path={nav.current ?? ''} dir={nav.current !== nav.file} />}>{name}</TitleMenuButton>
+        <TitleMenuButton icon={<FileIcon path={nav.current ?? ''} dir={nav.current !== nav.file} />}>{withoutEmoji(name)}</TitleMenuButton>
       </PopoverTrigger>
       <PopoverContent className="w-80 p-space-sm" onCloseAutoFocus={e => e.preventDefault()}>
         <div className="max-h-[60vh] overflow-y-auto overscroll-y-contain" data-no-pull>

@@ -10,6 +10,7 @@ import { ListRow } from './ui/list-row.jsx'
 import { CardTile } from './ui/card-tile.jsx'
 import { storage } from '../lib/storage.js'
 import { splitName } from '../lib/changes.js'
+import { withoutEmoji } from '../lib/icons.js'
 import { fileKind, LINK_ERRORS } from '../lib/files.js'
 import FileIcon, { iconTint } from './FileIcon.jsx'
 import SymlinkedBy from './SymlinkedBy.jsx'
@@ -74,7 +75,8 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
 
   // One item as a card, a list row or (Columns) a row with a chevron on folders; `active`: the folder open in the next column
   function renderItem(item, active) {
-    const [base, ext] = item.type === 'dir' ? [item.name, ''] : splitName(item.name)
+    const [name, ext] = item.type === 'dir' ? [item.name, ''] : splitName(item.name)
+    const base = withoutEmoji(name)
     const isLink = item.path in symlinks
     const link = symlinks[item.path] // undefined while loading
     const openable = isLink ? !!link?.kind : item.type === 'dir' || fileKind(item.path) !== 'file'

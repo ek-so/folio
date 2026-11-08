@@ -1,6 +1,6 @@
 import { marked } from 'marked'
 import { blankFrontMatter, frontMatter, withValue } from './frontmatter.js'
-import { displayName } from './files.js'
+import { fileName } from './files.js'
 import { findDates, formatDate, dateLabel, isoDate } from './dates.js'
 
 marked.setOptions({ breaks: true, gfm: true })
@@ -227,7 +227,7 @@ export function linkMarkdown(name, url, bare) {
 
 // A markdown link to `path` in the repo, from its root ("/notes/a.md"), so it works pasted in any note
 // (and follows renames like any link), named after it
-export const repoLink = path => linkMarkdown(displayName(path), '/' + path)
+export const repoLink = path => linkMarkdown(fileName(path), '/' + path)
 
 // `text` with the link at `span` replaced by `markdown`; '' takes the link out with
 // one of the spaces around it
