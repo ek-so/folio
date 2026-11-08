@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { parseRecurrence, formatRecurrence, occursOn, nextOccurrence } from './recurrence.js'
+import { parseRecurrence, formatRecurrence, occursOn, nextOccurrence, repeatLabel } from './recurrence.js'
 
 const rule = text => parseRecurrence(text)
 const days = (text, start, keys) => keys.filter(k => occursOn(rule(text), start, k))
@@ -42,5 +42,13 @@ describe('recurrence', () => {
     expect(next('every 3 years', '2026-03-01')).toBe('2029-03-01')
     expect(next('daily until 5 Nov 2026', '2026-11-04')).toBe('2026-11-05')
     expect(next('daily until 5 Nov 2026', '2026-11-05')).toBeNull()
+  })
+
+  it('says a repeat short on its badge', () => {
+    expect(['one-time', 'recurring', 'daily', 'weekly', 'every 3 months', 'every 6 years', 'every 3 days until 1 Jan 2027'].map(repeatLabel))
+      .toEqual(['One-time', 'Recurring', 'Daily', 'Weekly', '3 months', '6 years', '3 days'])
+    expect(repeatLabel('weekly on Mon, Wed')).toBe('Mon, Wed')
+    expect(repeatLabel('every 2 weeks on Fri')).toBe('2 weeks · Fri')
+    expect(repeatLabel('sometimes')).toBe('Sometimes')
   })
 })

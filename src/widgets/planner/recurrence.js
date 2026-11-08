@@ -61,6 +61,20 @@ export function formatRecurrence(rule) {
   return text
 }
 
+// A `repeat` value as a badge says it, short: One-time, Recurring, Daily / Weekly / Monthly / Yearly, "3 days", "2 weeks",
+// "3 months", "6 years", weekly on some weekdays just those ("Mon, Wed"; every N weeks: "2 weeks · Mon, Wed"); the end
+// date isn't said (the popover has it). A value that isn't a rule, as written, capitalized
+export function repeatLabel(value) {
+  const rule = parseRecurrence(value)
+  if (!rule) return value.charAt(0).toUpperCase() + value.slice(1)
+  if (rule.kind === 'one-time') return 'One-time'
+  if (rule.kind === 'unset') return 'Recurring'
+  const days = rule.unit === 'week' ? rule.weekdays.map(d => WEEKDAYS[d]).join(', ') : ''
+  const every = rule.every === 1 ? ONCE_A[rule.unit].replace(/^./, c => c.toUpperCase()) : `${rule.every} ${rule.unit}s`
+  if (!days) return every
+  return rule.every === 1 ? days : `${every} · ${days}`
+}
+
 const weekday = key => { const { year, month, day } = keyDay(key); return new Date(Date.UTC(year, month - 1, day)).getUTCDay() }
 const monday = key => addDays(key, -((weekday(key) + 6) % 7))
 const monthDays = (year, month) => new Date(Date.UTC(year, month, 0)).getUTCDate()

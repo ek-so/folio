@@ -12,7 +12,7 @@ import { DateField } from '@/components/DateBadge.jsx'
 import { useSingleOpen } from '@/hooks/useSingleOpen.jsx'
 import { formatDate } from '@/lib/dates.js'
 import { keyDay, dayKey, addDays, todayKey, dateValue, DATE, REPEAT } from './planner.js'
-import { parseRecurrence, formatRecurrence, ONE_TIME, UNITS, WEEKDAYS } from './recurrence.js'
+import { parseRecurrence, formatRecurrence, repeatLabel, ONE_TIME, UNITS, WEEKDAYS } from './recurrence.js'
 
 const KINDS = [['one-time', 'One-time', CalendarDot], ['repeat', 'Repeats', ArrowsClockwise]]
 const UNIT_NAMES = { day: 'Day', week: 'Week', month: 'Month', year: 'Year' }
@@ -25,7 +25,7 @@ export const BADGES = { [REPEAT]: RecurrenceField }
 const WEEKLY = { kind: 'repeat', every: 1, unit: 'week', weekdays: [], until: null }
 
 // A planner card's repeat (recurrence.js) as a badge, blue once it has a value: a calendar with a dot for one-time, circling arrows for a repeat,
-// then its words ("Weekly on Mon, Wed"); no ▾. With `onChange(key, value)` it opens a popover: One-time or Repeats
+// then its words, short (repeatLabel: "3 months", "Mon, Wed"); no ▾. With `onChange(key, value)` it opens a popover: One-time or Repeats
 // and, repeating, every how many days, weeks, months or years, the weekdays (weekly) and when it ends. Each choice is
 // written at once (the number when it's left or on Enter). `props`: the card's properties, for its date (an end can't be before it).
 export default function RecurrenceField({ prop, props, onChange }) {
@@ -33,7 +33,7 @@ export default function RecurrenceField({ prop, props, onChange }) {
   const value = Array.isArray(prop.value) ? prop.value[0] ?? '' : prop.value ?? ''
   const rule = parseRecurrence(value)
   const repeats = rule && rule.kind !== 'one-time'
-  const label = value ? value.charAt(0).toUpperCase() + value.slice(1) : prop.key
+  const label = value ? repeatLabel(value) : prop.key
   const Icon = repeats ? ArrowsClockwise : CalendarDot
   const badge = (
     <Badge

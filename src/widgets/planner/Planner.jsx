@@ -26,7 +26,7 @@ import { DATE, REPEAT, FIXED, listed, plan, addDays, daysBetween, dayOffsets, da
 import { usePlanner } from './usePlanner.js'
 import { useToday } from './useToday.js'
 import { BADGES } from './RecurrenceField.jsx'
-import { WEEKDAYS, parseRecurrence } from './recurrence.js'
+import { WEEKDAYS, parseRecurrence, repeatLabel } from './recurrence.js'
 
 // The ribbon: each day takes DAY_WIDTH (its box and the gap around it), and a line between months MONTH_GAP (a box that
 // wide with the 1px line in its middle: the days' gap on each side), so the scrolling sums match what's drawn; it starts
@@ -402,7 +402,7 @@ function TaskRow({ path, text, dashed, menu, onOpen }) {
     <ListRow
       icon={<Icon className={cn('size-4', repeats ? 'text-primary' : 'text-muted-foreground')} />}
       title={text === undefined ? name : noteTitle(text, name)}
-      description={`${date ? formatDate(date) : 'No date'}${repeats || parseRecurrence(repeat)?.kind === 'unset' ? ` · ${repeat.charAt(0).toUpperCase()}${repeat.slice(1)}` : ''}`}
+      description={`${date ? formatDate(date) : 'No date'}${repeats || parseRecurrence(repeat)?.kind === 'unset' ? ` · ${repeatLabel(repeat)}` : ''}`}
       trailing={menu}
       onClick={() => onOpen(path)}
       className={cn(dashed && 'border border-dashed border-muted-foreground/50')}
