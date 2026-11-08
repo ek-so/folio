@@ -70,7 +70,7 @@ export default function NoteWidget({ id, services, onRemove }) {
         onDragEnd={onDragEnd}
         onDragCancel={() => setMoving(null)}
       >
-      <div className="relative grid grid-cols-1 items-start gap-space-sm @min-[40.5rem]:grid-cols-2">
+      <div className="relative grid grid-cols-1 items-start gap-space-sm @min-[40.5rem]:grid-cols-2 @min-[61rem]:grid-cols-3">
         <SortableContext items={settings.notes.map(n => n.file)} strategy={rectSortingStrategy}>
         {settings.notes.map(entry => (
           <NoteTray
