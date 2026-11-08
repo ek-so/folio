@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { searchEmojis } from './emojis.js'
 import { parseIcons, serializeIcons, leadingEmoji, withoutEmoji, iconOf, withIcon, movedIcons, removedIcons } from './icons.js'
 
 describe('icons', () => {
@@ -34,5 +35,12 @@ describe('icons', () => {
     expect(withIcon({}, '📝 a.md', '')).toEqual({ '📝 a.md': '' })
     expect(movedIcons({ 'Life/a.md': '🌱', 'Life b.md': '📝' }, 'Life', 'Home', true)).toEqual({ 'Home/a.md': '🌱', 'Life b.md': '📝' })
     expect(removedIcons({ 'Life/a.md': '🌱', 'Lifestyle/b.md': '📝' }, 'Life', true)).toEqual({ 'Lifestyle/b.md': '📝' })
+  })
+
+  it('searches the emojis by the words that start theirs', () => {
+    expect(searchEmojis('').length).toBeGreaterThan(80)
+    expect(searchEmojis('hom')).toEqual(['🏠'])
+    expect(searchEmojis('coffee')).toEqual(['☕'])
+    expect(searchEmojis('xyz')).toEqual([])
   })
 })

@@ -5,32 +5,34 @@ import { Button } from './ui/button.jsx'
 import { Input } from './ui/input.jsx'
 import { Popover, PopoverTrigger, PopoverContent } from './ui/popover.jsx'
 import { ToggleGroup, ToggleGroupItem } from './ui/toggle-group.jsx'
-import { EMOJIS } from '../lib/emojis.js'
+import { searchEmojis } from '../lib/emojis.js'
+import { leadingEmoji } from '../lib/icons.js'
+import { EmptyMessage } from './EmptyState.jsx'
 
 // Custom: neither shadcn nor Phosphor has an emoji picker, and a library's would bring its own look. A ToggleGroup of
-// the emojis in lib/emojis.js, a field to type or paste any other, and a button to take it out.
-
-// The first emoji (or character) of what was typed or pasted, '' for nothing
-const first = text => [...new Intl.Segmenter().segment(text.trim())][0]?.segment ?? ''
+// the emojis in lib/emojis.js, a search field (words like "home" or "money"; an emoji pasted into it is picked at once)
+// and a button to take it out.
 
 // The picker's content: `value` (the chosen emoji, '' for none) and `onPick(emoji)` ('' takes it out; a view, a file's
 // ⋯ sub menu or the popover below hold it)
 export function EmojiGrid({ value, onPick, onDone }) {
-  const [typed, setTyped] = useState('')
+  const [query, setQuery] = useState('')
+  const found = searchEmojis(query)
   const pick = emoji => { onPick(emoji); onDone?.() }
   return (
     <div className="flex w-72 max-w-full flex-col gap-space-sm" onKeyDown={e => e.stopPropagation()}>
       <div className="flex gap-space-xs">
         <Input
-          value={typed} placeholder="Type or paste an emoji" aria-label="Emoji" className="min-w-0 flex-1"
-          onChange={e => { const emoji = first(e.target.value); setTyped(emoji); if (emoji) pick(emoji) }}
+          value={query} placeholder="Search or paste an emoji" aria-label="Search emoji" className="min-w-0 flex-1"
+          onChange={e => { const emoji = leadingEmoji(e.target.value.trim()); if (emoji) pick(emoji); else setQuery(e.target.value) }}
         />
         <Button type="button" variant="ghost-destructive" size="icon" aria-label="Remove emoji" tooltip="Remove emoji" disabled={!value} onClick={() => pick('')}>
           <X />
         </Button>
       </div>
+      {!found.length && <EmptyMessage size="sm">No emoji found</EmptyMessage>}
       <ToggleGroup type="single" value={value} onValueChange={v => { if (v) pick(v) }} aria-label="Emojis" className="grid grid-cols-8 gap-0">
-        {EMOJIS.map(emoji => (
+        {found.map(emoji => (
           <ToggleGroupItem key={emoji} value={emoji} variant="grid" aria-label={emoji} className={cn('size-control-md px-0 text-base', value === emoji && 'bg-secondary')}>
             {emoji}
           </ToggleGroupItem>
