@@ -161,7 +161,8 @@ function NoteTray({ path, services, height, onTakeOut, onReplace }) {
 
 // The note itself, read from GitHub (or this device's edits), as a card in the tray: its preview, `height` tall on desktop
 // (the widget's), cut off with a fade at the bottom, lifting on hover like every card. Only a picture of the note: nothing in
-// it reacts (inert: no scrolling, ticking, links or focus); a tap anywhere opens the note (`onOpen`)
+// it reacts (inert, its checkboxes disabled, no text selection: no scrolling, ticking, links, focus or gestures); a tap
+// anywhere opens the note (`onOpen`)
 function NoteBox({ found, path, services, tray, height, onOpen }) {
   const { content, loading, loadError } = useNote(found.entry, found.edited, (text, original) => services.saveNote(path, text, original))
   const body = loading ? <div className="flex flex-1 items-center justify-center"><Spinner /></div>
@@ -174,10 +175,10 @@ function NoteBox({ found, path, services, tray, height, onOpen }) {
         role="button" tabIndex={0} aria-label={`Open ${displayName(path)}`}
         onClick={onOpen}
         onKeyDown={e => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); onOpen() } }}
-        className={cn('hover-lift relative flex h-full cursor-pointer flex-col overflow-hidden rounded-lg border border-border bg-card outline-none focus-visible:ring-1 focus-visible:ring-ring', NO_CALLOUT)}
+        className={cn('hover-lift relative flex h-full cursor-pointer select-none touch-manipulation flex-col overflow-hidden rounded-lg border border-border bg-card outline-none focus-visible:ring-1 focus-visible:ring-ring', NO_CALLOUT)}
       >
         <div inert="" className="pointer-events-none flex min-h-0 flex-1 flex-col">{body}</div>
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-linear-to-t from-card" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 max-h-32 bg-linear-to-t from-card from-15%" />
       </div>
     </div>
   )

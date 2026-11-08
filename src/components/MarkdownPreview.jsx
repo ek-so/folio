@@ -134,7 +134,7 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
     // Task list items: remove bullet, enable checkbox, record markdown offset
     for (const cb of tpl.content.querySelectorAll('input[type="checkbox"]')) {
       cb.closest('li')?.classList.add('task-item')
-      cb.removeAttribute('disabled')
+      if (onChange) cb.removeAttribute('disabled') // without onChange (a picture of a note) they can't be ticked
       const block = cb.closest('[data-src]')
       if (!block) continue
       const blockStart = Number(block.dataset.src)
