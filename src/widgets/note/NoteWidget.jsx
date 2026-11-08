@@ -10,7 +10,7 @@ import EditListModal from '@/components/EditListModal.jsx'
 import FileIcon from '@/components/FileIcon.jsx'
 import MarkdownPreview from '@/components/MarkdownPreview.jsx'
 import { NO_CALLOUT } from '@/components/NoteCard.jsx'
-import { cn, isPortaled } from '@/lib/utils.js'
+import { cn } from '@/lib/utils.js'
 import { useNote } from '@/hooks/useNote.js'
 import { displayName } from '@/lib/files.js'
 import ResizeHandle from '@/components/ResizeHandle.jsx'
@@ -23,8 +23,8 @@ import { NotePicker } from './NoteSetup.jsx'
 // on top, then each note in a grey tray like a board's column, in a grid of two equal columns when each can be at least
 // 320px (the widget at least 40.5rem wide: a container query), else one; an odd last note keeps its column's width: its name and its own ⋯ (Rename note, Remove from widget),
 // then the note as a card: its preview, cut off; all cards are one height (resizable on desktop by one handle under them,
-// edge to edge). A tap on a card opens the note, as a board's card does; ticking a task there saves like on the note's
-// own page. Taking a note out of the widget keeps the note.
+// edge to edge). The card is only a picture of the note: a tap anywhere on it opens the note, as a board's card does.
+// Taking a note out of the widget keeps the note.
 export default function NoteWidget({ id, services, onRemove }) {
   const file = services.config.read(notePath(id))
   const settings = file.ready && file.text !== undefined ? parseNotes(file.text) : null
@@ -160,24 +160,23 @@ function NoteTray({ path, services, height, onTakeOut, onReplace }) {
 }
 
 // The note itself, read from GitHub (or this device's edits), as a card in the tray: its preview, `height` tall on desktop
-// (the widget's), cut off with a fade at the bottom, lifting on hover like every card. A tap opens the note (`onOpen`);
-// ticking a task, a link, a date and a list's grip work in place as in the note
+// (the widget's), cut off with a fade at the bottom, lifting on hover like every card. Only a picture of the note: nothing in
+// it reacts (inert: no scrolling, ticking, links or focus); a tap anywhere opens the note (`onOpen`)
 function NoteBox({ found, path, services, tray, height, onOpen }) {
-  const { content, change, loading, loadError } = useNote(found.entry, found.edited, (text, original) => services.saveNote(path, text, original))
+  const { content, loading, loadError } = useNote(found.entry, found.edited, (text, original) => services.saveNote(path, text, original))
   const body = loading ? <div className="flex flex-1 items-center justify-center"><Spinner /></div>
     : loadError ? <p className="px-6 py-12 text-center text-sm text-muted-foreground">Couldn't open this note. It isn't saved on this device yet — connect to the internet and pull to refresh.</p>
-    : <MarkdownPreview clip content={content} path={path} files={services.virtual} onChange={change} onOpenFile={services.openFile} onNavigate={services.openFolder} />
-  const own = e => isPortaled(e) || e.target.closest('a, input, button, summary, .link-spot, .date-spot, .list-grip')
+    : <MarkdownPreview clip content={content} path={path} files={services.virtual} />
   // Phones: the default height; desktop: the widget's
   return tray(
     <div style={{ '--note-h': `${height}px` }} className="h-80 md:h-(--note-h)">
       <div
         role="button" tabIndex={0} aria-label={`Open ${displayName(path)}`}
-        onClick={e => { if (!own(e)) onOpen() }}
+        onClick={onOpen}
         onKeyDown={e => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); onOpen() } }}
         className={cn('hover-lift relative flex h-full cursor-pointer flex-col overflow-hidden rounded-lg border border-border bg-card outline-none focus-visible:ring-1 focus-visible:ring-ring', NO_CALLOUT)}
       >
-        {body}
+        <div inert="" className="pointer-events-none flex min-h-0 flex-1 flex-col">{body}</div>
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-linear-to-t from-card" />
       </div>
     </div>
