@@ -271,7 +271,7 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
       {children && <div onClick={e => { if (!isPortaled(e) && !e.target.closest('a') && isDoubleTap(e)) onDoubleTap?.(0) }}>{children}</div>}
       <div
         ref={ref}
-        className={cn('editor-preview min-w-0 break-words leading-relaxed touch-manipulation [&_img]:max-w-full [&_img]:h-auto [&_img]:rounded-md', compact ? 'compact p-space-sm px-space text-sm' : 'p-space text-base')}
+        className={cn('editor-preview min-w-0 break-words leading-relaxed touch-manipulation [&_img]:max-w-full [&_img]:h-auto [&_img]:rounded-md', compact ? 'compact p-space text-sm' : 'p-space text-base')}
         onClick={handleClick}
         dangerouslySetInnerHTML={{ __html: withImages || '<p class="text-muted-foreground italic">Nothing to preview yet.</p>' }}
       />
