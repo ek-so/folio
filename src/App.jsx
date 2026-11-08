@@ -41,7 +41,7 @@ import { isConfigPath, addView, renameView, removeView, VIEWS_PATH, DEFAULT_VIEW
 import { withKeys, withValue, copyTitled } from './lib/frontmatter.js'
 import { widgetType } from './widgets/index.js'
 import { urlForPage, pageForUrl, existingView } from './lib/url.js'
-import { fileView, folderView, startTrails, currentView, openView, trailTo, movedTrails, keptTrails } from './lib/views.js'
+import { fileView, folderView, startTrails, currentView, openView, trailTo, movedTrails, keptTrails, upView, START } from './lib/views.js'
 import { toast } from 'sonner'
 import { Toaster } from './components/ui/sonner.jsx'
 import { TooltipProvider } from './components/ui/tooltip.jsx'
@@ -114,13 +114,9 @@ export default function App() {
     if (id === page && id !== PAGE.FILES && trailOf(id).length) setTrails(o => ({ ...o, [id]: [] }))
     setPage(id)
   }
-  // ← in the title bar: the page's previous view. When that's also the
-  // browser's previous entry, it's the browser's Back, so history stays one line.
-  function goBack() {
-    const rest = trailOf(mainPage).slice(0, -1)
-    if (history.state?.prev === urlForPage(BASE, mainPage, currentView(mainPage, rest))) history.back()
-    else setTrails(o => ({ ...o, [mainPage]: rest }))
-  }
+  // ← in the title bar: a level up (lib/views.js `upView`): a file's folder, a folder's parent, or the page's start
+  const up = view && upView(mainPage, view)
+  const goUp = up && (() => up === START ? setTrails(o => ({ ...o, [mainPage]: [] })) : show(up))
   const [newFile, setNewFile] = useState(null) // { folder, kind, keys?, values?, stay?, titled? } while the sheet is open (keys: a new note's properties; stay: don't open it; titled: asks for its title too)
   const [viewDialog, setViewDialog] = useState(null) // { kind: 'add' } or { kind: 'rename' | 'delete', view } while a view's dialog is open
   const [adding, setAdding] = useState(null) // { viewId, type } while a new widget's Setup is open
@@ -152,13 +148,12 @@ export default function App() {
   // each new page, folder or file is a history entry, so Back and Forward move
   // between them. Changes that only follow a rename or delete replace the
   // entry instead. Settings, Broken links and Documentation leave the address as it is.
-  // Each entry remembers the address before it (`prev`), for ←.
   const url = page === mainPage ? urlForPage(BASE, page, view) : null
   useEffect(() => {
     if (!url) return
     const here = window.location.pathname + window.location.search
     if (here !== url) {
-      if (started.current && !replaceNext.current) history.pushState({ prev: here }, '', url)
+      if (started.current && !replaceNext.current) history.pushState(null, '', url)
       else history.replaceState(history.state, '', url)
     }
     started.current = true
@@ -685,7 +680,7 @@ export default function App() {
         itemActions: { onRename: handleRename, onDuplicate: handleDuplicate, onDelete: handleDelete, onMove: handleMove, folders: allFolders },
         onOpenFolder: openFolder,
         onOpenFile: setSelectedFile,
-        onBack: page === mainPage && trailOf(mainPage).length ? goBack : null,
+        onBack: page === mainPage ? goUp : null,
         repo: auth.repo,
         repos: auth.repos,
         onSwitchRepo: switchRepo,
