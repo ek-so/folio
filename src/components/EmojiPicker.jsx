@@ -14,7 +14,7 @@ import { EmptyMessage } from './EmptyState.jsx'
 // and a button back to the default icon (a plain control: the emoji comes back with one pick, so nothing is confirmed).
 
 // The picker's content: `value` (the chosen emoji, '' for none) and `onPick(emoji)` ('' takes it out; a view, a file's
-// ⋯ sub menu or the popover below hold it)
+// ⋯ sub menu or the popover below hold it). 8 columns at its full width (18rem; cells 2.25rem); in a narrower space, as many as fit
 export function EmojiGrid({ value, onPick, onDone }) {
   const [query, setQuery] = useState('')
   const found = searchEmojis(query)
@@ -31,7 +31,7 @@ export function EmojiGrid({ value, onPick, onDone }) {
         </Button>
       </div>
       {!found.length && <EmptyMessage size="sm">No emoji found</EmptyMessage>}
-      <ToggleGroup type="single" value={value} onValueChange={v => { if (v) pick(v) }} aria-label="Emojis" className="grid grid-cols-8 gap-0">
+      <ToggleGroup type="single" value={value} onValueChange={v => { if (v) pick(v) }} aria-label="Emojis" className="grid grid-cols-[repeat(auto-fill,minmax(2.25rem,1fr))] justify-items-center gap-0">
         {found.map(emoji => (
           <ToggleGroupItem key={emoji} value={emoji} variant="grid" aria-label={emoji} className={cn('size-control-md px-0 text-base', value === emoji && 'bg-secondary')}>
             {emoji}
