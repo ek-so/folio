@@ -585,6 +585,17 @@ export default function App() {
     else repo.sync()
   }
 
+  // Folio syncs by itself once when it opens (and, if it opened offline, when it's back online), without a toast when it
+  // works; what goes wrong shows as it does for Sync (conflicts, the error sheet), and broken links stop it with a message
+  // (the check Sync offers first) instead of a sheet opening on its own. Nothing to say offline: the Sync button does.
+  const autoSynced = useRef(null)
+  useEffect(() => {
+    if (!repo.remote || !repo.online || autoSynced.current === auth.repo) return
+    autoSynced.current = auth.repo
+    if (!links.index.broken.length) return void repo.sync(true)
+    toast.error(`Not synced: ${plural(links.index.broken.length, 'broken link')}.`, { action: { label: 'Review', onClick: () => setSyncCheck(true) } })
+  }, [repo.remote, repo.online, auth.repo])
+
   // Everything fixed from the sheet: carry on with the sync
   useEffect(() => {
     if (syncCheck && links.index.broken.length === 0) {

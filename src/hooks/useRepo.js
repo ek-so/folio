@@ -229,17 +229,17 @@ export function useRepo(repo, onDone) {
   }
 
   // Runs a sync step, after the typing in an open note is saved; one at a time (one asked for meanwhile is ignored): success reports through onDone, failure flashes on the Sync
-  // button. A task returning false ends without a toast (e.g. stopped for
+  // button; `quiet` reports nothing on success (the automatic sync). A task returning false ends without a toast (e.g. stopped for
   // conflicts). Offline isn't an error (the button says Offline); anything
   // else opens the error sheet, whose Try again repeats `retry`.
-  async function run(task, retry, doneMessage = 'Synced') {
+  async function run(task, retry, doneMessage = 'Synced', quiet = false) {
     if (busy.current) return
     busy.current = true
     window.dispatchEvent(new Event('folio:flush')) // typing in an open note first
     setSyncing(true)
     setSyncError(null)
     try {
-      if (await task() !== false) onDone?.(doneMessage)
+      if (await task() !== false && !quiet) onDone?.(doneMessage)
     } catch (e) {
       if (isNetworkError(e)) {
         setOnline(false)
@@ -253,7 +253,8 @@ export function useRepo(repo, onDone) {
     setSyncing(false)
   }
 
-  function sync() {
+  // `quiet`: no "Synced" toast when it works (the automatic sync when Folio opens)
+  function sync(quiet = false) {
     return run(async () => {
       const latest = await pull()
       setError('')
@@ -263,7 +264,7 @@ export function useRepo(repo, onDone) {
         return false
       }
       await push(latest)
-    }, sync)
+    }, () => sync(), 'Synced', quiet)
   }
 
   // Pull only, from the Sync menu; local changes stay

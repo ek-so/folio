@@ -18,7 +18,7 @@ import DatePopover from '@/components/DatePopover.jsx'
 import { shownCards, hiddenCards, shownLimit } from '@/lib/trayCards.js'
 import { useGridColumns } from '@/hooks/useGridColumns.js'
 import { cardTitle } from '@/lib/folderNotes.js'
-import { formatDate, dateLabel } from '@/lib/dates.js'
+import { formatDate, dateLabel, daysAgo } from '@/lib/dates.js'
 import { properties } from '@/lib/frontmatter.js'
 import { DATE, REPEAT, FIXED, listed, plan, addDays, daysBetween, dayOffsets, dayAt, keyDay, dayKey, cardDate, dateValue, droppedDate, monthLabel } from './planner.js'
 import { usePlanner } from './usePlanner.js'
@@ -340,7 +340,7 @@ function TaskRow({ path, text, overdue, locked, menu, onOpen }) {
     <ListRow
       title={<span className={cn(overdue && 'opacity-50')}>{locked && <LockMark />}{cardTitle(path, text)}</span>}
       description={<>
-        <span className={cn(overdue && 'text-destructive-ink')}>{date ? dateLabel(date) : 'No date'}</span>
+        <span className={cn(overdue && 'text-destructive-ink')}>{date ? (overdue && daysAgo(date)) || dateLabel(date) : 'No date'}</span>
         {(kind === 'repeat' || kind === 'unset') && <> · <ArrowsClockwise className="inline size-3 align-[-0.125em]" /> {repeatLabel(repeat)}</>}
       </>}
       trailing={menu}
