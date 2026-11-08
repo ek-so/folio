@@ -170,7 +170,7 @@ function NoteBox({ found, path, services, tray, height, onOpen }) {
     : <MarkdownPreview clip compact content={content} path={path} files={services.virtual} />
   // Phones: the default height; desktop: the widget's
   return tray(
-    <div style={{ '--note-h': `${height}px` }} className="h-80 md:h-(--note-h)">
+    <div style={{ '--note-h': `${height}px` }} className="h-50 md:h-(--note-h)">
       <div
         role="button" tabIndex={0} aria-label={`Open ${displayName(path)}`}
         onClick={onOpen}

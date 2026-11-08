@@ -7,16 +7,16 @@ describe('notes widget', () => {
     expect(parseNotes('{}')).toBeNull()
     expect(parseNotes('{"file":""}')).toBeNull()
     expect(parseNotes('{"file":"a/b.md","height":480}')).toEqual({ notes: [{ file: 'a/b.md' }], height: 480 })
-    expect(parseNotes(serializeNotes({ notes: [{ file: 'a.md' }, { file: 'b.md', height: 5 }, { file: '' }] }))).toEqual({ notes: [{ file: 'a.md' }, { file: 'b.md' }], height: 160 })
+    expect(parseNotes(serializeNotes({ notes: [{ file: 'a.md' }, { file: 'b.md', height: 5 }, { file: '' }] }))).toEqual({ notes: [{ file: 'a.md' }, { file: 'b.md' }], height: 120 })
     expect(parseNotes('{"notes":[{"file":"a.md","height":400}],"height":600}').height).toBe(600)
     expect(parseNotes('{"notes":[]}')).toEqual({ notes: [] })
   })
 
   it('resizes, adds, removes and reorders its notes', () => {
     const s = { notes: [{ file: 'a.md' }, { file: 'b.md' }], height: 480 }
-    expect(notesHeight({ notes: [] })).toBe(320)
+    expect(notesHeight({ notes: [] })).toBe(200)
     expect(resizedNotes(s, 600)).toEqual({ notes: s.notes, height: 600 })
-    expect(resizedNotes(s, 320)).toEqual({ notes: s.notes })
+    expect(resizedNotes(s, 200)).toEqual({ notes: s.notes })
     expect(addedNote(s, 'c.md').notes.map(n => n.file)).toEqual(['a.md', 'b.md', 'c.md'])
     expect(addedNote(s, 'a.md')).toBe(s)
     expect(removedNote(s, 0)).toEqual({ notes: [{ file: 'b.md' }], height: 480 })
