@@ -2,7 +2,7 @@ import { Tip } from './tooltip.jsx'
 import { ToggleGroup, ToggleGroupItem } from './toggle-group.jsx'
 
 // Segmented toggle: a track of control height (p-1) with segments filling it (a shadcn ToggleGroup).
-// options: [value, label, Icon]. iconOnly: shows just the icons; the label stays as each segment's name and tooltip
+// options: [value, label, Icon]. iconOnly: shows just the icons, each segment square; the label stays as each segment's name and tooltip
 export function Segmented({ value, onChange, options, label, iconOnly }) {
   return (
     <ToggleGroup
@@ -15,7 +15,7 @@ export function Segmented({ value, onChange, options, label, iconOnly }) {
     >
       {options.map(([v, text, Icon]) => (
         <Tip key={v} content={iconOnly ? text : undefined}>
-          <ToggleGroupItem value={v} variant="segmented" aria-label={iconOnly ? text : undefined}>
+          <ToggleGroupItem value={v} variant="segmented" aria-label={iconOnly ? text : undefined} className={iconOnly ? 'aspect-square flex-none' : undefined}>
             {Icon && <Icon />}{!iconOnly && text}
           </ToggleGroupItem>
         </Tip>
