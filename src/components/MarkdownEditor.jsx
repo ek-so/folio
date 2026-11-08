@@ -1,6 +1,6 @@
 import { forwardRef, useMemo, useRef } from 'react'
 import { toast } from 'sonner'
-import { highlightMarkdown, keyLines } from '../lib/markdown.js'
+import { highlightMarkdown, keyLines, continueList } from '../lib/markdown.js'
 import { cn } from '@/lib/utils.js'
 
 // Shared by the textarea and its styling layer so they line up exactly
@@ -11,6 +11,7 @@ const TEXT_LAYOUT = 'w-full h-full p-space font-mono text-base leading-relaxed w
 //
 // Closing the keyboard in any way calls onDone (back to preview): iOS Done,
 // tapping elsewhere or Escape. Scrolling keeps editing.
+// Enter in a list continues it (`continueList`).
 // `locked`: property keys that can't be changed here (a planner's date and repeat: their badges change them): their lines
 // (`keyLines`) are greyed out, and typing that would change, add or remove one is refused, with a message.
 const NONE = []
@@ -33,6 +34,21 @@ const MarkdownEditor = forwardRef(function MarkdownEditor({ content, onChange, o
     toast.error(`${names.charAt(0).toUpperCase() + names.slice(1)} can only be changed with ${locked.length === 1 ? 'its badge' : 'their badges'}.`, { id: 'locked-properties' })
   }
 
+  // Enter in a list starts the next item. Typed through the browser (insertText) so undo keeps working
+  function handleKeyDown(e) {
+    if (e.key === 'Escape') return e.currentTarget.blur()
+    const t = e.currentTarget
+    if (e.key !== 'Enter' || e.shiftKey || e.nativeEvent.isComposing || t.selectionStart !== t.selectionEnd) return
+    const edit = continueList(t.value, t.selectionStart)
+    if (!edit) return
+    e.preventDefault()
+    t.setSelectionRange(edit.from, edit.to)
+    if (!document.execCommand('insertText', false, edit.insert)) {
+      t.setRangeText(edit.insert, edit.from, edit.to, 'end')
+      handleChange({ target: t, currentTarget: t })
+    }
+  }
+
   return (
     // data-no-pull: drags here scroll, never refresh
     <div className="relative flex-1 min-h-0 bg-card" data-no-pull>
@@ -50,7 +66,7 @@ const MarkdownEditor = forwardRef(function MarkdownEditor({ content, onChange, o
         onSelect={e => { selection.current = [e.currentTarget.selectionStart, e.currentTarget.selectionEnd] }}
         onScroll={e => { highlightRef.current.scrollTop = e.currentTarget.scrollTop }}
         onBlur={onDone}
-        onKeyDown={e => e.key === 'Escape' && e.currentTarget.blur()}
+        onKeyDown={handleKeyDown}
         spellCheck="true"
         autoCorrect="on"
         placeholder="Start writing…"

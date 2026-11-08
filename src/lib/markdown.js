@@ -242,6 +242,23 @@ export function replaceLink(text, span, markdown) {
 // "Fix it" both give "Fix"): to check that rendered list items are the ones found in the markdown
 export const firstWord = text => text.match(/[\p{L}\p{N}]+/u)?.[0] ?? ''
 
+// What Enter does at `cursor` in `text` on a list line, as GitHub does: a replacement `{ from, to, insert }` (put the
+// cursor after `insert`), or null when it's a plain Enter. After a list item's marker, the new line starts the next
+// one: same indent and marker, the next number in a numbered list, an empty `[ ]` after a task. Enter on an empty item
+// removes its marker (ends the list).
+const LIST_LINE = /^([ \t]*)(?:([-*+])|(\d{1,9})([.)]))([ \t]+)(\[[ xX]\](?:[ \t]+|$))?/
+export function continueList(text, cursor) {
+  const from = text.lastIndexOf('\n', cursor - 1) + 1
+  const lineEnd = text.indexOf('\n', cursor)
+  const line = text.slice(from, lineEnd < 0 ? text.length : lineEnd)
+  const m = LIST_LINE.exec(line)
+  if (!m || cursor - from < m[0].length) return null
+  const [marker, indent, bullet, num, delimiter, gap, box] = m
+  if (!line.slice(marker.length).trim()) return { from, to: from + line.length, insert: '' }
+  const next = bullet ?? `${Number(num) + 1}${delimiter}`
+  return { from: cursor, to: cursor, insert: `\n${indent}${next}${gap}${box ? '[ ] ' : ''}` }
+}
+
 // The lists in a list block's markdown `raw`, nested ones too, in the order the preview
 // renders them: [{ ordered, first, items: [{ start, end, word }] }] (`word`: its text's first, `firstWord`). An item runs from its marker
 // line to the next marker that isn't nested in it (its sub-lists and blank lines are in it).

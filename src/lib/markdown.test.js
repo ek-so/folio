@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest'
 // Date badges leave out this year (dateLabel): the tests' dates are read as of another year, so they keep theirs
 beforeAll(() => { vi.useFakeTimers({ now: new Date(2030, 0, 1), toFake: ['Date'] }) })
 afterAll(() => { vi.useRealTimers() })
-import { renderBlocks, tapOffset, taskOffsets, taskProgress, linkSpans, linkMarkdown, replaceLink, repoLink, listsIn, moveListItem, highlightMarkdown, keyLines, renderInline } from './markdown.js'
+import { renderBlocks, tapOffset, taskOffsets, taskProgress, linkSpans, linkMarkdown, replaceLink, repoLink, listsIn, moveListItem, continueList, highlightMarkdown, keyLines, renderInline } from './markdown.js'
 
 describe('markdown', () => {
   it('tags each block with its source range', () => {
@@ -143,5 +143,24 @@ describe('highlightMarkdown', () => {
     const html = renderBlocks('| When | What |\n|---|---|\n| 2025-03-18 | due **17.10.2026 2pm**, not `2025-05-01` or 2025-02-30 or [2025-06-01](a.md) |\n\n- Oct 17, 2026\n')
     const spots = [...html.matchAll(/<time class="date-spot" datetime="([\dT:-]+)" data-label="([^"]+)"/g)].map(m => [m[1], m[2]])
     expect(spots).toEqual([['2025-03-18', '18 Mar 2025'], ['2026-10-17T14:00', '17 Oct 2026, 14:00'], ['2026-10-17', '17 Oct 2026']])
+  })
+})
+
+describe('continueList', () => {
+  const enter = (text, at = text.length) => continueList(text, at)
+  it('continues bullets, numbers and tasks', () => {
+    expect(enter('- a')).toEqual({ from: 3, to: 3, insert: '\n- ' })
+    expect(enter('  * a')).toEqual({ from: 5, to: 5, insert: '\n  * ' })
+    expect(enter('x\n9. a')).toMatchObject({ insert: '\n10. ' })
+    expect(enter('- [x] done')).toMatchObject({ insert: '\n- [ ] ' })
+  })
+  it('ends the list on an empty item', () => {
+    expect(enter('a\n- ')).toEqual({ from: 2, to: 4, insert: '' })
+    expect(enter('- [ ] ')).toEqual({ from: 0, to: 6, insert: '' })
+  })
+  it('leaves other Enters alone', () => {
+    expect(enter('plain')).toBeNull()
+    expect(enter('- a', 1)).toBeNull() // cursor inside the marker
+    expect(enter('-a')).toBeNull()
   })
 })
