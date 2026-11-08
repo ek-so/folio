@@ -3,7 +3,7 @@
 ## Structure
 - **No header.** `AppNav` is the primary navigation.
 - **`Surface`** holds the open folder's or file's content: a `bg-card` box next to the rail down to the bottom (on phones under the top bar), scrolling inside, with 16px gutters from 768px. The content (not the title bar) is a centered column of at most 1000px, a view's of at most 1500px (`wide`; files opened from it keep the 1000px limit).
-- **`TitleBar`** starts every `Surface`: ← (when there's a step back) and the item's name in bold (a note's without `.md`; the repo's at the root; pages show their title from `lib/pages.js`; no icons). Actions on the right: ⋯ (`ItemMenu`), then + (folders), ✏️ Edit or ✓ (notes). At least base height with 8px padding, so every title bar is the same height; a bottom border separates it from the content. The title isn't editable: rename from ⋯. There is no bottom bar.
+- **`TitleBar`** starts every `Surface`: ← (when there's a step back) and the item's name in bold (a note's without `.md`; the repo's at the root; pages show their title from `lib/pages.js`; no icons). Actions on the right: ⋯ (`ItemMenu`), then + (folders), ✏️ Edit or ✓ (notes). At least base height with 8px padding above and below and 16px at the sides, so every title bar is the same height; a bottom border separates it from the content. The title isn't editable: rename from ⋯. There is no bottom bar.
 
 ## Rail (from 768px, `NavRail`)
 - Items in a group touch; every separator has 16px on both sides.
@@ -12,7 +12,7 @@
 - A view's row shows ⋯ (`ViewMenu`: Rename / Remove) on hover; File manager and Graph have none.
 
 ## Phones (`TopBar`, above the `Surface`)
-- ☰ (`AccountMenu`: the views and Add view, File manager and Graph, Broken links, Documentation, Settings, Sign out; the open one checked), the file-tree button (`NavDrawerButton`, on the three main pages), Search and Sync.
+- 16px from the screen's sides. ☰ (`AccountMenu`: the views and Add view, File manager and Graph, Broken links, Documentation, Settings, Sign out; the open one checked), the file-tree button (`NavDrawerButton`, on the three main pages), Search and Sync.
 - A view's ⋯ in ☰ is always shown and opens its Rename / Remove (`ViewMenu`) as a sub popover on its side.
 - The bar slides away while the content scrolls down (at least 16px in one go) and returns on scrolling up (`useHideOnScroll`), leaving only the title bar fixed: its row folds in 300ms with a gentle ease while what's in it slides up and fades, so the page under it moves softly.
 

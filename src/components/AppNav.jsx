@@ -132,7 +132,7 @@ export function TopBar({ host, resetKey, page, pages, viewActions, onPage, onSea
     <nav aria-label="Main" className="min-h-0 overflow-hidden">
     {/* The bar's row folds while its content slides up and fades with it, rather than being cut off */}
     <div className={cn('transition-[translate,opacity] duration-300 ease-[cubic-bezier(0.2,0,0,1)]', hidden && '-translate-y-full opacity-0')}>
-    <div className="flex items-center gap-2 px-space-sm py-space">
+    <div className="flex items-center gap-2 px-space py-space">
       <AccountMenu
         {...menu} current={page} pages={pages} viewActions={viewActions} onNavigate={onPage}
         trigger={
