@@ -1,6 +1,6 @@
 import { toast } from 'sonner'
 import { Fragment, useState, useMemo, useRef, useCallback, useLayoutEffect } from 'react'
-import { DotsThree, X, Tag, Plus, FolderOpen, CalendarBlank, CrosshairSimple, CalendarDots, ListBullets, CalendarDot, ArrowsClockwise } from '@phosphor-icons/react'
+import { Tag, Plus, CalendarBlank, CrosshairSimple, CalendarDots, ListBullets, CalendarDot, ArrowsClockwise } from '@phosphor-icons/react'
 import { DndContext, DragOverlay, MouseSensor, TouchSensor, useSensor, useSensors, useDraggable, useDroppable, pointerWithin } from '@dnd-kit/core'
 import { cn } from '@/lib/utils.js'
 import { Button } from '@/components/ui/button.jsx'
@@ -8,14 +8,12 @@ import { Separator } from '@/components/ui/separator.jsx'
 import { Segmented } from '@/components/ui/segmented.jsx'
 import { ListRow } from '@/components/ui/list-row.jsx'
 import { Tray, TrayTitle, TrayFooter, TRAY_BUTTON, TRAY_ROW } from '@/components/ui/tray.jsx'
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu.jsx'
+import { DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu.jsx'
 import NoteCard, { NO_CALLOUT, ownListeners, cardClick } from '@/components/NoteCard.jsx'
+import WidgetFrame from '@/components/WidgetFrame.jsx'
 import CardMenu, { cardActions } from '@/components/CardMenu.jsx'
 import CheckListModal from '@/components/CheckListModal.jsx'
 import ConfirmModal from '@/components/ConfirmModal.jsx'
-import Spinner from '@/components/Spinner.jsx'
-import EmptyState from '@/components/EmptyState.jsx'
-import FolderSheet from '@/components/FolderSheet.jsx'
 import DatePopover from '@/components/DatePopover.jsx'
 import { shownCards, hiddenCards, shownLimit } from '@/lib/trayCards.js'
 import { useGridColumns } from '@/hooks/useGridColumns.js'
@@ -62,7 +60,6 @@ export default function Planner({ id, services, onRemove }) {
   const [grid, setGrid] = useState(null) // the selected day's grid of cards, whose columns are counted
   const limit = shownLimit(useGridColumns(grid)) // its cards shown before Show more: whole rows on desktop
   const [choosing, setChoosing] = useState(false) // the Properties sheet
-  const [relocating, setRelocating] = useState(false) // picking another folder, its own being gone
   const { view, setView: pickView } = act // calendar or list, this device's choice
   const [dropping, setDropping] = useState(null) // the property whose removal is being confirmed
   const [jumping, setJumping] = useState(null) // a day picked in the calendar, scrolled to once the ribbon has it
@@ -120,35 +117,19 @@ export default function Planner({ id, services, onRemove }) {
     if (jumping && days.includes(jumping)) { scrollToDay(jumping, 'auto'); setJumping(null) }
   }, [jumping, days, scrollToDay])
 
-  const menu = (
-    <div className="flex shrink-0 items-center gap-space-sm">
-      {/* Calendar or list, saved in the planner's settings (where it can't be, on this screen only) */}
-      {planner && !missing && (
-        <Segmented iconOnly label="View" value={view} onChange={pickView} options={[['calendar', 'Calendar', CalendarDots], ['list', 'List', ListBullets]]} />
-      )}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost-outline" size="icon" aria-label="Planner actions" className="shrink-0 border-muted-foreground/50">
-            <DotsThree weight="bold" size={20} />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" onCloseAutoFocus={e => e.preventDefault()}>
-          {/* On the day shown: the selected one in the calendar, today in the list */}
-          <DropdownMenuItem disabled={off || !planner || missing} onSelect={() => act.newCard(view === 'list' ? today : selected)}><Plus /> New task</DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem disabled={off} onSelect={() => setChoosing(true)}><Tag /> Properties</DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem variant="destructive" disabled={!canEdit} onSelect={onRemove}><X /> Remove planner</DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </div>
+  // Calendar or list, this device's choice
+  const controls = planner && !missing && (
+    <Segmented iconOnly label="View" value={view} onChange={pickView} options={[['calendar', 'Calendar', CalendarDots], ['list', 'List', ListBullets]]} />
   )
+  const menu = <>
+    {/* On the day shown: the selected one in the calendar, today in the list */}
+    <DropdownMenuItem disabled={off || !planner || missing} onSelect={() => act.newCard(view === 'list' ? today : selected)}><Plus /> New task</DropdownMenuItem>
+    <DropdownMenuSeparator />
+    <DropdownMenuItem disabled={off} onSelect={() => setChoosing(true)}><Tag /> Properties</DropdownMenuItem>
+  </>
 
-  let body
-  if (!ready) body = <div className="flex justify-center py-12"><Spinner /></div>
-  else if (!planner) body = <p className="py-6 text-center text-sm text-muted-foreground">This planner's settings can't be read.</p>
-  else if (missing) body = <EmptyState message={`Its folder “${planner.folder}” is gone.`} action={{ label: 'Select folder', icon: <FolderOpen />, onClick: () => setRelocating(true), disabled: !canEdit }} />
-  else {
+  let body // only when its settings are read and its folder is there (WidgetFrame shows the other states)
+  if (ready && planner && !missing) {
     const list = arranged.on(selected)
     const shown = [...FIXED, ...planner.properties]
     // Mark as done (usePlanner), told in a toast with Undo: a repeating card moved on, any other archived
@@ -269,22 +250,13 @@ export default function Planner({ id, services, onRemove }) {
     )
   }
 
-  return (
-    <section className="flex shrink-0 flex-col gap-space-sm">
-      <div className="flex min-h-control items-center gap-space-sm">
-        {/* "Planner", then its folder from the repo's root under it, muted */}
-        <h2 className="flex min-w-0 flex-1 flex-col px-space-xs">
-          <span className="text-base font-bold">Planner</span>
-          {planner && <span className="truncate text-sm text-muted-foreground">{planner.folder || services.repoName}</span>}
-        </h2>
-        {menu}
-      </div>
-      {body}
-      {relocating && planner && (
-        <FolderSheet title="Planner from folder…" folders={['', ...services.folders]} onPick={folder => { act.setFolder(folder); return null }} onClose={() => setRelocating(false)}>
-          <p className="text-muted-foreground text-xs">Its notes become cards, each on the day of its date.</p>
-        </FolderSheet>
-      )}
+  // The planner's dialogs sit beside its frame
+  return <>
+    <WidgetFrame
+      title="Planner" subtitle={planner ? planner.folder || services.repoName : undefined} noun="planner" controls={controls} menu={menu}
+      removeLabel="Remove planner" onRemove={onRemove} canEdit={canEdit} ready={ready} readable={!!planner}
+      folder={planner && { name: planner.folder, missing, folders: ['', ...services.folders], sheetTitle: 'Planner from folder…', sheetText: 'Its notes become cards, each on the day of its date.', onPick: act.setFolder }}
+    >{() => body}</WidgetFrame>
       {choosing && planner && (
         <CheckListModal
           title="Properties"
@@ -316,8 +288,7 @@ export default function Planner({ id, services, onRemove }) {
           onClose={() => setDropping(null)}
         />
       )}
-    </section>
-  )
+  </>
 }
 
 // The cards' title: "Today, Saturday", "Tomorrow, Sunday", "Yesterday, Friday"; another day "November 12" ("November 12, 2027" in another year)

@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { DotsThree, Trash, X, PencilSimple, Tag, Columns, Check, CaretDown, Rows, FolderOpen } from '@phosphor-icons/react'
+import { DotsThree, Trash, PencilSimple, Tag, Columns, Check, CaretDown, Rows } from '@phosphor-icons/react'
 import {
   DndContext, DragOverlay, MouseSensor, TouchSensor, useSensor, useSensors,
   closestCenter, closestCorners, pointerWithin,
@@ -10,13 +10,11 @@ import { cn } from '@/lib/utils.js'
 import { Button } from '@/components/ui/button.jsx'
 import { Tray, TrayTitle, TrayFooter, TRAY_BUTTON } from '@/components/ui/tray.jsx'
 import { shownCards, hiddenCards } from '@/lib/trayCards.js'
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu.jsx'
-import Spinner from '@/components/Spinner.jsx'
-import EmptyState from '@/components/EmptyState.jsx'
-import FolderSheet from '@/components/FolderSheet.jsx'
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu.jsx'
 import RenameModal from '@/components/RenameModal.jsx'
 import ConfirmModal from '@/components/ConfirmModal.jsx'
 import CheckListModal from '@/components/CheckListModal.jsx'
+import WidgetFrame from '@/components/WidgetFrame.jsx'
 import CardMenu, { cardActions } from '@/components/CardMenu.jsx'
 import NoteCard, { NO_CALLOUT, ownListeners, cardClick } from '@/components/NoteCard.jsx'
 import { LOOSE, looseName } from './board.js'
@@ -61,30 +59,15 @@ export default function Board({ id, services, onRemove }) {
   const [dropping, setDropping] = useState(null) // the property whose removal is being confirmed
   const [expanded, setExpanded] = useState(() => new Set()) // keys of the columns showing all their cards
   const [choosing, setChoosing] = useState(null) // the open checklist: 'columns' | 'properties'
-  const [relocating, setRelocating] = useState(false) // picking another folder, its own being gone
   const off = !canEdit || !board || data?.missing
 
-  const menu = (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost-outline" size="icon" aria-label="Board actions" className="shrink-0 border-muted-foreground/50">
-          <DotsThree weight="bold" size={20} />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" onCloseAutoFocus={e => e.preventDefault()}>
-        <DropdownMenuItem disabled={off} onSelect={() => setChoosing('columns')}><Columns /> Columns</DropdownMenuItem>
-        <DropdownMenuItem disabled={off} onSelect={() => setChoosing('properties')}><Tag /> Properties</DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem variant="destructive" disabled={!canEdit} onSelect={onRemove}><X /> Remove board</DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  )
+  const menu = <>
+    <DropdownMenuItem disabled={off} onSelect={() => setChoosing('columns')}><Columns /> Columns</DropdownMenuItem>
+    <DropdownMenuItem disabled={off} onSelect={() => setChoosing('properties')}><Tag /> Properties</DropdownMenuItem>
+  </>
 
-  let body
-  if (!ready) body = <div className="flex justify-center py-12"><Spinner /></div>
-  else if (!board) body = <p className="py-6 text-center text-sm text-muted-foreground">This board's settings can't be read.</p>
-  else if (data.missing) body = <EmptyState message={`Its folder “${board.folder}” is gone.`} action={{ label: 'Select folder', icon: <FolderOpen />, onClick: () => setRelocating(true), disabled: !services.canEdit }} />
-  else {
+  let body // only when its settings are read and its folder is there (WidgetFrame shows the other states)
+  if (ready && board && !data.missing) {
     const columns = [...(data.loose.length ? [{ key: LOOSE, name: looseName(board), cards: data.loose }] : []), ...data.columns.filter(c => !board.hidden.includes(c.name))]
     const base = Object.fromEntries(columns.map(c => [c.key, c.cards.map(card => card.path)]))
     const items = drag?.items ?? base
@@ -173,17 +156,13 @@ export default function Board({ id, services, onRemove }) {
     )
   }
 
-  return (
-    <section className="flex shrink-0 flex-col gap-space-sm">
-      <div className="flex min-h-control items-center gap-space-sm">
-        {/* "Board", then its folder from the repo's root under it, muted */}
-        <h2 className="flex min-w-0 flex-1 flex-col px-space-xs">
-          <span className="text-base font-bold">Board</span>
-          {board && <span className="truncate text-sm text-muted-foreground">{board.folder || services.repoName}</span>}
-        </h2>
-        {menu}
-      </div>
-      {body}
+  // The board's dialogs sit beside its frame
+  return <>
+    <WidgetFrame
+      title="Board" subtitle={board ? board.folder || services.repoName : undefined} noun="board" menu={menu}
+      removeLabel="Remove board" onRemove={onRemove} canEdit={canEdit} ready={ready} readable={!!board}
+      folder={board && { name: board.folder, missing: data.missing, folders: ['', ...services.folders], sheetTitle: 'Board from folder…', sheetText: 'Its files, in subfolders too, become the cards, in a column per status.', onPick: act.setFolder }}
+    >{() => body}</WidgetFrame>
       {renaming && (
         <RenameModal
           kind="column"
@@ -242,11 +221,6 @@ export default function Board({ id, services, onRemove }) {
           onClose={() => setDropping(null)}
         />
       )}
-      {relocating && board && (
-        <FolderSheet title="Board from folder…" folders={['', ...services.folders]} onPick={folder => { act.setFolder(folder); return null }} onClose={() => setRelocating(false)}>
-          <p className="text-muted-foreground text-xs">Its files, in subfolders too, become the cards, in a column per status.</p>
-        </FolderSheet>
-      )}
       {deleting && (
         <ConfirmModal
           title={`Remove column “${deleting.name}”?`}
@@ -259,8 +233,7 @@ export default function Board({ id, services, onRemove }) {
           onClose={() => setDeleting(null)}
         />
       )}
-    </section>
-  )
+  </>
 }
 
 // The Columns sheet's Group by: the property the columns come from; it opens a dropdown under it, as wide, of

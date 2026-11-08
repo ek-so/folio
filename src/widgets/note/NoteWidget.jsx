@@ -19,6 +19,7 @@ import { Tray, TrayTitle, TRAY_BUTTON } from '@/components/ui/tray.jsx'
 import { NOTE_HEIGHT, clampSize } from '@/lib/resize.js'
 import { notePath, parseNotes, serializeNotes, notesHeight, resizedNotes, addedNote, removedNote, replacedNote, reorderedNote } from './note.js'
 import { NotePicker } from './NoteSetup.jsx'
+import WidgetFrame from '@/components/WidgetFrame.jsx'
 
 // The notes widget (note.js): "Notes" and its ⋯ (Add note…, Edit notes…: order them and take them out, Remove widget)
 // on top, then each note in a grey tray like a board's column, in a grid of two equal columns when each can be at least
@@ -44,10 +45,8 @@ export default function NoteWidget({ id, services, onRemove }) {
     if (next !== height) save(resizedNotes(settings, next))
   } : null
 
-  const message = text => <p className="py-6 text-center text-sm text-muted-foreground">{text}</p>
-  const body = !file.ready ? <div className="flex justify-center py-12"><Spinner /></div>
-    : !settings ? message("This notes widget's settings can't be read.")
-    : !settings.notes.length ? message('No notes yet. Add one from ⋯.')
+  // Only when its settings are read (WidgetFrame shows the other states)
+  const body = () => !settings.notes.length ? <p className="py-6 text-center text-sm text-muted-foreground">No notes yet. Add one from ⋯.</p>
     : (
       <div className="relative grid grid-cols-1 items-start gap-space-sm @min-[40.5rem]:grid-cols-2">
         {settings.notes.map(entry => (
@@ -62,25 +61,17 @@ export default function NoteWidget({ id, services, onRemove }) {
       </div>
     )
 
-  return (
-    <section className="@container flex shrink-0 flex-col gap-space-sm">
-      <div className="flex min-h-control items-center gap-space-sm">
-        <h2 className="min-w-0 flex-1 truncate px-space-xs text-base font-bold">Notes</h2>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost-outline" size="icon" aria-label="Notes widget actions" className="shrink-0 border-muted-foreground/50">
-              <DotsThree weight="bold" size={20} />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" onCloseAutoFocus={e => e.preventDefault()}>
-            <DropdownMenuItem disabled={!canEdit} onSelect={() => setAdding(true)}><Plus /> Add note…</DropdownMenuItem>
-            <DropdownMenuItem disabled={!canEdit || !settings.notes.length} onSelect={() => setListing(true)}><ListBullets /> Edit notes…</DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem variant="destructive" disabled={!services.canEdit} onSelect={onRemove}><X /> Remove widget</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-      {body}
+  const menu = <>
+    <DropdownMenuItem disabled={!canEdit} onSelect={() => setAdding(true)}><Plus /> Add note…</DropdownMenuItem>
+    <DropdownMenuItem disabled={!canEdit || !settings.notes.length} onSelect={() => setListing(true)}><ListBullets /> Edit notes…</DropdownMenuItem>
+  </>
+
+  // Its dialogs sit beside its frame
+  return <>
+    <WidgetFrame
+      title="Notes" noun="notes widget" menu={menu} removeLabel="Remove widget" onRemove={onRemove} canEdit={services.canEdit}
+      ready={file.ready} readable={!!settings} className="@container"
+    >{body}</WidgetFrame>
       {adding && (
         <NotePicker
           services={services}
@@ -110,8 +101,7 @@ export default function NoteWidget({ id, services, onRemove }) {
           onClose={() => setRemoving(null)}
         />
       )}
-    </section>
-  )
+  </>
 }
 
 // One note's tray: its name and ⋯ over its card, `height` tall on desktop (the widget's). `onTakeOut` (null: it can't be) asks to remove it from the widget
