@@ -331,7 +331,7 @@ function Day({ dayKey: key, today, selected, count, onSelect }) {
 
 // A card as a row of the list view (ListRow): its title, its date under it and, when it repeats, a small circling-arrows
 // icon (grey, like the line) and how often right after it; its ⋯; it opens the note. `overdue` (dated before today, listed
-// under Today): its title faded and its date red
+// under Today): its title faded and its date red; from 768px the date sits at the right, by the ⋯, in the title's size
 function TaskRow({ path, text, overdue, locked, menu, onOpen }) {
   const date = text === undefined ? null : cardDate(text)
   const repeat = text === undefined ? '' : properties(text)[REPEAT]
@@ -343,6 +343,7 @@ function TaskRow({ path, text, overdue, locked, menu, onOpen }) {
         <span className={cn(overdue && 'text-destructive-ink')}>{date ? (overdue && daysAgo(date)) || dateLabel(date) : 'No date'}</span>
         {(kind === 'repeat' || kind === 'unset') && <> · <ArrowsClockwise className="inline size-3 align-[-0.125em]" /> {repeatLabel(repeat)}</>}
       </>}
+      descriptionSide
       trailing={menu}
       onClick={() => onOpen(path)}
     />

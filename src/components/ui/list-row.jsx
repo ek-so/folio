@@ -6,7 +6,8 @@ import { Button } from './button.jsx'
 // base-height (40px), rounded row, highlighted on hover or while its ⋯ menu is
 // open. The row's own button holds `icon` (left), `title` and an optional
 // `description` (a second, muted line; the row grows for it) and does
-// `onClick`. `leading` sits before that button (the tree's indent and
+// `onClick`; with `descriptionSide`, from 768px the description moves to the right, next to `trailing`, in the title's
+// size (phones keep it under). `leading` sits before that button (the tree's indent and
 // chevron), `trailing` after it (⋯, a badge…). `active`: the open or selected item, blue like every selection (`SELECTED`);
 // `dimmed`: a hidden file or symlink, its icon and text faded (not the row's
 // hover or ⋯); `changed`: the blue dot of local changes after the title;
@@ -15,7 +16,7 @@ import { Button } from './button.jsx'
 // A selected item (the open page in the rail, the open item in a list): light accent fill, accent text
 export const SELECTED = 'bg-primary/15 text-primary-ink hover:bg-primary/20 hover:text-primary-ink'
 
-export function ListRow({ icon, title, description, leading, trailing, onClick, active, dimmed, changed, disabled, tooltip, className, rowProps }) {
+export function ListRow({ icon, title, description, descriptionSide, leading, trailing, onClick, active, dimmed, changed, disabled, tooltip, className, rowProps }) {
   // The tooltip is on the whole row, so it also explains a row that can't be opened
   return (
     <Tip content={tooltip}>
@@ -44,8 +45,9 @@ export function ListRow({ icon, title, description, leading, trailing, onClick, 
             {title}
             {changed && <span className="ml-1.5 inline-block size-1.5 rounded-full bg-primary align-middle" />}
           </span>
-          {description && <span className="block truncate text-xs text-muted-foreground">{description}</span>}
+          {description && <span className={cn('block truncate text-xs text-muted-foreground', descriptionSide && 'md:hidden')}>{description}</span>}
         </span>
+        {description && descriptionSide && <span className="hidden shrink-0 text-muted-foreground md:block">{description}</span>}
       </Button>
       {trailing && <div className="flex shrink-0 items-center pr-1">{trailing}</div>}
     </div>
