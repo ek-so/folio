@@ -14,7 +14,7 @@ import { valueList, valueColors, DESCRIPTION } from '../lib/frontmatter.js'
 import InlineMarkdown from './InlineMarkdown.jsx'
 import { DateField } from './DateBadge.jsx'
 import { valueDate } from '../lib/markdown.js'
-import { formatDate } from '../lib/dates.js'
+import { formatDate, dateLabel } from '../lib/dates.js'
 
 
 // A badge's color: its value's hue within its property (--tag-N, index.css), grey when empty; tinted against the card, a bit
@@ -142,7 +142,7 @@ function DateValue({ prop, onChange, emptyLabel }) {
   const pick = picked => onChange(prop.key, picked ? formatDate(picked) : '')
   return (
     <DateField
-      label={date ? formatDate(date) : emptyLabel} date={date} onPick={onChange && pick}
+      label={date ? dateLabel(date) : emptyLabel} date={date} onPick={onChange && pick}
       className={cn(!date && PLACEHOLDER)} {...(onChange ? own : {})}
     />
   )

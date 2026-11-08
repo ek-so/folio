@@ -1,4 +1,8 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest'
+
+// Date badges leave out this year (dateLabel): the tests' dates are read as of another year, so they keep theirs
+beforeAll(() => { vi.useFakeTimers({ now: new Date(2030, 0, 1), toFake: ['Date'] }) })
+afterAll(() => { vi.useRealTimers() })
 import { renderBlocks, tapOffset, taskOffsets, taskProgress, linkSpans, linkMarkdown, replaceLink, repoLink, listsIn, moveListItem, highlightMarkdown, keyLines, renderInline } from './markdown.js'
 
 describe('markdown', () => {

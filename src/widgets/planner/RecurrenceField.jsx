@@ -10,7 +10,7 @@ import { Segmented } from '@/components/ui/segmented.jsx'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group.jsx'
 import { DateField } from '@/components/DateBadge.jsx'
 import { useSingleOpen } from '@/hooks/useSingleOpen.jsx'
-import { formatDate } from '@/lib/dates.js'
+import { dateLabel } from '@/lib/dates.js'
 import { keyDay, dayKey, addDays, todayKey, dateValue, DATE, REPEAT } from './planner.js'
 import { parseRecurrence, formatRecurrence, repeatLabel, ONE_TIME, UNITS, WEEKDAYS } from './recurrence.js'
 
@@ -119,7 +119,7 @@ function RecurrenceChooser({ rule, start, onChange }) {
           <Segmented stretch label="Ends" value={repeat?.until ? 'on' : 'never'} options={ENDS} onChange={end => set({ until: end === 'never' ? null : (repeat?.until ?? addDays(earliest, 365)) })} />
           {repeat?.until && (
             <DateField
-              label={formatDate(keyDay(repeat.until))} date={keyDay(repeat.until)} dayOnly
+              label={dateLabel(keyDay(repeat.until))} date={keyDay(repeat.until)} dayOnly
               onPick={d => d && set({ until: start && dayKey(d) < start ? start : dayKey(d) })} // never before the card's day
               className="self-start"
             />

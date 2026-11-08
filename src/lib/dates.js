@@ -82,6 +82,12 @@ export function findDates(text, now = new Date()) {
 
 const pad = n => String(n).padStart(2, '0')
 
+// A date as a badge shows it: like formatDate, without the year when it's `thisYear` (now's), to save space ("17 Oct,
+// 14:30"); another year's keeps it. Only for showing: what's written in a note is always formatDate's
+export function dateLabel(date, thisYear = new Date().getFullYear()) {
+  return date.year === thisYear ? formatDate(date).replace(` ${thisYear}`, '') : formatDate(date)
+}
+
 // "17 Oct 2026, 14:30", or "17 Oct 2026" without a time, or "14:30" without a day
 export function formatDate({ year, month, day, hour, minute }) {
   if (year === undefined) return `${pad(hour)}:${pad(minute)}`

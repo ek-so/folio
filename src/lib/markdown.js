@@ -1,7 +1,7 @@
 import { marked } from 'marked'
 import { blankFrontMatter, frontMatter, withValue } from './frontmatter.js'
 import { displayName } from './files.js'
-import { findDates, formatDate, isoDate } from './dates.js'
+import { findDates, formatDate, dateLabel, isoDate } from './dates.js'
 
 marked.setOptions({ breaks: true, gfm: true })
 
@@ -71,7 +71,7 @@ const withDates = tokens => tokens.flatMap(t =>
 marked.use({
   extensions: [{
     name: 'date',
-    renderer: ({ raw, date }) => `<time class="date-spot" datetime="${isoDate(date)}" data-label="${formatDate(date)}" data-raw="${escapeAttr(raw)}"></time>`,
+    renderer: ({ raw, date }) => `<time class="date-spot" datetime="${isoDate(date)}" data-label="${dateLabel(date)}" data-raw="${escapeAttr(raw)}"></time>`,
   }],
 })
 

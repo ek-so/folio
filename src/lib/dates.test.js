@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { findDates, formatDate } from './dates.js'
+import { findDates, formatDate, dateLabel } from './dates.js'
 import { withFixedDates, dateSpans, withDate, valueDate } from './markdown.js'
 
 const now = new Date(2026, 5, 1)
@@ -73,5 +73,14 @@ describe('dates', () => {
 
   it('reads a one-digit hour from 1 to 6 as the afternoon', () => {
     expect(fixed('call 2:30, then 6:59, 7:30, 02:30, 2:30am, 17 Oct 2026 3:15')).toBe('call 14:30, then 18:59, 07:30, 02:30, 02:30, 17 Oct 2026, 15:15')
+  })
+})
+
+describe('date labels', () => {
+  it('leave out this year, keep another', () => {
+    expect(dateLabel({ year: 2026, month: 10, day: 17 }, 2026)).toBe('17 Oct')
+    expect(dateLabel({ year: 2026, month: 10, day: 17, hour: 14, minute: 30 }, 2026)).toBe('17 Oct, 14:30')
+    expect(dateLabel({ year: 2025, month: 10, day: 17 }, 2026)).toBe('17 Oct 2025')
+    expect(dateLabel({ hour: 9, minute: 5 }, 2026)).toBe('09:05')
   })
 })

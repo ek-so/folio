@@ -20,7 +20,7 @@ import DatePopover from '@/components/DatePopover.jsx'
 import { shownCards, hiddenCards, shownLimit } from '@/lib/trayCards.js'
 import { useGridColumns } from '@/hooks/useGridColumns.js'
 import { cardTitle } from '@/lib/folderNotes.js'
-import { formatDate } from '@/lib/dates.js'
+import { formatDate, dateLabel } from '@/lib/dates.js'
 import { properties } from '@/lib/frontmatter.js'
 import { DATE, REPEAT, FIXED, listed, plan, addDays, daysBetween, dayOffsets, dayAt, keyDay, dayKey, cardDate, dateValue, droppedDate, monthLabel } from './planner.js'
 import { usePlanner } from './usePlanner.js'
@@ -391,7 +391,7 @@ function TaskRow({ path, text, dashed, menu, onOpen }) {
     <ListRow
       icon={<Icon className={cn('size-4', repeats ? 'text-primary' : 'text-muted-foreground')} />}
       title={cardTitle(path, text)}
-      description={`${date ? formatDate(date) : 'No date'}${repeats || parseRecurrence(repeat)?.kind === 'unset' ? ` · ${repeatLabel(repeat)}` : ''}`}
+      description={`${date ? dateLabel(date) : 'No date'}${repeats || parseRecurrence(repeat)?.kind === 'unset' ? ` · ${repeatLabel(repeat)}` : ''}`}
       trailing={menu}
       onClick={() => onOpen(path)}
       className={cn(dashed && 'border border-dashed border-muted-foreground/50')}
