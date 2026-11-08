@@ -34,6 +34,7 @@ Items as a list (`ListRow`) or cards (`CardTile`): the icon-only List | Cards sw
 
 ## Address bar (`lib/url.js`)
 - File manager: `/folio/<path>` (trailing slash for folders). Home and Graph: `?page=home` / `?page=graph` (`&root` for the root folder). Settings, Broken links and Documentation leave the address as it is.
+- The rail's main pages (views, File manager, Graph) are links to where each was left (`hrefOf`: `urlForPage` of its trail's current view): hovering shows the address, and a middle click, ⌘/Ctrl-click or the browser's menu opens or copies it; a plain click opens the page in place.
 - Each page, folder or file opened is a history entry; renames, removes and discards replace it. Back / Forward (`popstate`) flush the open note, close any app page and show what the URL names (back along that page's trail if it's on it), or the nearest existing folder if it's gone.
 - The app opens at the address it was loaded at if that names a page, folder or file. The deploy copies `index.html` to `404.html` so these URLs load on GitHub Pages.
 

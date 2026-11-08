@@ -697,7 +697,7 @@ export default function App() {
         <Toaster theme={theme} />
         <PullToRefresh onRefresh={() => window.location.reload()}>
           <div className="flex flex-1 min-h-0">
-          <NavRail page={page} pages={pages} viewActions={viewActions} onPage={choosePage} onSearch={() => setSearchOpen(true)} renderSync={renderSync} menu={menu} onShowTree={treeCollapsed && page === mainPage ? toggleTree : null} />
+          <NavRail page={page} pages={pages} hrefOf={id => urlForPage(BASE, id, currentView(id, trailOf(id)))} viewActions={viewActions} onPage={choosePage} onSearch={() => setSearchOpen(true)} renderSync={renderSync} menu={menu} onShowTree={treeCollapsed && page === mainPage ? toggleTree : null} />
           <main ref={mainRef} className="flex flex-col flex-1 min-w-0 min-h-0">
           <TopBar host={mainRef} resetKey={`${page}|${selectedFile}|${folder}`} tree={page === mainPage} page={page} pages={pages} viewActions={viewActions} onPage={choosePage} onSearch={() => setSearchOpen(true)} renderSync={renderSync} menu={menu} />
           {page === PAGE.SETTINGS ? (

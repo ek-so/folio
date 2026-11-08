@@ -29,7 +29,12 @@ const ACTIVE = 'bg-primary/15 text-primary-ink hover:bg-primary/20 hover:text-pr
 // a separator, File manager, Graph, and at the bottom Broken links (count), Settings and Sign out.
 // `pages`: the main pages (lib/pages.js): the views, then Add view, a separator, File manager and Graph. With a
 // mouse, a view shows its ⋯ (Rename / Remove: `viewActions`) on hover; the collapsed rail has none, and Add view is an icon.
-export function NavRail({ page, pages, viewActions, onPage, onSearch, renderSync, menu, onShowTree }) {
+// A plain click (not one that opens a new tab or window): the app handles it in place
+const plainClick = e => e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey
+
+// `hrefOf(id)`: the address of where a main page was left (its open note or folder), the link its item is: hovering
+// shows it, and it opens or copies like any link; a plain click opens the page in place (`onPage`)
+export function NavRail({ page, pages, hrefOf, viewActions, onPage, onSearch, renderSync, menu, onShowTree }) {
   const [collapsed, setCollapsed] = useState(storage.getRailCollapsed)
   const [width, resize] = useResizableWidth(RAIL_WIDTH, storage.getRailWidth, storage.setRailWidth)
   const toggle = () => { setCollapsed(!collapsed); storage.setRailCollapsed(!collapsed) }
@@ -43,8 +48,10 @@ export function NavRail({ page, pages, viewActions, onPage, onSearch, renderSync
     </Button>
   )
   const pageButton = p => (
-    <Button variant="ghost" tooltip={hint(p.title)} tooltipSide="right" aria-current={page === p.id ? 'page' : undefined} className={cn(item(p.id), !collapsed && 'w-full', !collapsed && p.view && 'pr-10')} onClick={() => onPage(p.id)}>
-      <p.icon /> {collapsed ? label(p.title) : <span className="min-w-0 truncate"><PageTitle page={p} /></span>}
+    <Button asChild variant="ghost" tooltip={hint(p.title)} tooltipSide="right" aria-current={page === p.id ? 'page' : undefined} className={cn(item(p.id), !collapsed && 'w-full', !collapsed && p.view && 'pr-10')}>
+      <a href={hrefOf(p.id)} onClick={e => { if (plainClick(e)) { e.preventDefault(); onPage(p.id) } }}>
+        <p.icon /> {collapsed ? label(p.title) : <span className="min-w-0 truncate"><PageTitle page={p} /></span>}
+      </a>
     </Button>
   )
   // Items in a group touch (no gap); a separator has 16px (--space) on both sides
