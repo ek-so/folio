@@ -5,8 +5,8 @@ import { Button } from './button.jsx'
 // One row of any list (file manager, folder tree, search, move, backlinks): a
 // base-height (40px), rounded row, highlighted on hover or while its ⋯ menu is
 // open. The row's own button holds `icon` (left), `title` and an optional
-// `description` and does `onClick`. A description is muted: below 1024px a second line under the title (the row grows for it);
-// from 1024px it moves to the right, next to `trailing`, in the title's size, at most half the row (cut with …). `leading` sits before that button (the tree's indent and
+// `description` and does `onClick`. A description is muted: in a row narrower than 640px (a phone, a dialog like Search) a second line under the title (the row grows for it);
+// from 640px wide (a page's list: the row's own width, a container query) it moves to the right, next to `trailing`, in the title's size, at most half the row (cut with …). `leading` sits before that button (the tree's indent and
 // chevron), `trailing` after it (⋯, a badge…). `active`: the open or selected item, blue like every selection (`SELECTED`);
 // `dimmed`: a hidden file or symlink, its icon and text faded (not the row's
 // hover or ⋯); `changed`: the blue dot of local changes after the title;
@@ -22,7 +22,7 @@ export function ListRow({ icon, title, description, leading, trailing, onClick, 
     <div
       {...rowProps}
       className={cn(
-        'group flex min-h-control items-center rounded-sm transition-colors hover:bg-secondary/60 has-[[data-state=open]]:bg-secondary/60',
+        'group @container flex min-h-control items-center rounded-sm transition-colors hover:bg-secondary/60 has-[[data-state=open]]:bg-secondary/60',
         active && cn(SELECTED, 'has-[[data-state=open]]:bg-primary/20'),
         className,
       )}
@@ -44,9 +44,9 @@ export function ListRow({ icon, title, description, leading, trailing, onClick, 
             {title}
             {changed && <span className="ml-1.5 inline-block size-1.5 rounded-full bg-primary align-middle" />}
           </span>
-          {description && <span className="block truncate text-xs text-muted-foreground lg:hidden">{description}</span>}
+          {description && <span className="block truncate text-xs text-muted-foreground @min-[40rem]:hidden">{description}</span>}
         </span>
-        {description && <span className="hidden max-w-[50%] shrink-0 truncate text-muted-foreground lg:block">{description}</span>}
+        {description && <span className="hidden max-w-[50%] shrink-0 truncate text-muted-foreground @min-[40rem]:block">{description}</span>}
       </Button>
       {trailing && <div className="flex shrink-0 items-center pr-1">{trailing}</div>}
     </div>
