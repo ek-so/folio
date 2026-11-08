@@ -9,7 +9,7 @@ import { Separator } from '@/components/ui/separator.jsx'
 import { Segmented } from '@/components/ui/segmented.jsx'
 import { ListRow } from '@/components/ui/list-row.jsx'
 import { Tray, TrayTitle, TrayFooter, TRAY_BUTTON, TRAY_ROW } from '@/components/ui/tray.jsx'
-import { DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu.jsx'
+import { DropdownMenuItem } from '@/components/ui/dropdown-menu.jsx'
 import NoteCard, { NO_CALLOUT, ownListeners, cardClick } from '@/components/NoteCard.jsx'
 import WidgetFrame from '@/components/WidgetFrame.jsx'
 import CardMenu, { cardActions } from '@/components/CardMenu.jsx'
@@ -121,7 +121,6 @@ export default function Planner({ id, services, onRemove }) {
   const menu = <>
     {/* On the day shown: the selected one in the calendar, today in the list */}
     <DropdownMenuItem disabled={off || !planner || missing} onSelect={() => act.newCard(view === 'list' ? today : selected)}><Plus /> New task</DropdownMenuItem>
-    <DropdownMenuSeparator />
     <DropdownMenuItem disabled={off} onSelect={() => setChoosing(true)}><Tag /> Properties</DropdownMenuItem>
   </>
 
