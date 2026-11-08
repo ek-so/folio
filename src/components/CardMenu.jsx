@@ -9,7 +9,7 @@ import DeleteModal from '@/components/DeleteModal.jsx'
 import RenameModal from '@/components/RenameModal.jsx'
 import { copyText } from '@/lib/clipboard.js'
 import { repoLink } from '@/lib/markdown.js'
-import { own } from '@/lib/utils.js'
+import { cn, own } from '@/lib/utils.js'
 import { fileItem, cardTitle } from '@/lib/folderNotes.js'
 import { properties, valueList, DESCRIPTION } from '@/lib/frontmatter.js'
 
@@ -32,9 +32,9 @@ export const cardActions = (path, text, act, services) => ({
 // description (`description`, its text; only with `onDescription`, a note on this device), Rename file (its file's
 // name, `RenameModal`; `onRename(name)` returns an error or null), Duplicate (a copy of the file next to it), Copy link (`repoLink`), Move to column (only with `columns`, a board's: a submenu of its
 // columns, then Edit columns… that opens its Columns dialog) and Remove (the file, to the archive like anywhere else, confirmed). `columns`: [{ key, name }] shown,
-// `column`: the card's key. Its dialogs are in a `contents` div so a click in them stays
+// `column`: the card's key. `inRow`: in a list row (a planner's list view), which has its own padding: none pulled into the corner. Its dialogs are in a `contents` div so a click in them stays
 // theirs, never the card's.
-export default function CardMenu({ path, title, description, columns, column, onDone, onTitle, onDescription, onRename, onDuplicate, onMove, onEditColumns, onDelete }) {
+export default function CardMenu({ path, title, description, columns, column, onDone, onTitle, onDescription, onRename, onDuplicate, onMove, onEditColumns, onDelete, inRow }) {
   const [editing, setEditing] = useState(null) // 'title' | 'description' while its dialog is open
   const [renaming, setRenaming] = useState(false)
   const item = fileItem(path)
@@ -47,7 +47,7 @@ export default function CardMenu({ path, title, description, columns, column, on
             variant="ghost"
             size="icon"
             aria-label="Card actions"
-            className="-my-1.5 -mr-1.5 size-control-md shrink-0 text-muted-foreground hover:bg-muted-foreground/10 data-[state=open]:bg-muted-foreground/10 pointer-fine:opacity-0 pointer-fine:group-hover:opacity-100 pointer-fine:focus-visible:opacity-100 pointer-fine:data-[state=open]:opacity-100"
+            className={cn(!inRow && '-my-1.5 -mr-1.5', 'size-control-md shrink-0 text-muted-foreground hover:bg-muted-foreground/10 data-[state=open]:bg-muted-foreground/10 pointer-fine:opacity-0 pointer-fine:group-hover:opacity-100 pointer-fine:focus-visible:opacity-100 pointer-fine:data-[state=open]:opacity-100')}
           >
             <DotsThree weight="bold" size={16} />
           </Button>

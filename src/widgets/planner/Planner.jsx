@@ -1,6 +1,6 @@
 import { toast } from 'sonner'
 import { Fragment, useState, useMemo, useRef, useCallback, useLayoutEffect } from 'react'
-import { Tag, Plus, CalendarBlank, CrosshairSimple, CalendarDots, ListBullets, CalendarDot, ArrowsClockwise } from '@phosphor-icons/react'
+import { Tag, Plus, CalendarBlank, CrosshairSimple, CalendarDots, ListBullets, ArrowsClockwise } from '@phosphor-icons/react'
 import { DndContext, DragOverlay, useDraggable, useDroppable, pointerWithin } from '@dnd-kit/core'
 import { useDragSensors } from '@/hooks/useDragSensors.js'
 import { cn } from '@/lib/utils.js'
@@ -149,8 +149,8 @@ export default function Planner({ id, services, onRemove }) {
       const day = after && dayKey(after)
       if (day !== (before && dayKey(before))) toastMoved(path, day, () => act.setProperty(path, DATE, old ?? ''))
     }
-    const cardMenu = path => off ? undefined : (
-      <CardMenu {...cardActions(path, notes[path], act, services)} onDone={() => markDone(path)} />
+    const cardMenu = (path, inRow) => off ? undefined : (
+      <CardMenu {...cardActions(path, notes[path], act, services)} onDone={() => markDone(path)} inRow={inRow} />
     )
     const cardProps = path => ({
       path, text: notes[path], properties: shown, always: FIXED, dateKeys: [DATE], badges: BADGES, scopeName: 'this planner', files,
@@ -195,7 +195,7 @@ export default function Planner({ id, services, onRemove }) {
               {sectionTitle(group.label, group.first)}
               <div className="flex flex-col gap-0.5 rounded-lg border border-border bg-card p-1">
                 {group.cards.filter(c => rows.has(c.path)).map(({ path, overdue, undated }) => (
-                  <TaskRow key={path} path={path} text={notes[path]} dashed={overdue || undated} menu={cardMenu(path)} onOpen={openFile} />
+                  <TaskRow key={path} path={path} text={notes[path]} dashed={overdue || undated} menu={cardMenu(path, true)} onOpen={openFile} />
                 ))}
               </div>
               <TrayFooter more={hidden} onShowMore={() => setExpanded(e => new Set(e).add(`list:${group.key}`))} />
@@ -324,19 +324,20 @@ function Day({ dayKey: key, today, selected, count, onSelect }) {
   )
 }
 
-// A card as a row of the list view (ListRow): its repeat's icon (circling arrows in the accent color for a repeat, a
-// calendar with a dot for one-time), its title, its date (and repeat) under it, its ⋯; it opens the note. `dashed`:
-// listed under Today because it has no date or is late
+// A card as a row of the list view (ListRow): its title, its date under it and, when it repeats, a small circling-arrows
+// icon (accent color) and how often right after it; its ⋯; it opens the note. `dashed`: listed under Today because it
+// has no date or is late
 function TaskRow({ path, text, dashed, menu, onOpen }) {
   const date = text === undefined ? null : cardDate(text)
   const repeat = text === undefined ? '' : properties(text)[REPEAT]
-  const repeats = parseRecurrence(repeat)?.kind === 'repeat' // "recurring" without a rule is done like a one-time card
-  const Icon = repeats ? ArrowsClockwise : CalendarDot
+  const kind = parseRecurrence(repeat)?.kind
   return (
     <ListRow
-      icon={<Icon className={cn('size-4', repeats ? 'text-primary' : 'text-muted-foreground')} />}
       title={cardTitle(path, text)}
-      description={`${date ? dateLabel(date) : 'No date'}${repeats || parseRecurrence(repeat)?.kind === 'unset' ? ` · ${repeatLabel(repeat)}` : ''}`}
+      description={<>
+        {date ? dateLabel(date) : 'No date'}
+        {(kind === 'repeat' || kind === 'unset') && <> · <ArrowsClockwise className="inline size-3 align-[-0.125em] text-primary" /> {repeatLabel(repeat)}</>}
+      </>}
       trailing={menu}
       onClick={() => onOpen(path)}
       className={cn(dashed && 'border border-dashed border-muted-foreground/50')}
