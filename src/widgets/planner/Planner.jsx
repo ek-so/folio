@@ -194,7 +194,7 @@ export default function Planner({ id, services, onRemove }) {
             <Tray key={group.key}>
               {sectionTitle(group.label, group.first)}
               <div className="flex flex-col gap-0.5 rounded-lg border border-border bg-card p-1">
-                {group.cards.filter(c => rows.has(c.path)).map(({ path, overdue, undated }) => (
+                {group.cards.filter(c => rows.has(c.path)).map(({ path, overdue }) => (
                   <TaskRow key={path} path={path} text={notes[path]} overdue={overdue} menu={cardMenu(path, true)} onOpen={openFile} />
                 ))}
               </div>
