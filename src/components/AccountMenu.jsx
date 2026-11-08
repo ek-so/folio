@@ -11,8 +11,8 @@ import { Sheet, SheetTrigger, SheetContent, SheetTitle, SheetDescription } from 
 
 // The phone navigation, opened by `trigger` (a Button): a left sheet that floats 8px from the screen's edges,
 // titled with the app's name (its ✕ is the sheet's own). The main pages (`pages`): File manager, Assets and Graph, then the views
-// (each with its ⋯: `ViewMenu`, Rename / Remove, `viewActions`) and Views settings; then Broken links
-// (count), Documentation, Settings and Sign out. `current` is the open page, highlighted. Choosing a page closes it.
+// (each with its ⋯: `ViewMenu`, Rename / Remove, `viewActions`) and Views settings; then, pinned to the bottom of the sheet,
+// Broken links (count), Documentation, Settings and Sign out. `current` is the open page, highlighted. Choosing a page closes it.
 export default function AccountMenu({ trigger, current, pages, viewActions, onNavigate, brokenCount, onSignOut }) {
   const [open, setOpen] = useState(false)
   const go = fn => () => { setOpen(false); fn() }
@@ -41,7 +41,7 @@ export default function AccountMenu({ trigger, current, pages, viewActions, onNa
             <SheetTitle className="text-base font-bold">Folio</SheetTitle>
           </div>
         </div>
-        <nav aria-label="Main" className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain p-space" data-no-pull>
+        <nav aria-label="Main" className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-y-contain p-space" data-no-pull>
           <ul>
             {pages.filter(p => p.id === PAGE.FILES).map(page)}
             {fixed(PAGE.ASSETS, Images, 'Assets')}
@@ -52,6 +52,7 @@ export default function AccountMenu({ trigger, current, pages, viewActions, onNa
             {pages.filter(p => p.view).map(page)}
             <li><ListRow icon={<SlidersHorizontal />} title="Views settings" disabled={!viewActions.canEdit} onClick={go(viewActions.onSettings)} /></li>
           </ul>
+          <div className="mt-auto">
           {separator}
           <ul>
             {fixed(PAGE.LINKS, LinkBreak, 'Broken links', brokenCount > 0 && <span className="px-space-sm text-sm text-muted-foreground">{brokenCount}</span>)}
@@ -59,6 +60,7 @@ export default function AccountMenu({ trigger, current, pages, viewActions, onNa
             {fixed(PAGE.SETTINGS, Gear, 'Settings')}
             <li><ListRow icon={<SignOut className="text-destructive-ink" />} title={<span className="text-destructive-ink">Sign out</span>} onClick={go(onSignOut)} /></li>
           </ul>
+          </div>
         </nav>
       </SheetContent>
     </Sheet>

@@ -14,7 +14,7 @@
 
 ## Phones (`TopBar`, above the `Surface`)
 - 16px from the screen's sides. ☰, Search and Sync.
-- ☰ (`AccountMenu`) opens a left `Sheet` that floats 8px from the screen's edges (as wide as the screen less 16px; 85% from 500px), titled Folio with its logo in a header like a title bar, ✕ at the right; 16px padding inside, header and list alike: list rows (`ListRow`) for File manager, Assets and Graph, the views and Views settings, then Broken links (count), Documentation, Settings and Sign out (red), separated by `Separator`s; the open page highlighted. Choosing one closes it. A view's ⋯ (`ViewMenu`: Rename / Remove) is always shown on touch.
+- ☰ (`AccountMenu`) opens a left `Sheet` that floats 8px from the screen's edges (as wide as the screen less 16px; 85% from 500px), titled Folio with its logo in a header like a title bar, ✕ at the right; 16px padding inside, header and list alike: list rows (`ListRow`) for File manager, Assets and Graph, the views and Views settings, then, pinned to the bottom of the sheet, Broken links (count), Documentation, Settings and Sign out (red), separated by `Separator`s; the open page highlighted. Choosing one closes it. A view's ⋯ (`ViewMenu`: Rename / Remove) is always shown on touch.
 - The bar slides away while the content scrolls down (at least 16px in one go) and returns on scrolling up (`useHideOnScroll`), leaving only the title bar fixed: its row folds in 300ms with a gentle ease while what's in it slides up and fades, so the page under it moves softly.
 
 ## Folder tree (`NavTree.jsx`)
