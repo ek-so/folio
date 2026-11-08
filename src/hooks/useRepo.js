@@ -231,9 +231,9 @@ export function useRepo(repo, onDone) {
   // Runs a sync step, after the typing in an open note is saved; one at a time (one asked for meanwhile is ignored): success reports through onDone, failure flashes on the Sync
   // button; `quiet` reports nothing on success (the automatic sync). A task returning false ends without a toast (e.g. stopped for
   // conflicts). Offline isn't an error (the button says Offline); anything
-  // else opens the error sheet, whose Try again repeats `retry`.
+  // else opens the error sheet, whose Try again repeats `retry`. Resolves to whether it ran (false: another step was running).
   async function run(task, retry, doneMessage = 'Synced', quiet = false) {
-    if (busy.current) return
+    if (busy.current) return false
     busy.current = true
     window.dispatchEvent(new Event('folio:flush')) // typing in an open note first
     setSyncing(true)
@@ -251,6 +251,7 @@ export function useRepo(repo, onDone) {
     }
     busy.current = false
     setSyncing(false)
+    return true
   }
 
   // `quiet`: no "Synced" toast when it works (the automatic sync when Folio opens)

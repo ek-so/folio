@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Smiley, X } from '@phosphor-icons/react'
+import { Smiley, ArrowCounterClockwise } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
 import { Button } from './ui/button.jsx'
 import { Input } from './ui/input.jsx'
@@ -11,7 +11,7 @@ import { EmptyMessage } from './EmptyState.jsx'
 
 // Custom: neither shadcn nor Phosphor has an emoji picker, and a library's would bring its own look. A ToggleGroup of
 // the emojis in lib/emojis.js, a search field (words like "home" or "money"; an emoji pasted into it is picked at once)
-// and a button to take it out.
+// and a button back to the default icon (a plain control: the emoji comes back with one pick, so nothing is confirmed).
 
 // The picker's content: `value` (the chosen emoji, '' for none) and `onPick(emoji)` ('' takes it out; a view, a file's
 // ⋯ sub menu or the popover below hold it)
@@ -26,8 +26,8 @@ export function EmojiGrid({ value, onPick, onDone }) {
           value={query} placeholder="Search or paste an emoji" aria-label="Search emoji" className="min-w-0 flex-1"
           onChange={e => { const emoji = leadingEmoji(e.target.value.trim()); if (emoji) pick(emoji); else setQuery(e.target.value) }}
         />
-        <Button type="button" variant="ghost-destructive" size="icon" aria-label="Remove emoji" tooltip="Remove emoji" disabled={!value} onClick={() => pick('')}>
-          <X />
+        <Button type="button" variant="ghost-outline" size="icon" aria-label="Use the default icon" tooltip="Use the default icon" disabled={!value} onClick={() => pick('')}>
+          <ArrowCounterClockwise />
         </Button>
       </div>
       {!found.length && <EmptyMessage size="sm">No emoji found</EmptyMessage>}

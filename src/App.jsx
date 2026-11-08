@@ -80,6 +80,7 @@ export default function App() {
   const tagColors = useTagColors(config)
   const locks = useLocks(config) // files locked against editing (lib/locks.js)
   const icons = useIcons(config) // the emoji icons of files and folders (lib/icons.js)
+  const iconsInfo = useMemo(() => ({ iconOf: icons.iconOf, onSet: icons.canEdit ? (path, emoji) => update(icons.set(path, emoji)) : undefined }), [icons.canEdit, icons.key])
   const assets = useAssets(config) // when files were added, for the Assets page (lib/assets.js)
   const viewsFile = config.read(VIEWS_PATH)
   const parsedViews = viewsFile.ready ? parseViews(viewsFile.text) : undefined
@@ -596,9 +597,9 @@ export default function App() {
   useEffect(() => {
     if (!repo.remote || !repo.online || autoSynced.current === auth.repo) return
     autoSynced.current = auth.repo
-    if (!links.index.broken.length) return void repo.sync(true)
+    if (!links.index.broken.length) return void repo.sync(true).then(ran => { if (!ran) autoSynced.current = null }) // busy: tried again when that step ends
     toast.error(`Not synced: ${plural(links.index.broken.length, 'broken link')}.`, { action: { label: 'Review', onClick: () => setSyncCheck(true) } })
-  }, [repo.remote, repo.online, auth.repo])
+  }, [repo.remote, repo.online, repo.syncing, auth.repo])
 
   // Everything fixed from the sheet: carry on with the sync
   useEffect(() => {
@@ -680,7 +681,6 @@ export default function App() {
   )
 
   // For the Rename / Move sheets: how many notes' links a change would touch
-  const iconsInfo = { iconOf: icons.iconOf, onSet: icons.canEdit ? (path, emoji) => update(icons.set(path, emoji)) : undefined }
   const linkInfo = {
     rewriteCount: (item, to) => linkRewrites(item, to, changes.edits).size,
     linkedFrom: item => new Set(Object.entries(links.index.backlinks)

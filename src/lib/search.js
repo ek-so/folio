@@ -8,14 +8,31 @@ const AFTER = 70
 
 const flat = text => text.replace(/\s+/g, ' ')
 
+// What's worked out for a note once, kept while its text stays the same: the text on one line, and in lower case
+const cache = new Map() // path -> { text, line, lower }
+const prepared = (path, text) => {
+  let e = cache.get(path)
+  if (e?.text !== text) { const line = flat(text); e = { text, line, lower: line.toLowerCase() }; cache.set(path, e) }
+  return e
+}
+
+// The paths of a `texts` object in order, worked out once per object (`texts` is the link index's, which only changes
+// when a note does)
+const orders = new WeakMap()
+const ordered = texts => {
+  let paths = orders.get(texts)
+  if (!paths) { paths = Object.keys(texts).sort((a, b) => a.localeCompare(b)); orders.set(texts, paths) }
+  return paths
+}
+
 export function searchNotes(texts, query, skip = () => false, limit = 20) {
   const q = flat(query.trim()).toLowerCase()
   if (q.length < 2) return []
   const hits = []
-  for (const path of Object.keys(texts).sort((a, b) => a.localeCompare(b))) {
+  for (const path of ordered(texts)) {
     if (skip(path)) continue
-    const text = flat(texts[path])
-    const at = text.toLowerCase().indexOf(q)
+    const { line: text, lower } = prepared(path, texts[path])
+    const at = lower.indexOf(q)
     if (at < 0) continue
     const from = Math.max(0, at - BEFORE)
     const end = Math.min(text.length, at + q.length + AFTER)

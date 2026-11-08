@@ -2,7 +2,7 @@ import { forwardRef } from 'react'
 import { cn, isPortaled } from '@/lib/utils.js'
 import { openLink } from '@/lib/previewLinks.js'
 import PropertyBadges from '@/components/PropertyBadges.jsx'
-import { displayName } from '@/lib/files.js'
+import { fileName } from '@/lib/files.js'
 import { frontMatter, noteTitle, DESCRIPTION } from '@/lib/frontmatter.js'
 import { taskProgress } from '@/lib/markdown.js'
 import LockMark from './LockMark.jsx'
@@ -46,7 +46,7 @@ const NoteCard = forwardRef(function NoteCard({ path, text, properties, always =
       <div className="flex items-start gap-space-xs">
         <span className={cn('min-w-0 flex-1 break-words text-sm font-medium', overdue && 'opacity-50')}>
           {locked && <LockMark />}
-          {text === undefined ? displayName(path) : noteTitle(text, displayName(path))}
+          {text === undefined ? fileName(path) : noteTitle(text, fileName(path))}
         </span>
         {menu}
       </div>

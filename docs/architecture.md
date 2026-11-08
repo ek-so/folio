@@ -28,6 +28,7 @@ App flow: **Auth → RepoSetup → FileBrowser / Editor / FileViewer**. `App.jsx
 - `useTagColors` — `colors`, `canEdit`, `set(key, value, color)` as a change.
 - `useLocks` — `isLocked(path)`, `canEdit`, and `toggle`, `moved`, `removed` as changes.
 - `useIcons` — `iconOf(path)`, `canEdit`, and `set`, `moved`, `removed` as changes; `IconsContext` (App) gives every `FileIcon` and `ItemMenu` the icons and `onSet`.
+- `useConfigFile` — one `.folio` settings file read and written through parse and serialize (never saved over when unreadable): `useLocks`, `useIcons`, `useAssets` are built on it.
 - `useAssets` — `added`, and `record`, `moved`, `removed` as changes.
 - `useDragSensors` — how every drag starts (mouse after 5px, touch after holding 0.25s): board, planner, a note's lists, Edit list.
 - `useFolderNotes` — what a board or planner does with its folder's notes (values, properties: `showProperties`, `renameProperty`, `removeProperty`; a card's title, description, removal).

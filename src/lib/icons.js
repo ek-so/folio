@@ -38,7 +38,7 @@ export function withoutEmoji(name) {
 const baseOf = path => path.split('/').pop()
 
 // What `path` shows as its icon: its chosen emoji, else the one its name starts with; '' for none
-export const iconOf = (icons, path) => path in icons ? icons[path] : leadingEmoji(baseOf(path))
+export const iconOf = (icons, path) => Object.hasOwn(icons, path) ? icons[path] : leadingEmoji(baseOf(path))
 
 // `icons` with `emoji` for `path`; '' takes it out, or, when the name starts with one, says "none"
 export function withIcon(icons, path, emoji) {

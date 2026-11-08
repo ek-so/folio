@@ -20,12 +20,13 @@ export default function SearchSheet({ onClose, onSelect, virtual, changes, recen
   const q = query.trim().toLowerCase()
   // Same visibility as the file list: everything but folder placeholders
   const allFiles = Object.keys(virtual || {}).filter(p => !p.endsWith('/.gitkeep') && p !== '.gitkeep' && only(p))
+  const files = new Set(allFiles)
   const recentFiles = recent ? recent.filter(p => p in (virtual || {}) && only(p)) : [...allFiles].sort((a, b) => a.localeCompare(b))
 
   const found = q ? [
     ...(onSelectFolder ? folders : []).filter(p => p.toLowerCase().includes(q)).map(path => ({ path, dir: true })),
     ...allFiles.filter(p => p.toLowerCase().includes(q)).map(path => ({ path })),
-    ...(texts ? searchNotes(Object.fromEntries(allFiles.filter(p => p in texts).map(p => [p, texts[p]])), q, p => p.toLowerCase().includes(q)) : []),
+    ...(texts ? searchNotes(texts, q, p => !files.has(p) || p.toLowerCase().includes(q)) : []),
   ] : recentFiles.map(path => ({ path }))
   const results = found.slice(0, q ? 30 : 12)
 

@@ -15,7 +15,7 @@ import { CSS } from '@dnd-kit/utilities'
 import { useDragSensors } from '@/hooks/useDragSensors.js'
 import { cn } from '@/lib/utils.js'
 import { useNote } from '@/hooks/useNote.js'
-import { displayName } from '@/lib/files.js'
+import { displayName, fileName } from '@/lib/files.js'
 import { fileItem } from '@/lib/folderNotes.js'
 import ResizeHandle from '@/components/ResizeHandle.jsx'
 import { Tray, TrayTitle } from '@/components/ui/tray.jsx'
@@ -86,7 +86,7 @@ export default function NoteWidget({ id, services, onRemove }) {
       <DragOverlay>
         {moving && (
           <Tray className="rotate-1 bg-secondary shadow-lg">
-            <TrayTitle grip>{displayName(moving)}</TrayTitle>
+            <TrayTitle grip>{fileName(moving)}</TrayTitle>
           </Tray>
         )}
       </DragOverlay>
@@ -149,7 +149,7 @@ function NoteTray({ path, services, height, canMove, onTakeOut, onReplace }) {
     <Tray ref={setNodeRef} style={{ transform: CSS.Translate.toString(transform), transition }} className={cn('min-w-0', isDragging && 'opacity-40')}>
       <div className="flex items-center gap-space-xs">
         <div ref={setActivatorNodeRef} {...attributes} {...listeners} className={cn('min-w-0 flex-1', canMove && 'cursor-grab touch-manipulation select-none', NO_CALLOUT)}>
-          <TrayTitle grip={canMove}>{displayName(path)}</TrayTitle>
+          <TrayTitle grip={canMove}>{fileName(path)}</TrayTitle>
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

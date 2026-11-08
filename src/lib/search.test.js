@@ -11,6 +11,11 @@ describe('searchNotes', () => {
     expect(hits[0].match).toBe('MIL')
   })
 
+  it('sees a note\'s new text on the next search', () => {
+    expect(searchNotes({ 'n.md': 'apple pie' }, 'apple')).toHaveLength(1)
+    expect(searchNotes({ 'n.md': 'plum pie' }, 'apple')).toHaveLength(0)
+  })
+
   it('cuts long text with …, skips notes and short or empty queries', () => {
     const long = { 'x.md': `${'a '.repeat(40)}needle${' z'.repeat(60)}` }
     const [hit] = searchNotes(long, 'needle')

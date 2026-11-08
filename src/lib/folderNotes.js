@@ -1,6 +1,6 @@
 import { virtualFiles, editNote } from './changes.js'
 import { withKeys, noteTitle } from './frontmatter.js'
-import { displayName } from './files.js'
+import { fileName } from './files.js'
 import { SYMLINK_MODE } from './links.js'
 
 // Helpers for the notes of a folder that a widget (board, planner) works on
@@ -8,8 +8,8 @@ import { SYMLINK_MODE } from './links.js'
 // A file as the app's file actions take it ({ name, path, type })
 export const fileItem = path => ({ path, name: path.slice(path.lastIndexOf('/') + 1), type: 'file' })
 
-// A card's title: its note's (`text`; undefined when it isn't on this device: the file's name)
-export const cardTitle = (path, text) => text === undefined ? displayName(path) : noteTitle(text, displayName(path))
+// A card's title: its note's (`text`; undefined when it isn't on this device: the file's name). Kept as written, emoji included: cards have no icon to show it
+export const cardTitle = (path, text) => text === undefined ? fileName(path) : noteTitle(text, fileName(path))
 
 // Technical files and folders (".assets", "_attachments", ".gitkeep"…): a name starting with "." or "_"
 // anywhere in the path keeps it off a widget

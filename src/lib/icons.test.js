@@ -27,6 +27,7 @@ describe('icons', () => {
     expect(iconOf({}, 'Life/📝 a.md')).toBe('📝')
     expect(iconOf({ 'Life/📝 a.md': '' }, 'Life/📝 a.md')).toBe('')
     expect(iconOf({}, 'a.md')).toBe('')
+    expect(iconOf({}, 'constructor')).toBe('')
   })
 
   it('sets, clears, follows moves and forgets deletes', () => {
