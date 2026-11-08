@@ -134,7 +134,7 @@ export const TitleMenuButton = forwardRef(function TitleMenuButton({ icon, child
 })
 
 // The title of a file or folder: its `name` as a button that opens a popover with the tree of the folder
-// you're in (the open folder, or the open file's), its subfolders expandable; `badge` (symlinks pointing here) sits inside the button's outline, after ▾; on a view's page, the view's own
+// you're in (an open file's folder, or an open folder's parent with the folder itself open in it), its subfolders expandable; `badge` (symlinks pointing here) sits inside the button's outline, after ▾; on a view's page, the view's own
 // tree instead (`viewTree`: its widgets and what they show). It opens scrolled to the open item. Choosing a note or folder opens it and closes the popover.
 export function FolderTreeMenu({ name, changed, badge }) {
   const nav = useContext(NavContext)
@@ -142,7 +142,11 @@ export function FolderTreeMenu({ name, changed, badge }) {
   if (!nav) return name
   const close = fn => path => { setOpen(false); fn(path) }
   const viewTree = open && nav.viewTree?.()
-  const empty = nav.viewTree ? !viewTree?.length : !nav.listDir(nav.dir).length
+  // An open folder is shown inside its parent, like an open file among its siblings: the folder itself (highlighted, open) with its neighbours
+  const inParent = !nav.viewTree && !nav.file && nav.dir !== ''
+  const top = inParent ? nav.dir.split('/').slice(0, -1).join('/') : nav.dir
+  const empty = nav.viewTree ? !viewTree?.length : !nav.listDir(top).length
+  const expanded = inParent ? new Set([...nav.expanded, nav.dir]) : nav.expanded
   const trigger = (
     <PopoverTrigger asChild>
       <TitleMenuButton bare={!!badge} icon={<FileIcon path={nav.current ?? ''} dir={nav.current !== nav.file} />} changed={changed}>{withoutEmoji(name)}</TitleMenuButton>
@@ -156,8 +160,8 @@ export function FolderTreeMenu({ name, changed, badge }) {
           {empty
             ? <EmptyMessage size="sm">{nav.viewTree ? 'Nothing on this view yet' : 'Empty folder'}</EmptyMessage>
             : (
-              <NavContext.Provider value={{ ...nav, onOpenFolder: close(nav.onOpenFolder), onOpenFile: close(nav.onOpenFile) }}>
-                {viewTree ? <ViewTree nodes={viewTree} /> : <ul><Rows dir={nav.dir} depth={0} /></ul>}
+              <NavContext.Provider value={{ ...nav, expanded, onToggle: path => path !== nav.dir && nav.onToggle(path), onOpenFolder: close(nav.onOpenFolder), onOpenFile: close(nav.onOpenFile) }}>
+                {viewTree ? <ViewTree nodes={viewTree} /> : <ul><Rows dir={top} depth={0} /></ul>}
               </NavContext.Provider>
             )}
         </div>
