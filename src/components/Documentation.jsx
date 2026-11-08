@@ -3,6 +3,7 @@ import TitleBar from './TitleBar.jsx'
 import { PAGE } from '../lib/pages.js'
 import { WIDGET_TYPES } from '../widgets/index.js'
 import { KEEP_DAYS } from '../lib/archive.js'
+import PageLayout from './PageLayout.jsx'
 
 // What each kind of widget (widgets/index.js) is for and how it works, in plain words, by its `type`.
 // The page lists every registered kind with its own label and icon, so a new widget shows up here
@@ -45,14 +46,14 @@ const WIDGET_DOCS = {
 // A page of documentation: how views and each kind of widget work.
 export default function Documentation() {
   return (
-    <div className="flex flex-col flex-1 min-h-0">
+    <PageLayout>
       <Surface title={<TitleBar page={PAGE.DOCS} />}>
         <div className="flex-1 min-h-0 overflow-y-auto">
           <div className="mx-auto flex max-w-2xl flex-col gap-space-lg p-space">
             <section className="flex flex-col gap-space-sm">
               <h2 className="text-lg font-bold">Views and widgets</h2>
               <p className="text-sm">A view is a page of widgets. Each widget shows some of your notes in its own way.</p>
-              <ul className="flex list-disc flex-col gap-1 pl-5 text-sm">
+              <ul className="flex list-disc flex-col gap-space-xs pl-5 text-sm">
                 <li>Add a widget with +. Reorder or remove them in the view's ⋯.</li>
                 <li>Your notes hold the content. Views and widgets are saved in .folio and only change how notes look, so deleting them never deletes a note.</li>
                 <li>A trash removes. A file or folder goes to the archive (.archive) first, where you can recover it for {KEEP_DAYS} days; a value or property is removed for good. A ✕ only takes something off a view.</li>
@@ -63,11 +64,11 @@ export default function Documentation() {
               const doc = WIDGET_DOCS[type]
               return (
                 <section key={type} className="flex flex-col gap-space-sm">
-                  <h2 className="flex items-center gap-2 text-lg font-bold"><Icon className="size-5 text-primary" /> {label}</h2>
+                  <h2 className="flex items-center gap-space-sm text-lg font-bold"><Icon className="size-5 text-primary" /> {label}</h2>
                   {doc ? (
                     <>
                       <p className="text-sm">{doc.summary}</p>
-                      <ul className="flex list-disc flex-col gap-1 pl-5 text-sm">{doc.points.map(point => <li key={point}>{point}</li>)}</ul>
+                      <ul className="flex list-disc flex-col gap-space-xs pl-5 text-sm">{doc.points.map(point => <li key={point}>{point}</li>)}</ul>
                     </>
                   ) : <p className="text-sm text-muted-foreground">No description yet.</p>}
                 </section>
@@ -76,6 +77,6 @@ export default function Documentation() {
           </div>
         </div>
       </Surface>
-    </div>
+    </PageLayout>
   )
 }

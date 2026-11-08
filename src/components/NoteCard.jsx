@@ -1,11 +1,11 @@
 import { forwardRef } from 'react'
-import { LockSimple } from '@phosphor-icons/react'
 import { cn, isPortaled } from '@/lib/utils.js'
 import { openLink } from '@/lib/previewLinks.js'
 import PropertyBadges from '@/components/PropertyBadges.jsx'
 import { displayName } from '@/lib/files.js'
 import { frontMatter, noteTitle, DESCRIPTION } from '@/lib/frontmatter.js'
 import { taskProgress } from '@/lib/markdown.js'
+import LockMark from './LockMark.jsx'
 
 // A long press on iPhones mustn't open the text or link callout instead of the drag
 export const NO_CALLOUT = '[-webkit-touch-callout:none]'
@@ -40,17 +40,17 @@ const NoteCard = forwardRef(function NoteCard({ path, text, properties, always =
       role="button"
       tabIndex={0}
       onKeyDown={e => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); props.onClick?.(e) } }}
-      className={cn('group flex w-full cursor-pointer touch-manipulation select-none flex-col gap-1 rounded-lg border border-border bg-card p-space text-left outline-none hover-lift focus-visible:ring-1 focus-visible:ring-ring', NO_CALLOUT, className)}
+      className={cn('group flex w-full cursor-pointer touch-manipulation select-none flex-col gap-space-xs rounded-lg border border-border bg-card p-space text-left outline-none hover-lift focus-visible:ring-1 focus-visible:ring-ring', NO_CALLOUT, className)}
       {...props}
     >
-      <div className="flex items-start gap-1">
+      <div className="flex items-start gap-space-xs">
         <span className={cn('min-w-0 flex-1 break-words text-sm font-medium', overdue && 'opacity-50')}>
-          {locked && <LockSimple aria-label="Locked" className="mr-1 inline size-3.5 align-[-0.125em] text-muted-foreground" />}
+          {locked && <LockMark />}
           {text === undefined ? displayName(path) : noteTitle(text, displayName(path))}
         </span>
         {menu}
       </div>
-      <PropertyBadges props={shown} path={path} files={files} clamp className="pt-1" onChange={onChange} options={options} onRemoveValue={onRemoveValue} valueCount={valueCount} scopeName={scopeName} chosen={chosen} onEditValue={onEditValue} dateKeys={dateKeys} badges={badges} overdue={overdue} />
+      <PropertyBadges props={shown} path={path} files={files} clamp className="pt-space-xs" onChange={onChange} options={options} onRemoveValue={onRemoveValue} valueCount={valueCount} scopeName={scopeName} chosen={chosen} onEditValue={onEditValue} dateKeys={dateKeys} badges={badges} overdue={overdue} />
       {text !== undefined && <TaskProgress {...taskProgress(text)} />}
     </div>
   )
@@ -60,7 +60,7 @@ const NoteCard = forwardRef(function NoteCard({ path, text, properties, always =
 function TaskProgress({ done, total }) {
   if (!total) return null
   return (
-    <div className="flex items-center gap-2 pt-1" aria-label={`${done} of ${total} tasks done`}>
+    <div className="flex items-center gap-space-sm pt-space-xs" aria-label={`${done} of ${total} tasks done`}>
       <div className="h-1 flex-1 overflow-hidden rounded-full bg-muted">
         <div className={cn('h-full rounded-full transition-[width]', done === total ? 'bg-success' : 'bg-primary')} style={{ width: `${(done / total) * 100}%` }} />
       </div>

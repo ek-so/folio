@@ -13,10 +13,10 @@ export default function SyncCheckModal({ broken, files, onFix, onOpenNote, onOpe
       description="Fix them before syncing, or sync anyway."
       onClose={onClose}
     >
-      <div className="-mx-6 max-h-72 overflow-y-auto border-y border-border" data-no-pull>
+      <div className="-mx-space-lg max-h-72 overflow-y-auto border-y border-border" data-no-pull>
         <BrokenLinkList broken={broken} files={files} onOpen={onOpenNote} onFix={onFix} />
       </div>
-      <div className="flex flex-wrap justify-end gap-2">
+      <div className="flex flex-wrap justify-end gap-space-sm">
         <Button variant="secondary" onClick={onClose}>Cancel</Button>
         <Button variant="secondary" onClick={onOpenPage}>Open Broken links</Button>
         <Button onClick={onSyncAnyway}>Sync anyway</Button>

@@ -147,7 +147,7 @@ function NoteTray({ path, services, height, canMove, onTakeOut, onReplace }) {
   const open = () => { window.dispatchEvent(new Event('folio:flush')); services.openFile(path) } // typing first
   const tray = body => (
     <Tray ref={setNodeRef} style={{ transform: CSS.Translate.toString(transform), transition }} className={cn('min-w-0', isDragging && 'opacity-40')}>
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-space-xs">
         <div ref={setActivatorNodeRef} {...attributes} {...listeners} className={cn('min-w-0 flex-1', canMove && 'cursor-grab touch-manipulation select-none', NO_CALLOUT)}>
           <TrayTitle grip={canMove}>{displayName(path)}</TrayTitle>
         </div>

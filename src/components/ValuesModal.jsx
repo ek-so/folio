@@ -49,7 +49,7 @@ export default function ValuesModal({ name, values, colors, count, scopeName, re
       onOpenAutoFocus={e => { e.preventDefault(); e.currentTarget?.focus() }}
     >
       <div className="flex flex-col gap-3">
-        <form onSubmit={add} className="flex gap-2">
+        <form onSubmit={add} className="flex gap-space-sm">
           <Input
             value={typed}
             placeholder={`Add ${name}`}
@@ -59,7 +59,7 @@ export default function ValuesModal({ name, values, colors, count, scopeName, re
           />
           <Button type="submit" variant="success" size="icon" aria-label="Add" tooltip="Add" disabled={!query} className="shrink-0"><Check /></Button>
         </form>
-        {replaces && query && query !== replaces && <p className="-mt-1 px-1 text-xs text-muted-foreground">Adding it replaces “{replaces}” on this note.</p>}
+        {replaces && query && query !== replaces && <p className="-mt-space-xs px-space-xs text-xs text-muted-foreground">Adding it replaces “{replaces}” on this note.</p>}
         <ListBox>
           {values.map(v => editing?.value === v ? (
             <li key={v}>

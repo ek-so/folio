@@ -8,7 +8,7 @@ import BottomSheet from './BottomSheet.jsx'
 export default function ConfirmModal({ title, description, confirm = 'Remove', onConfirm, alternative, onClose }) {
   return (
     <BottomSheet title={title} description={description} onClose={onClose}>
-      <div className="flex flex-wrap justify-end gap-2">
+      <div className="flex flex-wrap justify-end gap-space-sm">
         <Button variant="secondary" onClick={onClose}>Cancel</Button>
         {alternative && <Button variant="secondary" onClick={alternative.onSelect}>{alternative.label}</Button>}
         <Button variant="destructive" onClick={onConfirm}>{confirm}</Button>

@@ -22,12 +22,12 @@ export default function TitleBar({ page, name, nameMenu, changed, badge, childre
             <ArrowLeft />
           </Button>
         )}
-        <div className="flex min-w-0 flex-1 items-center gap-2">
+        <div className="flex min-w-0 flex-1 items-center gap-space-sm">
           <h1 className={cn('min-w-0 truncate text-base font-bold', !page && 'flex')}>{page ? <PageTitle page={pageInfo(page, views)} /> : nameMenu ?? <FolderTreeMenu name={name} />}</h1>
           {changed && <span className="size-1.5 shrink-0 rounded-full bg-primary" />}
           {badge}
         </div>
-        {children && <div className="flex shrink-0 items-center gap-2">{children}</div>}
+        {children && <div className="flex shrink-0 items-center gap-space-sm">{children}</div>}
       </div>
     </div>
   )

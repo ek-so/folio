@@ -13,7 +13,7 @@ const TIME_ONLY = /^\d{2}:\d{2}$/
 
 const DateBadge = forwardRef(function DateBadge({ label, inline, className, ...props }, ref) {
   return (
-    <Badge ref={ref} {...props} className={cn('whitespace-nowrap', !props.tone && 'text-muted-foreground', inline ? 'h-5 gap-1 px-1.5 py-0 align-[-0.15em] text-xs' : 'gap-1.5', className)}>
+    <Badge ref={ref} {...props} className={cn('whitespace-nowrap', !props.tone && 'text-muted-foreground', inline ? 'h-5 gap-space-xs px-1.5 py-0 align-[-0.15em] text-xs' : 'gap-1.5', className)}>
       {TIME_ONLY.test(label) ? <Clock className={cn('shrink-0', inline ? 'size-3.5' : 'size-4')} /> : <CalendarBlank className={cn('shrink-0', inline ? 'size-3.5' : 'size-4')} />}
       {label}
     </Badge>

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Button } from './ui/button.jsx'
 import { Input } from './ui/input.jsx'
 import AppLogo from './AppLogo.jsx'
+import AuthLayout from './AuthLayout.jsx'
 
 export default function Auth({ onAuth }) {
   const [token, setToken] = useState('')
@@ -22,13 +23,11 @@ export default function Auth({ onAuth }) {
   }
 
   return (
-    <div className="flex min-h-full items-center justify-center p-6 bg-background">
-      <div className="w-full max-w-sm flex flex-col items-center gap-4">
-        <AppLogo className="size-20" />
-        <h1 className="text-2xl font-bold tracking-tight">Folio</h1>
-        <p className="text-sm text-muted-foreground text-center">
-          Paste a GitHub token to access your notes.
-        </p>
+    <AuthLayout
+      logo={<AppLogo className="size-20" />}
+      title="Folio"
+      intro="Paste a GitHub token to access your notes."
+    >
         <form onSubmit={handleSubmit} className="w-full flex flex-col gap-2.5">
           <Input
             type="password"
@@ -57,7 +56,6 @@ export default function Auth({ onAuth }) {
         <p className="text-xs text-muted-foreground text-center">
           Use a fine-grained token limited to your notes repo, with Contents: Read and write.
         </p>
-      </div>
-    </div>
+    </AuthLayout>
   )
 }

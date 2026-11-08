@@ -9,7 +9,7 @@ export default function UploadErrorsModal({ errors, onClose }) {
       title={`Couldn't add ${plural(errors.length, 'file')}`}
       onClose={onClose}
     >
-      <ul className="flex flex-col gap-2 text-sm">
+      <ul className="flex flex-col gap-space-sm text-sm">
         {errors.map(([name, reason]) => (
           <li key={name}><span className="font-medium">{name}</span> <span className="text-muted-foreground">— {reason}</span></li>
         ))}

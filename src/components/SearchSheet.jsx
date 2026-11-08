@@ -47,7 +47,7 @@ export default function SearchSheet({ onClose, onSelect, virtual, changes, recen
           autoCapitalize="off"
           className="bg-background border-border"
         />
-        <div className="overflow-y-auto max-h-64 -mx-1" data-no-pull>
+        <div className="overflow-y-auto max-h-64 -mx-space-xs" data-no-pull>
           {top && <div className="mb-0.5">{top}</div>}
           {!q && recentFiles.length === 0 ? (
             <EmptyMessage size="sm">No recent files</EmptyMessage>

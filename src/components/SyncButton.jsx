@@ -64,7 +64,7 @@ export default function SyncButton({ className, compact, bar, syncState, syncing
             {compact ? dot : <>
               {label}
               {pending && (
-                <span aria-label={directions} className="ml-auto flex h-5 min-w-5 items-center justify-center gap-0.5 rounded-full bg-primary px-1 text-primary-foreground">
+                <span aria-label={directions} className="ml-auto flex h-5 min-w-5 items-center justify-center gap-0.5 rounded-full bg-primary px-space-xs text-primary-foreground">
                   {hasPush && <ArrowUp weight="bold" className="size-3" />}
                   {hasPull && <ArrowDown weight="bold" className="size-3" />}
                 </span>

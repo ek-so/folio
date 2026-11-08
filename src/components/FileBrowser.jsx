@@ -135,7 +135,7 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
             {base}
             {ext && <span className="text-muted-foreground">{ext}</span>}
             {isLink && <span className="text-muted-foreground"> (symlink)</span>}
-            {link?.error && <span className={cn('text-sm text-muted-foreground', !cards && 'ml-2')}>{LINK_ERRORS[link.error]}</span>}
+            {link?.error && <span className={cn('text-sm text-muted-foreground', !cards && 'ml-space-sm')}>{LINK_ERRORS[link.error]}</span>}
           </>}
           tint={cards ? iconTint(isLink ? (link?.path ?? item.path) : item.path, isLink ? link?.kind === 'folder' : item.type === 'dir') : undefined}
           tall={cards ? tall : undefined}
@@ -211,8 +211,8 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
             <Spinner />
           </div>
         )}
-        {error && <p className="text-destructive-ink text-sm text-center pt-4 px-4">{error}</p>}
-        {notice && <p className="text-muted-foreground text-xs text-center pt-3 px-4">{notice}</p>}
+        {error && <p className="text-destructive-ink text-sm text-center pt-space px-space">{error}</p>}
+        {notice && <p className="text-muted-foreground text-xs text-center pt-3 px-space">{notice}</p>}
         {!loading && !error && items.length === 0 && layout !== 'columns' && (
           <EmptyMessage size="lg">No notes yet</EmptyMessage>
         )}

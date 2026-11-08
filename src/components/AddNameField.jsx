@@ -17,8 +17,8 @@ export default function AddNameField({ label, onAdd }) {
     else setName('')
   }
   return (
-    <form onSubmit={add} className="flex flex-col gap-2">
-      <div className="flex gap-2">
+    <form onSubmit={add} className="flex flex-col gap-space-sm">
+      <div className="flex gap-space-sm">
         <Input
           placeholder={label}
           value={name}

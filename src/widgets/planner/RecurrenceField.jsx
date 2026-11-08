@@ -108,7 +108,7 @@ function RecurrenceChooser({ rule, start, onChange }) {
               type="multiple" aria-label="Weekdays"
               value={(repeat?.weekdays ?? []).map(String)}
               onValueChange={days => set({ weekdays: days.map(Number) })}
-              className="h-control gap-1 rounded-sm bg-segment p-1"
+              className="h-control gap-space-xs rounded-sm bg-segment p-space-xs"
             >
               {WEEK.map(d => <ToggleGroupItem key={d} value={String(d)} variant="segmented" aria-label={WEEKDAYS[d]}>{WEEKDAYS[d].slice(0, 2)}</ToggleGroupItem>)}
             </ToggleGroup>

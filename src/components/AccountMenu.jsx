@@ -35,8 +35,8 @@ export default function AccountMenu({ trigger, current, pages, viewActions, onNa
         {/* Like a title bar: base height, 8px above and below, 16px at the sides, level with the sheet's ✕ (16px from
             the right too); the logo centered on the rows' icons and the name lined up with their labels */}
         <div className="shrink-0 border-b border-border py-space-sm pl-space pr-[calc(var(--spacing-space)+var(--spacing-control)+var(--spacing-space-sm))]">
-          <div className="flex min-h-control items-center gap-2 px-3">
-            <AppLogo className="-ml-1 size-6 shrink-0" />
+          <div className="flex min-h-control items-center gap-space-sm px-3">
+            <AppLogo className="-ml-space-xs size-6 shrink-0" />
             <SheetTitle className="text-base font-bold">Folio</SheetTitle>
           </div>
         </div>
@@ -51,7 +51,7 @@ export default function AccountMenu({ trigger, current, pages, viewActions, onNa
           <ul>{pages.filter(p => !p.view && p.id !== PAGE.FILES).map(page)}</ul>
           {separator}
           <ul>
-            {fixed(PAGE.LINKS, LinkBreak, 'Broken links', brokenCount > 0 && <span className="px-2 text-sm text-muted-foreground">{brokenCount}</span>)}
+            {fixed(PAGE.LINKS, LinkBreak, 'Broken links', brokenCount > 0 && <span className="px-space-sm text-sm text-muted-foreground">{brokenCount}</span>)}
             {fixed(PAGE.DOCS, BookOpen, 'Documentation')}
             {fixed(PAGE.SETTINGS, Gear, 'Settings')}
             <li><ListRow icon={<SignOut className="text-destructive-ink" />} title={<span className="text-destructive-ink">Sign out</span>} onClick={go(onSignOut)} /></li>

@@ -49,7 +49,7 @@ export default function RepoMenu() {
             inputRef={inputRef}
             inputClassName="font-mono bg-background border-border"
             actions={({ busy, empty }) => (
-              <div className="flex justify-end gap-2">
+              <div className="flex justify-end gap-space-sm">
                 <Button type="button" variant="secondary" onClick={() => setSwitching(false)}>Cancel</Button>
                 <Button type="submit" disabled={busy || empty || nav.syncing}>{busy ? 'Checking…' : nav.syncing ? 'Syncing…' : 'Switch'}</Button>
               </div>

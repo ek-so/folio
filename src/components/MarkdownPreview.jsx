@@ -302,7 +302,7 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
       {footer}
       {brokenTip && (
         <div
-          className="fixed z-50 rounded-md border border-border bg-popover text-foreground text-sm px-2 py-1 shadow-md pointer-events-none -translate-x-1/2 -translate-y-full"
+          className="fixed z-50 rounded-sm border border-border bg-popover text-foreground text-sm px-space-sm py-space-xs shadow-md pointer-events-none -translate-x-1/2 -translate-y-full"
           style={{ left: brokenTip.x, top: brokenTip.y - 6 }}
         >
           Link is broken

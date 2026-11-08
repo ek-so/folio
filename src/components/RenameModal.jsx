@@ -32,7 +32,7 @@ export default function RenameModal({ item, onRename, onClose, kind }) {
       onOpenAutoFocus={e => { e.preventDefault(); inputRef.current?.select() }}
     >
       <form onSubmit={handleRename} className="flex flex-col gap-3">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-space-sm">
           <Input
             ref={inputRef}
             type="text"
@@ -47,7 +47,7 @@ export default function RenameModal({ item, onRename, onClose, kind }) {
         {linkCount > 0 && (
           <p className="text-muted-foreground text-xs">Also updates links in {plural(linkCount, 'note')}.</p>
         )}
-        <div className="flex justify-end gap-2">
+        <div className="flex justify-end gap-space-sm">
           <Button type="button" variant="secondary" onClick={onClose}>Cancel</Button>
           <Button type="submit" disabled={!name.trim()}>Save</Button>
         </div>

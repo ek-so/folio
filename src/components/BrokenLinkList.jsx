@@ -13,12 +13,12 @@ export default function BrokenLinkList({ broken, files, onOpen, onFix }) {
   const byNote = Object.entries(groups).sort(([a], [b]) => a.localeCompare(b))
 
   return byNote.map(([from, items]) => (
-    <section key={from} className="border-b border-border px-4 py-3 last:border-b-0">
+    <section key={from} className="border-b border-border px-space py-3 last:border-b-0">
       <Button variant="ghost" className="-ml-3 gap-3 px-3 font-semibold" onClick={() => onOpen(from)}>
         <FileIcon path={from} />
         <span className="truncate">{displayName(from)}</span>
       </Button>
-      <ul className="mt-1 flex flex-col gap-2">
+      <ul className="mt-space-xs flex flex-col gap-space-sm">
         {items.map((b, i) => {
           const fix = suggestFix(b.link, files)
           return (

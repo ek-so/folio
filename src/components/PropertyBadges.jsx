@@ -215,7 +215,7 @@ function ValueChooser({ prop, options, onChange, onManage, close }) {
             key={v} title={v} icon={current.includes(v) ? <Check /> : <span className="size-4" />} onClick={() => choose(v)}
           />
         ))}
-        {!isNew && !shown.length && <p className="px-3 py-2 text-sm text-muted-foreground">No values yet. Type one to add it.</p>}
+        {!isNew && !shown.length && <p className="px-3 py-space-sm text-sm text-muted-foreground">No values yet. Type one to add it.</p>}
       </div>
       {onManage && <>
         <Separator className="-mx-space-sm my-space-xs data-[orientation=horizontal]:w-auto" />

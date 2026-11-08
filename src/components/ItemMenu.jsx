@@ -40,7 +40,7 @@ export default function ItemMenu({ item, onRename, onDuplicate, onDelete, onMove
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" onCloseAutoFocus={e => e.preventDefault()}>
           {onView && (
-            <div className="p-1">
+            <div className="p-space-xs">
               <Segmented stretch value={view} onChange={onView} options={desktop ? VIEWS : VIEWS.filter(([v]) => v !== 'columns')} label="View" iconOnly />
             </div>
           )}

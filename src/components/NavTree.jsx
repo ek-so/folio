@@ -27,13 +27,13 @@ function TreeRow({ depth, branch, open, onToggle, row }) {
         <span aria-hidden="true" className="shrink-0" style={{ width: `${depth}rem` }} />
         {branch ? (
           <Button
-            variant="ghost-quiet" size="icon-md" className="ml-1"
+            variant="ghost-quiet" size="icon-md" className="ml-space-xs"
             aria-label={open ? 'Collapse' : 'Expand'} aria-expanded={open}
             onClick={onToggle}
           >
             <CaretRight className={cn('transition-transform', open && 'rotate-90')} />
           </Button>
-        ) : <span aria-hidden="true" className="ml-1 w-control-md shrink-0" />}
+        ) : <span aria-hidden="true" className="ml-space-xs w-control-md shrink-0" />}
       </>}
       {...row}
     />
@@ -114,7 +114,7 @@ function ViewTree({ nodes }) {
 // `icon` (FileIcon), its name and ▾ on the right (the folder tree here, RepoMenu at File manager's root)
 export const TitleMenuButton = forwardRef(function TitleMenuButton({ icon, children, className, ...props }, ref) {
   return (
-    <Button ref={ref} variant="outline" className={cn('min-w-0 max-w-full gap-2 px-3', className)} {...props}>
+    <Button ref={ref} variant="outline" className={cn('min-w-0 max-w-full gap-space-sm px-3', className)} {...props}>
       {icon}
       <span className="truncate">{children}</span>
       <CaretDown className="text-muted-foreground" />

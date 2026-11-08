@@ -100,7 +100,7 @@ export default function PdfView({ base64 }) {
     <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto p-space">
       {status === 'loading' && <div className="flex justify-center py-12"><Spinner /></div>}
       {status === 'error' && <EmptyMessage size="lg" className="px-space">Couldn't show this PDF.</EmptyMessage>}
-      <div ref={pagesRef} className="flex flex-col gap-4" />
+      <div ref={pagesRef} className="flex flex-col gap-space" />
     </div>
   )
 }

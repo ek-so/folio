@@ -74,7 +74,7 @@ export default function DatePopover({ date, onPick, required, dayOnly, children 
         />
         {hasDay && (time || keeps) && (
           <div className="px-space-sm pb-space-sm">
-            <Button variant="ghost-destructive" className="w-full justify-start gap-2 px-3" onClick={removeDay}><X /> Remove date</Button>
+            <Button variant="ghost-destructive" className="w-full justify-start gap-space-sm px-3" onClick={removeDay}><X /> Remove date</Button>
           </div>
         )}
         {!dayOnly && <>
@@ -95,7 +95,7 @@ export default function DatePopover({ date, onPick, required, dayOnly, children 
             </div>
           ) : (
             <div className="p-space-sm">
-              <Button variant="ghost" className="w-full justify-start gap-2 px-3" onClick={addTime}><Plus /> Add time</Button>
+              <Button variant="ghost" className="w-full justify-start gap-space-sm px-3" onClick={addTime}><Plus /> Add time</Button>
             </div>
           )}
         </>}

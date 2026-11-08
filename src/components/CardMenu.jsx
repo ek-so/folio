@@ -106,7 +106,7 @@ function TextModal({ title, description, label, value: initial, onSave, onClose 
     <BottomSheet title={title} description={description} onClose={onClose}>
       <form onSubmit={e => { e.preventDefault(); onSave(value.trim()) }} className="flex flex-col gap-3">
         <Input value={value} onChange={e => setValue(e.target.value)} aria-label={label} placeholder={label} autoCorrect="off" className="bg-background border-border" />
-        <div className="flex justify-end gap-2">
+        <div className="flex justify-end gap-space-sm">
           <Button type="button" variant="secondary" onClick={onClose}>Cancel</Button>
           <Button type="submit">Save</Button>
         </div>

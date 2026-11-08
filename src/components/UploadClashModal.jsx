@@ -10,7 +10,7 @@ export default function UploadClashModal({ name, folder, onChoose }) {
       description={`${folder ? `In ${folder}. ` : ''}Replace it, or keep both and add a number to the new one's name.`}
       onClose={() => onChoose('skip')}
     >
-      <div className="flex justify-end gap-2">
+      <div className="flex justify-end gap-space-sm">
         <Button variant="secondary" onClick={() => onChoose('skip')}>Skip</Button>
         <Button variant="secondary" onClick={() => onChoose('keep')}>Keep both</Button>
         <Button variant="destructive" onClick={() => onChoose('replace')}>Replace</Button>

@@ -20,7 +20,7 @@ export default function LinkModal({ name: initialName, url: initialUrl, onSave, 
           URL
           <Input value={url} onChange={e => setUrl(e.target.value)} autoCorrect="off" autoCapitalize="off" spellCheck={false} className="bg-background border-border font-normal" />
         </Label>
-        <div className="flex justify-end gap-2">
+        <div className="flex justify-end gap-space-sm">
           <Button type="button" variant="secondary" onClick={onClose}>Cancel</Button>
           <Button type="submit" disabled={!url.trim()}>Save</Button>
         </div>

@@ -16,7 +16,7 @@ const buttonVariants = cva(
         secondary: 'bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80',
         ghost: 'hover:bg-secondary hover:text-secondary-foreground',
         // A muted button inside something already tinted or hoverable (a list row, a card, a tray): a faint fill on hover and while its menu is open
-        'ghost-quiet': 'text-muted-foreground hover:bg-muted-foreground/10 data-[state=open]:bg-muted-foreground/10',
+        'ghost-quiet': 'text-muted-foreground hover:bg-muted-foreground/10 hover:text-secondary-foreground data-[state=open]:bg-muted-foreground/10',
         // ✓ and ✕ icon buttons: green (success) and red; `*-light` where a ✓ and a ✕ stand together
         success: 'bg-success text-success-foreground shadow-sm hover:bg-success/90',
         'success-light': 'bg-success/15 text-success-ink hover:bg-success/25',

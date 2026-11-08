@@ -1,6 +1,6 @@
 import { toast } from 'sonner'
 import { Fragment, useState, useMemo, useRef, useCallback, useLayoutEffect } from 'react'
-import { Tag, Plus, LockSimple, CalendarBlank, CrosshairSimple, CalendarDots, ListBullets, ArrowsClockwise } from '@phosphor-icons/react'
+import { Tag, Plus, CalendarBlank, CrosshairSimple, CalendarDots, ListBullets, ArrowsClockwise } from '@phosphor-icons/react'
 import { DndContext, DragOverlay, useDraggable, useDroppable, pointerWithin } from '@dnd-kit/core'
 import { useDragSensors } from '@/hooks/useDragSensors.js'
 import { cn } from '@/lib/utils.js'
@@ -26,6 +26,7 @@ import { useToday } from './useToday.js'
 import { BADGES } from './RecurrenceField.jsx'
 import { WEEKDAYS, parseRecurrence, repeatLabel } from './recurrence.js'
 import { plural } from '@/lib/plural.js'
+import LockMark from '@/components/LockMark.jsx'
 
 // The ribbon: each day takes DAY_WIDTH (its box and the gap around it), and a line between months MONTH_GAP (a box that
 // wide with the 1px line in its middle: the days' gap on each side), so the scrolling sums match what's drawn; it starts
@@ -177,7 +178,7 @@ export default function Planner({ id, services, onRemove }) {
     const more = expanded.has(selected) ? 0 : hiddenCards(paths, dragged, limit).length
     // A section's title row (a day, a group of the list): its name and + (New task on `key`, its first day)
     const sectionTitle = (label, key) => (
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-space-xs">
         <div className="min-w-0 flex-1"><TrayTitle>{label}</TrayTitle></div>
         <Button variant="ghost-quiet" size="icon-md" aria-label={`New task: ${label}`} tooltip="New task" disabled={off} onClick={() => act.newCard(key)}><Plus /></Button>
       </div>
@@ -197,7 +198,7 @@ export default function Planner({ id, services, onRemove }) {
           return (
             <Tray key={group.key}>
               {sectionTitle(group.label, group.first)}
-              <div className="flex flex-col gap-0.5 rounded-lg border border-border bg-card p-1">
+              <div className="flex flex-col gap-0.5 rounded-lg border border-border bg-card p-space-xs">
                 {group.cards.filter(c => rows.has(c.path)).map(({ path, overdue }) => (
                   <TaskRow key={path} path={path} text={notes[path]} overdue={overdue} locked={services.locked(path)} menu={cardMenu(path, true)} onOpen={openFile} />
                 ))}
@@ -219,9 +220,9 @@ export default function Planner({ id, services, onRemove }) {
         {/* The ribbon in a tray like the cards' below, under a title row like a column's: the month in view, Today and a
             calendar to pick any day; it scrolls sideways to the tray's edges, with room above and below for a lifted day's shadow */}
         <Tray>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-space-xs">
             <div className="min-w-0 flex-1"><TrayTitle>{month}</TrayTitle></div>
-            <Button variant="ghost-quiet" size="md" className={cn(TRAY_ROW, 'shrink-0 gap-1.5 px-2', selected !== today && 'text-primary-ink hover:text-primary-ink')} onClick={goToday}><CrosshairSimple /> Today</Button>
+            <Button variant="ghost-quiet" size="md" className={cn(TRAY_ROW, 'shrink-0 gap-1.5 px-space-sm', selected !== today && 'text-primary-ink hover:text-primary-ink')} onClick={goToday}><CrosshairSimple /> Today</Button>
             <DatePopover dayOnly date={keyDay(selected)} onPick={d => d && goToDay(dayKey(d))}>
               <Button variant="ghost-quiet" size="icon-md" aria-label="Go to a day"><CalendarBlank /></Button>
             </DatePopover>
@@ -311,7 +312,7 @@ function Day({ dayKey: key, today, selected, count, onSelect }) {
   const { year, month, day } = keyDay(key)
   const weekday = WEEKDAYS[new Date(Date.UTC(year, month - 1, day)).getUTCDay()]
   return (
-    <div className="shrink-0 px-1" style={{ width: DAY_WIDTH }}>
+    <div className="shrink-0 px-space-xs" style={{ width: DAY_WIDTH }}>
       <Button
         ref={setNodeRef}
         variant={selected ? 'default' : 'ghost'}
@@ -322,7 +323,7 @@ function Day({ dayKey: key, today, selected, count, onSelect }) {
       >
         <span className={cn('text-xs', !selected && 'text-muted-foreground')}>{weekday}</span>
         <span className="text-base font-semibold tabular-nums">{day}</span>
-        <span className={cn('flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-xs tabular-nums', count ? (selected ? 'bg-primary-foreground/20' : 'bg-primary/15 text-primary-ink') : 'invisible')}>{count || 0}</span>
+        <span className={cn('flex h-4 min-w-4 items-center justify-center rounded-full px-space-xs text-xs tabular-nums', count ? (selected ? 'bg-primary-foreground/20' : 'bg-primary/15 text-primary-ink') : 'invisible')}>{count || 0}</span>
       </Button>
     </div>
   )
@@ -337,7 +338,7 @@ function TaskRow({ path, text, overdue, locked, menu, onOpen }) {
   const kind = parseRecurrence(repeat)?.kind
   return (
     <ListRow
-      title={<span className={cn(overdue && 'opacity-50')}>{locked && <LockSimple aria-label="Locked" className="mr-1 inline size-3.5 align-[-0.125em] text-muted-foreground" />}{cardTitle(path, text)}</span>}
+      title={<span className={cn(overdue && 'opacity-50')}>{locked && <LockMark />}{cardTitle(path, text)}</span>}
       description={<>
         <span className={cn(overdue && 'text-destructive-ink')}>{date ? dateLabel(date) : 'No date'}</span>
         {(kind === 'repeat' || kind === 'unset') && <> · <ArrowsClockwise className="inline size-3 align-[-0.125em]" /> {repeatLabel(repeat)}</>}

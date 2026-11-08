@@ -45,7 +45,7 @@ export default function LinkBadge({ href, text, kind, path, onEdit, onRemove }) 
   const Icon = REPO_ICONS[kind]
   return (
     <span className="link-badge inline-flex max-w-[min(420px,100%)] gap-px align-middle">
-      <Badge as="a" href={href} data-badge className={cn('gap-1.5 rounded-r-none py-0 pl-2', kind === 'missing' ? 'text-muted-foreground' : 'text-foreground/75')}>
+      <Badge as="a" href={href} data-badge className={cn('gap-1.5 rounded-r-none py-0 pl-space-sm', kind === 'missing' ? 'text-muted-foreground' : 'text-foreground/75')}>
         {Icon ? <Icon className={cn('size-4 shrink-0', kind === 'missing' ? 'text-muted-foreground' : 'text-primary')} /> : <Favicon href={href} />}
         <MiddleCut text={text} />
       </Badge>

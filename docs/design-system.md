@@ -14,7 +14,7 @@ shadcn/ui (new-york) · Tailwind CSS v4 · Radix UI · Phosphor icons (`@phospho
 - All controls share one radius, `rounded-sm` (8px). Badges (`ui/badge.jsx`: properties, links, the symlink badge in a title bar) are pills (`rounded-full`).
 
 ## Spacing tokens (`src/index.css`)
-`--space-lg` 24px, `--space` 16px, `--space-sm` 8px, `--space-xs` 4px. Classes: `p-space`, `gap-space-sm`, `px-space-xs`, `inset-x-space`…
+`--space-lg` 24px, `--space` 16px, `--space-sm` 8px, `--space-xs` 4px. Classes: `p-space`, `gap-space-sm`, `px-space-xs`, `inset-x-space`… A spacing of 4, 8, 16 or 24px is always the token, never `p-1`, `gap-2`, `px-4` or `mt-6`; the in-between ones (6, 10, 12px) and the half steps have none and stay as they are.
 - **24px:** the desktop rail's padding left and bottom.
 - **16px (base):** gutters around the content box, the content's padding on every side, gaps between them, the Surface's distance from the screen's edges.
 - **8px:** inside a piece (title bar, list and tree padding, gaps between buttons).
@@ -52,7 +52,9 @@ Never hardcode colors; use the semantic tokens (light and dark values in `src/in
 `--safe-top` / `--safe-bottom` hold the iOS safe-area insets.
 
 ## Buttons
-- Variants: `default`, `secondary`, `ghost`, `ghost-outline`, `outline`, `link`, and the colored ones: `destructive`, `ghost-destructive` (trash to delete, ✕ to take out: see the AGENTS rule), `success`, `success-light`, `destructive-light`.
+- Variants: `default`, `secondary`, `ghost`, `ghost-quiet` (a muted button inside something already tinted or hoverable: a faint fill on hover and while its menu is open), `ghost-outline` (no border, despite the name: a grey fill), `outline`, `link`, and the colored ones: `destructive`, `ghost-destructive` (trash to delete, ✕ to take out: see the AGENTS rule), `success`, `success-light`, `destructive-light`.
+- Sizes: `default` (40px), `icon` (40px square), `icon-md` (32px square, for buttons inside a row, tile, card or tray), `md`, `sm`. The icon sizes don't shrink in a flex row.
+- **`MoreButton`** (`components/MoreButton.jsx`) is every ⋯ that opens a menu (a `DropdownMenuTrigger asChild`): in a title row a `ghost-outline` base button with a 20px ⋯, `inRow` a quiet medium one with a 16px ⋯, `reveal` shown only while its row is hovered with a mouse (`REVEAL`).
 - Confirm and dismiss icon buttons: `success` / `destructive` alone, `success-light` / `destructive-light` side by side.
 
 ## Icons
@@ -64,7 +66,10 @@ Never hardcode colors; use the semantic tokens (light and dark values in `src/in
 - **`CardTile`** (`ui/card-tile.jsx`, same props): file manager's cards. A 24px icon in a 48px tinted square over the name; outlined, `rounded-lg`; names up to two lines (tiles two lines tall only when some name in the folder wraps, measured in `FileBrowser`); ⋯ in the corner on hover.
 - **`Tray`** / **`TrayTitle`** (`ui/tray.jsx`): a tinted box rounded a bit more than cards (`rounded-xl`, 16px; the Properties box too) grouping what's in it under a small title (`grip`: the drag dots): a board's column, a note in the Notes widget (its name as the title). What sits in it is `bg-card`.
 - **`Calendar`** (`ui/calendar.jsx`): shadcn's (`npx shadcn add calendar`, react-day-picker), its icons switched to Phosphor's and `cn` to the project's (keep that when updating it; the CLI also rewrites `ui/button.jsx`, which must be put back). `DatePopover` is shadcn's date picker with time: the Calendar (today marked lightly, since the theme's accent is its blue) and, for a date with a time, a time field under it, for any date (`DateField`: a date badge in a note, a description or a date property).
+- **`ListBox`** (`ui/list-row.jsx`): the scrolling list of rows in a dialog or popover (Properties, Edit widgets, Edit values). **`InlineRename`** (`components/InlineRename.jsx`): a row turned into a name field with ✓ and ✕, in the Properties and Edit values dialogs.
+- **`AuthLayout`** (`components/AuthLayout.jsx`): the sign-in screens' frame (token, repository). **`LockMark`**: the small lock before a locked note's title.
 - **`Placeholder`** (`ui/placeholder.jsx`): light text for what isn't filled in yet (Untitled, No value).
+- **`EmptyMessage`** (`components/EmptyState.jsx`): the muted centered line for what a list or page has nothing of, `size` sm / md / lg for the air around it. Never a hand-written `<p>`.
 - **`EmptyState`** (`components/EmptyState.jsx`): a widget's broken or empty state in its place: a muted message and a secondary button to put it right (Select folder, Select note).
 
 ## Tooltips

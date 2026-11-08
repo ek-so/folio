@@ -36,7 +36,7 @@ export default function FolderSheet({ title, folders, onPick, onClose, children 
         />
         {error && <p className="text-destructive-ink text-xs">{error}</p>}
         {children}
-        <ul className="flex flex-col gap-0.5 max-h-64 overflow-y-auto -mx-1">
+        <ul className="flex flex-col gap-0.5 max-h-64 overflow-y-auto -mx-space-xs">
           {filtered.map(folder => (
             <li key={folder || '__root__'}>
               <ListRow icon={<FileIcon path={folder} dir />} title={folder || '(root)'} onClick={() => pick(folder)} />

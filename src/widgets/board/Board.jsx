@@ -142,7 +142,7 @@ export default function Board({ id, services, onRemove }) {
               </Column>
             ))}
           </SortableContext>
-          {!columns.length && <p className="py-6 text-sm text-muted-foreground">No columns yet: each {board.group} its notes have becomes a column.</p>}
+          {!columns.length && <p className="py-space-lg text-sm text-muted-foreground">No columns yet: each {board.group} its notes have becomes a column.</p>}
         </div>
         <DragOverlay>
           {dragged && drag.type === 'card' && byPath[dragged] && <NoteCard path={dragged} text={notes[dragged]} properties={board.properties} scopeName="this board" files={files} chosen={services.tagColors.colors} className="rotate-2 border-lift-edge shadow-lg" />}
@@ -252,17 +252,17 @@ function Column({ column, canEdit, count, more, onShowMore, onNewCard, onRename,
       className={cn('min-w-80 flex-1 max-md:min-w-70 max-md:flex-none max-md:basis-[85%] max-md:snap-start', isDragging && 'opacity-40')}
     >
       {column.key === LOOSE ? (
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-space-xs">
           <div className="min-w-0 flex-1"><TrayTitle>{column.name}</TrayTitle></div>
           <span className="flex size-control-md shrink-0 items-center justify-center text-sm tabular-nums text-muted-foreground">{count}</span>
         </div>
       ) : (
-        <div className="group/title -mx-space-sm -mt-space-sm flex items-center gap-1 px-space-sm pt-space-sm">
+        <div className="group/title -mx-space-sm -mt-space-sm flex items-center gap-space-xs px-space-sm pt-space-sm">
           <div ref={setActivatorNodeRef} {...attributes} {...listeners} className={cn('min-w-0 flex-1 cursor-grab touch-manipulation select-none', NO_CALLOUT)}>
             <TrayTitle grip>{column.name}</TrayTitle>
           </div>
           {/* With a mouse on a wider screen the count and ⋯ share one spot (a grid cell); on phones and touch they sit side by side */}
-          <div className="flex shrink-0 items-center gap-1 md:pointer-fine:grid md:pointer-fine:*:[grid-area:1/1]">
+          <div className="flex shrink-0 items-center gap-space-xs md:pointer-fine:grid md:pointer-fine:*:[grid-area:1/1]">
             <span className="pointer-events-none flex h-control-md min-w-control-md items-center justify-center text-sm tabular-nums text-muted-foreground md:pointer-fine:group-hover/title:opacity-0 md:pointer-fine:group-has-[[data-state=open]]/title:opacity-0 md:pointer-fine:group-has-[:focus-visible]/title:opacity-0">{count}</span>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

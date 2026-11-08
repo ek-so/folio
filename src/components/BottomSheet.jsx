@@ -40,7 +40,7 @@ export default function BottomSheet({ title, description, onClose, onOpenAutoFoc
     <Sheet open onOpenChange={open => !open && onClose()}>
       <SheetContent
         side="bottom"
-        className="mx-auto w-full max-w-[680px] gap-4 rounded-t-2xl bg-card p-6"
+        className="mx-auto w-full max-w-[680px] gap-space rounded-t-2xl bg-card p-space-lg"
         style={{
           bottom: keyboard,
           paddingBottom: keyboard ? '1.5rem' : 'calc(1.5rem + var(--safe-bottom))',
