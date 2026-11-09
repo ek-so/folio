@@ -19,8 +19,8 @@ import PageIcon from './PageIcon.jsx'
 
 // The app's primary navigation, in place of a header. `menu`: brokenCount and
 // onSignOut; `page` the open page; `renderSync(compact, bar)` makes the SyncButton (`bar`: the phone's top bar).
-// Desktop (768px+): a left rail, 16px from the top like the content boxes, 24px (--space-lg) on the left and
-// bottom; on the right its own 8px and the content's 16px gutter. On top a header row, level with the title
+// Desktop (768px+): a left rail, 16px from the top, left and bottom like the content boxes' 16px around; where
+// they meet, 8px: the rail has none on its right and the content box 8px on its left. On top a header row, level with the title
 // bars' rows (8px and a 1px top edge like the boxes' outline above it): the app's name (Folio, bold) and a
 // button that collapses the rail to icons only (remembered on this device; expanded, its edge is a drag handle);
 // then a separator like every other; Search, Sync, File manager, Assets and Graph (plain items, no separator between them), a separator, the views, Views settings,
@@ -57,7 +57,7 @@ export function NavRail({ page, pages, hrefOf, viewActions, onPage, onSearch, re
     </Button>
   )
   return (
-    <nav aria-label="Main" style={collapsed ? undefined : { width }} className={cn('relative hidden md:flex shrink-0 flex-col pt-space pb-space-lg pl-space-lg pr-space-sm', collapsed ? 'items-center' : 'max-w-[25vw]')}>
+    <nav aria-label="Main" style={collapsed ? undefined : { width }} className={cn('relative hidden md:flex shrink-0 flex-col p-space pr-0', collapsed ? 'items-center' : 'max-w-[25vw]')}>
       {collapsed ? <>
         {/* Collapsed: the logo button (level with the title bars' rows), then one separator (expanded: the header row, then it) */}
         <div className="flex shrink-0 justify-center self-stretch border-t border-t-transparent pt-space-sm">{collapseButton}</div>
@@ -110,7 +110,7 @@ export function NavRail({ page, pages, hrefOf, viewActions, onPage, onSearch, re
       <Button variant="ghost" tooltip={hint('Sign out')} tooltipSide="right" className={cn('justify-start gap-3 font-normal text-destructive-ink', collapsed && 'size-control justify-center px-0')} onClick={menu.onSignOut}>
         <SignOut /> {label('Sign out')}
       </Button>
-      {!collapsed && <ResizeHandle label="Resize menu" size={width} limits={RAIL_WIDTH} onResize={resize} className="inset-y-space-lg" />}
+      {!collapsed && <ResizeHandle label="Resize menu" size={width} limits={RAIL_WIDTH} onResize={resize} className="inset-y-space" />}
     </nav>
   )
 }
