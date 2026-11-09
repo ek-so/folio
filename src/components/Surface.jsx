@@ -1,6 +1,6 @@
 import { cn } from '@/lib/utils.js'
 
-// The open folder's or file's content: a card-colored box (a rounded, outlined box with 16px gutters (8px on its left, beside the rail: the 8px the two share), on phones under the top bar),
+// The open folder's or file's content: a card-colored box (a rounded, outlined box with 16px gutters (8px on its left, beside the rail's own 8px), on phones under the top bar),
 // down to the bottom of the screen. Fills the space; `title` (TitleBar, optional)
 // stays on top while the content scrolls inside, in a column of at most 1000px centered in the box (`wide`: at most 1500px, for
 // a view's dashboard).

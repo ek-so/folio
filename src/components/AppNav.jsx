@@ -20,7 +20,7 @@ import PageIcon from './PageIcon.jsx'
 // The app's primary navigation, in place of a header. `menu`: brokenCount and
 // onSignOut; `page` the open page; `renderSync(compact, bar)` makes the SyncButton (`bar`: the phone's top bar).
 // Desktop (768px+): a left rail, 16px from the top, left and bottom like the content boxes' 16px around; where
-// they meet, 8px: the rail has none on its right and the content box 8px on its left. On top a header row, level with the title
+// they meet, 8px each: the rail's right and the content box's left. On top a header row, level with the title
 // bars' rows (8px and a 1px top edge like the boxes' outline above it): the app's name (Folio, bold) and a
 // button that collapses the rail to icons only (remembered on this device; expanded, its edge is a drag handle);
 // then a separator like every other; Search, Sync, File manager, Assets and Graph (plain items, no separator between them), a separator, the views, Views settings,
@@ -57,7 +57,7 @@ export function NavRail({ page, pages, hrefOf, viewActions, onPage, onSearch, re
     </Button>
   )
   return (
-    <nav aria-label="Main" style={collapsed ? undefined : { width }} className={cn('relative hidden md:flex shrink-0 flex-col p-space pr-0', collapsed ? 'items-center' : 'max-w-[25vw]')}>
+    <nav aria-label="Main" style={collapsed ? undefined : { width }} className={cn('relative hidden md:flex shrink-0 flex-col p-space pr-space-sm', collapsed ? 'items-center' : 'max-w-[25vw]')}>
       {collapsed ? <>
         {/* Collapsed: the logo button (level with the title bars' rows), then one separator (expanded: the header row, then it) */}
         <div className="flex shrink-0 justify-center self-stretch border-t border-t-transparent pt-space-sm">{collapseButton}</div>
