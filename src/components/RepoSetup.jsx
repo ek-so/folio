@@ -1,11 +1,20 @@
+import { cn } from '@/lib/utils.js'
 import { useEffect, useState } from 'react'
-import { GithubLogo, SignOut } from '@phosphor-icons/react'
+import { SignOut } from '@phosphor-icons/react'
 import { Button } from './ui/button.jsx'
 import { ListRow, ListBox } from './ui/list-row.jsx'
 import AuthLayout from './AuthLayout.jsx'
 import FileIcon from './FileIcon.jsx'
 import Spinner from './Spinner.jsx'
 import { listRepos } from '../lib/github.js'
+
+// GitHub's official mark (public/github-mark.svg, from @primer/octicons). Phosphor's
+// GithubLogo is only the cat; this one is the cat in its circle. A CSS mask paints it in
+// the text color, so it follows the theme like an icon.
+function GithubMark({ className }) {
+  const url = `url(${import.meta.env.BASE_URL}github-mark.svg)`
+  return <span aria-hidden="true" className={cn('shrink-0 bg-foreground', className)} style={{ mask: `${url} center / contain no-repeat`, WebkitMask: `${url} center / contain no-repeat` }} />
+}
 
 // The second sign-in step: the repos the token can reach, to pick the one that
 // stores the notes. Repos it can write to come first; the others are shown
@@ -25,7 +34,7 @@ export default function RepoSetup({ onRepo, onLogout }) {
 
   return (
     <AuthLayout
-      logo={<GithubLogo className="size-16 text-foreground" aria-hidden="true" />}
+      logo={<GithubMark className="size-16" />}
       title="Notes repo"
       intro="Choose the GitHub repo that stores your notes."
     >
