@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react'
 import { flushSync } from 'react-dom'
-import { Plus, X } from '@phosphor-icons/react'
+import { Plus, Trash } from '@phosphor-icons/react'
 import { Popover, PopoverTrigger, PopoverContent } from './ui/popover.jsx'
 import { Calendar } from './ui/calendar.jsx'
 import { Input } from './ui/input.jsx'
@@ -74,7 +74,7 @@ export default function DatePopover({ date, onPick, required, dayOnly, children 
         />
         {hasDay && (time || keeps) && (
           <div className="px-space-sm pb-space-sm">
-            <Button variant="ghost-destructive" className="w-full justify-start gap-space-sm px-3" onClick={removeDay}><X /> Remove date</Button>
+            <Button variant="ghost-destructive" className="w-full justify-start gap-space-sm px-3" onClick={removeDay}><Trash /> Remove date</Button>
           </div>
         )}
         {!dayOnly && <>
@@ -90,7 +90,7 @@ export default function DatePopover({ date, onPick, required, dayOnly, children 
                 className="flex-1 appearance-none [&::-webkit-calendar-picker-indicator]:hidden"
               />
               {(hasDay || keeps) && (
-                <Button variant="ghost-destructive" size="icon" aria-label="Remove time" tooltip="Remove time" className="shrink-0" onMouseDown={e => e.preventDefault()} onClick={removeTime}><X /></Button>
+                <Button variant="ghost-destructive" size="icon" aria-label="Remove time" tooltip="Remove time" className="shrink-0" onMouseDown={e => e.preventDefault()} onClick={removeTime}><Trash /></Button>
               )}
             </div>
           ) : (

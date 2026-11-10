@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { X, FolderOpen } from '@phosphor-icons/react'
+import { Trash, FolderOpen } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils.js'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from './ui/dropdown-menu.jsx'
 import Spinner from './Spinner.jsx'
@@ -10,7 +10,7 @@ import { EmptyMessage } from './EmptyState.jsx'
 
 // What every widget on a view is framed by (board, planner, notes): its title row, then its body in one of its states.
 // Title row: `title` (bold) with `subtitle` under it (muted: a widget's folder), then `controls` (the widget's own, such
-// as the planner's calendar / list) and ⋯: the widget's own `menu` items, a separator and `removeLabel` (red, X;
+// as the planner's calendar / list) and ⋯: the widget's own `menu` items, a separator and `removeLabel` (red, Trash;
 // `onRemove`, disabled without `canEdit`). Body: a spinner until `ready`; "This `noun`'s settings can't be read."
 // when not `readable`; with `folder` ({ name, missing, folders, sheetTitle, sheetText, onPick }) gone, "Its folder … is gone."
 // and Select folder (FolderSheet: another folder for it); else `children()` (only called then: it may rely on the
@@ -36,7 +36,7 @@ export default function WidgetFrame({ title, subtitle, noun, controls, menu, rem
           <DropdownMenuContent align="end" onCloseAutoFocus={e => e.preventDefault()}>
             {menu}
             <DropdownMenuSeparator />
-            <DropdownMenuItem variant="destructive" disabled={!canEdit} onSelect={onRemove}><X /> {removeLabel}</DropdownMenuItem>
+            <DropdownMenuItem variant="destructive" disabled={!canEdit} onSelect={onRemove}><Trash /> {removeLabel}</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

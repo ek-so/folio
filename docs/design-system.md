@@ -52,7 +52,7 @@ Never hardcode colors; use the semantic tokens (light and dark values in `src/in
 `--safe-top` / `--safe-bottom` hold the iOS safe-area insets.
 
 ## Buttons
-- Variants: `default`, `secondary`, `ghost`, `ghost-quiet` (a muted button inside something already tinted or hoverable: a faint fill on hover and while its menu is open), `ghost-outline` (no border, despite the name: a grey fill), `outline`, `link`, and the colored ones: `destructive`, `ghost-destructive` (trash to delete, ✕ to take out: see the AGENTS rule), `success`, `success-light`, `destructive-light`.
+- Variants: `default`, `secondary`, `ghost`, `ghost-quiet` (a muted button inside something already tinted or hoverable: a faint fill on hover and while its menu is open), `ghost-outline` (no border, despite the name: a grey fill), `outline`, `link`, and the colored ones: `destructive`, `ghost-destructive` (trash for every Remove: see the AGENTS rule), `success`, `success-light`, `destructive-light`.
 - Sizes: `default` (40px), `icon` (40px square), `icon-md` (32px square, for buttons inside a row, tile, card or tray), `md`, `sm`. The icon sizes don't shrink in a flex row.
 - **`MoreButton`** (`components/MoreButton.jsx`) is every ⋯ that opens a menu (a `DropdownMenuTrigger asChild`): in a title row a `ghost-outline` base button with a 20px ⋯, `inRow` a quiet medium one with a 16px ⋯, `reveal` shown only while its row is hovered with a mouse (`REVEAL`).
 - Confirm and dismiss icon buttons: `success` / `destructive` alone, `success-light` / `destructive-light` side by side.

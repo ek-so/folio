@@ -56,7 +56,7 @@ export default function Documentation() {
               <ul className="flex list-disc flex-col gap-space-xs pl-5 text-sm">
                 <li>Add a widget with +. Reorder or remove them in the view's ⋯.</li>
                 <li>Your notes hold the content. Views and widgets are saved in .folio and only change how notes look, so deleting them never deletes a note.</li>
-                <li>A trash removes. A file or folder goes to the archive (.archive) first, where you can recover it for {KEEP_DAYS} days; a value or property is removed for good. A ✕ only takes something off a view.</li>
+                <li>A trash removes. A file or folder goes to the archive (.archive) first, where you can recover it for {KEEP_DAYS} days; a value or property is removed for good; a widget, view or date is only taken off, and what it points to stays.</li>
                 <li>Changes stay on this device until you Sync.</li>
               </ul>
             </section>

@@ -1,4 +1,4 @@
-import { DotsSixVertical, X } from '@phosphor-icons/react'
+import { DotsSixVertical, Trash } from '@phosphor-icons/react'
 import { DndContext, closestCenter } from '@dnd-kit/core'
 import { useDragSensors } from '../hooks/useDragSensors.js'
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
@@ -54,7 +54,7 @@ function Row({ item, onRemove }) {
         rowProps={listeners}
         trailing={
           <Button variant="ghost-destructive" size="icon-md" aria-label={`Remove ${item.label ?? item.title}`} tooltip="Remove" onPointerDown={e => e.stopPropagation()} onClick={() => onRemove(item)}>
-            <X />
+            <Trash />
           </Button>
         }
       />

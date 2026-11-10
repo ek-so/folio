@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { PencilSimple, Plus, ListBullets, X, FileText } from '@phosphor-icons/react'
+import { PencilSimple, Plus, ListBullets, Trash, FileText } from '@phosphor-icons/react'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu.jsx'
 import Spinner from '@/components/Spinner.jsx'
 import EmptyState from '@/components/EmptyState.jsx'
@@ -158,7 +158,7 @@ function NoteTray({ path, services, height, canMove, onTakeOut, onReplace }) {
           <DropdownMenuContent align="end" onCloseAutoFocus={e => e.preventDefault()}>
             <DropdownMenuItem disabled={!found} onSelect={() => setRenaming(true)}><PencilSimple /> Rename note</DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem variant="destructive" disabled={!onTakeOut} onSelect={onTakeOut}><X /> Remove from widget</DropdownMenuItem>
+            <DropdownMenuItem variant="destructive" disabled={!onTakeOut} onSelect={onTakeOut}><Trash /> Remove from widget</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
