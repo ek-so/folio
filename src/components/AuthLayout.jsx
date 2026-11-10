@@ -7,7 +7,7 @@ export default function AuthLayout({ logo, title, brand, intro, children }) {
     <div className="flex min-h-full items-center justify-center bg-background p-space-lg">
       <div className="flex w-full max-w-sm flex-col items-center gap-space">
         {logo}
-        <h1 className={cn('font-bold', brand ? 'font-brand text-5xl leading-none text-primary-ink' : 'text-2xl tracking-tight')}>{title}</h1>
+        <h1 className={cn(brand ? 'font-brand text-4xl leading-normal text-primary-ink' : 'text-2xl font-bold tracking-tight')}>{title}</h1>
         <p className="text-center text-sm text-muted-foreground">{intro}</p>
         {children}
       </div>
