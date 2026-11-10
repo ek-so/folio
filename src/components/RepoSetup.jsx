@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { GithubLogo } from '@phosphor-icons/react'
+import { GithubLogo, SignOut } from '@phosphor-icons/react'
 import { Button } from './ui/button.jsx'
 import { ListRow, ListBox } from './ui/list-row.jsx'
 import AuthLayout from './AuthLayout.jsx'
@@ -56,8 +56,8 @@ export default function RepoSetup({ onRepo, onLogout }) {
         </ListBox>
         </div>
       )}
-      <Button variant="ghost" onClick={onLogout} className="text-muted-foreground">
-        Sign out
+      <Button variant="ghost-destructive" onClick={onLogout}>
+        <SignOut /> Sign out
       </Button>
     </AuthLayout>
   )
