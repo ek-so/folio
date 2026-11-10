@@ -33,8 +33,8 @@ import { EmptyBox } from '@/components/EmptyState.jsx'
 // wide with the 1px line in its middle: the days' gap on each side), so the scrolling sums match what's drawn; it starts
 // with a window of days around a day (today, or one picked far away) and grows by MORE_DAYS on either side as it's
 // scrolled near an end (EDGE), so it never ends
-// Today with nothing to do (no cards, no overdue ones), in its tray
-const SORTED = { emoji: '🍃', text: 'Free as a leaf on the wind' }
+// A day with nothing to do (no cards, no overdue ones), in its tray
+const SORTED = { emoji: '🌱', text: 'Free day. Grow some ideas.' }
 const DAY_WIDTH = 80
 const MONTH_GAP = 9
 const MORE_DAYS = 60
