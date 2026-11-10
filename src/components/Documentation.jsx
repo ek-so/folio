@@ -5,39 +5,33 @@ import { WIDGET_TYPES } from '../widgets/index.js'
 import { KEEP_DAYS } from '../lib/archive.js'
 import PageLayout from './PageLayout.jsx'
 
-// What each kind of widget (widgets/index.js) is for and how it works, in plain words, by its `type`.
+// What each kind of widget (widgets/index.js) does, in plain words, by its `type`: the gist, not step-by-step use.
 // The page lists every registered kind with its own label and icon, so a new widget shows up here
 // (with a line to write) and none can be forgotten.
 const WIDGET_DOCS = {
   board: {
     summary: 'Your notes as cards in columns, like a to-do board.',
     points: [
-      'Takes every note in the folder you pick, subfolders too. Files starting with . or _ are skipped.',
-      'Columns come from one property, status by default. Each value is a column; notes without one go to "No status". Pick another property in ⋯ → Columns → Group by.',
-      'Drag a card to another column and its status changes in the note. The file doesn\'t move.',
-      'Adds an empty status and description to notes that lack them. Showing another property on cards adds it, empty, the same way. The property the columns come from comes back if you delete it in a note.',
-      'Cards show the title, description, chosen properties and checklist progress. Tap a value to change it.',
-      'Column order, hidden columns and shown properties are just display settings. Removing the board keeps every note.',
+      'Shows the notes of a folder you pick, subfolders too.',
+      'Columns come from one property, status by default. Dragging a card to another column changes it in the note; the file stays where it is.',
+      'Adds an empty status and description to notes that lack them.',
+      'Removing the board keeps every note.',
     ],
   },
   planner: {
     summary: 'Your notes on a ribbon of days, like a calendar.',
     points: [
-      'Takes every note in the folder you pick, subfolders too. Each card sits on the day in its date property.',
-      'Adds an empty date, repeat and description to notes that lack them. Date and repeat always show first on cards. In the text editor they are greyed out and cannot be changed: use their badges. They also come back if they go missing from a note.',
-      'Repeat says how often a card happens: one-time, or every few days, weeks (on chosen weekdays), months or years, until a day if you like. Tap it to choose. A card shows once, on its date.',
-      'Mark as done in a card\'s ⋯ moves a repeating card to its next date. Any other card goes to the archive, like anything you remove. Undo is offered right away.',
-      'Tap a day to see its cards, or jump to any day with the calendar on the right and back with Today. Notes with no date or a past date also show under today, dashed.',
-      'Drag a card onto a day, or tap its date, to move it. + next to a day or a group adds a task there; New task in ⋯ uses the day shown.',
-      'The toggle next to ⋯ switches to a list: every task grouped into Today, Tomorrow, This week, This month, This year and Later. The planner remembers which one you used.',
+      'Shows the notes of a folder you pick on the day in their date. Undated and overdue ones show under today.',
+      'Adds an empty date, repeat and description to notes that lack them.',
+      'A card can repeat. Mark as done moves it to its next date, or archives a one-time card.',
+      'A list view groups every task by time: Today, Tomorrow, This week and later.',
       'Removing the planner keeps every note.',
     ],
   },
   note: {
     summary: 'A few notes side by side, to read and edit right on the view.',
     points: [
-      'Pick any notes in the repo, or create a new one. Nothing is added to them.',
-      'Edits save on their own, ticking a checkbox too.',
+      'Shows any notes you pick, and adds nothing to them.',
       'Removing a note from the widget, or the widget itself, keeps the note.',
     ],
   },
