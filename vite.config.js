@@ -8,16 +8,19 @@ export default defineConfig(({ command }) => ({
   plugins: [
     tailwindcss(),
     react(),
-    // Service worker caches the app itself so it opens offline. Notes are
-    // cached separately in IndexedDB (src/lib/cache.js). Updates are applied
-    // by src/lib/updates.js, which waits until you're not typing.
+    // Service worker (src/sw.js) caches the app itself so it opens offline,
+    // but loads the page from the network first. Notes are cached separately
+    // in IndexedDB (src/lib/cache.js). Updates are applied by
+    // src/lib/updates.js, which waits until you're not typing.
     VitePWA({
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.js',
       registerType: 'prompt',
       injectRegister: false,
       manifest: false,
-      workbox: {
+      injectManifest: {
         globPatterns: ['**/*.{js,mjs,css,html,png,svg,json,woff2}'],
-        navigateFallback: 'index.html',
       },
     }),
   ],
