@@ -34,7 +34,7 @@ import { EmptyBox } from '@/components/EmptyState.jsx'
 // with a window of days around a day (today, or one picked far away) and grows by MORE_DAYS on either side as it's
 // scrolled near an end (EDGE), so it never ends
 // Today with nothing to do (no cards, no overdue ones), in its tray
-const SORTED = { emoji: '☕', text: 'All sorted for today' }
+const SORTED = { emoji: '🍃', text: 'Free as a leaf on the wind' }
 const DAY_WIDTH = 80
 const MONTH_GAP = 9
 const MORE_DAYS = 60
@@ -238,7 +238,7 @@ export default function Planner({ id, services, onRemove }) {
         <Tray>
           {sectionTitle(shortTitle(selected, today), selected)}
           {/* The cards of a row are one height; Show more on a row of its own, one column wide (all of it on phones) */}
-          {list.length === 0 && selected === today && <EmptyBox emoji={SORTED.emoji}>{SORTED.text}</EmptyBox>}
+          {list.length === 0 && <EmptyBox emoji={SORTED.emoji}>{SORTED.text}</EmptyBox>}
           {list.length > 0 && (
             <div ref={setGrid} className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,18rem),1fr))] gap-space-sm">
               {list.filter(c => visible.has(c.path)).map(({ path, overdue, undated }) => (
