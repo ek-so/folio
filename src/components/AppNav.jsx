@@ -64,7 +64,7 @@ export function NavRail({ page, pages, hrefOf, viewActions, onPage, onSearch, re
         {separator}
       </> : <>
         <div className="flex shrink-0 items-center gap-space-sm self-stretch border-t border-t-transparent pt-space-sm pl-3">
-          <span className="flex flex-1 items-center gap-space-sm text-base font-bold"><AppLogo className="size-6" /><span className="font-brand text-lg leading-none font-normal text-foreground/85">Folio</span></span>
+          <span className="flex flex-1 items-center gap-space-sm text-base font-bold"><AppLogo className="size-6" /><span className="font-brand text-xl leading-none font-normal text-foreground/85">Folio</span></span>
           {collapseButton}
         </div>
         {separator}
