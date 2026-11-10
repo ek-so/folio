@@ -34,7 +34,7 @@ import { EmptyBox } from '@/components/EmptyState.jsx'
 // with a window of days around a day (today, or one picked far away) and grows by MORE_DAYS on either side as it's
 // scrolled near an end (EDGE), so it never ends
 // A day with nothing to do (no cards, no overdue ones), in its tray
-const SORTED = { emoji: '🌱', text: 'Free day. Grow some ideas.' }
+const SORTED = { emoji: '🌱', text: 'All sorted' }
 const DAY_WIDTH = 80
 const MONTH_GAP = 9
 const MORE_DAYS = 60

@@ -5,6 +5,7 @@ import ViewMenu from './ViewMenu.jsx'
 import PageTitle from './PageTitle.jsx'
 import PageIcon from './PageIcon.jsx'
 import AppLogo from './AppLogo.jsx'
+import BrandName from './BrandName.jsx'
 import { ListRow } from './ui/list-row.jsx'
 import { Separator } from './ui/separator.jsx'
 import { Sheet, SheetTrigger, SheetContent, SheetTitle, SheetDescription } from './ui/sheet.jsx'
@@ -38,7 +39,7 @@ export default function AccountMenu({ trigger, current, pages, viewActions, onNa
         <div className="shrink-0 border-b border-border py-space-sm pl-space pr-[calc(var(--spacing-space)+var(--spacing-control)+var(--spacing-space-sm))]">
           <div className="flex min-h-control items-center gap-space-sm px-3">
             <AppLogo className="-ml-space-xs size-6 shrink-0" />
-            <SheetTitle className="font-brand text-xl leading-none font-normal text-foreground/85 translate-y-1">Folio</SheetTitle>
+            <SheetTitle><BrandName /></SheetTitle>
           </div>
         </div>
         <nav aria-label="Main" className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-y-contain p-space" data-no-pull>

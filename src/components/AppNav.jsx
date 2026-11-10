@@ -12,6 +12,7 @@ import { useResizableWidth } from '../hooks/useResizableWidth.js'
 import ResizeHandle from './ResizeHandle.jsx'
 import { useHideOnScroll } from '../hooks/useHideOnScroll.js'
 import AppLogo from './AppLogo.jsx'
+import BrandName from './BrandName.jsx'
 import ViewMenu from './ViewMenu.jsx'
 import PageTitle from './PageTitle.jsx'
 import PageIcon from './PageIcon.jsx'
@@ -64,7 +65,7 @@ export function NavRail({ page, pages, hrefOf, viewActions, onPage, onSearch, re
         {separator}
       </> : <>
         <div className="flex shrink-0 items-center gap-space-sm self-stretch border-t border-t-transparent pt-space-sm pl-3">
-          <span className="flex flex-1 items-center gap-space-sm text-base font-bold"><AppLogo className="size-6" /><span className="font-brand text-xl leading-none font-normal text-foreground/85 translate-y-1">Folio</span></span>
+          <span className="flex flex-1 items-center gap-space-sm"><AppLogo className="size-6" /><BrandName /></span>
           {collapseButton}
         </div>
         {separator}

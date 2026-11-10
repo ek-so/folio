@@ -38,11 +38,27 @@ export async function checkRepo(owner, name) {
   await octokit.rest.repos.get({ owner, repo: name })
 }
 
-// The repos the token can reach, sorted by name, each `{ full, canWrite }`
-// (`canWrite`: the token can push to it, so Folio can save notes there).
-export async function listRepos() {
-  const repos = await octokit.paginate(octokit.rest.repos.listForAuthenticatedUser, { per_page: 100, sort: 'full_name' })
-  return repos.map(r => ({ full: r.full_name, canWrite: !!r.permissions?.push }))
+// The repos the token can reach, sorted by name, a page of 100 at a time (so a long
+// list shows while the rest loads), each `{ full, canWrite }`. `canWrite` is the
+// user's own access, which the token's can narrow: `canWriteRepo` checks the token.
+export async function* listRepos() {
+  for await (const { data } of octokit.paginate.iterator(octokit.rest.repos.listForAuthenticatedUser, { per_page: 100, sort: 'full_name' })) {
+    yield data.map(r => ({ full: r.full_name, canWrite: !!r.permissions?.push }))
+  }
+}
+
+// Whether the token itself can write to `owner/name` (save notes there): stores an
+// empty blob, the request a sync's upload makes, which nothing points to. Throws
+// when GitHub can't be asked (offline). An empty repo can't take a blob yet; it passes.
+export async function canWriteRepo(owner, name) {
+  try {
+    await octokit.rest.git.createBlob({ owner, repo: name, content: '', encoding: 'utf-8' })
+    return true
+  } catch (e) {
+    if (e.status === 403 || e.status === 404) return false
+    if (e.status === 409) return true
+    throw e
+  }
 }
 
 function decode(base64) {
