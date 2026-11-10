@@ -47,7 +47,7 @@ export default {
     const all = [{ key: LOOSE, name: looseName(board), cards: data.loose }, ...data.columns]
     const current = all.find(c => c.cards.some(card => card.path === path))
     if (!current) return null
-    const columns = all.filter(c => c.key === current.key || (c.key === LOOSE ? c.cards.length : !board.hidden.includes(c.name)))
+    const columns = all.filter(c => c.key !== LOOSE || c.cards.length).map(c => ({ ...c, hidden: board.hidden.includes(c.name) }))
     return {
       columns, column: current.key,
       onSelect: key => placeCardVia(services, id, board, data, path, key, all.find(c => c.key === key).cards.filter(c => c.path !== path).length),

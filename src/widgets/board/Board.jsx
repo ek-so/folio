@@ -103,11 +103,13 @@ export default function Board({ id, services, onRemove }) {
     }
 
     // The card moved to the end of another column
-    const moveToColumn = (path, key) => act.placeCard(path, key, items[key].filter(p => p !== path).length)
+    // Every column a card can move to, hidden ones too (`hidden: true`)
+    const moveTargets = [...(data.loose.length ? [{ key: LOOSE, name: looseName(board), cards: data.loose }] : []), ...data.columns.map(c => ({ ...c, hidden: board.hidden.includes(c.name) }))]
+    const moveToColumn = (path, key) => act.placeCard(path, key, moveTargets.find(c => c.key === key).cards.filter(card => card.path !== path).length)
     const cardMenu = path => off ? undefined : (
       <CardMenu
         {...cardActions(path, notes[path], act, services)}
-        columns={services.locked(path) ? undefined : columns} column={columnOf(path)}
+        columns={services.locked(path) ? undefined : moveTargets} column={columnOf(path) ?? moveTargets.find(c => c.cards.some(card => card.path === path))?.key}
         onMove={key => moveToColumn(path, key)}
         onEditColumns={() => setChoosing('columns')}
       />
