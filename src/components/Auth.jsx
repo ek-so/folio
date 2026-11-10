@@ -26,6 +26,7 @@ export default function Auth({ onAuth }) {
     <AuthLayout
       logo={<AppLogo className="size-20" />}
       title="Folio"
+      brand
       intro="Paste a GitHub token to access your notes. Use a fine-grained token with Contents: Read and write, limited to your notes repo."
     >
         <form onSubmit={handleSubmit} className="w-full flex flex-col gap-2.5">

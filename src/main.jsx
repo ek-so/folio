@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import App from './App.jsx'
 import { setupAutoUpdate } from './lib/updates.js'
 import { resetScrollAfterKeyboard } from './lib/viewport.js'
+import '@fontsource/caveat/latin-700.css'
 import './index.css'
 import './App.css'
 
