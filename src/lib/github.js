@@ -38,6 +38,13 @@ export async function checkRepo(owner, name) {
   await octokit.rest.repos.get({ owner, repo: name })
 }
 
+// The repos the token can reach, sorted by name, each `{ full, canWrite }`
+// (`canWrite`: the token can push to it, so Folio can save notes there).
+export async function listRepos() {
+  const repos = await octokit.paginate(octokit.rest.repos.listForAuthenticatedUser, { per_page: 100, sort: 'full_name' })
+  return repos.map(r => ({ full: r.full_name, canWrite: !!r.permissions?.push }))
+}
+
 function decode(base64) {
   return decodeURIComponent(escape(atob(base64)))
 }

@@ -26,7 +26,7 @@ export default function Auth({ onAuth }) {
     <AuthLayout
       logo={<AppLogo className="size-20" />}
       title="Folio"
-      intro="Paste a GitHub token to access your notes."
+      intro="Paste a GitHub token to access your notes. Use a fine-grained token with Contents: Read and write, limited to your notes repo."
     >
         <form onSubmit={handleSubmit} className="w-full flex flex-col gap-2.5">
           <Input
@@ -53,9 +53,6 @@ export default function Auth({ onAuth }) {
         >
           Create a token on GitHub ↗
         </a>
-        <p className="text-xs text-muted-foreground text-center">
-          Use a fine-grained token limited to your notes repo, with Contents: Read and write.
-        </p>
     </AuthLayout>
   )
 }

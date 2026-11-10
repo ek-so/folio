@@ -5,7 +5,7 @@ import { checkRepo } from '../lib/github.js'
 import { parseRepo } from '../lib/files.js'
 
 // The owner/repo field, checked with GitHub before `onConnect('owner/repo')`.
-// Used by the setup screen and the Switch repository sheet; `actions({ busy,
+// Used by the Switch repository sheet; `actions({ busy,
 // empty })` renders their buttons (a submit button connects).
 export default function RepoForm({ initial, onConnect, inputRef, inputClassName, errorClassName, actions }) {
   const [value, setValue] = useState(initial)
