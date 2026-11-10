@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { parsePlanner, serializePlanner, newPlanner, movedPlanner, addDays, daysBetween, dayOffsets, dayAt, dayKey, plan, cardDate, doneNext, droppedDate, listed, monthLabel } from './planner.js'
+import { parsePlanner, serializePlanner, newPlanner, movedPlanner, orderedDay, addDays, daysBetween, dayOffsets, dayAt, dayKey, plan, cardDate, doneNext, droppedDate, listed, monthLabel } from './planner.js'
 
 const note = (date, extra = '') => `---\n${date === null ? '' : `date: ${date}\n`}${extra}---\n# T\n`
 
@@ -7,17 +7,43 @@ describe('planner', () => {
   it('reads its settings, or nothing from bad text; the date is never a chosen property', () => {
     expect(parsePlanner('nope')).toBeNull()
     expect(parsePlanner('{}')).toBeNull()
-    expect(parsePlanner('{"folder":"T","properties":["date","tags"]}')).toEqual({ folder: 'T', properties: ['tags'] })
-    expect(parsePlanner('{"folder":"T","properties":[],"view":"list"}')).toEqual({ folder: 'T', properties: [] }) // an older one's view isn't kept
-    expect(parsePlanner('{"folder":"T","properties":["priority","repeat"]}')).toEqual({ folder: 'T', properties: ['priority'] })
+    const plain = { sort: 'time', order: {} }
+    expect(parsePlanner('{"folder":"T","properties":["date","tags"]}')).toEqual({ folder: 'T', properties: ['tags'], ...plain })
+    expect(parsePlanner('{"folder":"T","properties":[],"view":"list"}')).toEqual({ folder: 'T', properties: [], ...plain }) // an older one's view isn't kept
+    expect(parsePlanner('{"folder":"T","properties":["priority","repeat"]}')).toEqual({ folder: 'T', properties: ['priority'], ...plain })
+    expect(parsePlanner('{"folder":"T","sort":"nonsense","order":{"x":["a.md"],"2026-11-06":["a.md",3]}}'))
+      .toEqual({ folder: 'T', properties: [], sort: 'time', order: { '2026-11-06': ['a.md'] } })
     const p = { ...newPlanner('T'), properties: ['tags'] }
     expect(parsePlanner(serializePlanner(p))).toEqual(p)
+    expect(serializePlanner(p)).not.toMatch(/sort|order/) // the defaults aren't written
+    const sorted = { ...p, sort: 'property:priority', order: { '2026-11-06': ['b.md', 'a.md'] } }
+    expect(parsePlanner(serializePlanner(sorted))).toEqual(sorted)
   })
 
   it('follows its folder when it moves', () => {
     expect(movedPlanner(newPlanner('A/T'), 'A', 'B')).toEqual(newPlanner('B/T'))
     expect(movedPlanner(newPlanner('A/T'), 'A/T/x.md', 'A/T/y.md')).toEqual(newPlanner('A/T'))
     expect(movedPlanner(newPlanner(''), 'A', 'B')).toEqual(newPlanner(''))
+  })
+
+  it('keeps a manual order, its cards following renames', () => {
+    const p = orderedDay(newPlanner('T'), '2026-11-06', ['T/b.md', 'T/sub/a.md', 'Elsewhere/x.md'])
+    expect(p).toMatchObject({ sort: 'manual', order: { '2026-11-06': ['b.md', 'sub/a.md'] } })
+    expect(movedPlanner(p, 'T/b.md', 'T/c.md').order['2026-11-06']).toEqual(['c.md', 'sub/a.md'])
+    expect(movedPlanner(p, 'T/sub', 'T/new', true).order['2026-11-06']).toEqual(['b.md', 'new/a.md'])
+  })
+
+  it('sorts a day by time, title, a property or by hand', () => {
+    const cards = [
+      { path: 'T/a.md', text: note('2026-11-06, 15:00', 'title: Apple\npriority: 2\n') },
+      { path: 'T/b.md', text: note('2026-11-06, 9:00', 'title: Banana\npriority: 10\n') },
+      { path: 'T/c.md', text: note('2026-11-06', 'title: Cherry\n') },
+    ]
+    const day = planner => plan(cards, '2026-11-06', planner).on('2026-11-06').map(c => c.path)
+    expect(day(newPlanner('T'))).toEqual(['T/b.md', 'T/a.md', 'T/c.md']) // time; no time last
+    expect(day({ ...newPlanner('T'), sort: 'title' })).toEqual(['T/a.md', 'T/b.md', 'T/c.md'])
+    expect(day({ ...newPlanner('T'), sort: 'property:priority' })).toEqual(['T/a.md', 'T/b.md', 'T/c.md']) // 2 before 10; none last
+    expect(day(orderedDay(newPlanner('T'), '2026-11-06', ['T/c.md', 'T/a.md']))).toEqual(['T/c.md', 'T/a.md', 'T/b.md']) // unplaced by time
   })
 
   it('counts days', () => {

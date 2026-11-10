@@ -4,7 +4,9 @@ import { parseRecurrence, nextOccurrence } from './recurrence.js'
 
 // A planner widget: a folder whose notes are cards, each on the day of its `date`
 // property, shown on a ribbon of days. Each planner's settings live in the repo, beside the views:
-// `.folio/planners/<id>.json`, { "folder", "properties": [keys shown on cards besides the date] }. Calendar or list
+// `.folio/planners/<id>.json`, { "folder", "properties": [keys shown on cards besides the date], "sort" (how a day's cards
+// are ordered: SORTS, or "property:<key>"; "time" when left out), "order": { day key: [cards' paths inside the folder] }
+// (the manual order of each day it was set for; none when left out) }. Calendar or list
 // (VIEWS) is this device's choice, not a setting (usePlanner).
 // The date and repeat (one-time or how it repeats: recurrence.js) are always shown, can't be turned off, renamed or removed, and come back
 // into a card's note when it's saved without them.
@@ -29,28 +31,61 @@ const strings = list => Array.isArray(list) ? list.filter(s => typeof s === 'str
 // the first unless another was picked on this device
 export const VIEWS = ['calendar', 'list']
 
+// How a day's cards can be ordered (the calendar view's): by time (the default), title, or as dragged (manual); or by a
+// property's value, "property:<key>"
+export const SORTS = ['time', 'title', 'manual']
+export const PROPERTY_SORT = 'property:'
+export const DEFAULT_SORT = SORTS[0]
+const isSort = s => typeof s === 'string' && (SORTS.includes(s) || (s.startsWith(PROPERTY_SORT) && s.length > PROPERTY_SORT.length))
+
+// A saved manual order: day keys to lists of paths, anything else left out
+function orders(value) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return {}
+  return Object.fromEntries(Object.entries(value)
+    .filter(([key, list]) => /^\d{4}-\d{2}-\d{2}$/.test(key) && Array.isArray(list))
+    .map(([key, list]) => [key, list.filter(s => typeof s === 'string')]))
+}
+
 // The planner a file's text holds, or null when it can't be read as one
 export function parsePlanner(text) {
   try {
     const data = JSON.parse(text)
     if (typeof data?.folder !== 'string') return null
-    return { folder: data.folder, properties: strings(data.properties) } // an older one's "view" is left out
+    // an older one's "view" is left out
+    return { folder: data.folder, properties: strings(data.properties), sort: isSort(data.sort) ? data.sort : DEFAULT_SORT, order: orders(data.order) }
   } catch {
     return null
   }
 }
 
-export const serializePlanner = planner => JSON.stringify(planner, null, 2) + '\n'
+// The default sort and an empty order aren't written, so a planner that never used them keeps its file as it was
+export function serializePlanner({ sort, order, ...rest }) {
+  const data = { ...rest, ...(sort !== DEFAULT_SORT && { sort }), ...(Object.keys(order).length > 0 && { order }) }
+  return JSON.stringify(data, null, 2) + '\n'
+}
 
-export const newPlanner = folder => ({ folder, properties: [] })
+export const newPlanner = folder => ({ folder, properties: [], sort: DEFAULT_SORT, order: {} })
 
 export const plannerTitle = (planner, repoName) => planner.folder.split('/').pop() || repoName
 
-// The planner after the file or folder (`isDir`) at `from` moved to `to`: its folder follows
-export function movedPlanner(planner, from, to) {
+// Where `path` sits inside the planner's folder ('' for the repo's root), or null when it's outside it
+const keyIn = (folder, path) => !folder ? path : path.startsWith(folder + '/') ? path.slice(folder.length + 1) : null
+
+// The planner after the file or folder (`isDir`) at `from` moved to `to`: its folder follows, and so do the
+// cards in its manual order (kept by their place inside the folder)
+export function movedPlanner(planner, from, to, isDir = false) {
   const { folder } = planner
-  return folder !== '' && (folder === from || folder.startsWith(from + '/')) ? { ...planner, folder: to + folder.slice(from.length) } : planner
+  if (folder !== '' && (folder === from || folder.startsWith(from + '/'))) return { ...planner, folder: to + folder.slice(from.length) }
+  const [was, now] = [keyIn(folder, from), keyIn(folder, to)]
+  if (was === null || now === null || !Object.keys(planner.order).length) return planner
+  const follow = k => k === was ? now : isDir && k.startsWith(was + '/') ? now + k.slice(was.length) : k
+  return { ...planner, order: Object.fromEntries(Object.entries(planner.order).map(([day, keys]) => [day, keys.map(follow)])) }
 }
+
+// `planner` with the day `key`'s cards in the order `paths`, now sorted manually
+export const orderedDay = (planner, key, paths) => ({
+  ...planner, sort: 'manual', order: { ...planner.order, [key]: paths.map(p => keyIn(planner.folder, p)).filter(k => k !== null) },
+})
 
 const pad = n => String(n).padStart(2, '0')
 
@@ -166,28 +201,48 @@ export function listed(cards, today) {
   return groups.filter(g => g.cards.length).map(g => ({ ...g, cards: g.cards.sort(order).map(({ path, overdue, undated }) => ({ path, overdue, undated })) }))
 }
 
-// `cards` ([{ path, text }]) arranged by day, as of `today` (a key): `on(key)` is what a day lists,
-// [{ path, overdue, undated }] by time, then title: the cards dated that day (a repeating card too: its date is its next
-// time, moved on by Mark as done), and under today also the cards without a date (`undated`) and those dated before today
-// (`overdue`; they also stay on their own day); `count(key)` is how many that is. Each day is worked out once.
-export function plan(cards, today) {
+// The text a card is sorted by for a property sort: its value (a list's values joined), '' when it has none
+const sortValue = (value) => Array.isArray(value) ? value.join(', ') : typeof value === 'string' ? value.trim() : ''
+
+// How two cards of a day ({ path, time, title, value }) compare under `sort`; `at(path)`: a card's place in the day's
+// manual order (Infinity when it has none). Ties, and cards without a manual place, go by time, then title; a property
+// sort puts cards without a value last and compares numbers as numbers
+export function dayOrder(sort, at) {
+  const byTime = (a, b) => a.time.localeCompare(b.time) || a.title.localeCompare(b.title)
+  if (sort === 'title') return (a, b) => a.title.localeCompare(b.title) || a.time.localeCompare(b.time)
+  if (sort === 'manual') return (a, b) => (at(a.path) - at(b.path)) || byTime(a, b)
+  if (sort.startsWith(PROPERTY_SORT)) {
+    return (a, b) => (!a.value - !b.value) || a.value.localeCompare(b.value, undefined, { numeric: true, sensitivity: 'base' }) || byTime(a, b)
+  }
+  return byTime
+}
+
+// `cards` ([{ path, text }]) arranged by day, as of `today` (a key), each day ordered as `planner` says (its `sort`, and
+// its `order` when manual; dayOrder): `on(key)` is what a day lists, [{ path, overdue, undated }]: the cards dated that
+// day (a repeating card too: its date is its next time, moved on by Mark as done), and under today also the cards without
+// a date (`undated`) and those dated before today (`overdue`; they also stay on their own day); `count(key)` is how many
+// that is. Each day is worked out once.
+export function plan(cards, today, planner = newPlanner('')) {
+  const { sort } = planner
+  const property = sort.startsWith(PROPERTY_SORT) ? sort.slice(PROPERTY_SORT.length) : null
   const dated = new Map() // key → [{ path, time, title }]
   const loose = [] // without a date
   const past = [] // dated before today
   for (const { path, text } of cards) {
     const date = cardDate(text)
     const title = noteTitle(text, path.slice(path.lastIndexOf('/') + 1).replace(/\.md$/, ''))
-    const entry = { path, title, time: date?.hour === undefined ? '99:99' : `${pad(date.hour)}:${pad(date.minute)}` }
+    const entry = { path, title, time: date?.hour === undefined ? '99:99' : `${pad(date.hour)}:${pad(date.minute)}`, value: property ? sortValue(properties(text)[property]) : '' }
     if (!date) { loose.push(entry); continue }
     const key = dayKey(date)
     if (dated.has(key)) dated.get(key).push(entry)
     else dated.set(key, [entry])
     if (key < today) past.push(entry)
   }
-  const order = (a, b) => a.time.localeCompare(b.time) || a.title.localeCompare(b.title)
   const days = new Map()
   const on = key => {
     if (!days.has(key)) {
+      const saved = new Map((planner.order[key] ?? []).map((k, i) => [planner.folder ? `${planner.folder}/${k}` : k, i]))
+      const order = dayOrder(sort, path => saved.get(path) ?? Infinity)
       const own = (dated.get(key) ?? []).map(e => ({ ...e, overdue: false, undated: false }))
       const extra = key === today ? [...loose.map(e => ({ ...e, overdue: false, undated: true })), ...past.map(e => ({ ...e, overdue: true, undated: false }))] : []
       days.set(key, [...own, ...extra].sort(order).map(({ path, overdue, undated }) => ({ path, overdue, undated })))

@@ -23,6 +23,7 @@ const WIDGET_DOCS = {
     points: [
       'Shows the notes of a folder you pick on the day in their date. Undated and overdue ones show under today.',
       'Adds an empty date, repeat and description to notes that lack them.',
+      'A day\'s cards are sorted by time, title or any property. Drag one into place to sort by hand.',
       'A card can repeat. Mark as done moves it to its next date, or archives a one-time card.',
       'A list view groups every task by time: Today, Tomorrow, This week and later.',
       'Removing the planner keeps every note.',

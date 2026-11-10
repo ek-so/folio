@@ -34,7 +34,7 @@ export default {
     const text = config.readIn(ch, plannerPath(id))
     const planner = typeof text === 'string' ? parsePlanner(text) : null
     if (!planner) return ch
-    const moved = serializePlanner(movedPlanner(planner, from, to))
+    const moved = serializePlanner(movedPlanner(planner, from, to, isDir))
     return moved === serializePlanner(planner) ? ch : config.write(plannerPath(id), moved)(ch)
   },
   // Where a note's property values come from on its page when it's a card of this planner: the whole planner

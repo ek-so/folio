@@ -1,7 +1,9 @@
 import { toast } from 'sonner'
 import { Fragment, useState, useMemo, useRef, useCallback, useLayoutEffect } from 'react'
-import { Tag, Plus, CalendarBlank, CrosshairSimple, CalendarDots, ListBullets, ArrowsClockwise } from '@phosphor-icons/react'
-import { DndContext, DragOverlay, useDraggable, useDroppable, pointerWithin } from '@dnd-kit/core'
+import { Tag, Plus, CalendarBlank, CrosshairSimple, CalendarDots, ListBullets, ArrowsClockwise, SortAscending, Check } from '@phosphor-icons/react'
+import { DndContext, DragOverlay, useDroppable, pointerWithin, closestCenter } from '@dnd-kit/core'
+import { SortableContext, useSortable, arrayMove, rectSortingStrategy } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import { useDragSensors } from '@/hooks/useDragSensors.js'
 import { cn } from '@/lib/utils.js'
 import { Button } from '@/components/ui/button.jsx'
@@ -9,7 +11,7 @@ import { Separator } from '@/components/ui/separator.jsx'
 import { Segmented } from '@/components/ui/segmented.jsx'
 import { ListRow } from '@/components/ui/list-row.jsx'
 import { Tray, TrayTitle, TrayFooter, TRAY_ROW } from '@/components/ui/tray.jsx'
-import { DropdownMenuItem } from '@/components/ui/dropdown-menu.jsx'
+import { DropdownMenuItem, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent } from '@/components/ui/dropdown-menu.jsx'
 import NoteCard, { NO_CALLOUT, ownListeners, cardClick } from '@/components/NoteCard.jsx'
 import WidgetFrame from '@/components/WidgetFrame.jsx'
 import CardMenu, { cardActions } from '@/components/CardMenu.jsx'
@@ -20,7 +22,7 @@ import { useGridColumns } from '@/hooks/useGridColumns.js'
 import { cardTitle } from '@/lib/folderNotes.js'
 import { formatDate, dateLabel, daysAgo } from '@/lib/dates.js'
 import { properties } from '@/lib/frontmatter.js'
-import { DATE, REPEAT, FIXED, listed, plan, addDays, daysBetween, dayOffsets, dayAt, keyDay, dayKey, cardDate, dateValue, droppedDate, monthLabel } from './planner.js'
+import { DATE, REPEAT, FIXED, SORTS, PROPERTY_SORT, listed, plan, addDays, daysBetween, dayOffsets, dayAt, keyDay, dayKey, cardDate, dateValue, droppedDate, monthLabel } from './planner.js'
 import { usePlanner } from './usePlanner.js'
 import { useToday } from './useToday.js'
 import { BADGES } from './RecurrenceField.jsx'
@@ -43,8 +45,21 @@ const EDGE = DAY_WIDTH * 3
 const dayCardId = path => 'card:' + path
 const dayCellId = key => 'day:' + key
 
-// Only a day under the pointer is a target: a card let go anywhere else is cancelled, never re-dated
-const collide = pointerWithin
+const isDayId = id => String(id).startsWith('day:')
+
+// A day under the pointer is the target (the card moves to it); else the selected day's card under it, or nearest
+// to it (the card takes its place). A card is never re-dated unless let go over a day
+function collide(args) {
+  const hits = pointerWithin(args)
+  const day = hits.find(h => isDayId(h.id))
+  if (day) return [day]
+  if (hits.length) return hits
+  return closestCenter({ ...args, droppableContainers: args.droppableContainers.filter(c => !isDayId(c.id)) })
+}
+
+// The sort menu's names: SORTS, then the properties ("property:<key>") by their keys
+const SORT_LABELS = { time: 'Time', title: 'Title', manual: 'Manual' }
+const sortLabel = sort => SORT_LABELS[sort] ?? sort.slice(PROPERTY_SORT.length)
 
 // A planner widget (planner.js): its folder's name and ⋯ on top, a ribbon of days that scrolls
 // sideways (the month on top, today marked, the selected day filled, how many cards each day has),
@@ -76,7 +91,7 @@ export default function Planner({ id, services, onRemove }) {
 
   const days = useMemo(() => Array.from({ length: range.before + range.after + 1 }, (_, i) => addDays(anchor, i - range.before)), [anchor, range])
   const offsets = useMemo(() => dayOffsets(days, DAY_WIDTH, MONTH_GAP), [days])
-  const arranged = useMemo(() => plan(cards, today), [cards, today])
+  const arranged = useMemo(() => plan(cards, today, planner ?? undefined), [cards, today, planner])
   const groups = useMemo(() => listed(cards, today), [cards, today])
 
   const scrollToDay = useCallback((key, behavior = 'smooth') => {
@@ -126,6 +141,21 @@ export default function Planner({ id, services, onRemove }) {
     {/* On the day shown: the selected one in the calendar, today in the list */}
     <DropdownMenuItem disabled={off || !planner || missing} onSelect={() => act.newCard(view === 'list' ? today : selected)}><Plus /> New task</DropdownMenuItem>
     <DropdownMenuItem disabled={off} onSelect={() => setChoosing(true)}><Tag /> Properties</DropdownMenuItem>
+    {/* How a day's cards are ordered: the calendar's (the list goes by date); the current one ticked */}
+    {view === 'calendar' && planner && !missing && (
+      <DropdownMenuSub>
+        <DropdownMenuSubTrigger disabled={off}><SortAscending /> Sort by</DropdownMenuSubTrigger>
+        <DropdownMenuSubContent>
+          {[...SORTS, null, ...act.propertyKeys().filter(k => k !== DATE && k !== 'title').map(k => PROPERTY_SORT + k)].map((sort, i) => sort === null
+            ? <DropdownMenuSeparator key={i} />
+            : (
+              <DropdownMenuItem key={sort} onSelect={() => act.setSort(sort)}>
+                {planner.sort === sort ? <Check /> : <span className="size-4" />} {sortLabel(sort)}
+              </DropdownMenuItem>
+            ))}
+        </DropdownMenuSubContent>
+      </DropdownMenuSub>
+    )}
   </>
 
   let body // only when its settings are read and its folder is there (WidgetFrame shows the other states)
@@ -166,10 +196,21 @@ export default function Planner({ id, services, onRemove }) {
         chosen: services.tagColors.colors, onEditValue: still || !services.tagColors.canEdit ? undefined : act.editValue,
       }
     }
+    // A card dropped on another card of the day takes its place: the day's cards in that order. When that isn't
+    // the order the sort gives, the planner switches to Manual, told in a toast with Undo
+    const reorder = (path, overPath) => {
+      const from = paths.indexOf(path), to = paths.indexOf(overPath)
+      if (from < 0 || to < 0 || from === to) return
+      const next = arrayMove(paths, from, to)
+      const wasManual = planner.sort === 'manual'
+      const undo = act.reorderDay(selected, next)
+      if (!wasManual) toast.success('Sorting changed to Manual', { action: { label: 'Undo', onClick: undo } })
+    }
     // A card dropped on a day gets that day as its date (its time is kept; text that isn't a day is replaced)
     const onDragEnd = ({ active, over }) => {
       setDragged(null)
-      if (!over || !String(over.id).startsWith('day:')) return
+      if (!over) return
+      if (!isDayId(over.id)) return reorder(active.data.current.path, over.data.current?.path)
       const path = active.data.current.path
       const key = over.id.slice(4)
       const old = notes[path] === undefined ? null : cardDate(notes[path])
@@ -241,9 +282,11 @@ export default function Planner({ id, services, onRemove }) {
           {list.length === 0 && <EmptyBox emoji={SORTED.emoji}>{SORTED.text}</EmptyBox>}
           {list.length > 0 && (
             <div ref={setGrid} className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,18rem),1fr))] gap-space-sm">
-              {list.filter(c => visible.has(c.path)).map(({ path, overdue, undated }) => (
-                <PlannerCard key={path} {...cardProps(path)} menu={cardMenu(path)} overdue={overdue} dashed={overdue || undated} locked={services.locked(path)} onOpen={openFile} onOpenFolder={openFolder} />
-              ))}
+              <SortableContext items={paths.filter(p => visible.has(p)).map(dayCardId)} strategy={rectSortingStrategy}>
+                {list.filter(c => visible.has(c.path)).map(({ path, overdue, undated }) => (
+                  <PlannerCard key={path} {...cardProps(path)} menu={cardMenu(path)} overdue={overdue} dashed={overdue || undated} locked={services.locked(path)} onOpen={openFile} onOpenFolder={openFolder} />
+                ))}
+              </SortableContext>
               <TrayFooter grid more={more} onShowMore={() => setExpanded(e => new Set(e).add(selected))} />
             </div>
           )}
@@ -353,15 +396,17 @@ function TaskRow({ path, text, overdue, locked, menu, onOpen }) {
   )
 }
 
-// A card of the selected day, dragged by a press on it (dropped on a day of the ribbon). One only listed under today
+// A card of the selected day, dragged by a press on it: onto a day of the ribbon (its date changes) or onto another
+// card of the day (it takes that place; the others make room). One only listed under today
 // because it has no date or is late (`dashed`) has a dashed outline; a late one (`overdue`) also its title faded and its
 // date red (NoteCard)
 function PlannerCard({ path, dashed, locked, onOpen, onOpenFolder, files, ...props }) {
-  const { setNodeRef, attributes, listeners, isDragging } = useDraggable({ id: dayCardId(path), data: { path }, disabled: !!locked })
+  const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({ id: dayCardId(path), data: { path }, disabled: !!locked })
   return (
     <NoteCard
       ref={setNodeRef}
       path={path} locked={locked} files={files} {...props}
+      style={{ transform: CSS.Translate.toString(transform), transition }}
       className={cn(NO_CALLOUT, dashed && 'border-dashed border-muted-foreground/50', isDragging && 'opacity-40')}
       onClick={cardClick(path, files, onOpen, onOpenFolder)}
       {...attributes} aria-disabled={undefined} {...ownListeners(listeners)}

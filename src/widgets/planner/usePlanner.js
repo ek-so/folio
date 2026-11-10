@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { plannerPath, parsePlanner, serializePlanner, keyDay, droppedDate, doneNext, asCard, DATE, REPEAT, ORDER, VIEWS } from './planner.js'
+import { plannerPath, parsePlanner, serializePlanner, keyDay, droppedDate, doneNext, asCard, orderedDay, DATE, REPEAT, ORDER, VIEWS } from './planner.js'
 import { storage } from '@/lib/storage.js'
 import { ONE_TIME } from './recurrence.js'
 import { formatDate } from '@/lib/dates.js'
@@ -19,6 +19,7 @@ export function usePlanner(id, services) {
   const notes = useFolderNotes(services, planner ? planner.folder : null)
   const cards = useMemo(() => notes.entries.map(([path, text]) => ({ path, text })), [notes.entries])
   const write = next => config.write(plannerPath(id), serializePlanner(next))
+  const save = next => update(write(next))
   // Calendar or list: this device's choice, kept here (never in .folio, which holds no state of a screen)
   const [view, setViewState] = useState(() => VIEWS.includes(storage.getPlannerView(id)) ? storage.getPlannerView(id) : VIEWS[0])
 
@@ -50,6 +51,15 @@ export function usePlanner(id, services) {
     // Calendar or list (planner.js VIEWS), remembered on this device
     view,
     setView: next => { setViewState(next); storage.setPlannerView(id, next) },
+    // How a day's cards are ordered (planner.js SORTS, or a property's "property:<key>"); a manual order is kept for when it's picked again
+    setSort: sort => save({ ...planner, sort }),
+    // The day `key`'s cards dragged into the order `paths`: the planner sorts manually from now on. Returns undo(),
+    // which puts back the sort and order it had
+    reorderDay(key, paths) {
+      const before = planner
+      save(orderedDay(planner, key, paths))
+      return () => save(before)
+    },
     // The properties cards show besides the date; a newly chosen one is added, empty, to the notes that lack it
     setProperties: keys => notes.showProperties(keys, planner.properties, write({ ...planner, properties: keys })),
     // The property `from` renamed `to` in every note of the folder (and in its settings); refused when a note already has `to`
