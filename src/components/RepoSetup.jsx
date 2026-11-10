@@ -80,7 +80,7 @@ export default function RepoSetup({ user, onRepo, onLogout }) {
 
   return (
     <AuthLayout
-      logo={<GithubMark className="size-16" />}
+      logo={<GithubMark className="size-12" />}
       title="Notes repo"
       intro="Choose the GitHub repo that stores your notes."
     >
@@ -113,8 +113,8 @@ export default function RepoSetup({ user, onRepo, onLogout }) {
                 </li>
               ))}
               {!done && <li className="flex justify-center py-space-sm"><Spinner className="size-4" /></li>}
-              {/* The last choice: a repo typed by name; focusing the field chooses it. Its text lines up with the names above (the field's own padding is the gap) */}
-              <li className={cn('flex min-h-control items-center rounded-sm pl-3', chosen === TYPED && 'bg-primary/15')}>
+              {/* The last choice: a repo typed by name, an outlined field from the start (its box where the names above start); focusing it chooses it */}
+              <li className={cn('flex min-h-control items-center gap-3 rounded-sm py-space-xs pl-3 pr-space-xs', chosen === TYPED && 'bg-primary/15')}>
                 <button type="button" aria-label="Type a repo" className="flex min-h-control items-center" disabled={checking} onClick={() => choose(TYPED)}>
                   <Radio checked={chosen === TYPED} />
                 </button>
@@ -130,7 +130,7 @@ export default function RepoSetup({ user, onRepo, onLogout }) {
                   autoCorrect="off"
                   autoCapitalize="none"
                   spellCheck="false"
-                  className="font-mono border-transparent bg-transparent shadow-none focus-visible:border-border"
+                  className="font-mono bg-background border-border"
                 />
               </li>
             </ListBox>
