@@ -2,12 +2,13 @@ import { useEffect, useState } from 'react'
 import { SignOut } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils.js'
 import { Button } from './ui/button.jsx'
+import { Input } from './ui/input.jsx'
+import { Radio } from './ui/checkbox.jsx'
 import { ListRow, ListBox } from './ui/list-row.jsx'
 import AuthLayout from './AuthLayout.jsx'
-import FileIcon from './FileIcon.jsx'
-import RepoForm from './RepoForm.jsx'
 import Spinner from './Spinner.jsx'
-import { listRepos, canWriteRepo } from '../lib/github.js'
+import { listRepos, checkRepo, canWriteRepo } from '../lib/github.js'
+import { parseRepo } from '../lib/files.js'
 
 // GitHub's official mark (public/github-mark.svg, from @primer/octicons). Phosphor's
 // GithubLogo is only the cat; this one is the cat in its circle. A CSS mask paints it in
@@ -17,21 +18,24 @@ function GithubMark({ className }) {
   return <span aria-hidden="true" className={cn('shrink-0 bg-foreground', className)} style={{ mask: `${url} center / contain no-repeat`, WebkitMask: `${url} center / contain no-repeat` }} />
 }
 
-// The second sign-in step: the repos the token can reach, to pick the one that
-// stores the notes, shown as they load. Repos it can write to come first; the
-// others are shown but can't be picked ("No write access"). Shown even when
-// there's only one. Picking one first checks that the token itself can write
-// there (GitHub's list only knows the user's access). A repo the list leaves
-// out can be typed by name.
+const TYPED = '' // the choice of the last row, where a repo is typed by name
+
+// The second sign-in step: the repos the token can reach, as one-of-several
+// choices (shown as they load), and a last row to type one the list leaves out.
+// Repos it can write to come first; the others are shown but can't be chosen
+// ("No write access"). Shown even when there's only one; the first writable
+// repo starts chosen. Continue checks that the token itself can write there
+// (GitHub's list only knows the user's access), then opens it.
 export default function RepoSetup({ user, onRepo, onLogout }) {
   const [repos, setRepos] = useState(null)
   const [done, setDone] = useState(false)
   const [error, setError] = useState('')
   const [attempt, setAttempt] = useState(0)
   const [denied, setDenied] = useState(() => new Set()) // the token can't write there after all
-  const [checking, setChecking] = useState(null)
+  const [chosen, setChosen] = useState(null) // a repo's full name, TYPED, or none yet
+  const [typed, setTyped] = useState(`${user.login}/`)
+  const [checking, setChecking] = useState(false)
   const [pickError, setPickError] = useState('')
-  const [typing, setTyping] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -43,6 +47,7 @@ export default function RepoSetup({ user, onRepo, onLogout }) {
         for await (const page of listRepos()) {
           if (cancelled) return
           setRepos(r => [...(r ?? []), ...page])
+          setChosen(c => c ?? page.find(r => r.canWrite)?.full ?? null)
         }
         if (!cancelled) { setRepos(r => r ?? []); setDone(true) }
       } catch {
@@ -54,17 +59,23 @@ export default function RepoSetup({ user, onRepo, onLogout }) {
 
   const writable = r => r.canWrite && !denied.has(r.full)
   const sorted = repos && [...repos.filter(writable), ...repos.filter(r => !writable(r))]
+  const choose = full => { setChosen(full); setPickError('') }
+  const target = chosen === TYPED ? parseRepo(typed)?.join('/') : chosen
 
-  async function pick(full) {
-    setChecking(full)
+  async function submit() {
+    if (!target) return setPickError(chosen === TYPED ? 'Use owner/repo format, e.g. ek-so/brain' : '')
+    if (!navigator.onLine) return setPickError("You're offline. Connect to the internet to check the repo.")
+    setChecking(true)
     setPickError('')
     try {
-      if (await canWriteRepo(...full.split('/'))) return onRepo(full)
-      setDenied(d => new Set(d).add(full))
-    } catch {
-      setPickError("Can't check that repo with GitHub. Try again.")
+      if (chosen === TYPED) await checkRepo(...target.split('/')).catch(() => { throw new Error('missing') })
+      if (await canWriteRepo(...target.split('/'))) return onRepo(target)
+      setPickError(`This token can't write to ${target}.`)
+      if (chosen !== TYPED) { setDenied(d => new Set(d).add(target)); setChosen(null) }
+    } catch (e) {
+      setPickError(e.message === 'missing' ? "Can't access that repo. Check the name and token permissions." : "Can't check that repo with GitHub. Try again.")
     }
-    setChecking(null)
+    setChecking(false)
   }
 
   return (
@@ -73,53 +84,65 @@ export default function RepoSetup({ user, onRepo, onLogout }) {
       title="Notes repo"
       intro="Choose the GitHub repo that stores your notes."
     >
-      {error ? (
-        <>
-          <p className="text-destructive-ink text-xs text-center">{error}</p>
-          <Button variant="secondary" onClick={() => setAttempt(a => a + 1)}>Try again</Button>
-        </>
-      ) : !sorted ? (
-        <div className="flex justify-center py-space"><Spinner /></div>
-      ) : sorted.length === 0 ? (
-        <p className="text-xs text-muted-foreground text-center">This token can't reach any repo. Create a new token with access to your notes repo.</p>
-      ) : (
-        <div className="w-full rounded-lg border border-border bg-card p-space-xs">
-          <ListBox className="mx-0">
-            {sorted.map(r => (
-              <li key={r.full}>
-                <ListRow
-                  icon={<FileIcon path="" dir />}
-                  title={r.full}
-                  onClick={() => pick(r.full)}
-                  disabled={!writable(r) || !!checking}
-                  dimmed={!writable(r)}
-                  trailing={
-                    checking === r.full ? <Spinner className="mx-space-sm size-4" />
-                    : !writable(r) && <span className="px-space-sm text-xs text-muted-foreground">No write access</span>
-                  }
+      {/* Not a form: the rows are buttons, which in a form would submit it */}
+      <div className="flex w-full flex-col items-center gap-space">
+        {error ? (
+          <>
+            <p className="text-destructive-ink text-xs text-center">{error}</p>
+            <Button variant="secondary" onClick={() => setAttempt(a => a + 1)}>Try again</Button>
+          </>
+        ) : !sorted ? (
+          <div className="flex justify-center py-space"><Spinner /></div>
+        ) : sorted.length === 0 && (
+          <p className="text-xs text-muted-foreground text-center">This token can't reach any repo in its list. Type yours below, or create a new token with access to it.</p>
+        )}
+        {sorted && !error && (
+          <div className="w-full rounded-lg border border-border bg-card p-space-xs">
+            <ListBox role="radiogroup" aria-label="Repos" className="mx-0">
+              {sorted.map(r => (
+                <li key={r.full}>
+                  <ListRow
+                    icon={<Radio checked={chosen === r.full} />}
+                    title={r.full}
+                    onClick={() => choose(r.full)}
+                    active={chosen === r.full}
+                    disabled={!writable(r) || checking}
+                    dimmed={!writable(r)}
+                    trailing={!writable(r) && <span className="px-space-sm text-xs text-muted-foreground">No write access</span>}
+                  />
+                </li>
+              ))}
+              {!done && <li className="flex justify-center py-space-sm"><Spinner className="size-4" /></li>}
+              {/* The last choice: a repo typed by name; focusing the field chooses it. Its text lines up with the names above (the field's own padding is the gap) */}
+              <li className={cn('flex min-h-control items-center rounded-sm pl-3', chosen === TYPED && 'bg-primary/15')}>
+                <button type="button" aria-label="Type a repo" className="flex min-h-control items-center" disabled={checking} onClick={() => choose(TYPED)}>
+                  <Radio checked={chosen === TYPED} />
+                </button>
+                <Input
+                  type="text"
+                  aria-label="Repo by name, owner/repo"
+                  placeholder="owner/repo"
+                  value={typed}
+                  onFocus={() => choose(TYPED)}
+                  onChange={e => { setTyped(e.target.value); choose(TYPED) }}
+                  onKeyDown={e => e.key === 'Enter' && submit()}
+                  disabled={checking}
+                  autoCorrect="off"
+                  autoCapitalize="none"
+                  spellCheck="false"
+                  className="font-mono border-transparent bg-transparent shadow-none focus-visible:border-border"
                 />
               </li>
-            ))}
-          </ListBox>
-        </div>
-      )}
-      {sorted && !done && !error && <Spinner className="size-4" />}
-      {pickError && <p className="text-destructive-ink text-xs text-center">{pickError}</p>}
-      {typing ? (
-        <RepoForm
-          initial={`${user.login}/`}
-          onConnect={onRepo}
-          inputClassName="font-mono bg-card border-border"
-          errorClassName="text-center"
-          actions={({ busy, empty }) => (
-            <Button type="submit" disabled={busy || empty} className="w-full">
-              {busy ? 'Connecting…' : 'Connect'}
-            </Button>
-          )}
-        />
-      ) : (
-        <Button variant="link" onClick={() => setTyping(true)}>Enter a repo by name</Button>
-      )}
+            </ListBox>
+          </div>
+        )}
+        {pickError && <p className="text-destructive-ink text-xs text-center">{pickError}</p>}
+        {sorted && !error && (
+          <Button disabled={checking || !target} className="w-full" onClick={submit}>
+            {checking ? 'Checking…' : 'Continue'}
+          </Button>
+        )}
+      </div>
       <Button variant="ghost-destructive" onClick={onLogout}>
         <SignOut /> Sign out
       </Button>

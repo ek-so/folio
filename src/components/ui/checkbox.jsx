@@ -19,3 +19,21 @@ export function Checkbox({ checked, className }) {
     </span>
   )
 }
+
+// The radio mark for one of several choices in a list (the sign-in's repos), drawn like
+// `Checkbox`: a 16px circle, outlined, with an accent dot when `checked`. Only the mark:
+// the row it sits in is what's tapped.
+export function Radio({ checked, className }) {
+  return (
+    <span
+      aria-hidden
+      className={cn(
+        'flex size-4 shrink-0 items-center justify-center rounded-full border-[1.5px] bg-background transition-colors',
+        checked ? 'border-primary' : 'border-border',
+        className,
+      )}
+    >
+      {checked && <span className="size-2 rounded-full bg-primary" />}
+    </span>
+  )
+}
