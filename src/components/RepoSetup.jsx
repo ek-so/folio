@@ -25,7 +25,7 @@ export default function RepoSetup({ onRepo, onLogout }) {
 
   return (
     <AuthLayout
-      logo={<GithubLogo className="size-16 text-foreground" weight="fill" aria-hidden="true" />}
+      logo={<GithubLogo className="size-16 text-foreground" aria-hidden="true" />}
       title="Notes repo"
       intro="Choose the GitHub repo that stores your notes."
     >
@@ -39,7 +39,8 @@ export default function RepoSetup({ onRepo, onLogout }) {
       ) : repos.length === 0 ? (
         <p className="text-xs text-muted-foreground text-center">This token can't reach any repo. Create a new token with access to your notes repo.</p>
       ) : (
-        <ListBox className="w-full">
+        <div className="w-full rounded-lg border border-border bg-card p-space-xs">
+        <ListBox className="mx-0">
           {repos.map(r => (
             <li key={r.full}>
               <ListRow
@@ -53,6 +54,7 @@ export default function RepoSetup({ onRepo, onLogout }) {
             </li>
           ))}
         </ListBox>
+        </div>
       )}
       <Button variant="ghost" onClick={onLogout} className="text-muted-foreground">
         Sign out
