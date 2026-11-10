@@ -38,7 +38,7 @@ export default function AccountMenu({ trigger, current, pages, viewActions, onNa
         <div className="shrink-0 border-b border-border py-space-sm pl-space pr-[calc(var(--spacing-space)+var(--spacing-control)+var(--spacing-space-sm))]">
           <div className="flex min-h-control items-center gap-space-sm px-3">
             <AppLogo className="-ml-space-xs size-6 shrink-0" />
-            <SheetTitle className="font-brand text-lg leading-none font-normal">Folio</SheetTitle>
+            <SheetTitle className="font-brand text-lg leading-none font-normal text-foreground/85">Folio</SheetTitle>
           </div>
         </div>
         <nav aria-label="Main" className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-y-contain p-space" data-no-pull>
