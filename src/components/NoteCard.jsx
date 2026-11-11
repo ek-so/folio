@@ -1,5 +1,4 @@
 import { forwardRef } from 'react'
-import { Smiley } from '@phosphor-icons/react'
 import { cn, isPortaled } from '@/lib/utils.js'
 import { openLink } from '@/lib/previewLinks.js'
 import PropertyBadges from '@/components/PropertyBadges.jsx'
@@ -7,7 +6,6 @@ import { fileName } from '@/lib/files.js'
 import { frontMatter, noteTitle, DESCRIPTION } from '@/lib/frontmatter.js'
 import { taskProgress } from '@/lib/markdown.js'
 import LockMark from './LockMark.jsx'
-import EmojiPicker from './EmojiPicker.jsx'
 import { useIconsContext } from '../hooks/useIcons.js'
 
 // A long press on iPhones mustn't open the text or link callout instead of the drag
@@ -26,18 +24,10 @@ export const cardClick = (path, files, onOpen, onOpenFolder) => e => {
   openLink(link.getAttribute('href'), { path, files, onOpenFile: onOpen, onNavigate: onOpenFolder })
 }
 
-// A card's emoji (its note's icon, lib/icons.js) before its title: a button that opens the emoji picker, a faint smiley
-// when it has none; just the emoji while icons can't be saved. Its presses stay its own: they never open or drag the card
+// A card's emoji (its note's icon, lib/icons.js) before its title, nothing when it has none; changed in the card's ⋯ (CardMenu)
 export function CardEmoji({ path, className }) {
-  const { iconOf, onSet } = useIconsContext()
-  const emoji = iconOf(path)
-  if (!onSet) return emoji ? <span aria-hidden className={cn('flex size-control-sm shrink-0 items-center justify-center text-base leading-none', className)}>{emoji}</span> : null
-  const stop = e => e.stopPropagation()
-  return (
-    <span className={cn('flex shrink-0', className)} onPointerDown={stop} onClick={stop} onKeyDown={stop}>
-      <EmojiPicker emoji={emoji} label="Emoji" fallback={<Smiley className="text-muted-foreground/50" />} onChange={value => onSet(path, value)} className="size-control-sm" />
-    </span>
-  )
+  const emoji = useIconsContext().iconOf(path)
+  return emoji ? <span aria-hidden className={cn('shrink-0 leading-5', className)}>{emoji}</span> : null
 }
 
 // What a card of a board or a planner shows: its emoji (CardEmoji), the note's title, its description, the chosen `properties`' values (`overdue`:
@@ -61,7 +51,7 @@ const NoteCard = forwardRef(function NoteCard({ path, text, properties, always =
       {...props}
     >
       <div className="flex items-start gap-space-xs">
-        <CardEmoji path={path} className="-my-0.5 -ml-1" />
+        <CardEmoji path={path} className="text-sm" />
         <span className={cn('min-w-0 flex-1 break-words text-sm font-medium', overdue && 'opacity-50')}>
           {locked && <LockMark />}
           {text === undefined ? fileName(path) : noteTitle(text, fileName(path))}

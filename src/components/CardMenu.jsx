@@ -1,8 +1,10 @@
 import { useState } from 'react'
-import { PencilSimple, Trash, Columns, Copy, TextAlignLeft, LinkSimple, CheckCircle, Lock, LockOpen } from '@phosphor-icons/react'
+import { PencilSimple, Trash, Columns, Copy, TextAlignLeft, LinkSimple, CheckCircle, Lock, LockOpen, Smiley } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button.jsx'
 import { Input } from '@/components/ui/input.jsx'
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu.jsx'
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent } from '@/components/ui/dropdown-menu.jsx'
+import { EmojiGrid } from '@/components/EmojiPicker.jsx'
+import { useIconsContext } from '@/hooks/useIcons.js'
 import ColumnSubmenu from '@/components/ColumnSubmenu.jsx'
 import BottomSheet from '@/components/BottomSheet.jsx'
 import DeleteModal from '@/components/DeleteModal.jsx'
@@ -34,7 +36,7 @@ export const cardActions = (path, text, act, services) => {
 // A card's ⋯ menu, a board's and a planner's (hidden until the card is hovered with a mouse, always shown on touch):
 // Mark as done (only with `onDone`, a planner's), Add / Edit
 // description (`description`, its text; only with `onDescription`, a note on this device), Rename (its title and file
-// name together, `RenameModal`; `onRename(name, title)` returns an error or null), Duplicate (a copy of the file next to it), Copy link (`repoLink`), Move to column (only with `columns`, a board's: a submenu of its
+// name together, `RenameModal`; `onRename(name, title)` returns an error or null), Emoji (its note's icon, as in a file's ⋯: `EmojiGrid`, `IconsContext`; the card shows it before its title), Duplicate (a copy of the file next to it), Copy link (`repoLink`), Move to column (only with `columns`, a board's: a submenu of its
 // columns, then Edit columns… that opens its Columns dialog) and Remove (the file, to the archive like anywhere else, confirmed). `columns`: [{ key, name }] shown,
 // `column`: the card's key. `inRow`: in a list row (a planner's list view), which has its own padding: none pulled into the corner. Its dialogs are in a `contents` div so a click in them stays
 // theirs, never the card's.
@@ -43,9 +45,11 @@ export default function CardMenu({ path, description, columns, column, onDone, o
   const [renaming, setRenaming] = useState(false)
   const item = fileItem(path)
   const [deleting, setDeleting] = useState(false)
+  const [open, setOpen] = useState(false)
+  const icons = useIconsContext()
   return (
     <div className="contents" {...own}>
-      <DropdownMenu>
+      <DropdownMenu open={open} onOpenChange={setOpen}>
         <DropdownMenuTrigger asChild>
           <MoreButton inRow reveal aria-label="Card actions" className={cn(!inRow && '-my-1.5 -mr-1.5')} />
         </DropdownMenuTrigger>
@@ -56,6 +60,12 @@ export default function CardMenu({ path, description, columns, column, onDone, o
           </>}
           {onDescription && <DropdownMenuItem onSelect={() => setEditing('description')}><TextAlignLeft /> {description ? 'Edit' : 'Add'} description</DropdownMenuItem>}
           <DropdownMenuItem onSelect={() => setRenaming(true)}><PencilSimple /> Rename</DropdownMenuItem>
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger disabled={!icons.onSet}><Smiley /> Emoji</DropdownMenuSubTrigger>
+            <DropdownMenuSubContent className="p-space-sm">
+              <EmojiGrid value={icons.iconOf(path)} onPick={emoji => icons.onSet(path, emoji)} onDone={() => setOpen(false)} />
+            </DropdownMenuSubContent>
+          </DropdownMenuSub>
           <DropdownMenuItem onSelect={onDuplicate}><Copy /> Duplicate</DropdownMenuItem>
           <DropdownMenuItem onSelect={() => copyText(repoLink(path), 'Link copied')}><LinkSimple /> Copy link</DropdownMenuItem>
           {lock && <DropdownMenuItem disabled={!lock.onToggle} onSelect={lock.onToggle}>{lock.locked ? <><LockOpen /> Unlock</> : <><Lock /> Lock</>}</DropdownMenuItem>}

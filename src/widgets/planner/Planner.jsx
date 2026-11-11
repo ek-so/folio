@@ -379,7 +379,7 @@ function Day({ dayKey: key, today, selected, count, onSelect }) {
   )
 }
 
-// A card as a row of the list view (ListRow): its emoji (CardEmoji, before the row's button), its title, its date under it and, when it repeats, a small circling-arrows
+// A card as a row of the list view (ListRow): its emoji (CardEmoji), its title, its date under it and, when it repeats, a small circling-arrows
 // icon (grey, like the line) and how often right after it; its ⋯; it opens the note. `overdue` (dated before today, listed
 // under Today): its title faded and its date red
 function TaskRow({ path, text, overdue, locked, menu, onOpen }) {
@@ -388,8 +388,7 @@ function TaskRow({ path, text, overdue, locked, menu, onOpen }) {
   const kind = parseRecurrence(repeat)?.kind
   return (
     <ListRow
-      leading={<CardEmoji path={path} className="pl-space-xs" />}
-      title={<span className={cn(overdue && 'opacity-50')}>{locked && <LockMark />}{cardTitle(path, text)}</span>}
+      title={<span className={cn(overdue && 'opacity-50')}>{locked && <LockMark />}<CardEmoji path={path} className="mr-1.5" />{cardTitle(path, text)}</span>}
       description={<>
         <span className={cn(overdue && 'text-destructive-ink')}>{date ? (overdue && daysAgo(date)) || dateLabel(date) : 'No date'}</span>
         {(kind === 'repeat' || kind === 'unset') && <> · <ArrowsClockwise className="inline size-3 align-[-0.125em]" /> {repeatLabel(repeat)}</>}
