@@ -129,11 +129,11 @@ export default function RepoSetup({ repoList, onRepoList, onRepo, onBack, onLogo
             {/* With the search, as tall as it can be from the start, so searching never changes its height */}
             <ListBox role="radiogroup" aria-label="Repos" className={cn('mx-0', searching && 'h-64')}>
               {done && found.length === 0 && (
-                <li className="flex h-full flex-col items-center justify-center gap-space-sm px-space text-center">
+                <li className="flex h-full flex-col items-center justify-center gap-space-xs px-space text-center">
+                  <EmptyMessage size="sm" className="py-0">No repos found.</EmptyMessage>
                   <EmptyMessage size="sm" className="py-0">
-                    {name ? <>No repos found. Create your own named <code className="rounded-sm bg-[var(--code-bg)] px-1.5 py-0.5 font-mono text-xs text-foreground">{name}</code></> : 'No repos found. Type a name in the search to create your own.'}
+                    {name ? <>Create a new one named <code className="rounded-sm bg-[var(--code-bg)] px-1.5 py-0.5 font-mono text-xs text-foreground">{name}</code></> : 'Type a name in the search to create a new one.'}
                   </EmptyMessage>
-                  <Button variant="secondary" disabled={!name || checking} onClick={create}>{checking ? 'Creating…' : 'Create repo'}</Button>
                 </li>
               )}
               {found.map(r => (
@@ -154,11 +154,15 @@ export default function RepoSetup({ repoList, onRepoList, onRepo, onBack, onLogo
           </div>
         )}
         {pickError && <p className="text-destructive-ink text-xs text-center">{pickError}</p>}
-        {sorted && !error && (found.length > 0 || !done) && (
+        {sorted && !error && (found.length > 0 || !done ? (
           <Button disabled={checking || !chosen} className="w-full" onClick={submit}>
             {checking ? 'Checking…' : 'Continue'}
           </Button>
-        )}
+        ) : (
+          <Button disabled={checking || !name} className="w-full" onClick={create}>
+            {checking ? 'Creating…' : 'Create repo'}
+          </Button>
+        ))}
       </div>
       <Button variant="ghost-destructive" onClick={onLogout}>
         <SignOut /> Sign out
