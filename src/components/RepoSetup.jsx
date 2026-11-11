@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { SignOut } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils.js'
 import { Button } from './ui/button.jsx'
-import { Input } from './ui/input.jsx'
 import { SearchInput } from './ui/search-input.jsx'
 import { Radio } from './ui/checkbox.jsx'
 import { ListRow, ListBox } from './ui/list-row.jsx'
@@ -12,28 +11,25 @@ import BrandName from './BrandName.jsx'
 import SignInSteps from './SignInSteps.jsx'
 import Spinner from './Spinner.jsx'
 import { EmptyMessage } from './EmptyState.jsx'
-import { listRepos, checkRepo, canWriteRepo } from '../lib/github.js'
-import { parseRepo } from '../lib/files.js'
+import { listRepos, canWriteRepo } from '../lib/github.js'
 
-const TYPED = '' // the choice of the last row, where a repo is typed by name
 const SEARCH_FROM = 11 // a search field shows above the list once it has this many repos
 
 // The second sign-in step, under the app's logo and name like the first (the stepper's Token goes back to the
 // first, the token kept): the repos
 // the token can reach, as one-of-several choices (shown as they load; with more
-// than 10, a search field above them), and a last row to type one the list leaves out.
+// than 10, a search field above them); with none to find, a hint to create a repo on GitHub.
 // Repos it can write to come first; the others are shown but can't be chosen
 // ("No write access"). Shown even when there's only one; the first writable
 // repo starts chosen. Continue checks that the token itself can write there
 // (GitHub's list only knows the user's access), then opens it.
-export default function RepoSetup({ user, onRepo, onBack, onLogout }) {
+export default function RepoSetup({ onRepo, onBack, onLogout }) {
   const [repos, setRepos] = useState(null)
   const [done, setDone] = useState(false)
   const [error, setError] = useState('')
   const [attempt, setAttempt] = useState(0)
   const [denied, setDenied] = useState(() => new Set()) // the token can't write there after all
-  const [chosen, setChosen] = useState(null) // a repo's full name, TYPED, or none yet
-  const [typed, setTyped] = useState(`${user.login}/`)
+  const [chosen, setChosen] = useState(null) // a repo's full name, or none yet
   const [checking, setChecking] = useState(false)
   const [pickError, setPickError] = useState('')
   const [query, setQuery] = useState('')
@@ -64,20 +60,19 @@ export default function RepoSetup({ user, onRepo, onBack, onLogout }) {
   const needle = searching ? query.trim().toLowerCase() : ''
   const found = sorted && (needle ? sorted.filter(r => r.full.toLowerCase().includes(needle)) : sorted)
   const choose = full => { setChosen(full); setPickError('') }
-  const target = chosen === TYPED ? parseRepo(typed)?.join('/') : chosen
 
   async function submit() {
-    if (!target) return setPickError(chosen === TYPED ? 'Use owner/repo format, e.g. ek-so/brain' : '')
+    if (!chosen) return
     if (!navigator.onLine) return setPickError("You're offline. Connect to the internet to check the repo.")
     setChecking(true)
     setPickError('')
     try {
-      if (chosen === TYPED) await checkRepo(...target.split('/')).catch(() => { throw new Error('missing') })
-      if (await canWriteRepo(...target.split('/'))) return onRepo(target)
-      setPickError(`This token can't write to ${target}.`)
-      if (chosen !== TYPED) { setDenied(d => new Set(d).add(target)); setChosen(null) }
-    } catch (e) {
-      setPickError(e.message === 'missing' ? "Can't access that repo. Check the name and token permissions." : "Can't check that repo with GitHub. Try again.")
+      if (await canWriteRepo(...chosen.split('/'))) return onRepo(chosen)
+      setPickError(`This token can't write to ${chosen}.`)
+      setDenied(d => new Set(d).add(chosen))
+      setChosen(null)
+    } catch {
+      setPickError("Can't check that repo with GitHub. Try again.")
     }
     setChecking(false)
   }
@@ -99,7 +94,7 @@ export default function RepoSetup({ user, onRepo, onBack, onLogout }) {
         ) : !sorted ? (
           <div className="flex justify-center py-space"><Spinner /></div>
         ) : sorted.length === 0 && (
-          <p className="text-xs text-muted-foreground text-center">This token can't reach any repo in its list. Type yours below, or create a new token with access to it.</p>
+          <p className="text-xs text-muted-foreground text-center">This token can't reach any repo. Create a repo on GitHub, or a new token with access to yours.</p>
         )}
         {searching && !error && (
           <SearchInput
@@ -110,11 +105,11 @@ export default function RepoSetup({ user, onRepo, onBack, onLogout }) {
             className="bg-card border-border"
           />
         )}
-        {sorted && !error && (
+        {sorted?.length > 0 && !error && (
           <div className="w-full rounded-lg border border-border bg-card p-space-xs">
             {/* With the search, as tall as it can be from the start, so searching never changes its height */}
             <ListBox role="radiogroup" aria-label="Repos" className={cn('mx-0', searching && 'h-64')}>
-              {needle && found.length === 0 && <li><EmptyMessage size="sm">No repos found</EmptyMessage></li>}
+              {needle && found.length === 0 && <li><EmptyMessage size="sm">No repos found. Create your own repo on GitHub.</EmptyMessage></li>}
               {found.map(r => (
                 <li key={r.full}>
                   <ListRow
@@ -129,32 +124,12 @@ export default function RepoSetup({ user, onRepo, onBack, onLogout }) {
                 </li>
               ))}
               {!done && <li className="flex justify-center py-space-sm"><Spinner className="size-4" /></li>}
-              {/* The last choice: a repo typed by name, an outlined field from the start (its box where the names above start); focusing it chooses it */}
-              <li className={cn('flex min-h-control items-center gap-3 rounded-sm py-space-xs pl-3 pr-space-xs', chosen === TYPED && 'bg-primary/15')}>
-                <button type="button" aria-label="Type a repo" className="flex min-h-control items-center" disabled={checking} onClick={() => choose(TYPED)}>
-                  <Radio checked={chosen === TYPED} />
-                </button>
-                <Input
-                  type="text"
-                  aria-label="Repo by name, owner/repo"
-                  placeholder="owner/repo"
-                  value={typed}
-                  onFocus={() => choose(TYPED)}
-                  onChange={e => { setTyped(e.target.value); choose(TYPED) }}
-                  onKeyDown={e => e.key === 'Enter' && submit()}
-                  disabled={checking}
-                  autoCorrect="off"
-                  autoCapitalize="none"
-                  spellCheck="false"
-                  className="font-mono bg-background border-border"
-                />
-              </li>
             </ListBox>
           </div>
         )}
         {pickError && <p className="text-destructive-ink text-xs text-center">{pickError}</p>}
         {sorted && !error && (
-          <Button disabled={checking || !target} className="w-full" onClick={submit}>
+          <Button disabled={checking || !chosen} className="w-full" onClick={submit}>
             {checking ? 'Checking…' : 'Continue'}
           </Button>
         )}
