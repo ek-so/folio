@@ -12,6 +12,7 @@ const RAIL_KEY = 'folio_rail_collapsed'
 const FILES_VIEW_KEY = 'folio_files_view'
 const CHANGES_KEY = 'folio_changes_'
 const PLANNER_VIEW_KEY = 'folio_planner_view_'
+const PLANNER_DAYS_KEY = 'folio_planner_days'
 
 function read(store, key) {
   try { return store.getItem(key) } catch { return null }
@@ -65,6 +66,17 @@ export const storage = {
     try { return JSON.parse(read(sessionStorage, EXPANDED_KEY)) || [] } catch { return [] }
   },
   setExpanded: (paths) => write(sessionStorage, EXPANDED_KEY, JSON.stringify(paths)),
+  // The day picked on a planner's ribbon (`id`: its widget's), so it's still selected after a note is opened and closed; null: today
+  getPlannerDay: (id) => {
+    try { return JSON.parse(read(sessionStorage, PLANNER_DAYS_KEY))?.[id] ?? null } catch { return null }
+  },
+  setPlannerDay: (id, key) => {
+    let days = {}
+    try { days = JSON.parse(read(sessionStorage, PLANNER_DAYS_KEY)) || {} } catch {}
+    if (key) days[id] = key
+    else delete days[id]
+    write(sessionStorage, PLANNER_DAYS_KEY, JSON.stringify(days))
+  },
   getRecentFiles: () => {
     try { return JSON.parse(read(sessionStorage, RECENT_KEY)) || [] } catch { return [] }
   },
@@ -83,14 +95,14 @@ export const storage = {
     const next = [repo, ...storage.getRepos().filter(r => r !== repo)].slice(0, 8)
     write(localStorage, REPOS_KEY, JSON.stringify(next))
   },
-  // What's open in this repo: the page stays, the trails, open folders and recent files go
+  // What's open in this repo: the page stays, the trails, open folders, recent files and planners' picked days go
   clearRepoSession: () => {
-    for (const key of [TRAILS_KEY, EXPANDED_KEY, RECENT_KEY]) write(sessionStorage, key, null)
+    for (const key of [TRAILS_KEY, EXPANDED_KEY, RECENT_KEY, PLANNER_DAYS_KEY]) write(sessionStorage, key, null)
   },
   // Everything tied to the signed-in account; theme stays
   clearSession: () => {
     for (const key of [TOKEN_KEY, REPO_KEY, REPOS_KEY, USER_KEY]) write(localStorage, key, null)
-    for (const key of [TRAILS_KEY, PAGE_KEY, EXPANDED_KEY, RECENT_KEY]) write(sessionStorage, key, null)
+    for (const key of [TRAILS_KEY, PAGE_KEY, EXPANDED_KEY, RECENT_KEY, PLANNER_DAYS_KEY]) write(sessionStorage, key, null)
   },
 }
 

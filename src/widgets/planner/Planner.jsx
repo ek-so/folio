@@ -1,5 +1,5 @@
 import { toast } from 'sonner'
-import { Fragment, useState, useMemo, useRef, useCallback, useLayoutEffect } from 'react'
+import { Fragment, useState, useMemo, useRef, useCallback, useEffect, useLayoutEffect } from 'react'
 import { Tag, Plus, CalendarBlank, CrosshairSimple, CalendarDots, ListBullets, ArrowsClockwise, SortAscending, Check } from '@phosphor-icons/react'
 import { DndContext, DragOverlay, useDroppable, pointerWithin, closestCenter } from '@dnd-kit/core'
 import { SortableContext, useSortable, arrayMove, rectSortingStrategy } from '@dnd-kit/sortable'
@@ -30,6 +30,7 @@ import { WEEKDAYS, parseRecurrence, repeatLabel } from './recurrence.js'
 import { plural } from '@/lib/plural.js'
 import LockMark from '@/components/LockMark.jsx'
 import { EmptyBox } from '@/components/EmptyState.jsx'
+import { storage } from '@/lib/storage.js'
 
 // The ribbon: each day takes DAY_WIDTH (its box and the gap around it), and a line between months MONTH_GAP (a box that
 // wide with the 1px line in its middle: the days' gap on each side), so the scrolling sums match what's drawn; it starts
@@ -71,9 +72,11 @@ export default function Planner({ id, services, onRemove }) {
   const { notes, canEdit, openFile, openFolder } = services
   const files = useMemo(() => Object.fromEntries(services.files.map(f => [f, true])), [services.files]) // as the preview's links want them
   const today = useToday()
-  const [picked, setPicked] = useState(null) // the day chosen on the ribbon; none follows today
+  // The day chosen on the ribbon; none follows today. Kept for the session, so it's still selected after opening a note and coming back
+  const [picked, setPicked] = useState(() => { const key = storage.getPlannerDay(id); return /^\d{4}-\d{2}-\d{2}$/.test(key ?? '') ? key : null })
+  useEffect(() => { storage.setPlannerDay(id, picked) }, [id, picked])
   const selected = picked ?? today
-  const [anchor, setAnchor] = useState(today) // the ribbon's days are counted from where it started, so a new day doesn't shift them
+  const [anchor, setAnchor] = useState(selected) // the ribbon's days are counted from where it started, so a new day doesn't shift them
   const [expanded, setExpanded] = useState(() => new Set()) // keys of the days showing all their cards (`list:` and a group's key: a list group)
   const [range, setRange] = useState({ before: MORE_DAYS, after: MORE_DAYS * 2 }) // days shown before and after today
   const [dragged, setDragged] = useState(null) // the path of the card being dragged
@@ -82,7 +85,7 @@ export default function Planner({ id, services, onRemove }) {
   const [choosing, setChoosing] = useState(false) // the Properties sheet
   const { view, setView: pickView } = act // calendar or list, this device's choice
   const [jumping, setJumping] = useState(null) // a day picked in the calendar, scrolled to once the ribbon has it
-  const [month, setMonth] = useState(() => monthLabel(today)) // the month of the day in the middle of the ribbon, its title
+  const [month, setMonth] = useState(() => monthLabel(selected)) // the month of the day in the middle of the ribbon, its title
   const scroller = useRef(null)
   const grown = useRef(false) // days were added before the first: the view moves by their width to keep its place
   const centered = useRef(false)
@@ -99,7 +102,7 @@ export default function Planner({ id, services, onRemove }) {
     const at = days.indexOf(key)
     if (el && at >= 0) el.scrollTo({ left: offsets[at] - el.clientWidth / 2 + DAY_WIDTH / 2, behavior })
   }, [days, offsets])
-  // The ribbon starts with today in the middle
+  // The ribbon starts with the selected day (today, or the one picked before a note was opened) in the middle
   const setScroller = useCallback(el => {
     scroller.current = el
     if (!el) centered.current = false // gone (the list view): centered again when it's back
