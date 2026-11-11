@@ -26,31 +26,34 @@ const SEARCH_FROM = 11 // a search field shows above the list once it has this m
 // ("No write access"). Shown even when there's only one; the first writable
 // repo starts chosen. Continue checks that the token itself can write there
 // (GitHub's list only knows the user's access), then opens it.
-export default function RepoSetup({ onRepo, onBack, onLogout }) {
-  const [repos, setRepos] = useState(null)
-  const [done, setDone] = useState(false)
+export default function RepoSetup({ repoList, onRepoList, onRepo, onBack, onLogout }) {
+  const [repos, setRepos] = useState(repoList) // the list kept from the last visit with this token, if any
+  const [done, setDone] = useState(!!repoList)
   const [error, setError] = useState('')
   const [attempt, setAttempt] = useState(0)
   const [denied, setDenied] = useState(() => new Set()) // the token can't write there after all
-  const [chosen, setChosen] = useState(null) // a repo's full name, or none yet
+  const [chosen, setChosen] = useState(() => repoList?.find(r => r.canWrite)?.full ?? null) // a repo's full name, or none yet
   const [checking, setChecking] = useState(false)
   const [pickError, setPickError] = useState('')
   const [query, setQuery] = useState('')
   const [newName, setNewName] = useState('')
 
   useEffect(() => {
+    if (repoList && attempt === 0) return
     let cancelled = false
     setError('')
     setRepos(null)
     setDone(false)
     ;(async () => {
       try {
+        const all = []
         for await (const page of listRepos()) {
           if (cancelled) return
-          setRepos(r => [...(r ?? []), ...page])
+          all.push(...page)
+          setRepos([...all])
           setChosen(c => c ?? page.find(r => r.canWrite)?.full ?? null)
         }
-        if (!cancelled) { setRepos(r => r ?? []); setDone(true) }
+        if (!cancelled) { setRepos(all); onRepoList(all); setDone(true) }
       } catch {
         if (!cancelled) setError(navigator.onLine ? "Can't load your repos from GitHub." : "You're offline. Connect to the internet to load your repos.")
       }

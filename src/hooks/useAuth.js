@@ -13,6 +13,7 @@ export function useAuth() {
   const [user, setUser] = useState(null)
   const [repo, setRepoState] = useState(null)
   const [ready, setReady] = useState(false)
+  const [repoList, setRepoList] = useState(null) // the repos the token can reach, as the repo step loaded them; kept while the token is
   const [repos, setRepos] = useState(storage.getRepos) // used on this device, latest first
   const remember = full => { storage.addRepo(full); setRepos(storage.getRepos()) }
 
@@ -59,6 +60,7 @@ export function useAuth() {
       throw e
     }
     storage.setToken(token)
+    setRepoList(null)
     storage.setUser(u)
     setUser(u)
     setEditingToken(false)
@@ -83,12 +85,13 @@ export function useAuth() {
   function signOut() {
     setEditingToken(false)
     storage.clearSession()
+    setRepoList(null)
     setUser(null)
     setRepoState(null)
   }
 
   return {
-    user, repo, repos, ready, authenticate, selectRepo, switchRepo, signOut,
+    user, repo, repos, repoList, setRepoList, ready, authenticate, selectRepo, switchRepo, signOut,
     editingToken, editToken: () => setEditingToken(true), token: () => storage.getToken() ?? '',
   }
 }

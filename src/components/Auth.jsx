@@ -7,7 +7,7 @@ import BrandName from './BrandName.jsx'
 import SignInSteps from './SignInSteps.jsx'
 
 // The sign-in's first step: the GitHub token. Back here from the repo step (`initialToken`: the one in use), it's
-// filled in: Continue keeps it, a changed one Connects anew
+// filled in: Continue keeps it (so does the stepper's Repo), a changed one Connects anew
 export default function Auth({ onAuth, initialToken = '' }) {
   const [token, setToken] = useState(initialToken)
   const same = !!initialToken && token.trim() === initialToken
@@ -29,7 +29,7 @@ export default function Auth({ onAuth, initialToken = '' }) {
 
   return (
     <AuthLayout
-      steps={<SignInSteps current={0} />}
+      steps={<SignInSteps current={0} onForward={same && !loading ? () => onAuth(token.trim()) : undefined} />}
       logo={<AppLogo className="size-20" />}
       title={<BrandName large />}
       intro="Paste a GitHub token to access your notes. Use a fine-grained token with Contents: Read and write, limited to your notes repo."
