@@ -177,7 +177,9 @@ function EditableBadge({ prop, label, color, options, onChange, onManage }) {
 // The values to choose from (what other notes nearby have, plus what this one
 // has), a field to type a new one. A property with a list of values toggles them
 // and stays open; one with a single value takes the chosen one (choosing it
-// again empties it) and closes.
+// again empties it) and closes. The field shows from 10 values (or with none, or without Edit values, which
+// adds too); under that the list is short enough to scan.
+const FIND_FROM = 10
 function ValueChooser({ prop, options, onChange, onManage, close }) {
   const [typed, setTyped] = useState('')
   const isList = Array.isArray(prop.value)
@@ -185,6 +187,7 @@ function ValueChooser({ prop, options, onChange, onManage, close }) {
   const all = [...new Set([...options, ...current])]
   const query = typed.trim()
   const shown = all.filter(v => v.toLowerCase().includes(query.toLowerCase()))
+  const showField = all.length >= FIND_FROM || !all.length || !onManage
   const isNew = query && !all.some(v => v.toLowerCase() === query.toLowerCase())
 
   function choose(value) {
@@ -198,7 +201,7 @@ function ValueChooser({ prop, options, onChange, onManage, close }) {
 
   return (
     <div className="flex flex-col gap-space-xs">
-      <Input
+      {showField && <Input
         value={typed}
         placeholder={`Find or add ${prop.key}`}
         onChange={e => setTyped(e.target.value)}
@@ -207,7 +210,7 @@ function ValueChooser({ prop, options, onChange, onManage, close }) {
           e.preventDefault()
           choose(isNew ? query : (all.find(v => v.toLowerCase() === query.toLowerCase())))
         }}
-      />
+      />}
       <div className="flex max-h-60 flex-col overflow-y-auto">
         {isNew && <ListRow title={`Add “${query}”`} icon={<span className="size-4" />} onClick={() => choose(query)} />}
         {shown.map(v => (
