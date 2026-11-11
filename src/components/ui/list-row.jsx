@@ -48,7 +48,7 @@ export function ListRow({ icon, title, description, leading, trailing, onClick, 
         </span>
         {description && <span className="hidden max-w-[50%] shrink-0 truncate text-muted-foreground @min-[40rem]:block">{description}</span>}
       </Button>
-      {trailing && <div className="flex shrink-0 items-center pr-1">{trailing}</div>}
+      {trailing && <div className="flex shrink-0 items-center py-space-sm pr-space-sm">{trailing}</div>}
     </div>
     </Tip>
   )
