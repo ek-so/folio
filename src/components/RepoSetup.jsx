@@ -3,7 +3,6 @@ import { SignOut } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils.js'
 import { Button } from './ui/button.jsx'
 import { SearchInput } from './ui/search-input.jsx'
-import { Input } from './ui/input.jsx'
 import { Radio } from './ui/checkbox.jsx'
 import { ListRow, ListBox } from './ui/list-row.jsx'
 import AuthLayout from './AuthLayout.jsx'
@@ -20,8 +19,8 @@ const SEARCH_FROM = 11 // a search field shows above the list once it has this m
 // The second sign-in step, under the app's logo and name like the first (the stepper's Token goes back to the
 // first, the token kept): the repos
 // the token can reach, as one-of-several choices (shown as they load; with more
-// than 10, a search field above them); with none to show (nothing at all, or no match) a field to name a new repo, which is
-// created private under the user's account and opened.
+// than 10, or none at all, a search field above them); with none to show (nothing at all, or no match) a line naming the
+// search text as a new repo and a button that creates it, private under the user's account, and opens it.
 // Repos it can write to come first; the others are shown but can't be chosen
 // ("No write access"). Shown even when there's only one; the first writable
 // repo starts chosen. Continue checks that the token itself can write there
@@ -36,7 +35,6 @@ export default function RepoSetup({ repoList, onRepoList, onRepo, onBack, onLogo
   const [checking, setChecking] = useState(false)
   const [pickError, setPickError] = useState('')
   const [query, setQuery] = useState('')
-  const [newName, setNewName] = useState('')
 
   useEffect(() => {
     if (repoList && attempt === 0) return
@@ -63,9 +61,11 @@ export default function RepoSetup({ repoList, onRepoList, onRepo, onBack, onLogo
 
   const writable = r => r.canWrite && !denied.has(r.full)
   const sorted = repos && [...repos.filter(writable), ...repos.filter(r => !writable(r))]
-  const searching = !!repos && repos.length >= SEARCH_FROM
+  const empty = !!repos && done && repos.length === 0
+  const searching = !!repos && (repos.length >= SEARCH_FROM || empty) // with none at all, its text names the new repo
   const needle = searching ? query.trim().toLowerCase() : ''
   const found = sorted && (needle ? sorted.filter(r => r.full.toLowerCase().includes(needle)) : sorted)
+  const name = query.trim()
   const choose = full => { setChosen(full); setPickError('') }
 
   async function submit() {
@@ -85,7 +85,7 @@ export default function RepoSetup({ repoList, onRepoList, onRepo, onBack, onLogo
   }
 
   async function create() {
-    const name = newName.trim()
+    const name = query.trim()
     if (!isRepoName(name)) return setPickError('Use letters, numbers, dots, dashes and underscores for the name.')
     if (!navigator.onLine) return setPickError("You're offline. Connect to the internet to create the repo.")
     setChecking(true)
@@ -129,21 +129,11 @@ export default function RepoSetup({ repoList, onRepoList, onRepo, onBack, onLogo
             {/* With the search, as tall as it can be from the start, so searching never changes its height */}
             <ListBox role="radiogroup" aria-label="Repos" className={cn('mx-0', searching && 'h-64')}>
               {done && found.length === 0 && (
-                <li>
-                  <EmptyMessage size="sm">No repos found. Create your own:</EmptyMessage>
-                  <Input
-                    type="text"
-                    aria-label="New repo name"
-                    placeholder="new-repo-name"
-                    value={newName}
-                    onChange={e => { setNewName(e.target.value); setPickError('') }}
-                    onKeyDown={e => e.key === 'Enter' && create()}
-                    disabled={checking}
-                    autoCorrect="off"
-                    autoCapitalize="none"
-                    spellCheck="false"
-                    className="font-mono bg-background border-border"
-                  />
+                <li className="flex h-full flex-col items-center justify-center gap-space-sm px-space text-center">
+                  <EmptyMessage size="sm" className="py-0">
+                    {name ? <>No repos found. Create your own named <span className="font-mono text-foreground">{name}</span></> : 'No repos found. Type a name in the search to create your own.'}
+                  </EmptyMessage>
+                  <Button variant="secondary" disabled={!name || checking} onClick={create}>{checking ? 'Creating…' : 'Create repo'}</Button>
                 </li>
               )}
               {found.map(r => (
@@ -164,15 +154,11 @@ export default function RepoSetup({ repoList, onRepoList, onRepo, onBack, onLogo
           </div>
         )}
         {pickError && <p className="text-destructive-ink text-xs text-center">{pickError}</p>}
-        {sorted && !error && (found.length > 0 || !done ? (
+        {sorted && !error && (found.length > 0 || !done) && (
           <Button disabled={checking || !chosen} className="w-full" onClick={submit}>
             {checking ? 'Checking…' : 'Continue'}
           </Button>
-        ) : (
-          <Button disabled={checking || !newName.trim()} className="w-full" onClick={create}>
-            {checking ? 'Creating…' : 'Create repo'}
-          </Button>
-        ))}
+        )}
       </div>
       <Button variant="ghost-destructive" onClick={onLogout}>
         <SignOut /> Sign out
