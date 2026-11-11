@@ -61,10 +61,10 @@ export function NavRail({ page, pages, hrefOf, viewActions, onPage, onSearch, re
     <nav aria-label="Main" style={collapsed ? undefined : { width }} className={cn('relative hidden md:flex shrink-0 flex-col p-space pr-space-sm', collapsed ? 'items-center' : 'max-w-[25vw]')}>
       {collapsed ? <>
         {/* Collapsed: the logo button (level with the title bars' rows), then one separator (expanded: the header row, then it) */}
-        <div className="flex shrink-0 justify-center self-stretch border-t border-t-transparent pt-space-sm">{collapseButton}</div>
+        <div className="flex shrink-0 justify-center self-stretch border-t border-t-transparent pt-space">{collapseButton}</div>
         {separator}
       </> : <>
-        <div className="flex shrink-0 items-center gap-space-sm self-stretch border-t border-t-transparent pt-space-sm pl-3">
+        <div className="flex shrink-0 items-center gap-space-sm self-stretch border-t border-t-transparent pt-space pl-3">
           <span className="flex flex-1 items-center gap-space-sm"><AppLogo className="size-6" /><BrandName /></span>
           {collapseButton}
         </div>
