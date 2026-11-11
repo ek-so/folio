@@ -131,7 +131,7 @@ export default function RepoSetup({ repoList, onRepoList, onRepo, onBack, onLogo
               {done && found.length === 0 && (
                 <li className="flex h-full flex-col items-center justify-center gap-space-sm px-space text-center">
                   <EmptyMessage size="sm" className="py-0">
-                    {name ? <>No repos found. Create your own named <span className="font-mono text-foreground">{name}</span></> : 'No repos found. Type a name in the search to create your own.'}
+                    {name ? <>No repos found. Create your own named <code className="rounded-sm bg-[var(--code-bg)] px-1.5 py-0.5 font-mono text-xs text-foreground">{name}</code></> : 'No repos found. Type a name in the search to create your own.'}
                   </EmptyMessage>
                   <Button variant="secondary" disabled={!name || checking} onClick={create}>{checking ? 'Creating…' : 'Create repo'}</Button>
                 </li>
