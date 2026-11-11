@@ -3,6 +3,7 @@ import { SignOut } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils.js'
 import { Button } from './ui/button.jsx'
 import { Input } from './ui/input.jsx'
+import { SearchInput } from './ui/search-input.jsx'
 import { Radio } from './ui/checkbox.jsx'
 import { ListRow, ListBox } from './ui/list-row.jsx'
 import AuthLayout from './AuthLayout.jsx'
@@ -10,6 +11,7 @@ import AppLogo from './AppLogo.jsx'
 import BrandName from './BrandName.jsx'
 import SignInSteps from './SignInSteps.jsx'
 import Spinner from './Spinner.jsx'
+import { EmptyMessage } from './EmptyState.jsx'
 import { listRepos, checkRepo, canWriteRepo } from '../lib/github.js'
 import { parseRepo } from '../lib/files.js'
 
@@ -100,22 +102,19 @@ export default function RepoSetup({ user, onRepo, onBack, onLogout }) {
           <p className="text-xs text-muted-foreground text-center">This token can't reach any repo in its list. Type yours below, or create a new token with access to it.</p>
         )}
         {searching && !error && (
-          <Input
-            type="text"
+          <SearchInput
             aria-label="Search repos"
             placeholder="Search repos…"
             value={query}
             onChange={e => setQuery(e.target.value)}
-            autoCorrect="off"
-            autoCapitalize="none"
-            spellCheck="false"
             className="bg-card border-border"
           />
         )}
         {sorted && !error && (
           <div className="w-full rounded-lg border border-border bg-card p-space-xs">
-            <ListBox role="radiogroup" aria-label="Repos" className="mx-0">
-              {needle && found.length === 0 && <li className="px-3 py-2 text-sm text-muted-foreground">No repos match “{query.trim()}”</li>}
+            {/* With the search, as tall as it can be from the start, so searching never changes its height */}
+            <ListBox role="radiogroup" aria-label="Repos" className={cn('mx-0', searching && 'h-64')}>
+              {needle && found.length === 0 && <li><EmptyMessage size="sm">No repos found</EmptyMessage></li>}
               {found.map(r => (
                 <li key={r.full}>
                   <ListRow

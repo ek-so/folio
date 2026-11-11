@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { Input } from './ui/input.jsx'
+import { SearchInput } from './ui/search-input.jsx'
 import BottomSheet from './BottomSheet.jsx'
 import { splitName } from '../lib/changes.js'
 import { withoutEmoji } from '../lib/icons.js'
@@ -43,13 +43,11 @@ export default function SearchSheet({ onClose, onSelect, virtual, changes, recen
       onOpenAutoFocus={e => { e.preventDefault(); inputRef.current?.focus() }}
     >
       <div className="flex flex-col gap-3">
-        <Input
+        <SearchInput
           ref={inputRef}
           value={query}
           onChange={e => setQuery(e.target.value)}
           placeholder={placeholder}
-          autoCorrect="off"
-          autoCapitalize="off"
           className="bg-background border-border"
         />
         <div className="overflow-y-auto max-h-64 -mx-space-xs" data-no-pull>

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Input } from './ui/input.jsx'
+import { SearchInput } from './ui/search-input.jsx'
 import BottomSheet from './BottomSheet.jsx'
 import FileIcon from './FileIcon.jsx'
 import { ListRow } from './ui/list-row.jsx'
@@ -28,7 +28,7 @@ export default function FolderSheet({ title, folders, onPick, onClose, children 
       onOpenAutoFocus={e => { e.preventDefault(); e.currentTarget?.querySelector('input')?.focus() }}
     >
       <div className="flex flex-col gap-3">
-        <Input
+        <SearchInput
           placeholder="Search folders…"
           value={query}
           onChange={e => { setQuery(e.target.value); setError('') }}

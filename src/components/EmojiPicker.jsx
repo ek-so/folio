@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Smiley, ArrowCounterClockwise } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
 import { Button } from './ui/button.jsx'
-import { Input } from './ui/input.jsx'
+import { SearchInput } from './ui/search-input.jsx'
 import { Popover, PopoverTrigger, PopoverContent } from './ui/popover.jsx'
 import { ToggleGroup, ToggleGroupItem } from './ui/toggle-group.jsx'
 import { searchEmojis } from '../lib/emojis.js'
@@ -22,8 +22,8 @@ export function EmojiGrid({ value, onPick, onDone }) {
   return (
     <div className="flex w-72 max-w-full flex-col gap-space-sm" onKeyDown={e => e.stopPropagation()}>
       <div className="flex gap-space-xs">
-        <Input
-          value={query} placeholder="Search or paste an emoji" aria-label="Search emoji" className="min-w-0 flex-1"
+        <SearchInput
+          value={query} placeholder="Search or paste an emoji" aria-label="Search emoji" wrapperClassName="min-w-0 flex-1"
           onChange={e => { const emoji = leadingEmoji(e.target.value.trim()); if (emoji) pick(emoji); else setQuery(e.target.value) }}
         />
         <Button type="button" variant="ghost-outline" size="icon" aria-label="Use the default icon" tooltip="Use the default icon" disabled={!value} onClick={() => pick('')}>
