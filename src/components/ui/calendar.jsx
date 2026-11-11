@@ -1,6 +1,6 @@
 // shadcn's Calendar (`npx shadcn add calendar`), its icons Phosphor's (the project's icon library) and `cn` the project's,
 // and its look the app's: no fill of its own (it sits on the popover's), rounded-sm, the secondary fill for today and
-// ranges (the theme's accent is its primary green), a 1px focus ring, the 8px popover padding.
+// ranges (the theme's accent is its primary green), a 1px focus ring, the 8px popover padding. Weeks start on Monday.
 import * as React from "react"
 import { cn } from "@/lib/utils"
 import { CaretDown as ChevronDownIcon, CaretLeft as ChevronLeftIcon, CaretRight as ChevronRightIcon } from "@phosphor-icons/react"
@@ -22,6 +22,7 @@ function Calendar({
 
   return (
     <DayPicker
+      weekStartsOn={1}
       showOutsideDays={showOutsideDays}
       className={cn(
         "group/calendar p-space-sm [--cell-size:--spacing(8)]",
