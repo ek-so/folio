@@ -6,22 +6,18 @@ import { Input } from './ui/input.jsx'
 import { Radio } from './ui/checkbox.jsx'
 import { ListRow, ListBox } from './ui/list-row.jsx'
 import AuthLayout from './AuthLayout.jsx'
+import AppLogo from './AppLogo.jsx'
+import BrandName from './BrandName.jsx'
 import Spinner from './Spinner.jsx'
 import { listRepos, checkRepo, canWriteRepo } from '../lib/github.js'
 import { parseRepo } from '../lib/files.js'
 
-// GitHub's official mark (public/github-mark.svg, from @primer/octicons). Phosphor's
-// GithubLogo is only the cat; this one is the cat in its circle. A CSS mask paints it in
-// the text color, so it follows the theme like an icon.
-function GithubMark({ className }) {
-  const url = `url(${import.meta.env.BASE_URL}github-mark.svg)`
-  return <span aria-hidden="true" className={cn('shrink-0 bg-foreground', className)} style={{ mask: `${url} center / contain no-repeat`, WebkitMask: `${url} center / contain no-repeat` }} />
-}
-
 const TYPED = '' // the choice of the last row, where a repo is typed by name
+const SEARCH_FROM = 11 // a search field shows above the list once it has this many repos
 
-// The second sign-in step: the repos the token can reach, as one-of-several
-// choices (shown as they load), and a last row to type one the list leaves out.
+// The second sign-in step, under the app's logo and name like the first: the repos
+// the token can reach, as one-of-several choices (shown as they load; with more
+// than 10, a search field above them), and a last row to type one the list leaves out.
 // Repos it can write to come first; the others are shown but can't be chosen
 // ("No write access"). Shown even when there's only one; the first writable
 // repo starts chosen. Continue checks that the token itself can write there
@@ -36,6 +32,7 @@ export default function RepoSetup({ user, onRepo, onLogout }) {
   const [typed, setTyped] = useState(`${user.login}/`)
   const [checking, setChecking] = useState(false)
   const [pickError, setPickError] = useState('')
+  const [query, setQuery] = useState('')
 
   useEffect(() => {
     let cancelled = false
@@ -59,6 +56,9 @@ export default function RepoSetup({ user, onRepo, onLogout }) {
 
   const writable = r => r.canWrite && !denied.has(r.full)
   const sorted = repos && [...repos.filter(writable), ...repos.filter(r => !writable(r))]
+  const searching = !!repos && repos.length >= SEARCH_FROM
+  const needle = searching ? query.trim().toLowerCase() : ''
+  const found = sorted && (needle ? sorted.filter(r => r.full.toLowerCase().includes(needle)) : sorted)
   const choose = full => { setChosen(full); setPickError('') }
   const target = chosen === TYPED ? parseRepo(typed)?.join('/') : chosen
 
@@ -80,9 +80,9 @@ export default function RepoSetup({ user, onRepo, onLogout }) {
 
   return (
     <AuthLayout
-      logo={<GithubMark className="size-12" />}
-      title="Notes repo"
-      intro="Choose the GitHub repo that stores your notes."
+      logo={<AppLogo className="size-20" />}
+      title={<BrandName large />}
+      intro="Choose the GitHub repo that stores your notes. Folio needs write access to it to save and modify your notes."
     >
       {/* Not a form: the rows are buttons, which in a form would submit it */}
       <div className="flex w-full flex-col items-center gap-space">
@@ -96,10 +96,24 @@ export default function RepoSetup({ user, onRepo, onLogout }) {
         ) : sorted.length === 0 && (
           <p className="text-xs text-muted-foreground text-center">This token can't reach any repo in its list. Type yours below, or create a new token with access to it.</p>
         )}
+        {searching && !error && (
+          <Input
+            type="text"
+            aria-label="Search repos"
+            placeholder="Search repos…"
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            autoCorrect="off"
+            autoCapitalize="none"
+            spellCheck="false"
+            className="bg-card border-border"
+          />
+        )}
         {sorted && !error && (
           <div className="w-full rounded-lg border border-border bg-card p-space-xs">
             <ListBox role="radiogroup" aria-label="Repos" className="mx-0">
-              {sorted.map(r => (
+              {needle && found.length === 0 && <li className="px-3 py-2 text-sm text-muted-foreground">No repos match “{query.trim()}”</li>}
+              {found.map(r => (
                 <li key={r.full}>
                   <ListRow
                     icon={<Radio checked={chosen === r.full} />}
