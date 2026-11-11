@@ -9,6 +9,7 @@ import {
 } from '../lib/changes.js'
 
 const PREFETCH_WORKERS = 4
+const PULL_WAIT_MS = 3000 // how long opening a stored repo waits for GitHub's latest before showing the stored copy
 const UNSAVED = 'unsaved-changes' // the toast shown while local changes can't be stored
 
 // Download every note not yet on this device, so all of them open offline.
@@ -80,17 +81,28 @@ export function useRepo(repo, onDone) {
     setRemoteTree(null)
     setError('')
     let cancelled = false
-    // Files on this device stay as they are until Sync or Pull: a saved tree
-    // is only checked against GitHub (the Sync badge shows if it's behind).
-    // Only a repo never opened here is downloaded.
-    cache.getTree(repo).then(tree => {
+    // A repo opens with GitHub's latest: a repo never opened here is downloaded, and
+    // a stored one is pulled when it has nothing unsynced, Folio waiting up to
+    // PULL_WAIT_MS before showing the stored copy (offline, slow or failing GitHub),
+    // which the latest then replaces if it still has nothing unsynced. With
+    // unsynced changes, the stored copy stays until Sync or Pull: it's only checked
+    // against GitHub (the Sync badge shows if it's behind).
+    cache.getTree(repo).then(async tree => {
       if (cancelled) return
-      if (tree?.commitSha && !remoteRef.current) {
-        setRemoteTree(tree)
-        knownCommitSha.current = tree.commitSha
-        prefetchNotes(tree.files)
-        checkRemote()
-      } else refresh()
+      if (!tree?.commitSha || remoteRef.current) return refresh()
+      const clean = () => count(changesRef.current) === 0
+      if (clean() && navigator.onLine) {
+        const latest = getTree()
+        const timeout = new Promise(resolve => setTimeout(resolve, PULL_WAIT_MS))
+        const first = await Promise.race([latest.catch(() => null), timeout])
+        if (cancelled) return
+        if (first) return applyTree(first)
+        latest.then(t => { if (!cancelled && clean()) applyTree(t) }, () => {})
+      }
+      setRemoteTree(tree)
+      knownCommitSha.current = tree.commitSha
+      prefetchNotes(tree.files)
+      checkRemote()
     })
     return () => { cancelled = true }
   }, [repo])
@@ -153,7 +165,11 @@ export function useRepo(repo, onDone) {
   }
 
   async function pull() {
-    const latest = await getTree()
+    return applyTree(await getTree())
+  }
+
+  // GitHub's latest tree (getTree) as this device's: shown, stored, its notes downloaded
+  function applyTree(latest) {
     setRemoteTree(latest)
     setOnline(true)
     cache.setTree(repo, latest)
