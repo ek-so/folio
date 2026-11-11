@@ -3,6 +3,7 @@ import { SignOut } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils.js'
 import { Button } from './ui/button.jsx'
 import { SearchInput } from './ui/search-input.jsx'
+import { Input } from './ui/input.jsx'
 import { Radio } from './ui/checkbox.jsx'
 import { ListRow, ListBox } from './ui/list-row.jsx'
 import AuthLayout from './AuthLayout.jsx'
@@ -11,14 +12,16 @@ import BrandName from './BrandName.jsx'
 import SignInSteps from './SignInSteps.jsx'
 import Spinner from './Spinner.jsx'
 import { EmptyMessage } from './EmptyState.jsx'
-import { listRepos, canWriteRepo } from '../lib/github.js'
+import { listRepos, canWriteRepo, createRepo } from '../lib/github.js'
+import { isRepoName } from '../lib/files.js'
 
 const SEARCH_FROM = 11 // a search field shows above the list once it has this many repos
 
 // The second sign-in step, under the app's logo and name like the first (the stepper's Token goes back to the
 // first, the token kept): the repos
 // the token can reach, as one-of-several choices (shown as they load; with more
-// than 10, a search field above them); with none to find, a hint to create a repo on GitHub.
+// than 10, a search field above them); with none to show (nothing at all, or no match) a field to name a new repo, which is
+// created private under the user's account and opened.
 // Repos it can write to come first; the others are shown but can't be chosen
 // ("No write access"). Shown even when there's only one; the first writable
 // repo starts chosen. Continue checks that the token itself can write there
@@ -33,6 +36,7 @@ export default function RepoSetup({ onRepo, onBack, onLogout }) {
   const [checking, setChecking] = useState(false)
   const [pickError, setPickError] = useState('')
   const [query, setQuery] = useState('')
+  const [newName, setNewName] = useState('')
 
   useEffect(() => {
     let cancelled = false
@@ -77,6 +81,20 @@ export default function RepoSetup({ onRepo, onBack, onLogout }) {
     setChecking(false)
   }
 
+  async function create() {
+    const name = newName.trim()
+    if (!isRepoName(name)) return setPickError('Use letters, numbers, dots, dashes and underscores for the name.')
+    if (!navigator.onLine) return setPickError("You're offline. Connect to the internet to create the repo.")
+    setChecking(true)
+    setPickError('')
+    try {
+      return onRepo(await createRepo(name))
+    } catch (e) {
+      setPickError(e.status === 422 ? `A repo named ${name} already exists.` : e.status === 403 || e.status === 404 ? "This token can't create repos." : "Can't create the repo with GitHub. Try again.")
+    }
+    setChecking(false)
+  }
+
   return (
     <AuthLayout
       steps={<SignInSteps current={1} onBack={onBack} />}
@@ -93,9 +111,7 @@ export default function RepoSetup({ onRepo, onBack, onLogout }) {
           </>
         ) : !sorted ? (
           <div className="flex justify-center py-space"><Spinner /></div>
-        ) : sorted.length === 0 && (
-          <p className="text-xs text-muted-foreground text-center">This token can't reach any repo. Create a repo on GitHub, or a new token with access to yours.</p>
-        )}
+        ) : null}
         {searching && !error && (
           <SearchInput
             aria-label="Search repos"
@@ -105,11 +121,28 @@ export default function RepoSetup({ onRepo, onBack, onLogout }) {
             className="bg-card border-border"
           />
         )}
-        {sorted?.length > 0 && !error && (
+        {sorted && !error && (
           <div className="w-full rounded-lg border border-border bg-card p-space-xs">
             {/* With the search, as tall as it can be from the start, so searching never changes its height */}
             <ListBox role="radiogroup" aria-label="Repos" className={cn('mx-0', searching && 'h-64')}>
-              {needle && found.length === 0 && <li><EmptyMessage size="sm">No repos found. Create your own repo on GitHub.</EmptyMessage></li>}
+              {done && found.length === 0 && (
+                <li>
+                  <EmptyMessage size="sm">No repos found. Create your own:</EmptyMessage>
+                  <Input
+                    type="text"
+                    aria-label="New repo name"
+                    placeholder="new-repo-name"
+                    value={newName}
+                    onChange={e => { setNewName(e.target.value); setPickError('') }}
+                    onKeyDown={e => e.key === 'Enter' && create()}
+                    disabled={checking}
+                    autoCorrect="off"
+                    autoCapitalize="none"
+                    spellCheck="false"
+                    className="font-mono bg-background border-border"
+                  />
+                </li>
+              )}
               {found.map(r => (
                 <li key={r.full}>
                   <ListRow
@@ -128,11 +161,15 @@ export default function RepoSetup({ onRepo, onBack, onLogout }) {
           </div>
         )}
         {pickError && <p className="text-destructive-ink text-xs text-center">{pickError}</p>}
-        {sorted && !error && (
+        {sorted && !error && (found.length > 0 || !done ? (
           <Button disabled={checking || !chosen} className="w-full" onClick={submit}>
             {checking ? 'Checking…' : 'Continue'}
           </Button>
-        )}
+        ) : (
+          <Button disabled={checking || !newName.trim()} className="w-full" onClick={create}>
+            {checking ? 'Creating…' : 'Create repo'}
+          </Button>
+        ))}
       </div>
       <Button variant="ghost-destructive" onClick={onLogout}>
         <SignOut /> Sign out

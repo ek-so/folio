@@ -35,6 +35,9 @@ export const LINK_ERRORS = {
   unavailable: 'not on this device yet',
 }
 
+// A name GitHub accepts for a new repo: letters, digits, dots, dashes and underscores
+export const isRepoName = value => /^[\w.-]+$/.test(value) && value !== '.' && value !== '..'
+
 // 'owner/repo' typed by the user as [owner, repo], or null if it isn't one
 export function parseRepo(value) {
   const parts = value.trim().split('/')

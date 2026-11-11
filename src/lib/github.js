@@ -47,6 +47,13 @@ export async function* listRepos() {
   }
 }
 
+// Creates a private repo `name` under the signed-in user's account, with a first commit (so it isn't
+// empty), and returns its full name. Throws an HttpError: 422 the name is taken, 403/404 the token can't create repos.
+export async function createRepo(name) {
+  const { data } = await octokit.rest.repos.createForAuthenticatedUser({ name, private: true, auto_init: true })
+  return data.full_name
+}
+
 // Whether the token itself can write to `owner/name` (save notes there): stores an
 // empty blob, the request a sync's upload makes, which nothing points to. Throws
 // when GitHub can't be asked (offline). An empty repo can't take a blob yet; it passes.
