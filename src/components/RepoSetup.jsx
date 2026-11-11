@@ -132,7 +132,7 @@ export default function RepoSetup({ repoList, onRepoList, onRepo, onBack, onLogo
                 <li className="flex h-full flex-col items-center justify-center gap-space-xs px-space text-center">
                   <EmptyMessage size="sm" className="py-0">No repos found.</EmptyMessage>
                   <EmptyMessage size="sm" className="py-0">
-                    {name ? <>Create a new one named <code className="rounded-sm bg-[var(--code-bg)] px-1.5 py-0.5 font-mono text-xs text-foreground">{name}</code></> : 'Type a name in the search to create a new one.'}
+                    {name ? <>Create a new one named <code className="code-chunk text-foreground">{name}</code></> : 'Type a name in the search to create a new one.'}
                   </EmptyMessage>
                 </li>
               )}

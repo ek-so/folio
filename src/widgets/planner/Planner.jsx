@@ -206,7 +206,7 @@ export default function Planner({ id, services, onRemove }) {
       if (from < 0 || to < 0 || from === to) return
       const next = arrayMove(paths, from, to)
       const wasManual = planner.sort === 'manual'
-      const undo = act.reorderDay(selected, next)
+      const undo = act.reorderDay(selected, next, today)
       if (!wasManual) toast.success('Sorting changed to Manual', { action: { label: 'Undo', onClick: undo } })
     }
     // A card dropped on a day gets that day as its date (its time is kept; text that isn't a day is replaced)

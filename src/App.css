@@ -44,7 +44,8 @@
 .editor-preview .summary-caret svg { width: 16px; height: 16px; }
 .editor-preview details[open] > summary { margin-bottom: 8px; }
 .editor-preview details[open] > summary > .summary-caret { transform: rotate(90deg); }
-.editor-preview code { background: var(--code-bg); padding: 2px 6px; border-radius: 4px; font-family: 'SF Mono', monospace; font-size: 13px; }
+/* Inline code: the preview's and a code chunk anywhere else (.code-chunk, e.g. the sign-in's new repo name) */
+.editor-preview code, .code-chunk { background: var(--code-bg); padding: 2px 6px; border-radius: 4px; font-family: 'SF Mono', monospace; font-size: 13px; }
 .editor-preview pre { max-width: 100%; background: var(--code-bg); padding: 16px; border-radius: 12px; overflow-x: auto; margin: 0 0 14px; }
 .editor-preview pre code { background: none; padding: 0; }
 .editor-preview blockquote { border-left: 3px solid var(--accent); padding-left: 16px; color: var(--muted-foreground); margin: 0 0 14px; }

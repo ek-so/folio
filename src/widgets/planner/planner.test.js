@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { parsePlanner, serializePlanner, newPlanner, movedPlanner, orderedDay, addDays, daysBetween, dayOffsets, dayAt, dayKey, plan, cardDate, doneNext, droppedDate, listed, monthLabel } from './planner.js'
+import { parsePlanner, serializePlanner, newPlanner, movedPlanner, orderedDay, restoredDay, renamedProperty, removedProperty, addDays, daysBetween, dayOffsets, dayAt, dayKey, plan, cardDate, doneNext, droppedDate, listed, monthLabel } from './planner.js'
 
 const note = (date, extra = '') => `---\n${date === null ? '' : `date: ${date}\n`}${extra}---\n# T\n`
 
@@ -27,10 +27,29 @@ describe('planner', () => {
   })
 
   it('keeps a manual order, its cards following renames', () => {
-    const p = orderedDay(newPlanner('T'), '2026-11-06', ['T/b.md', 'T/sub/a.md', 'Elsewhere/x.md'])
+    const p = orderedDay(newPlanner('T'), '2026-11-06', ['T/b.md', 'T/sub/a.md', 'Elsewhere/x.md'], '2026-11-06', [])
     expect(p).toMatchObject({ sort: 'manual', order: { '2026-11-06': ['b.md', 'sub/a.md'] } })
     expect(movedPlanner(p, 'T/b.md', 'T/c.md').order['2026-11-06']).toEqual(['c.md', 'sub/a.md'])
     expect(movedPlanner(p, 'T/sub', 'T/new', true).order['2026-11-06']).toEqual(['b.md', 'new/a.md'])
+  })
+
+  it('prunes past days and gone cards from the manual order', () => {
+    const p = { ...newPlanner('T'), order: { '2026-11-01': ['a.md'], '2026-11-08': ['a.md', 'gone.md'], '2026-11-09': ['gone.md'] } }
+    expect(orderedDay(p, '2026-11-06', ['T/b.md', 'T/a.md'], '2026-11-06', ['T/a.md', 'T/b.md']).order)
+      .toEqual({ '2026-11-06': ['b.md', 'a.md'], '2026-11-08': ['a.md'] })
+  })
+
+  it('undoes a reorder without undoing later changes', () => {
+    const before = { ...newPlanner('T'), sort: 'title', order: { '2026-11-07': ['x.md'] } }
+    const now = { ...orderedDay(before, '2026-11-06', ['T/b.md'], '2026-11-06', ['T/b.md', 'T/x.md']), properties: ['tags'] }
+    expect(restoredDay(now, before, '2026-11-06')).toEqual({ ...before, properties: ['tags'] })
+  })
+
+  it('follows a renamed or removed property it sorts by', () => {
+    const p = { ...newPlanner('T'), properties: ['prio'], sort: 'property:prio' }
+    expect(renamedProperty(p, 'prio', 'rank')).toMatchObject({ properties: ['rank'], sort: 'property:rank' })
+    expect(removedProperty(p, 'prio')).toMatchObject({ properties: [], sort: 'time' })
+    expect(removedProperty({ ...p, sort: 'title' }, 'prio').sort).toBe('title')
   })
 
   it('sorts a day by time, title, a property or by hand', () => {
@@ -43,7 +62,7 @@ describe('planner', () => {
     expect(day(newPlanner('T'))).toEqual(['T/b.md', 'T/a.md', 'T/c.md']) // time; no time last
     expect(day({ ...newPlanner('T'), sort: 'title' })).toEqual(['T/a.md', 'T/b.md', 'T/c.md'])
     expect(day({ ...newPlanner('T'), sort: 'property:priority' })).toEqual(['T/a.md', 'T/b.md', 'T/c.md']) // 2 before 10; none last
-    expect(day(orderedDay(newPlanner('T'), '2026-11-06', ['T/c.md', 'T/a.md']))).toEqual(['T/c.md', 'T/a.md', 'T/b.md']) // unplaced by time
+    expect(day(orderedDay(newPlanner('T'), '2026-11-06', ['T/c.md', 'T/a.md'], '2026-11-06', []))).toEqual(['T/c.md', 'T/a.md', 'T/b.md']) // unplaced by time
   })
 
   it('counts days', () => {

@@ -82,9 +82,37 @@ export function movedPlanner(planner, from, to, isDir = false) {
   return { ...planner, order: Object.fromEntries(Object.entries(planner.order).map(([day, keys]) => [day, keys.map(follow)])) }
 }
 
-// `planner` with the day `key`'s cards in the order `paths`, now sorted manually
-export const orderedDay = (planner, key, paths) => ({
-  ...planner, sort: 'manual', order: { ...planner.order, [key]: paths.map(p => keyIn(planner.folder, p)).filter(k => k !== null) },
+// `planner` with the day `key`'s cards in the order `paths`, now sorted manually. The other days' orders are pruned:
+// days before `today` go, and so do cards no longer among `cards` (the folder's notes' paths)
+export function orderedDay(planner, key, paths, today, cards) {
+  const kept = new Set(cards.map(p => keyIn(planner.folder, p)))
+  const order = Object.fromEntries(Object.entries(planner.order)
+    .filter(([day]) => day >= today)
+    .map(([day, keys]) => [day, keys.filter(k => kept.has(k))])
+    .filter(([, keys]) => keys.length))
+  return { ...planner, sort: 'manual', order: { ...order, [key]: paths.map(p => keyIn(planner.folder, p)).filter(k => k !== null) } }
+}
+
+// `planner` (as it is now) with the sort and the day `key`'s order `before` had: a reorder undone, nothing else changed
+export function restoredDay(planner, before, key) {
+  const order = { ...planner.order }
+  if (before.order[key]) order[key] = before.order[key]
+  else delete order[key]
+  return { ...planner, sort: before.sort, order }
+}
+
+// `planner` after its notes' property `from` was renamed `to`: shown and sorted by under its new name
+export const renamedProperty = (planner, from, to) => ({
+  ...planner,
+  properties: planner.properties.map(k => k === from ? to : k),
+  sort: planner.sort === PROPERTY_SORT + from ? PROPERTY_SORT + to : planner.sort,
+})
+
+// `planner` after its notes' property `key` was removed: no longer shown, nor sorted by (back to the default)
+export const removedProperty = (planner, key) => ({
+  ...planner,
+  properties: planner.properties.filter(k => k !== key),
+  sort: planner.sort === PROPERTY_SORT + key ? DEFAULT_SORT : planner.sort,
 })
 
 const pad = n => String(n).padStart(2, '0')

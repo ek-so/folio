@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { plannerPath, parsePlanner, serializePlanner, keyDay, droppedDate, doneNext, asCard, orderedDay, DATE, REPEAT, ORDER, VIEWS } from './planner.js'
+import { plannerPath, parsePlanner, serializePlanner, keyDay, droppedDate, doneNext, asCard, orderedDay, restoredDay, renamedProperty, removedProperty, DATE, REPEAT, ORDER, VIEWS } from './planner.js'
 import { storage } from '@/lib/storage.js'
 import { ONE_TIME } from './recurrence.js'
 import { formatDate } from '@/lib/dates.js'
@@ -20,6 +20,12 @@ export function usePlanner(id, services) {
   const cards = useMemo(() => notes.entries.map(([path, text]) => ({ path, text })), [notes.entries])
   const write = next => config.write(plannerPath(id), serializePlanner(next))
   const save = next => update(write(next))
+  // An edit of the planner's settings as they are when it runs (later changes kept), not as this render read them
+  const change = edit => update(ch => {
+    const text = config.readIn(ch, plannerPath(id))
+    const now = typeof text === 'string' ? parsePlanner(text) : null
+    return now ? write(edit(now))(ch) : ch
+  })
   // Calendar or list: this device's choice, kept here (never in .folio, which holds no state of a screen)
   const [view, setViewState] = useState(() => VIEWS.includes(storage.getPlannerView(id)) ? storage.getPlannerView(id) : VIEWS[0])
 
@@ -53,19 +59,19 @@ export function usePlanner(id, services) {
     setView: next => { setViewState(next); storage.setPlannerView(id, next) },
     // How a day's cards are ordered (planner.js SORTS, or a property's "property:<key>"); a manual order is kept for when it's picked again
     setSort: sort => save({ ...planner, sort }),
-    // The day `key`'s cards dragged into the order `paths`: the planner sorts manually from now on. Returns undo(),
-    // which puts back the sort and order it had
-    reorderDay(key, paths) {
+    // The day `key`'s cards dragged into the order `paths` (as of `today`): the planner sorts manually from now on. Returns
+    // undo(), which puts back the sort and that day's order it had, keeping any other change made since
+    reorderDay(key, paths, today) {
       const before = planner
-      save(orderedDay(planner, key, paths))
-      return () => save(before)
+      save(orderedDay(planner, key, paths, today, cards.map(c => c.path)))
+      return () => change(now => restoredDay(now, before, key))
     },
     // The properties cards show besides the date; a newly chosen one is added, empty, to the notes that lack it
     setProperties: keys => notes.showProperties(keys, planner.properties, write({ ...planner, properties: keys })),
-    // The property `from` renamed `to` in every note of the folder (and in its settings); refused when a note already has `to`
+    // The property `from` renamed `to` in every note of the folder (and in its settings, its sort too); refused when a note already has `to`
     renameProperty: (from, to) => notes.renameProperty(from, to,
-      write({ ...planner, properties: planner.properties.map(k => k === from ? to : k) })),
-    // The property `key`, with its value, out of every note of the folder (confirmed first)
-    removeProperty: key => notes.removeProperty(key, write({ ...planner, properties: planner.properties.filter(k => k !== key) })),
+      write(renamedProperty(planner, from, to))),
+    // The property `key`, with its value, out of every note of the folder (confirmed first); sorted by it, back to time
+    removeProperty: key => notes.removeProperty(key, write(removedProperty(planner, key))),
   }
 }

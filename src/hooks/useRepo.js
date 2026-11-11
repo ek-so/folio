@@ -84,7 +84,7 @@ export function useRepo(repo, onDone) {
     // A repo opens with GitHub's latest: a repo never opened here is downloaded, and
     // a stored one is pulled when it has nothing unsynced, Folio waiting up to
     // PULL_WAIT_MS before showing the stored copy (offline, slow or failing GitHub),
-    // which the latest then replaces if it still has nothing unsynced. With
+    // which the latest then replaces if it still has nothing unsynced (typing saved first) and no sync is running. With
     // unsynced changes, the stored copy stays until Sync or Pull: it's only checked
     // against GitHub (the Sync badge shows if it's behind).
     cache.getTree(repo).then(async tree => {
@@ -97,7 +97,13 @@ export function useRepo(repo, onDone) {
         const first = await Promise.race([latest.catch(() => null), timeout])
         if (cancelled) return
         if (first) return applyTree(first)
-        latest.then(t => { if (!cancelled && clean()) applyTree(t) }, () => {})
+        // Late: the stored copy is open by now. Typing in an open note is saved first (as Pull does), and the latest
+        // replaces it only when that left nothing unsynced and no sync step is running
+        latest.then(t => {
+          if (cancelled || busy.current) return
+          window.dispatchEvent(new Event('folio:flush'))
+          if (clean()) applyTree(t)
+        }, () => {})
       }
       setRemoteTree(tree)
       knownCommitSha.current = tree.commitSha
