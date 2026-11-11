@@ -1,13 +1,12 @@
 import { useState } from 'react'
-import { PencilSimple, Trash, Folder, Rows, SquaresFour, Columns, Copy, LinkSimple, Lock, LockOpen, Smiley, FolderOpen } from '@phosphor-icons/react'
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent } from './ui/dropdown-menu.jsx'
+import { PencilSimple, Trash, Folder, Rows, SquaresFour, Columns, Copy, LinkSimple, Lock, LockOpen, FolderOpen } from '@phosphor-icons/react'
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from './ui/dropdown-menu.jsx'
 import { Segmented } from './ui/segmented.jsx'
 import RenameModal from './RenameModal.jsx'
 import DeleteModal from './DeleteModal.jsx'
 import MoveModal from './MoveModal.jsx'
 import ColumnSubmenu from './ColumnSubmenu.jsx'
-import { EmojiGrid } from './EmojiPicker.jsx'
-import { useIconsContext } from '../hooks/useIcons.js'
+import { EmojiSubmenu } from './EmojiPicker.jsx'
 import { copyText } from '../lib/clipboard.js'
 import { repoLink } from '../lib/markdown.js'
 import { useIsDesktop } from '../hooks/useIsDesktop.js'
@@ -37,7 +36,6 @@ export default function ItemMenu({ item, onReveal, onRename, onDuplicate, onDele
   const [moving, setMoving] = useState(false)
   const [open, setOpen] = useState(false)
   const desktop = useIsDesktop()
-  const icons = useIconsContext()
 
   return (
     <>
@@ -55,12 +53,7 @@ export default function ItemMenu({ item, onReveal, onRename, onDuplicate, onDele
           {item && <>
             {onReveal && <DropdownMenuItem onSelect={() => onReveal(item)}><FolderOpen /> Show in folder</DropdownMenuItem>}
             <DropdownMenuItem onSelect={() => setRenaming(true)}><PencilSimple /> Rename</DropdownMenuItem>
-            <DropdownMenuSub>
-              <DropdownMenuSubTrigger disabled={!icons.onSet}><Smiley /> Emoji</DropdownMenuSubTrigger>
-              <DropdownMenuSubContent className="p-space-sm">
-                <EmojiGrid value={icons.iconOf(item.path)} onPick={emoji => icons.onSet(item.path, emoji)} onDone={() => setOpen(false)} />
-              </DropdownMenuSubContent>
-            </DropdownMenuSub>
+            <EmojiSubmenu path={item.path} onDone={() => setOpen(false)} />
             {columns && !lock?.locked && <ColumnSubmenu columns={columns.columns} column={columns.column} onSelect={columns.onSelect} />}
             {onMove && <DropdownMenuItem onSelect={() => setMoving(true)}><Folder /> Move to…</DropdownMenuItem>}
             {onDuplicate && item.type !== 'dir' && <DropdownMenuItem onSelect={() => onDuplicate(item)}><Copy /> Duplicate</DropdownMenuItem>}

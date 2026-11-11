@@ -7,6 +7,7 @@ import { Button } from './ui/button.jsx'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from './ui/dropdown-menu.jsx'
 import { useSingleOpen } from '../hooks/useSingleOpen.jsx'
 import { urlForView } from '../lib/url.js'
+import { useIconsContext } from '../hooks/useIcons.js'
 
 const REPO_ICONS = { note: FileText, file: File, folder: Folder, missing: LinkBreak }
 
@@ -32,7 +33,7 @@ function Favicon({ href }) {
 }
 
 // A link in the note preview or a description (InlineMarkdown): a badge with the site's favicon, or what
-// it points to in the repo (grey when it's missing), and its text, a bit softer than the note's; at most 420px wide (less where its container is), a longer text cut
+// it points to in the repo (its emoji when it has one, lib/icons.js; grey when it's missing), and its text, a bit softer than the note's; at most 420px wide (less where its container is), a longer text cut
 // in the middle (`MiddleCut`). A tap
 // opens it (whoever shows it handles that). Beside it, split off by a 1px gap, a ⋯ of its own (`own`: a
 // click on it never opens a board card) with Copy link address, Edit link and Remove (the last two only
@@ -43,10 +44,11 @@ export default function LinkBadge({ href, text, kind, path, onEdit, onRemove }) 
   const copy = () => copyText(address, 'Link address copied')
   const [open, setOpen] = useSingleOpen()
   const Icon = REPO_ICONS[kind]
+  const emoji = useIconsContext().iconOf(path && kind !== 'missing' ? path : '') // a note's or folder's emoji in place of its icon
   return (
     <span className="link-badge inline-flex max-w-[min(420px,100%)] gap-px align-middle">
       <Badge as="a" href={href} data-badge className={cn('gap-1.5 rounded-r-none py-0 pl-space-sm', kind === 'missing' ? 'text-muted-foreground' : 'text-foreground/75')}>
-        {Icon ? <Icon className={cn('size-4 shrink-0', kind === 'missing' ? 'text-muted-foreground' : 'text-primary')} /> : <Favicon href={href} />}
+        {emoji ? <span aria-hidden className="flex size-4 shrink-0 items-center justify-center text-sm leading-none">{emoji}</span> : Icon ? <Icon className={cn('size-4 shrink-0', kind === 'missing' ? 'text-muted-foreground' : 'text-primary')} /> : <Favicon href={href} />}
         <MiddleCut text={text} />
       </Badge>
       <DropdownMenu open={open} onOpenChange={setOpen}>

@@ -4,6 +4,8 @@ import { cn } from '@/lib/utils'
 import { Button } from './ui/button.jsx'
 import { SearchInput } from './ui/search-input.jsx'
 import { Popover, PopoverTrigger, PopoverContent } from './ui/popover.jsx'
+import { DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent } from './ui/dropdown-menu.jsx'
+import { useIconsContext } from '../hooks/useIcons.js'
 import { ToggleGroup, ToggleGroupItem } from './ui/toggle-group.jsx'
 import { searchEmojis } from '../lib/emojis.js'
 import { leadingEmoji } from '../lib/icons.js'
@@ -57,5 +59,19 @@ export default function EmojiPicker({ emoji, onChange, label = 'Emoji', classNam
         <EmojiGrid value={emoji} onPick={onChange} onDone={() => setOpen(false)} />
       </PopoverContent>
     </Popover>
+  )
+}
+
+// Emoji in a file's or folder's ⋯ (ItemMenu, a card's CardMenu, a Notes widget's note): a sub menu with the picker for the
+// icon of `path` (lib/icons.js, `IconsContext`), disabled while the icons can't be saved. `onDone` closes the menu
+export function EmojiSubmenu({ path, onDone }) {
+  const icons = useIconsContext()
+  return (
+    <DropdownMenuSub>
+      <DropdownMenuSubTrigger disabled={!icons.onSet}><Smiley /> Emoji</DropdownMenuSubTrigger>
+      <DropdownMenuSubContent className="p-space-sm">
+        <EmojiGrid value={icons.iconOf(path)} onPick={emoji => icons.onSet(path, emoji)} onDone={onDone} />
+      </DropdownMenuSubContent>
+    </DropdownMenuSub>
   )
 }

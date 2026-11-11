@@ -1,10 +1,9 @@
 import { useState } from 'react'
-import { PencilSimple, Trash, Columns, Copy, TextAlignLeft, LinkSimple, CheckCircle, Lock, LockOpen, Smiley } from '@phosphor-icons/react'
+import { PencilSimple, Trash, Columns, Copy, TextAlignLeft, LinkSimple, CheckCircle, Lock, LockOpen } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button.jsx'
 import { Input } from '@/components/ui/input.jsx'
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent } from '@/components/ui/dropdown-menu.jsx'
-import { EmojiGrid } from '@/components/EmojiPicker.jsx'
-import { useIconsContext } from '@/hooks/useIcons.js'
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu.jsx'
+import { EmojiSubmenu } from '@/components/EmojiPicker.jsx'
 import ColumnSubmenu from '@/components/ColumnSubmenu.jsx'
 import BottomSheet from '@/components/BottomSheet.jsx'
 import DeleteModal from '@/components/DeleteModal.jsx'
@@ -46,7 +45,6 @@ export default function CardMenu({ path, description, columns, column, onDone, o
   const item = fileItem(path)
   const [deleting, setDeleting] = useState(false)
   const [open, setOpen] = useState(false)
-  const icons = useIconsContext()
   return (
     <div className="contents" {...own}>
       <DropdownMenu open={open} onOpenChange={setOpen}>
@@ -60,12 +58,7 @@ export default function CardMenu({ path, description, columns, column, onDone, o
           </>}
           {onDescription && <DropdownMenuItem onSelect={() => setEditing('description')}><TextAlignLeft /> {description ? 'Edit' : 'Add'} description</DropdownMenuItem>}
           <DropdownMenuItem onSelect={() => setRenaming(true)}><PencilSimple /> Rename</DropdownMenuItem>
-          <DropdownMenuSub>
-            <DropdownMenuSubTrigger disabled={!icons.onSet}><Smiley /> Emoji</DropdownMenuSubTrigger>
-            <DropdownMenuSubContent className="p-space-sm">
-              <EmojiGrid value={icons.iconOf(path)} onPick={emoji => icons.onSet(path, emoji)} onDone={() => setOpen(false)} />
-            </DropdownMenuSubContent>
-          </DropdownMenuSub>
+          <EmojiSubmenu path={path} onDone={() => setOpen(false)} />
           <DropdownMenuItem onSelect={onDuplicate}><Copy /> Duplicate</DropdownMenuItem>
           <DropdownMenuItem onSelect={() => copyText(repoLink(path), 'Link copied')}><LinkSimple /> Copy link</DropdownMenuItem>
           {lock && <DropdownMenuItem disabled={!lock.onToggle} onSelect={lock.onToggle}>{lock.locked ? <><LockOpen /> Unlock</> : <><Lock /> Lock</>}</DropdownMenuItem>}

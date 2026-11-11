@@ -8,7 +8,8 @@ import ConfirmModal from '@/components/ConfirmModal.jsx'
 import EditListModal from '@/components/EditListModal.jsx'
 import FileIcon from '@/components/FileIcon.jsx'
 import MarkdownPreview from '@/components/MarkdownPreview.jsx'
-import { NO_CALLOUT } from '@/components/NoteCard.jsx'
+import { NO_CALLOUT, CardEmoji } from '@/components/NoteCard.jsx'
+import { EmojiSubmenu } from '@/components/EmojiPicker.jsx'
 import { DndContext, DragOverlay, closestCenter } from '@dnd-kit/core'
 import { SortableContext, useSortable, rectSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
@@ -143,20 +144,22 @@ function NoteTray({ path, services, height, canMove, onTakeOut, onReplace }) {
   const found = services.noteFile(path)
   const [renaming, setRenaming] = useState(false)
   const [replacing, setReplacing] = useState(false) // picking a note in place of this one, which is gone
+  const [menuOpen, setMenuOpen] = useState(false)
   const item = fileItem(path)
   const open = () => { window.dispatchEvent(new Event('folio:flush')); services.openFile(path) } // typing first
   const tray = body => (
     <Tray ref={setNodeRef} style={{ transform: CSS.Translate.toString(transform), transition }} className={cn('min-w-0', isDragging && 'opacity-40')}>
       <div className="flex items-center gap-space-xs">
         <div ref={setActivatorNodeRef} {...attributes} {...listeners} className={cn('min-w-0 flex-1', canMove && 'cursor-grab touch-manipulation select-none', NO_CALLOUT)}>
-          <TrayTitle grip={canMove}>{fileName(path)}</TrayTitle>
+          <TrayTitle grip={canMove}><CardEmoji path={path} className="mr-1.5" />{fileName(path)}</TrayTitle>
         </div>
-        <DropdownMenu>
+        <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
           <DropdownMenuTrigger asChild>
             <MoreButton inRow aria-label={`Actions for ${displayName(path)}`} />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" onCloseAutoFocus={e => e.preventDefault()}>
             <DropdownMenuItem disabled={!found} onSelect={() => setRenaming(true)}><PencilSimple /> Rename note</DropdownMenuItem>
+            {found && <EmojiSubmenu path={path} onDone={() => setMenuOpen(false)} />}
             <DropdownMenuSeparator />
             <DropdownMenuItem variant="destructive" disabled={!onTakeOut} onSelect={onTakeOut}><Trash /> Remove from widget</DropdownMenuItem>
           </DropdownMenuContent>
