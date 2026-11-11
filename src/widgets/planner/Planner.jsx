@@ -12,7 +12,7 @@ import { Segmented } from '@/components/ui/segmented.jsx'
 import { ListRow } from '@/components/ui/list-row.jsx'
 import { Tray, TrayTitle, TrayFooter, TRAY_ROW } from '@/components/ui/tray.jsx'
 import { DropdownMenuItem, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent } from '@/components/ui/dropdown-menu.jsx'
-import NoteCard, { NO_CALLOUT, ownListeners, cardClick } from '@/components/NoteCard.jsx'
+import NoteCard, { NO_CALLOUT, ownListeners, cardClick, CardEmoji } from '@/components/NoteCard.jsx'
 import WidgetFrame from '@/components/WidgetFrame.jsx'
 import CardMenu, { cardActions } from '@/components/CardMenu.jsx'
 import PropertiesDialog from '@/components/PropertiesDialog.jsx'
@@ -379,7 +379,7 @@ function Day({ dayKey: key, today, selected, count, onSelect }) {
   )
 }
 
-// A card as a row of the list view (ListRow): its title, its date under it and, when it repeats, a small circling-arrows
+// A card as a row of the list view (ListRow): its emoji (CardEmoji, before the row's button), its title, its date under it and, when it repeats, a small circling-arrows
 // icon (grey, like the line) and how often right after it; its ⋯; it opens the note. `overdue` (dated before today, listed
 // under Today): its title faded and its date red
 function TaskRow({ path, text, overdue, locked, menu, onOpen }) {
@@ -388,6 +388,7 @@ function TaskRow({ path, text, overdue, locked, menu, onOpen }) {
   const kind = parseRecurrence(repeat)?.kind
   return (
     <ListRow
+      leading={<CardEmoji path={path} className="pl-space-xs" />}
       title={<span className={cn(overdue && 'opacity-50')}>{locked && <LockMark />}{cardTitle(path, text)}</span>}
       description={<>
         <span className={cn(overdue && 'text-destructive-ink')}>{date ? (overdue && daysAgo(date)) || dateLabel(date) : 'No date'}</span>
