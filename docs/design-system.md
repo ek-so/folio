@@ -17,7 +17,7 @@ shadcn/ui (new-york) · Tailwind CSS v4 · Radix UI · Phosphor icons (`@phospho
 `--space-lg` 24px, `--space` 16px, `--space-sm` 8px, `--space-xs` 4px. Classes: `p-space`, `gap-space-sm`, `px-space-xs`, `inset-x-space`… A spacing of 4, 8, 16 or 24px is always the token, never `p-1`, `gap-2`, `px-4` or `mt-6`; the in-between ones (6, 10, 12px) and the half steps have none and stay as they are.
 - **24px:** the desktop rail's padding left and bottom.
 - **16px (base):** gutters around the content box, the content's padding on every side, gaps between them, the Surface's distance from the screen's edges.
-- **8px:** inside a piece (title bar, list and tree padding, gaps between buttons).
+- **8px:** inside a piece (list and tree padding, gaps between buttons).
 - **4px:** a title's own side padding in title bars.
 
 ## Control sizes (tokens in `src/index.css`)
