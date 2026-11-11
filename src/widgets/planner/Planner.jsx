@@ -1,7 +1,7 @@
 import { toast } from 'sonner'
 import { Fragment, useState, useMemo, useRef, useCallback, useEffect, useLayoutEffect } from 'react'
 import { Tag, Plus, CalendarBlank, CrosshairSimple, CalendarDots, ListBullets, ArrowsClockwise, SortAscending, Check } from '@phosphor-icons/react'
-import { DndContext, DragOverlay, useDroppable, pointerWithin, closestCenter } from '@dnd-kit/core'
+import { DndContext, DragOverlay, useDroppable, pointerWithin } from '@dnd-kit/core'
 import { SortableContext, useSortable, arrayMove, rectSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { useDragSensors } from '@/hooks/useDragSensors.js'
@@ -48,14 +48,12 @@ const dayCellId = key => 'day:' + key
 
 const isDayId = id => String(id).startsWith('day:')
 
-// A day under the pointer is the target (the card moves to it); else the selected day's card under it, or nearest
-// to it (the card takes its place). A card is never re-dated unless let go over a day
+// Only what's under the pointer is a target: a day (the card moves to it), else a card of the selected day (the card
+// takes its place). A card let go anywhere else is cancelled: never re-dated or reordered
 function collide(args) {
   const hits = pointerWithin(args)
   const day = hits.find(h => isDayId(h.id))
-  if (day) return [day]
-  if (hits.length) return hits
-  return closestCenter({ ...args, droppableContainers: args.droppableContainers.filter(c => !isDayId(c.id)) })
+  return day ? [day] : hits
 }
 
 // The sort menu's names: SORTS, then the properties ("property:<key>") by their keys
