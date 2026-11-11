@@ -8,6 +8,7 @@ import { ListRow, ListBox } from './ui/list-row.jsx'
 import AuthLayout from './AuthLayout.jsx'
 import AppLogo from './AppLogo.jsx'
 import BrandName from './BrandName.jsx'
+import SignInSteps from './SignInSteps.jsx'
 import Spinner from './Spinner.jsx'
 import { listRepos, checkRepo, canWriteRepo } from '../lib/github.js'
 import { parseRepo } from '../lib/files.js'
@@ -15,14 +16,15 @@ import { parseRepo } from '../lib/files.js'
 const TYPED = '' // the choice of the last row, where a repo is typed by name
 const SEARCH_FROM = 11 // a search field shows above the list once it has this many repos
 
-// The second sign-in step, under the app's logo and name like the first: the repos
+// The second sign-in step, under the app's logo and name like the first (the stepper's Token goes back to the
+// first, the token kept): the repos
 // the token can reach, as one-of-several choices (shown as they load; with more
 // than 10, a search field above them), and a last row to type one the list leaves out.
 // Repos it can write to come first; the others are shown but can't be chosen
 // ("No write access"). Shown even when there's only one; the first writable
 // repo starts chosen. Continue checks that the token itself can write there
 // (GitHub's list only knows the user's access), then opens it.
-export default function RepoSetup({ user, onRepo, onLogout }) {
+export default function RepoSetup({ user, onRepo, onBack, onLogout }) {
   const [repos, setRepos] = useState(null)
   const [done, setDone] = useState(false)
   const [error, setError] = useState('')
@@ -80,6 +82,7 @@ export default function RepoSetup({ user, onRepo, onLogout }) {
 
   return (
     <AuthLayout
+      steps={<SignInSteps current={1} onBack={onBack} />}
       logo={<AppLogo className="size-20" />}
       title={<BrandName large />}
       intro="Choose the GitHub repo that stores your notes. Folio needs write access to it to save and modify your notes."

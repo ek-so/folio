@@ -42,12 +42,26 @@ export function useAuth() {
     }).finally(() => setReady(true))
   }, [])
 
+  // Back on the token step from the repo step (the sign-in's stepper): still signed in, the token shown to keep or change
+  const [editingToken, setEditingToken] = useState(false)
+
+  // Signs in with `token`; the same one again (back on the token step, unchanged) just goes on. A token GitHub
+  // refuses leaves the one in use as it was
   async function authenticate(token) {
+    if (user && token === storage.getToken()) return setEditingToken(false)
     init(token)
-    const u = await getUser()
+    let u
+    try {
+      u = await getUser()
+    } catch (e) {
+      const old = storage.getToken()
+      if (old) init(old)
+      throw e
+    }
     storage.setToken(token)
     storage.setUser(u)
     setUser(u)
+    setEditingToken(false)
   }
 
   function selectRepo(full) {
@@ -67,10 +81,14 @@ export function useAuth() {
   }
 
   function signOut() {
+    setEditingToken(false)
     storage.clearSession()
     setUser(null)
     setRepoState(null)
   }
 
-  return { user, repo, repos, ready, authenticate, selectRepo, switchRepo, signOut }
+  return {
+    user, repo, repos, ready, authenticate, selectRepo, switchRepo, signOut,
+    editingToken, editToken: () => setEditingToken(true), token: () => storage.getToken() ?? '',
+  }
 }

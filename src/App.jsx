@@ -675,8 +675,8 @@ export default function App() {
     )
   }
 
-  if (!auth.user) return <Auth onAuth={auth.authenticate} />
-  if (!auth.repo) return <RepoSetup user={auth.user} onRepo={auth.selectRepo} onLogout={auth.signOut} />
+  if (!auth.user || auth.editingToken) return <Auth onAuth={auth.authenticate} initialToken={auth.editingToken ? auth.token() : ''} />
+  if (!auth.repo) return <RepoSetup user={auth.user} onRepo={auth.selectRepo} onBack={auth.editToken} onLogout={auth.signOut} />
 
   // A symlink never opens itself (opening one opens its source instead)
   const entry = selectedFile && !(selectedFile in symlinks) && virtual[selectedFile]

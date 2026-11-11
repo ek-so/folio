@@ -4,9 +4,13 @@ import { Input } from './ui/input.jsx'
 import AppLogo from './AppLogo.jsx'
 import AuthLayout from './AuthLayout.jsx'
 import BrandName from './BrandName.jsx'
+import SignInSteps from './SignInSteps.jsx'
 
-export default function Auth({ onAuth }) {
-  const [token, setToken] = useState('')
+// The sign-in's first step: the GitHub token. Back here from the repo step (`initialToken`: the one in use), it's
+// filled in: Continue keeps it, a changed one Connects anew
+export default function Auth({ onAuth, initialToken = '' }) {
+  const [token, setToken] = useState(initialToken)
+  const same = !!initialToken && token.trim() === initialToken
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -25,6 +29,7 @@ export default function Auth({ onAuth }) {
 
   return (
     <AuthLayout
+      steps={<SignInSteps current={0} />}
       logo={<AppLogo className="size-20" />}
       title={<BrandName large />}
       intro="Paste a GitHub token to access your notes. Use a fine-grained token with Contents: Read and write, limited to your notes repo."
@@ -43,7 +48,7 @@ export default function Auth({ onAuth }) {
           />
           {error && <p className="text-destructive-ink text-xs text-center">{error}</p>}
           <Button type="submit" disabled={loading || !token.trim()} className="w-full">
-            {loading ? 'Connecting…' : 'Connect'}
+            {loading ? 'Connecting…' : same ? 'Continue' : 'Connect'}
           </Button>
         </form>
         <a
