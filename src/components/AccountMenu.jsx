@@ -32,11 +32,11 @@ export default function AccountMenu({ trigger, current, pages, viewActions, onNa
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>{trigger}</SheetTrigger>
-      <SheetContent side="left" className="top-[calc(var(--space-sm)+var(--safe-top))] bottom-[calc(var(--space-sm)+var(--safe-bottom))] left-space-sm h-auto w-[calc(100vw-2*var(--space-sm))] gap-0 min-[500px]:w-[85vw] sm:max-w-none overflow-hidden rounded-xl border bg-card" closeClassName="right-space">
+      <SheetContent side="left" className="top-[calc(var(--space-sm)+var(--safe-top))] bottom-[calc(var(--space-sm)+var(--safe-bottom))] left-space-sm h-auto w-[calc(100vw-2*var(--space-sm))] gap-0 min-[500px]:w-[85vw] sm:max-w-none overflow-hidden rounded-xl border bg-card" closeClassName="top-space right-space">
         <SheetDescription className="sr-only">Pages and settings</SheetDescription>
-        {/* Like a title bar: base height, 8px above and below, 16px at the sides, level with the sheet's ✕ (16px from
-            the right too); the logo centered on the rows' icons and the name lined up with their labels */}
-        <div className="shrink-0 border-b border-border py-space-sm pl-space pr-[calc(var(--spacing-space)+var(--spacing-control)+var(--spacing-space-sm))]">
+        {/* Like a title bar (TitleBar): base height, 16px all around, level with the sheet's ✕ (16px from the top and
+            right too); the logo centered on the rows' icons and the name lined up with their labels */}
+        <div className="shrink-0 border-b border-border py-space pl-space pr-[calc(var(--spacing-space)+var(--spacing-control)+var(--spacing-space-sm))]">
           <div className="flex min-h-control items-center gap-space-sm px-3">
             <AppLogo className="-ml-space-xs size-6 shrink-0" />
             <SheetTitle><BrandName /></SheetTitle>
