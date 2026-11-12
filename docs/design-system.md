@@ -3,7 +3,7 @@
 shadcn/ui (new-york) · Tailwind CSS v4 · Radix UI · Phosphor icons (`@phosphor-icons/react`, regular weight; ⋯ `DotsThree` is bold).
 
 ## Components (`src/components/ui/`)
-- **shadcn/ui (Radix):** `button`, `dialog`, `sheet`, `dropdown-menu`, `popover`, `tooltip`, `sonner`, `input`, `label`, `separator`, `toggle-group`, `calendar`. Use them for dividers (`Separator`), field labels (`Label`) and one-of-several choices (`ToggleGroup`: color swatches, `Segmented`).
+- **shadcn/ui (Radix):** `button`, `dialog`, `sheet`, `dropdown-menu`, `popover`, `tooltip`, `sonner`, `input`, `label`, `separator`, `toggle-group`, `calendar`, `kbd` (a shortcut's keys). Use them for dividers (`Separator`), field labels (`Label`) and one-of-several choices (`ToggleGroup`: color swatches, `Segmented`).
 - **Custom, because shadcn has no equivalent:** `ListRow`, `CardTile`, `Tray`, `Badge` (a label that can be a button), `Checkbox` and `Radio` (only the mark inside a clickable row), `SignInSteps` (the sign-in's stepper), `SearchInput` (`ui/search-input.jsx`: every search field, with a small round grey-filled ✕ that clears it while it has text), `Placeholder`, `Spinner` (pull-to-refresh draws it still), `ResizeHandle` (pixel widths with limits), `MarkdownEditor`'s textarea (highlight overlay).
 - Before adding a custom piece, check the list above and the shadcn registry. If the CLI can't reach the registry, copy the component's source into `ui/` and adapt it to our tokens.
 

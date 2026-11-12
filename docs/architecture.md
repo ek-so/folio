@@ -19,6 +19,7 @@ App flow: **Auth → RepoSetup → FileBrowser / Editor / FileViewer**. `App.jsx
 - `links.js` — internal links: backlink and broken-link index, rewriting links on moves, Fix suggestions, `resolveSymlink`. Tested.
 - `viewsConfig.js` — views and their widgets in `.folio/views.json`, `isConfigPath`. Tested.
 - `views.js` — each main page's trail (`openView`, `currentView`, `trailTo`). Tested.
+- `shortcuts.js` — keyboard shortcuts: Search is ⌘K on a Mac, Ctrl+K elsewhere (`isSearchShortcut`, `searchKeys`, `IS_MAC`). Tested.
 - `pages.js` — page ids and the title and icon of every page.
 - `columns.js` (File manager's Columns), `url.js` (address bar), `resize.js`, `files.js`, `cache.js` (IndexedDB), `storage.js` (localStorage), `syncErrors.js`, `updates.js`, `viewport.js`, `plural.js` ("3 notes").
 
@@ -30,6 +31,7 @@ App flow: **Auth → RepoSetup → FileBrowser / Editor / FileViewer**. `App.jsx
 - `useIcons` — `iconOf(path)`, `canEdit`, and `set`, `moved`, `removed` as changes; `IconsContext` (App) gives every `FileIcon` and `ItemMenu` the icons and `onSet`.
 - `useConfigFile` — one `.folio` settings file read and written through parse and serialize (never saved over when unreadable): `useLocks`, `useIcons`, `useAssets` are built on it.
 - `useAssets` — `added`, and `record`, `moved`, `removed` as changes.
+- `useSearchShortcut` — ⌘K / Ctrl+K anywhere opens Search (App, once signed in to a repo).
 - `useDragSensors` — how every drag starts (mouse after 5px, touch after holding 0.25s): board, planner, a note's lists, Edit list.
 - `useFolderNotes` — what a board or planner does with its folder's notes (values, properties: `showProperties`, `renameProperty`, `removeProperty`; a card's title, description, removal).
 

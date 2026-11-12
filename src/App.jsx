@@ -54,6 +54,7 @@ import { toast } from 'sonner'
 import { Toaster } from './components/ui/sonner.jsx'
 import { TooltipProvider } from './components/ui/tooltip.jsx'
 import { SingleOpenProvider } from './hooks/useSingleOpen.jsx'
+import { useSearchShortcut } from './hooks/useSearchShortcut.js'
 import { cache } from './lib/cache.js'
 import { archiveDay, inArchive, staleArchiveDays, KEEP_DAYS } from './lib/archive.js'
 import { fileItem } from './lib/folderNotes.js'
@@ -136,6 +137,7 @@ export default function App() {
   const [confirmDiscard, setConfirmDiscard] = useState(false)
   const [discards, setDiscards] = useState(0) // remounts the open note after a discard
   const [searchOpen, setSearchOpen] = useState(false)
+  useSearchShortcut(() => { if (auth.user && auth.repo) setSearchOpen(true) }) // ⌘K / Ctrl+K, signed in
   const [syncCheck, setSyncCheck] = useState(false) // broken-links sheet before syncing
   const [uploadClash, setUploadClash] = useState(null) // { name, folder, resolve } while asking
   const [uploadErrors, setUploadErrors] = useState([]) // [name, reason] after adding files

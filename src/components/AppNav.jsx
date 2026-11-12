@@ -3,6 +3,8 @@ import { List, SidebarSimple, MagnifyingGlass, Images, LinkBreak, BookOpen, Gear
 import { cn } from '@/lib/utils.js'
 import { Button } from './ui/button.jsx'
 import { Separator } from './ui/separator.jsx'
+import { Kbd, KbdGroup } from './ui/kbd.jsx'
+import { searchKeys, IS_MAC } from '../lib/shortcuts.js'
 import { SELECTED } from './ui/list-row.jsx'
 import AccountMenu from './AccountMenu.jsx'
 import { PAGE } from '../lib/pages.js'
@@ -33,6 +35,8 @@ const plainClick = e => e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKe
 
 // `hrefOf(id)`: the address of where a main page was left (its open note or folder), the link its item is: hovering
 // shows it, and it opens or copies like any link; a plain click opens the page in place (`onPage`)
+const SEARCH_KEYS = searchKeys(IS_MAC)
+
 export function NavRail({ page, pages, hrefOf, viewActions, onPage, onSearch, renderSync, menu }) {
   const [collapsed, setCollapsed] = useState(storage.getRailCollapsed)
   const [width, resize] = useResizableWidth(RAIL_WIDTH, storage.getRailWidth, storage.setRailWidth)
@@ -70,9 +74,11 @@ export function NavRail({ page, pages, hrefOf, viewActions, onPage, onSearch, re
         </div>
         {separator}
       </>}
-      {/* Search on top, then Sync, File manager, Assets and Graph: plain items like the others */}
-      <Button variant="ghost" tooltip={hint('Search')} tooltipSide="right" className={cn('justify-start gap-3 font-normal', collapsed && 'size-control justify-center px-0')} onClick={onSearch}>
+      {/* Search on top, then Sync, File manager, Assets and Graph: plain items like the others. Search shows its
+          shortcut (⌘K / Ctrl+K, lib/shortcuts.js) on its right, or in its tooltip when collapsed */}
+      <Button variant="ghost" tooltip={hint(`Search ${SEARCH_KEYS.join(IS_MAC ? '' : '+')}`)} tooltipSide="right" aria-keyshortcuts={IS_MAC ? 'Meta+K' : 'Control+K'} className={cn('justify-start gap-3 font-normal', collapsed && 'size-control justify-center px-0')} onClick={onSearch}>
         <MagnifyingGlass /> {label('Search')}
+        {!collapsed && <KbdGroup aria-hidden className="ml-auto">{SEARCH_KEYS.map(k => <Kbd key={k}>{k}</Kbd>)}</KbdGroup>}
       </Button>
       {renderSync(collapsed)}
       {pages.filter(p => p.id === PAGE.FILES).map(p => <div key={p.id}>{pageButton(p)}</div>)}
