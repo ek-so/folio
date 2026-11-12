@@ -14,7 +14,7 @@ import { EmptyMessage } from './EmptyState.jsx'
 // `onRemove`, disabled without `canEdit`). Body: a spinner until `ready`; "This `noun`'s settings can't be read."
 // when not `readable`; with `folder` ({ name, missing, folders, sheetTitle, sheetText, onPick }) gone, "Its folder … is gone."
 // and Select folder (FolderSheet: another folder for it); else `children()` (only called then: it may rely on the
-// settings). `className` goes on the frame (the Notes widget's container query).
+// settings). `className` goes on the frame.
 export default function WidgetFrame({ title, subtitle, noun, controls, menu, removeLabel, onRemove, canEdit, ready, readable, folder, className, children }) {
   const [relocating, setRelocating] = useState(false) // picking another folder, its own being gone
   const body = !ready ? <div className="flex justify-center py-12"><Spinner /></div>

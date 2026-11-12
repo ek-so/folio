@@ -1,7 +1,7 @@
 // The views in the navigation (Home and the ones added in Views settings) live
 // in the repo, like Obsidian's config folder: `.folio/views.json`,
 // { "views": [{ "id", "name", "icon" (an emoji, optional), "widgets": [{ "id", "type" }] }] }. A repo without the file has Home alone.
-// A view's widgets show on it, in order; each kind is in src/widgets/ and keeps its own settings
+// A view's widgets show on it, in order (an old "note" widget, the Notes widget, reads as "pinned", its new name); each kind is in src/widgets/ and keeps its own settings
 // (a board: .folio/boards/<id>.json). A kind this version doesn't know is kept as it is.
 // The file is a normal local change, committed by Sync; it never shows in
 // File manager, the folder tree or Search (`isConfigPath`).
@@ -29,7 +29,7 @@ export function parseViews(text) {
       if (typeof v?.id !== 'string' || typeof v?.name !== 'string' || seen.has(v.id)) continue
       seen.add(v.id)
       const widgets = Array.isArray(v.widgets)
-        ? v.widgets.filter(w => typeof w?.id === 'string' && typeof w.type === 'string').map(w => ({ id: w.id, type: w.type }))
+        ? v.widgets.filter(w => typeof w?.id === 'string' && typeof w.type === 'string').map(w => ({ id: w.id, type: w.type === 'note' ? 'pinned' : w.type }))
         : []
       views.push({ id: v.id, name: v.name, ...(typeof v.icon === 'string' && { icon: v.icon }), ...(widgets.length && { widgets }) })
     }

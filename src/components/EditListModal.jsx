@@ -10,7 +10,7 @@ import BottomSheet from './BottomSheet.jsx'
 import AddNameField from './AddNameField.jsx'
 import { EmptyMessage } from './EmptyState.jsx'
 
-// A sheet to edit a list of `items` ([{ id, icon, title, label? (its name when `title` isn't text) }]; a view's widgets, the views, a Notes widget's notes): drag them into
+// A sheet to edit a list of `items` ([{ id, icon, title, label? (its name when `title` isn't text) }]; a view's widgets, the views, a Pinned widget's notes and folders): drag them into
 // order (with a mouse right away, on touch after holding 0.25s, like a board's cards; each drop
 // calls `onMove(from, to)`, indexes, at once), remove one with its ✕ (`onRemove(item)`, confirmed
 // by the caller). `addLabel` and `onAdd(name)`: a field under the list to add one by name (returns an error

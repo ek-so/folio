@@ -71,9 +71,9 @@ function Rows({ dir, depth }) {
   })
 }
 
-// A view's tree (`viewTree`): nodes { key, name, icon (a Phosphor icon) or path (a note), children? }: its widgets,
-// then what each shows (a board's columns and their cards, a Notes widget's notes…). `expanded`: the open nodes' keys.
-// A note opens in the view; a node with children only expands and collapses.
+// A view's tree (`viewTree`): nodes { key, name, icon (a Phosphor icon) or path (a note; with `dir`, a folder), children? }: its
+// widgets, then what each shows (a board's columns and their cards, a Pinned widget's notes and folders…). `expanded`: the
+// open nodes' keys. A note or folder opens in the view; a node with children only expands and collapses.
 function NodeRows({ nodes, depth, expanded, onToggle }) {
   const nav = useContext(NavContext)
   return nodes.map(node => {
@@ -82,10 +82,10 @@ function NodeRows({ nodes, depth, expanded, onToggle }) {
     return (
       <li key={node.key}>
         <TreeRow depth={depth} branch={!!node.children} open={open} onToggle={() => onToggle(node.key)} row={node.path ? {
-          icon: <FileIcon path={node.path} />,
+          icon: <FileIcon path={node.path} dir={node.dir} />,
           title: node.name,
-          onClick: () => nav.onOpenFile(node.path),
-          trailing: <ItemMenu item={fileItem(node.path)} {...nav.itemActions} inList hoverReveal />,
+          onClick: () => node.dir ? nav.onOpenFolder(node.path) : nav.onOpenFile(node.path),
+          trailing: <ItemMenu item={node.dir ? { path: node.path, name: node.path.split('/').pop(), type: 'dir' } : fileItem(node.path)} {...nav.itemActions} inList hoverReveal />,
           active: nav.current === node.path,
         } : {
           icon: Icon && <Icon className="text-muted-foreground" />,

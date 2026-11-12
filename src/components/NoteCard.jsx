@@ -30,10 +30,11 @@ export function CardEmoji({ path, className }) {
   return emoji ? <span aria-hidden className={cn('shrink-0 leading-5', className)}>{emoji}</span> : null
 }
 
-// What a card of a board or a planner shows: its emoji (CardEmoji), the note's title, its description, the chosen `properties`' values (`overdue`:
-// a planner's late card, its title faded and its date red; `locked`: a small lock before its title). A div, not a button:
-// the badges in it are buttons
-const NoteCard = forwardRef(function NoteCard({ path, text, properties, always = [], scopeName, files, menu, onChange, options, onRemoveValue, valueCount, chosen, onEditValue, dateKeys, badges, overdue, locked, className, ...props }, ref) {
+// What a card of a board, a planner or the Pinned widget shows: its emoji (CardEmoji; `icon` in its place: a pinned folder's),
+// the note's title, `detail` (a muted line under it: how much a pinned folder holds), its description, the chosen `properties`'
+// values (`overdue`: a planner's late card, its title faded and its date red; `locked`: a small lock before its title). A div,
+// not a button: the badges in it are buttons
+const NoteCard = forwardRef(function NoteCard({ path, text, properties = [], icon, detail, always = [], scopeName, files, menu, onChange, options, onRemoveValue, valueCount, chosen, onEditValue, dateKeys, badges, overdue, locked, className, ...props }, ref) {
   const fm = text === undefined ? [] : frontMatter(text)?.props ?? []
   // With `always` (a planner's date and repeat): the description first, then those in that order (shown empty when the
   // note lacks one), then the rest in the file's order; without, all in the file's order
@@ -51,10 +52,11 @@ const NoteCard = forwardRef(function NoteCard({ path, text, properties, always =
       {...props}
     >
       <div className="flex items-start gap-space-xs">
-        <CardEmoji path={path} className="text-sm" />
+        {icon ?? <CardEmoji path={path} className="text-sm" />}
         <span className={cn('min-w-0 flex-1 break-words text-sm font-medium', overdue && 'opacity-50')}>
           {locked && <LockMark />}
           {text === undefined ? fileName(path) : noteTitle(text, fileName(path))}
+          {detail && <span className="block text-xs font-normal text-muted-foreground">{detail}</span>}
         </span>
         {menu}
       </div>

@@ -393,16 +393,8 @@ export default function App() {
     createFolder: (parent, name) => createFolder(parent, name),
     // `keys`: the properties it starts with, empty; `stay`: don't open it
     newNote: (folder, { keys, values, stay } = {}) => setNewFile({ folder, kind: 'note', keys, values, stay }),
-    // A note widget's note: its new note, made in one step with the widget (noteToAdd); its file
-    // ({ entry, edited: this device's text, if edited }, or null when it's gone) and its typing saved
+    // A Pinned widget's new note, made in one step with the widget (noteToAdd)
     addNote: (folder, name, title) => noteToAdd(folder, name, [], title),
-    noteFile: path => shown[path] ? { entry: shown[path], edited: changes.edits[shown[path].orig] } : null,
-    saveNote: (path, content, original) => update(ch => {
-      const entry = virtualFiles(repo.remote.files, ch)[path]
-      return entry ? setEdit(ch, entry, content, original) : ch
-    }),
-    virtual, // every file, as a note's preview wants them for its links and images
-    discards, // a discard reloads the notes widgets show
     // A done note archived (archive): `edit` applied to its text first, in the same step. { to: its new path, text: its
     // text as it was archived (with the typing flushed first), for an undo }
     archive: (path, edit) => archive(fileItem(path), edit),

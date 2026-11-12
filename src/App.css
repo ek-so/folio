@@ -7,12 +7,6 @@
 .editor-preview ul { list-style-type: disc; padding-left: 20px; margin: 0 0 14px; }
 .editor-preview ol { list-style-type: decimal; padding-left: 20px; margin: 0 0 14px; }
 .editor-preview li { margin: 4px 0; }
-/* Compact (a Notes widget's card): smaller headings, text (text-sm on the root) and space between them */
-.editor-preview.compact h1 { font-size: 18px; margin-bottom: 8px; gap: 6px; }
-.editor-preview.compact h2 { font-size: 16px; margin: 14px 0 6px; }
-.editor-preview.compact h3 { font-size: 15px; margin: 12px 0 4px; }
-.editor-preview.compact :is(p, ul, ol, pre, blockquote, table, details) { margin-bottom: 8px; }
-.editor-preview.compact li { margin: 2px 0; }
 /* A list item's drag handle (ListGrip), always shown, inside the text column before its marker: a list that can be
    dragged indents by the grip's width (--grip-w) more, and the grip sits there; --list-pad is how far its list
    indents its items past the marker */

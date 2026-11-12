@@ -29,11 +29,12 @@ const WIDGET_DOCS = {
       'Removing the planner keeps every note.',
     ],
   },
-  note: {
-    summary: 'A few notes side by side, to read and edit right on the view.',
+  pinned: {
+    summary: 'Notes and folders you use often, as cards on the view.',
     points: [
-      'Shows any notes you pick, and adds nothing to them.',
-      'Removing a note from the widget, or the widget itself, keeps the note.',
+      'A note shows its title, description and checklist progress; a folder how much it holds. A tap opens it.',
+      'Drag cards into any order.',
+      'Removing a card from the widget, or the widget itself, keeps the note or folder.',
     ],
   },
 }

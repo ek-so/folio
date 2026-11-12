@@ -4,11 +4,12 @@ import FolderSheet from '@/components/FolderSheet.jsx'
 import SearchSheet from '@/components/SearchSheet.jsx'
 import NewFileModal from '@/components/NewFileModal.jsx'
 import { ListRow } from '@/components/ui/list-row.jsx'
-import { notePath, serializeNotes, isNote } from './note.js'
+import { settingsWrite, isNote } from './pinned.js'
 
-// Picks a note: found by searching every note in the repo, or New note…, which asks for its folder and name.
-// `onPick(path, first)`: `first` (ch => ch) makes a new note, to apply in the same step. `title`: the search sheet's.
-export function NotePicker({ services, onPick, onClose, title = 'Add note' }) {
+// Picks a note or a folder to pin: found by searching the repo's notes and folders (folders first), or New note…, which
+// asks for its folder and name. `onPick(path, first)`: `first` (ch => ch) makes a new note, to apply in the same step.
+// `title`: the search sheet's.
+export function PinPicker({ services, onPick, onClose, title = 'Pin note or folder' }) {
   const { folders, files } = services
   const [step, setStep] = useState('search') // 'search', then for a new note 'folder' and 'name'
   const [folder, setFolder] = useState('') // the new note's folder ('' is the root)
@@ -18,9 +19,11 @@ export function NotePicker({ services, onPick, onClose, title = 'Add note' }) {
   if (step === 'search') return (
     <SearchSheet
       title={title}
-      placeholder="Search notes…"
+      placeholder="Search notes and folders…"
       virtual={all}
       only={isNote}
+      folders={folders}
+      onSelectFolder={path => onPick(path)}
       top={<ListRow icon={<Plus />} title="New note…" onClick={() => setStep('folder')} />}
       onSelect={path => onPick(path)}
       onClose={() => { if (!picked.current) onClose() }}
@@ -53,12 +56,12 @@ export function NotePicker({ services, onPick, onClose, title = 'Add note' }) {
   )
 }
 
-// A new notes widget, starting with one picked note
-export default function NoteSetup({ services, onCreate, onClose }) {
+// A new Pinned widget, starting with one picked note or folder
+export default function PinnedSetup({ services, onCreate, onClose }) {
   return (
-    <NotePicker
+    <PinPicker
       services={services}
-      onPick={(path, first = ch => ch) => onCreate(id => ch => services.config.write(notePath(id), serializeNotes({ notes: [{ file: path }] }))(first(ch)))}
+      onPick={(path, first = ch => ch) => onCreate(id => ch => settingsWrite(services.config, id, { items: [{ path }] })(first(ch)))}
       onClose={onClose}
     />
   )

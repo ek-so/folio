@@ -10,7 +10,7 @@ import { searchNotes } from '../lib/search.js'
 
 // Command-palette style search. Shows recently opened files when no query is typed (without `recent`:
 // the first files), then filters every visible file in the repo (notes, images, PDFs, …) by path.
-// `only(path)`: the files it can find (a Notes widget's picker: notes); `top`: a row above the results
+// `only(path)`: the files it can find (a Pinned widget's picker: notes); `top`: a row above the results
 // (New note…); `title`, `placeholder`. With `folders` (paths) and `onSelectFolder`, a query finds folders too, listed first. With `texts` ({ path: text }, lib/search.js), it
 // also finds notes by what they say, after the ones found by name, each with a snippet of its text under its name.
 export default function SearchSheet({ onClose, onSelect, virtual, changes, recent, only = () => true, top, title = 'Search', placeholder = 'Search files…', folders = [], onSelectFolder, texts }) {

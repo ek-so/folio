@@ -62,7 +62,7 @@ export default function EmojiPicker({ emoji, onChange, label = 'Emoji', classNam
   )
 }
 
-// Emoji in a file's or folder's ⋯ (ItemMenu, a card's CardMenu, a Notes widget's note): a sub menu with the picker for the
+// Emoji in a file's or folder's ⋯ (ItemMenu, a card's CardMenu, a Pinned widget's card): a sub menu with the picker for the
 // icon of `path` (lib/icons.js, `IconsContext`), disabled while the icons can't be saved. `onDone` closes the menu
 export function EmojiSubmenu({ path, onDone }) {
   const icons = useIconsContext()
