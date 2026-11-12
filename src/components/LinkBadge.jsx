@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { DotsThree, Globe, FileText, File, Folder, LinkBreak, LinkSimple, PencilSimple, Trash } from '@phosphor-icons/react'
-import { copyText } from '../lib/clipboard.js'
+import { DotsThree, Globe, FileText, File, Folder, LinkBreak, PencilSimple, Trash } from '@phosphor-icons/react'
+import CopyLinkItem from './CopyLinkItem.jsx'
 import { cn, own } from '@/lib/utils.js'
 import { Badge } from './ui/badge.jsx'
 import { Button } from './ui/button.jsx'
@@ -36,12 +36,11 @@ function Favicon({ href }) {
 // it points to in the repo (its emoji when it has one, lib/icons.js; grey when it's missing), and its text, a bit softer than the note's; at most 420px wide (less where its container is), a longer text cut
 // in the middle (`MiddleCut`). A tap
 // opens it (whoever shows it handles that). Beside it, split off by a 1px gap, a ⋯ of its own (`own`: a
-// click on it never opens a board card) with Copy link address, Edit link and Remove (the last two only
+// click on it never opens a board card) with Copy link (its address), Edit link and Remove (the last two only
 // with `onEdit` / `onRemove`).
 export default function LinkBadge({ href, text, kind, path, onEdit, onRemove }) {
   // A link into the repo is copied as the app's address of what it points to (in File manager)
   const address = path ? location.origin + urlForView(import.meta.env.BASE_URL, kind === 'folder' ? { folder: path } : { file: path }) : href
-  const copy = () => copyText(address, 'Link address copied')
   const [open, setOpen] = useSingleOpen()
   const Icon = REPO_ICONS[kind]
   const emoji = useIconsContext().iconOf(path && kind !== 'missing' ? path : '') // a note's or folder's emoji in place of its icon
@@ -58,7 +57,7 @@ export default function LinkBadge({ href, text, kind, path, onEdit, onRemove }) 
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" onCloseAutoFocus={e => e.preventDefault()}>
-          <DropdownMenuItem onSelect={copy}><LinkSimple /> Copy link address</DropdownMenuItem>
+          <CopyLinkItem link={address} />
           {onEdit && <DropdownMenuItem onSelect={onEdit}><PencilSimple /> Edit link</DropdownMenuItem>}
           {onRemove && <DropdownMenuItem variant="destructive" onSelect={onRemove}><Trash /> Remove</DropdownMenuItem>}
         </DropdownMenuContent>

@@ -10,6 +10,8 @@ import FileIcon from '@/components/FileIcon.jsx'
 import MarkdownPreview from '@/components/MarkdownPreview.jsx'
 import { NO_CALLOUT, CardEmoji } from '@/components/NoteCard.jsx'
 import { EmojiSubmenu } from '@/components/EmojiPicker.jsx'
+import CopyLinkItem from '@/components/CopyLinkItem.jsx'
+import { repoLink } from '@/lib/markdown.js'
 import { DndContext, DragOverlay, closestCenter } from '@dnd-kit/core'
 import { SortableContext, useSortable, rectSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
@@ -160,6 +162,7 @@ function NoteTray({ path, services, height, canMove, onTakeOut, onReplace }) {
           <DropdownMenuContent align="end" onCloseAutoFocus={e => e.preventDefault()}>
             <DropdownMenuItem disabled={!found} onSelect={() => setRenaming(true)}><PencilSimple /> Rename note</DropdownMenuItem>
             {found && <EmojiSubmenu path={path} onDone={() => setMenuOpen(false)} />}
+            <CopyLinkItem link={repoLink(path)} disabled={!found} />
             <DropdownMenuSeparator />
             <DropdownMenuItem variant="destructive" disabled={!onTakeOut} onSelect={onTakeOut}><Trash /> Remove from widget</DropdownMenuItem>
           </DropdownMenuContent>

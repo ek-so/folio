@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { PencilSimple, Trash, Folder, Rows, SquaresFour, Columns, Copy, LinkSimple, Lock, LockOpen, FolderOpen } from '@phosphor-icons/react'
+import { PencilSimple, Trash, Folder, Rows, SquaresFour, Columns, Copy, Lock, LockOpen, FolderOpen } from '@phosphor-icons/react'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from './ui/dropdown-menu.jsx'
 import { Segmented } from './ui/segmented.jsx'
 import RenameModal from './RenameModal.jsx'
@@ -7,7 +7,7 @@ import DeleteModal from './DeleteModal.jsx'
 import MoveModal from './MoveModal.jsx'
 import ColumnSubmenu from './ColumnSubmenu.jsx'
 import { EmojiSubmenu } from './EmojiPicker.jsx'
-import { copyText } from '../lib/clipboard.js'
+import CopyLinkItem from './CopyLinkItem.jsx'
 import { repoLink } from '../lib/markdown.js'
 import { useIsDesktop } from '../hooks/useIsDesktop.js'
 import MoreButton from './MoreButton.jsx'
@@ -57,7 +57,7 @@ export default function ItemMenu({ item, onReveal, onRename, onDuplicate, onDele
             {columns && !lock?.locked && <ColumnSubmenu columns={columns.columns} column={columns.column} onSelect={columns.onSelect} />}
             {onMove && <DropdownMenuItem onSelect={() => setMoving(true)}><Folder /> Move to…</DropdownMenuItem>}
             {onDuplicate && item.type !== 'dir' && <DropdownMenuItem onSelect={() => onDuplicate(item)}><Copy /> Duplicate</DropdownMenuItem>}
-            <DropdownMenuItem onSelect={() => copyText(repoLink(item.path), 'Link copied')}><LinkSimple /> Copy link</DropdownMenuItem>
+            <CopyLinkItem link={repoLink(item.path)} />
             {lock && <DropdownMenuItem disabled={!lock.onToggle} onSelect={lock.onToggle}>{lock.locked ? <><LockOpen /> Unlock</> : <><Lock /> Lock</>}</DropdownMenuItem>}
             {!lock?.locked && <DropdownMenuItem variant="destructive" onSelect={() => setDeleting(true)}><Trash /> Remove</DropdownMenuItem>}
           </>}

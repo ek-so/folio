@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { PencilSimple, Trash, Columns, Copy, TextAlignLeft, LinkSimple, CheckCircle, Lock, LockOpen } from '@phosphor-icons/react'
+import { PencilSimple, Trash, Columns, Copy, TextAlignLeft, CheckCircle, Lock, LockOpen } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button.jsx'
 import { Input } from '@/components/ui/input.jsx'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu.jsx'
@@ -8,7 +8,7 @@ import ColumnSubmenu from '@/components/ColumnSubmenu.jsx'
 import BottomSheet from '@/components/BottomSheet.jsx'
 import DeleteModal from '@/components/DeleteModal.jsx'
 import RenameModal from '@/components/RenameModal.jsx'
-import { copyText } from '@/lib/clipboard.js'
+import CopyLinkItem from '@/components/CopyLinkItem.jsx'
 import { repoLink } from '@/lib/markdown.js'
 import { cn, own } from '@/lib/utils.js'
 import { fileItem } from '@/lib/folderNotes.js'
@@ -60,7 +60,7 @@ export default function CardMenu({ path, description, columns, column, onDone, o
           <DropdownMenuItem onSelect={() => setRenaming(true)}><PencilSimple /> Rename</DropdownMenuItem>
           <EmojiSubmenu path={path} onDone={() => setOpen(false)} />
           <DropdownMenuItem onSelect={onDuplicate}><Copy /> Duplicate</DropdownMenuItem>
-          <DropdownMenuItem onSelect={() => copyText(repoLink(path), 'Link copied')}><LinkSimple /> Copy link</DropdownMenuItem>
+          <CopyLinkItem link={repoLink(path)} />
           {lock && <DropdownMenuItem disabled={!lock.onToggle} onSelect={lock.onToggle}>{lock.locked ? <><LockOpen /> Unlock</> : <><Lock /> Lock</>}</DropdownMenuItem>}
           {columns && (
             <ColumnSubmenu columns={columns} column={column} onSelect={onMove}>
