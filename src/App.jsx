@@ -29,7 +29,7 @@ import { useSymlinks } from './hooks/useSymlinks.js'
 import { rewriteLinks, retargetLink, extractLinks, SYMLINK_MODE } from './lib/links.js'
 import { NavContext } from './components/NavTree.jsx'
 import { NavRail, TopBar } from './components/AppNav.jsx'
-import EmptyPage from './components/EmptyPage.jsx'
+import GraphPage from './components/GraphPage.jsx'
 import Settings from './components/Settings.jsx'
 import Spinner from './components/Spinner.jsx'
 import { useAuth } from './hooks/useAuth.js'
@@ -760,7 +760,7 @@ export default function App() {
           ) : page === PAGE.ASSETS ? (
             <Assets files={shown} added={assets.added} backlinks={links.index.backlinks} onOpen={path => setSelectedFile(path, PAGE.FILES)} onReveal={path => openFolder(path.slice(0, Math.max(path.lastIndexOf('/'), 0)), PAGE.FILES)} itemActions={{ onRename: handleRename, onDuplicate: handleDuplicate, onDelete: handleDelete, onMove: handleMove, folders: allFolders }} />
           ) : !view && page === PAGE.GRAPH ? (
-            <EmptyPage page={page} />
+            <GraphPage page={page} files={shown} backlinks={links.index.backlinks} repoName={auth.repo.split('/')[1]} onOpenFile={path => setSelectedFile(path)} onOpenFolder={path => openFolder(path)} />
           ) : !view ? (
             <ViewPage
               page={page}
