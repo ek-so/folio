@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { toast } from 'sonner'
-import { getTree, getBlob, getBlobBase64, commitTree, isNetworkError, getLatestCommitSha, changedFileCount, blobSha, encodeText, uploadBlob } from '../lib/github.js'
+import { getTree, getBlob, getBlobBase64, fileOn, isOutOfDate, commitTree, isNetworkError, getLatestCommitSha, changedFileCount, blobSha, encodeText, uploadBlob } from '../lib/github.js'
 import { cache } from '../lib/cache.js'
 import { localChanges } from '../lib/storage.js'
 import { describeSyncError } from '../lib/syncErrors.js'
@@ -225,7 +225,7 @@ export function useRepo(repo, onDone) {
 
   // Fetch the latest tree; what changed on both sides is merged
   async function fetchLatest() {
-    const latest = await pull()
+    const latest = await complete(await pull())
     setError('')
     await mergeConflicts(latest)
   }
@@ -296,13 +296,35 @@ export function useRepo(repo, onDone) {
     return true
   }
 
-  // `quiet`: no "Synced" toast when it works (the automatic sync when Folio opens)
+  // GitHub's latest with every file this device touched in it: when GitHub cut the listing short (a very large repo),
+  // a file left out isn't taken for removed; each one is asked for
+  async function complete(latest) {
+    if (!latest.truncated) return latest
+    const missing = Object.keys(changesRef.current.base).filter(orig => !latest.files[orig])
+    if (!missing.length) return latest
+    const files = { ...latest.files }
+    for (const orig of missing) {
+      const found = await fileOn(orig, latest.branch)
+      if (found) files[orig] = found
+    }
+    return { ...latest, files }
+  }
+
+  const SYNC_TRIES = 3 // another device pushing in between: pulled, merged and pushed again, this many times in all
+
+  // Pull, merge what changed on both sides, push. `quiet`: no "Synced" toast when it works (Folio syncing by itself)
   function sync(quiet = false) {
     return run(async () => {
-      const latest = await pull()
-      setError('')
-      await mergeConflicts(latest)
-      await push(latest)
+      for (let tries = 1; ; tries++) {
+        const latest = await complete(await pull())
+        setError('')
+        await mergeConflicts(latest)
+        try {
+          return await push(latest)
+        } catch (e) {
+          if (tries >= SYNC_TRIES || !isOutOfDate(e)) throw e
+        }
+      }
     }, () => sync(), 'Synced', quiet)
   }
 

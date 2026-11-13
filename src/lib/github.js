@@ -138,6 +138,22 @@ export async function getBlob(sha) {
   return decode(await getBlobBase64(sha))
 }
 
+// The blob sha and mode of the file at `path` on `branch`, or null when there's none there: for a file a tree listing left
+// out (GitHub cuts a very large repo's listing short)
+export async function fileOn(path, branch) {
+  try {
+    const { data } = await step('read', octokit.rest.repos.getContent({ owner, repo, path, ref: branch, request: { fetch: fetchFresh } }))
+    return Array.isArray(data) || data.type !== 'file' ? null : { sha: data.sha, mode: '100644' }
+  } catch (e) {
+    if (e?.status === 404) return null
+    throw e
+  }
+}
+
+// Whether a sync's commit lost the race: another device moved the branch on between the pull and the push
+// (GitHub refuses to move it back), so pulling again and pushing on top works
+export const isOutOfDate = e => e?.step === 'save' && (e.status === 409 || e.status === 422)
+
 // Creates one commit on top of `remote` with the given tree entries.
 // Returns the new commit's and tree's shas.
 export async function commitTree(remote, entries, message) {
