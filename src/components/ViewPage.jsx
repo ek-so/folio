@@ -59,11 +59,7 @@ export default function ViewPage({ page, widgets = [], error, services, onAdd, o
           {widgets.length === 0 ? (
             <div className="flex flex-1 flex-col items-center justify-center gap-space py-12 text-center">
               <p className="text-sm text-muted-foreground">Nothing on this view yet.</p>
-              <div className="flex flex-wrap justify-center gap-space-sm">
-                {WIDGET_TYPES.map(t => (
-                  <Button key={t.type} variant="secondary" disabled={!canEdit} onClick={() => onAdd(t.type)}><t.icon /> Add {t.label.toLowerCase()}</Button>
-                ))}
-              </div>
+              {addMenu(<Button variant="secondary" disabled={!canEdit}><Plus /> Add widget</Button>, 'center')}
             </div>
           ) : <>
             {widgets.map(w => {

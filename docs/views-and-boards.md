@@ -1,7 +1,7 @@
 # Views and boards
 
 ## Views
-- A view is a dashboard (`ViewPage`): a title bar with ⋯ and + → Add widget (every kind in `widgets/index.js`) over its widgets stacked full width, then an Add widget button under them. Empty: an Add button per kind.
+- A view is a dashboard (`ViewPage`): a title bar with ⋯ and + → Add widget (every kind in `widgets/index.js`) over its widgets stacked full width, then an Add widget button under them. Empty: only the Add widget button, with the same menu.
 - The view's ⋯: Edit widgets (`EditListModal`: drag rows into order, saved on each drop by `moveWidget`; a row's trash removes that widget from the view, confirmed on top of the sheet), Rename, Remove. The navigation's ⋯ keeps only Rename and Remove. A kind this version doesn't know is kept, shown as such, and can be removed. Saved in `.folio/views.json` (`lib/viewsConfig.js`); a file that can't be read shows Home and can't be changed.
 - **Views settings** (in the rail and ☰, in place of Add view; `EditListModal`, like a Pinned widget's Edit pinned): the views in order, dragged into another (`moveView`), each with a red trash that removes it (confirmed, `DeleteModal`), and a New view field under them that adds one by name at the end (`addView`; it doesn't open it). A view with no name (an older one) shows a light Untitled (`PageTitle`); a rename needs a name. Rename / Remove from a view's ⋯ go through `RenameModal` / `DeleteModal` with `kind="view"`. Any view, Home too, can be removed (confirmed); with none left File manager is first.
 
