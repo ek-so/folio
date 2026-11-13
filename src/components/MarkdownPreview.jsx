@@ -1,5 +1,5 @@
 import { useMemo, useEffect, useLayoutEffect, useRef, useState, forwardRef, useImperativeHandle } from 'react'
-import DOMPurify from 'dompurify'
+import { safeHtml } from '../lib/sanitize.js'
 import { renderBlocks, tapOffset, taskOffsets, resolveImage, linkSpans, listsIn, moveListItem, firstWord } from '../lib/markdown.js'
 import { useRepoImages } from '../hooks/useRepoImages.js'
 import { linkSpots, openLink } from '../lib/previewLinks.js'
@@ -124,7 +124,7 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
   const linkEdits = useLinkEdits(content, onChange)
   const dateProps = useDateEdits(content, onChange)
   const [html, imagePaths, lists] = useMemo(() => {
-    const sanitized = DOMPurify.sanitize(renderBlocks(content))
+    const sanitized = safeHtml(renderBlocks(content))
     const tpl = document.createElement('template')
     tpl.innerHTML = sanitized
     linkSpots(tpl.content, path, files, spans)

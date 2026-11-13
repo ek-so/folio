@@ -40,3 +40,9 @@ App flow: **Auth → RepoSetup → FileBrowser / Editor / FileViewer**. `App.jsx
 - `useFolderNotes` — what a board or planner does with its folder's notes (values, properties: `showProperties`, `renameProperty`, `removeProperty`; a card's title, description, removal).
 
 **`widgets/`** — one folder each, registered in `widgets/index.js`. A kind is one object: `type`, `label`, `icon`, `Widget`, `Setup`, `moved`, `removed`, optionally `title`, `fileMoves` and `valueScope` (for a note that's one of its cards: where its values come from, the properties that come back when missing (`required`), can't be edited in the markdown (`locked`) and show as the widget's own badge (`badges`), and the order they come in (`order`); App joins every widget's). A widget gets only `services` (App's `widgetServices`), so all its changes go through the app's pipeline; App and `ViewPage` never name a kind. See [views-and-boards](views-and-boards.md).
+
+## Security
+- A note is someone else's text (a collaborator's, a merged pull request's): every piece of note HTML goes through `safeHtml` (`lib/sanitize.js`): DOMPurify (no scripts, handlers or javascript: links), and no forms or controls (only a task's checkbox) and no style that lifts it out of the note (position, place on screen, layer: `contained`, tested), so a note can't imitate the app or ask for the token.
+- The built app carries a Content Security Policy and `no-referrer` (`vite.config.js`, `securityHeaders`): only its own scripts (no inline, no eval; WebAssembly for the PDF viewer), data only to itself and `api.github.com`, no forms sent anywhere, no plugins or frames; images from any https site, data: and blob:. The dev server has none (its hot reload needs more).
+- The token is kept in localStorage on the device (sign-out removes it, with every cached file); the policy above is what keeps scripts from reaching it.
+
