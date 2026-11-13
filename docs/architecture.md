@@ -17,7 +17,7 @@ App flow: **Auth → RepoSetup → FileBrowser / Editor / FileViewer**. `App.jsx
 - `search.js` — notes found by what they say, with a snippet (`searchNotes`). Tested.
 - `assets.js` — what the Assets page lists and when each file was added, `.folio/assets.json` (`assetList`, `withAdded`). `pathMap.js` — settings keyed by path that follow moves and deletes (icons, assets). Tested.
 - `archive.js` — the archive: what's removed moves into `.archive/<day>/` (`archiveDay`, `inArchive`), `markedDone` (a planner card's `status: done`) and `staleArchiveDays` (day folders older than 30 days: App removes them when Folio opens, as local changes). Tested.
-- `links.js` — internal links: backlink and broken-link index, rewriting links on moves, Fix suggestions, `resolveSymlink`. Tested.
+- `links.js` — internal links: backlink and broken-link index (each note's links kept by its text between builds, so a change reads only the notes that changed), rewriting links on moves, Fix suggestions, `resolveSymlink`. Tested.
 - `viewsConfig.js` — views and their widgets in `.folio/views.json`, `isConfigPath`. Tested.
 - `views.js` — each main page's trail (`openView`, `currentView`, `trailTo`). Tested.
 - `shortcuts.js` — keyboard shortcuts: Search is ⌘K on a Mac, Ctrl+K elsewhere (`isSearchShortcut`, `searchKeys`, `IS_MAC`). Tested.

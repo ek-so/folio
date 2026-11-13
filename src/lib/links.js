@@ -93,21 +93,28 @@ const lineAt = (md, offset) => {
   return md.slice(start, end === -1 ? md.length : end).trim()
 }
 
+// A note's links with what doesn't depend on the other files: [{ link, repoPath, line }]
+const noteLinks = (from, text) => extractLinks(text).flatMap(l => {
+  const repoPath = resolveImage(from, l.target)
+  return repoPath === null ? [] : [{ link: l, repoPath, line: lineAt(text, l.targetStart) }]
+})
+
 // Backlinks (target path -> [{ from, line }]) and broken links
-// ([{ from, line, link }]) across all `notes` ({ path: text }).
-export function buildIndex(notes, files) {
+// ([{ from, line, link }]) across all `notes` ({ path: text }). `memo` (a Map kept between calls) holds each note's
+// links by its text, so only notes that changed are read again; what they point to is always looked up anew.
+export function buildIndex(notes, files, memo = new Map()) {
   const backlinks = {}
   const broken = []
   for (const [from, text] of Object.entries(notes)) {
-    for (const l of extractLinks(text)) {
-      const repoPath = resolveImage(from, l.target)
-      if (repoPath === null) continue
+    let known = memo.get(from)
+    if (known?.text !== text) memo.set(from, known = { text, links: noteLinks(from, text) })
+    for (const { link: l, repoPath, line } of known.links) {
       const target = linkTarget(repoPath, files)
-      const line = lineAt(text, l.targetStart)
       if (!target) broken.push({ from, line, link: l })
       else if (target.path !== from) (backlinks[target.path] ||= []).push({ from, line })
     }
   }
+  for (const path of memo.keys()) if (!(path in notes)) memo.delete(path) // gone or renamed: forgotten
   return { backlinks, broken }
 }
 

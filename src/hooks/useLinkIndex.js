@@ -45,7 +45,8 @@ export function useLinkIndex(virtual, changes) {
     return { notes, missing }
   }, [virtual, changes, loaded])
 
-  const index = useMemo(() => buildIndex(notes, virtual), [notes, virtual])
+  const memo = useRef(new Map()) // each note's links by its text (buildIndex): only changed notes are read again
+  const index = useMemo(() => buildIndex(notes, virtual, memo.current), [notes, virtual])
 
   return { notes, index, missing, remoteText }
 }

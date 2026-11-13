@@ -22,6 +22,17 @@ describe('links', () => {
     expect(broken.map(b => b.link.target)).toEqual(['Old.md'])
   })
 
+  it('reads again only the notes that changed, and looks up what they point to anew', () => {
+    const memo = new Map()
+    const notes = { 'Life/Trip.md': '[Packing](Packing.md)', 'Travel/Italy.md': '[gone](Nowhere.md)' }
+    buildIndex(notes, files, memo)
+    const kept = memo.get('Life/Trip.md')
+    buildIndex({ ...notes, 'Travel/Italy.md': '[trip](../Life/Trip)' }, files, memo)
+    expect(memo.get('Life/Trip.md')).toBe(kept) // unchanged: not read again
+    expect(buildIndex(notes, { ...files, 'Travel/Nowhere.md': { sha: 'n' } }, memo).broken).toEqual([]) // the target appeared
+    expect(buildIndex({ 'Life/Trip.md': notes['Life/Trip.md'] }, files, memo) && [...memo.keys()]).toEqual(['Life/Trip.md'])
+  })
+
   it('rewrites links to a renamed file in the same style, renaming matching link text', () => {
     const text = '[Packing](Packing.md), [list](./Packing#top), [Packing.md](/Life/Packing.md)'
     const out = rewriteLinks(text, 'Life/Trip.md', 'Life/Trip.md', move('Life/Packing.md', 'Life/Gear list.md'), files)
