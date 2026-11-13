@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from 'react'
-import { X } from '@phosphor-icons/react'
+import { X, TreeView } from '@phosphor-icons/react'
 import PageLayout from './PageLayout.jsx'
 import Surface from './Surface.jsx'
 import TitleBar from './TitleBar.jsx'
@@ -80,7 +80,7 @@ function DotInfo({ node, data, files, text, onOpen, onClose }) {
         <span className="min-w-0 flex-1 break-words font-medium">{text === undefined ? node.name : noteTitle(text, node.name)}</span>
         <Button variant="ghost" size="icon" aria-label="Close" className="-my-space-xs -mr-space-xs text-muted-foreground" onClick={onClose}><X /></Button>
       </div>
-      {node.id && <p className="break-all text-xs text-muted-foreground">{node.id}</p>}
+      {node.id && <p className="flex items-start gap-space-xs break-all text-xs text-muted-foreground"><TreeView aria-hidden className="size-4 shrink-0" /><span className="min-w-0">{node.id}</span></p>}
       {dir && <p className="text-sm text-muted-foreground">{plural(count, 'item')}</p>}
       {props.length > 0 && <PropertyBadges props={props} path={node.id} files={files} />}
       <Button className="w-full" onClick={onOpen}>Open</Button>

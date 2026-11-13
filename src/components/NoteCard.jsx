@@ -6,6 +6,7 @@ import { fileName } from '@/lib/files.js'
 import { frontMatter, noteTitle, DESCRIPTION } from '@/lib/frontmatter.js'
 import { taskProgress } from '@/lib/markdown.js'
 import LockMark from './LockMark.jsx'
+import { TreeView } from '@phosphor-icons/react'
 import FileIcon from './FileIcon.jsx'
 import { PLACEHOLDER } from './ui/placeholder.jsx'
 
@@ -28,7 +29,7 @@ export const cardClick = (path, files, onOpen, onOpenFolder) => e => {
 // What a card of a board, a planner or the Pinned widget shows: its icon (FileIcon: its emoji, changed in its ⋯, else a
 // note's icon, or a folder's with `dir`: a pinned folder),
 // the note's title, `detail` (a muted line under it, where a description sits and like one: how much a pinned folder holds), its description, the chosen `properties`'
-// values, then `location` (a last line, lighter still: where a pinned note or folder is) (`overdue`: a planner's late card, its title faded and its date red; `locked`: a small lock before its title) and its
+// values, then `location` (a last line, lighter still, after a folder-tree icon: where a pinned note or folder is) (`overdue`: a planner's late card, its title faded and its date red; `locked`: a small lock before its title) and its
 // checklist progress (`progress`; not on a Pinned widget's card). A div, not a button: the badges in it are buttons
 const NoteCard = forwardRef(function NoteCard({ path, text, dir, properties = [], detail, location, progress = true, always = [], scopeName, files, menu, onChange, options, onRemoveValue, valueCount, chosen, onEditValue, dateKeys, badges, overdue, locked, className, ...props }, ref) {
   const fm = text === undefined ? [] : frontMatter(text)?.props ?? []
@@ -57,7 +58,7 @@ const NoteCard = forwardRef(function NoteCard({ path, text, dir, properties = []
       </div>
       {detail && <p className="break-words pt-space-xs text-sm text-muted-foreground">{detail}</p>}
       <PropertyBadges props={shown} path={path} files={files} clamp className="pt-space-xs" onChange={onChange} options={options} onRemoveValue={onRemoveValue} valueCount={valueCount} scopeName={scopeName} chosen={chosen} onEditValue={onEditValue} dateKeys={dateKeys} badges={badges} overdue={overdue} />
-      {location && <p className={cn('break-words text-sm', PLACEHOLDER)}>{location}</p>}
+      {location && <p className={cn('flex items-start gap-space-xs break-words text-sm', PLACEHOLDER)}><TreeView aria-hidden className="size-4 shrink-0 translate-y-0.5" /><span className="min-w-0">{location}</span></p>}
       {progress && text !== undefined && <TaskProgress {...taskProgress(text)} />}
     </div>
   )
