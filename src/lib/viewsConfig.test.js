@@ -67,4 +67,9 @@ describe('viewsConfig', () => {
     expect(parseViews(serializeViews(named))).toEqual(named)
     expect(renameWidget(named, 'a', 'w', ' ')[0].widgets[0]).toEqual({ id: 'w', type: 'planner' })
   })
+
+  it('keeps a view\'s icon when its last widget goes', () => {
+    const views = [{ id: 'a', name: 'A', icon: '🌱', widgets: [{ id: 'w', type: 'board' }] }]
+    expect(removeWidget(views, 'a', 'w')).toEqual([{ id: 'a', name: 'A', icon: '🌱' }])
+  })
 })

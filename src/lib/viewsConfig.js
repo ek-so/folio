@@ -87,7 +87,8 @@ export function addWidget(views, viewId, type) {
 export const removeWidget = (views, viewId, widgetId) => views.map(v => {
   if (v.id !== viewId) return v
   const widgets = (v.widgets ?? []).filter(w => w.id !== widgetId)
-  return widgets.length ? { ...v, widgets } : { id: v.id, name: v.name }
+  if (widgets.length) return { ...v, widgets }
+  return Object.fromEntries(Object.entries(v).filter(([key]) => key !== 'widgets')) // the last one gone: no empty list, the rest (its icon too) kept
 })
 
 // `views` with view `viewId`'s widget `widgetId` named `name` (empty: its kind's name again)
