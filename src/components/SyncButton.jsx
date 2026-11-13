@@ -18,7 +18,8 @@ function MenuBadge({ children }) {
   )
 }
 
-// Sync in the navigation: one button that opens the sync menu: Sync all (its
+// Sync in the navigation, a backup to the sync Folio does by itself (useAutoSync), and its state: "Synced" when there's
+// nothing to push or pull, "Sync" with what's waiting, "Syncing…" while a step runs. One button that opens the sync menu: Sync now (its
 // badge the total to push and pull, "7+" or New when GitHub can't count), a
 // separator, Push (change count), Pull (files changed on GitHub, or New) and
 // Discard. In the rail (`bar` false) it's a plain item like Search: the icon
@@ -28,10 +29,11 @@ function MenuBadge({ children }) {
 // top bar): an icon button filled like its neighbours, with the dot. Failed and
 // Offline flash in place of the icon and label.
 export default function SyncButton({ className, compact, bar, syncState, syncing, changeCount, incoming, onSync, onPull, onDiscard }) {
-  const { label, Icon } = LOOK[syncState] || LOOK.idle
+  const { Icon } = LOOK[syncState] || LOOK.idle
   const failed = syncState === 'error'
   const hasPush = changeCount > 0
   const hasPull = incoming !== null
+  const label = syncing ? 'Syncing…' : syncState !== 'idle' ? LOOK[syncState].label : hasPush || hasPull ? 'Sync' : 'Synced'
   const directions = [hasPush && 'Changes to push', hasPull && 'Changes to pull'].filter(Boolean).join(', ')
   // Files to pull: a number, or null when GitHub can't compare (New); it lists at most 300
   const pullCount = hasPull && incoming.files ? incoming.files : null
@@ -75,7 +77,7 @@ export default function SyncButton({ className, compact, bar, syncState, syncing
       </DropdownMenuTrigger>
       <DropdownMenuContent align={bar ? 'end' : 'start'} onCloseAutoFocus={e => e.preventDefault()}>
         <DropdownMenuItem disabled={syncing} onSelect={onSync}>
-          <ArrowsClockwise /> Sync all
+          <ArrowsClockwise /> Sync now
           {(hasPush || hasPull) && <MenuBadge>{totalLabel}</MenuBadge>}
         </DropdownMenuItem>
         <DropdownMenuSeparator />

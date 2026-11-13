@@ -54,6 +54,7 @@ import { Toaster } from './components/ui/sonner.jsx'
 import { TooltipProvider } from './components/ui/tooltip.jsx'
 import { SingleOpenProvider } from './hooks/useSingleOpen.jsx'
 import { useSearchShortcut } from './hooks/useSearchShortcut.js'
+import { useAutoSync } from './hooks/useAutoSync.js'
 import { cache } from './lib/cache.js'
 import { archiveDay, inArchive, staleArchiveDays, KEEP_DAYS } from './lib/archive.js'
 import { fileItem } from './lib/folderNotes.js'
@@ -608,16 +609,12 @@ export default function App() {
     else repo.sync()
   }
 
-  // Folio syncs by itself once when it opens (and, if it opened offline, when it's back online), without a toast when it
-  // works; what goes wrong shows as it does for Sync (the error sheet), and broken links stop it with a message
-  // (the check Sync offers first) instead of a sheet opening on its own. Nothing to say offline: the Sync button does.
-  const autoSynced = useRef(null)
-  useEffect(() => {
-    if (!repo.remote || !repo.online || autoSynced.current === auth.repo) return
-    autoSynced.current = auth.repo
-    if (!links.index.broken.length) return void repo.sync(true).then(ran => { if (!ran) autoSynced.current = null }) // busy: tried again when that step ends
-    toast.error(`Not synced: ${plural(links.index.broken.length, 'broken link')}.`, { action: { label: 'Review', onClick: () => setSyncCheck(true) } })
-  }, [repo.remote, repo.online, repo.syncing, auth.repo])
+  // Folio syncs by itself (useAutoSync: on opening, pulling every minute, pushing 30s after the last change), without
+  // toasts when it works; what goes wrong shows as it does for Sync (the error sheet), and broken links stop pushing
+  // with a message (the check Sync offers first) instead of a sheet opening on its own. Nothing to say offline: the Sync
+  // button does.
+  useAutoSync(repo, auth.repo, links.index.broken.length, () =>
+    toast.error(`Not synced: ${plural(links.index.broken.length, 'broken link')}.`, { action: { label: 'Review', onClick: () => setSyncCheck(true) } }))
 
   // Everything fixed from the sheet: carry on with the sync
   useEffect(() => {
@@ -693,7 +690,7 @@ export default function App() {
       changeCount={repo.changeCount}
       incoming={repo.incoming}
       onSync={requestSync}
-      onPull={repo.pullChanges}
+      onPull={() => repo.pullChanges()}
       onDiscard={() => setConfirmDiscard(true)}
     />
   )

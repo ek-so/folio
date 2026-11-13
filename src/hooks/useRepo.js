@@ -125,17 +125,6 @@ export function useRepo(repo, onDone) {
     }
   }, [repo])
 
-  useEffect(() => {
-    if (!repo) return
-    const id = setInterval(checkRemote, 3 * 60 * 1000)
-    const onVisible = () => { if (document.visibilityState === 'visible') checkRemote() }
-    document.addEventListener('visibilitychange', onVisible)
-    return () => {
-      clearInterval(id)
-      document.removeEventListener('visibilitychange', onVisible)
-    }
-  }, [repo])
-
   useEffect(() => () => clearTimeout(flashTimer.current), [])
 
   const virtual = useMemo(() => remote ? virtualFiles(remote.files, changes) : {}, [remote, changes])
@@ -186,18 +175,21 @@ export function useRepo(repo, onDone) {
     return latest
   }
 
-  // Whether GitHub has commits this device hasn't pulled; downloads nothing
+  // Whether GitHub has commits this device hasn't pulled (resolves to true then); downloads nothing. A conditional request:
+  // when nothing changed GitHub answers "not modified", which doesn't count against its hourly limit
   async function checkRemote() {
-    if (!navigator.onLine || !knownCommitSha.current) return
+    if (!navigator.onLine || !knownCommitSha.current) return false
     try {
       const sha = await getLatestCommitSha()
       setOnline(true)
       const known = knownCommitSha.current
-      if (sha === known) return setIncoming(null)
+      if (sha === known) { setIncoming(null); return false }
       const files = await changedFileCount(known, sha)
       if (knownCommitSha.current === known) setIncoming({ files }) // not pulled meanwhile
+      return true
     } catch (e) {
       if (isNetworkError(e)) setOnline(false)
+      return false
     }
   }
 
@@ -277,7 +269,8 @@ export function useRepo(repo, onDone) {
 
   // Runs a sync step, after the typing in an open note is saved; one at a time (one asked for meanwhile is ignored): success reports through onDone, failure flashes on the Sync
   // button; `quiet` reports nothing on success (the automatic sync). A task returning false ends without a toast. Offline isn't an error (the button says Offline); anything
-  // else opens the error sheet, whose Try again repeats `retry`. Resolves to whether it ran (false: another step was running).
+  // else opens the error sheet, whose Try again repeats `retry`. Resolves to how it went: true (done), 'failed' (not offline: the sheet is open)
+  // or false (another step was running).
   async function run(task, retry, doneMessage = 'Synced', quiet = false) {
     if (busy.current) return false
     busy.current = true
@@ -293,6 +286,9 @@ export function useRepo(repo, onDone) {
       } else {
         flash('error')
         setSyncError({ ...describeSyncError(e), retry })
+        busy.current = false
+        setSyncing(false)
+        return 'failed'
       }
     }
     busy.current = false
@@ -310,9 +306,9 @@ export function useRepo(repo, onDone) {
     }, () => sync(), 'Synced', quiet)
   }
 
-  // Pull only, from the Sync menu; local changes stay
-  function pullChanges() {
-    return run(fetchLatest, pullChanges, 'Pulled')
+  // Pull only, from the Sync menu (`quiet`: by itself, no "Pulled" toast); local changes stay, merged
+  function pullChanges(quiet = false) {
+    return run(fetchLatest, () => pullChanges(), 'Pulled', quiet)
   }
 
   // Drop every local change, including typing not yet reported by an open note
@@ -328,6 +324,6 @@ export function useRepo(repo, onDone) {
 
   return {
     remote, error, online, virtual, changes, changed, changeCount: count(changes),
-    syncing, syncState, incoming, syncError, dismissSyncError: () => setSyncError(null), update, sync, pullChanges, discardAll,
+    syncing, syncState, incoming, syncError, dismissSyncError: () => setSyncError(null), update, sync, pullChanges, checkRemote, discardAll,
   }
 }
