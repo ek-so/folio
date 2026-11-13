@@ -8,7 +8,7 @@ import { SYMLINK_MODE } from './links.js'
 // A file as the app's file actions take it ({ name, path, type })
 export const fileItem = path => ({ path, name: path.slice(path.lastIndexOf('/') + 1), type: 'file' })
 
-// A card's title: its note's (`text`; undefined when it isn't on this device: the file's name). Kept as written: a card shows its note's icon before it (NoteCard's CardEmoji)
+// A card's title: its note's (`text`; undefined when it isn't on this device: the file's name). Kept as written: a card shows its note's icon before it (NoteCard's FileIcon)
 export const cardTitle = (path, text) => text === undefined ? fileName(path) : noteTitle(text, fileName(path))
 
 // Technical files and folders (".assets", "_attachments", ".gitkeep"…): a name starting with "." or "_"

@@ -6,7 +6,7 @@ import { fileName } from '@/lib/files.js'
 import { frontMatter, noteTitle, DESCRIPTION } from '@/lib/frontmatter.js'
 import { taskProgress } from '@/lib/markdown.js'
 import LockMark from './LockMark.jsx'
-import { useIconsContext } from '../hooks/useIcons.js'
+import FileIcon from './FileIcon.jsx'
 
 // A long press on iPhones mustn't open the text or link callout instead of the drag
 export const NO_CALLOUT = '[-webkit-touch-callout:none]'
@@ -24,17 +24,12 @@ export const cardClick = (path, files, onOpen, onOpenFolder) => e => {
   openLink(link.getAttribute('href'), { path, files, onOpenFile: onOpen, onNavigate: onOpenFolder })
 }
 
-// A card's emoji (its note's icon, lib/icons.js) before its title, nothing when it has none; changed in the card's ⋯ (CardMenu)
-export function CardEmoji({ path, className }) {
-  const emoji = useIconsContext().iconOf(path)
-  return emoji ? <span aria-hidden className={cn('shrink-0 leading-5', className)}>{emoji}</span> : null
-}
-
-// What a card of a board, a planner or the Pinned widget shows: its emoji (CardEmoji; `icon` in its place: a pinned folder's),
+// What a card of a board, a planner or the Pinned widget shows: its icon (FileIcon: its emoji, changed in its ⋯, else a
+// note's icon, or a folder's with `dir`: a pinned folder),
 // the note's title, `detail` (a muted line under it, where a description sits and like one: how much a pinned folder holds), its description, the chosen `properties`'
 // values (`overdue`: a planner's late card, its title faded and its date red; `locked`: a small lock before its title) and its
 // checklist progress (`progress`; not on a Pinned widget's card). A div, not a button: the badges in it are buttons
-const NoteCard = forwardRef(function NoteCard({ path, text, properties = [], icon, detail, progress = true, always = [], scopeName, files, menu, onChange, options, onRemoveValue, valueCount, chosen, onEditValue, dateKeys, badges, overdue, locked, className, ...props }, ref) {
+const NoteCard = forwardRef(function NoteCard({ path, text, dir, properties = [], detail, progress = true, always = [], scopeName, files, menu, onChange, options, onRemoveValue, valueCount, chosen, onEditValue, dateKeys, badges, overdue, locked, className, ...props }, ref) {
   const fm = text === undefined ? [] : frontMatter(text)?.props ?? []
   // With `always` (a planner's date and repeat): the description first, then those in that order (shown empty when the
   // note lacks one), then the rest in the file's order; without, all in the file's order
@@ -52,7 +47,7 @@ const NoteCard = forwardRef(function NoteCard({ path, text, properties = [], ico
       {...props}
     >
       <div className="flex items-start gap-space-xs">
-        {icon ?? <CardEmoji path={path} className="text-sm" />}
+        <span className="flex h-5 shrink-0 items-center"><FileIcon path={path} dir={dir} /></span>
         <span className={cn('min-w-0 flex-1 break-words text-sm font-medium', overdue && 'opacity-50')}>
           {locked && <LockMark />}
           {text === undefined ? fileName(path) : noteTitle(text, fileName(path))}

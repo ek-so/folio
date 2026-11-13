@@ -162,7 +162,7 @@ function PinnedCard({ path, dir, found, services, files, canMove, onTakeOut, onR
     <NoteCard
       ref={setNodeRef}
       path={path} text={dir || !found ? undefined : services.notes[path]} files={files} menu={menu} detail={detail} progress={false}
-      icon={<span className="flex h-5 items-center"><FileIcon path={path} dir={dir} /></span>}
+      dir={dir}
       style={{ transform: CSS.Translate.toString(transform), transition }}
       className={cn(!found && 'border-dashed border-muted-foreground/50', isDragging && 'opacity-40')}
       onClick={open}
