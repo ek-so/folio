@@ -114,7 +114,7 @@ export default function Editor({ linkedBy, onOpenLink, path, entry, files, notes
           onDoubleTap={locked ? undefined : startEditing} onChange={changeUnlocked} onOpenFile={onOpenFile} onNavigate={onNavigate}
           footer={<Backlinks links={backlinks} onOpen={onOpenFile} />}
         >
-          <PropertyBadges props={ordered(frontMatter(content)?.props ?? [], valueScope?.order)} path={path} files={files} title="Properties" onChange={locked ? undefined : (key, value) => change(withValue(content, key, value))} options={values.options} onRemoveValue={locked ? undefined : values.removeValue} valueCount={values.count} scopeName={valueScope?.name ?? "this folder"} chosen={tagColors.colors} onEditValue={tagColors.canEdit && !locked ? values.editValue : undefined} badges={valueScope?.badges} className="px-space pt-space" />
+          <PropertyBadges props={ordered(frontMatter(content)?.props ?? [], valueScope?.order)} path={path} files={files} title="Properties" onChange={locked ? undefined : (key, value) => change(withValue(content, key, value))} options={values.options} onRemoveValue={locked ? undefined : values.removeValue} valueCount={values.count} scopeName={valueScope?.name ?? "this folder"} chosen={tagColors.colors} onEditValue={tagColors.canEdit && !locked ? values.editValue : undefined} badges={valueScope?.badges} hiddenValues={valueScope?.hidden} className="px-space pt-space" />
         </MarkdownPreview>
       )}
     </FilePage>

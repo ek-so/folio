@@ -55,12 +55,12 @@ export default {
   },
   // Where a note's property values come from on its page when it's a card of this board: the whole board
   // ({ name, includes(path) }), so a value used in one column is offered in every other; the property it's grouped by
-  // comes back when the note is saved without it (`required`); else null
+  // comes back when the note is saved without it (`required`), and its hidden columns (`hidden`: property → values, offered too, marked); else null
   valueScope(id, path, services) {
     const file = services.config.read(boardPath(id))
     const board = file.ready && file.text !== undefined ? parseBoard(file.text) : null
     const inBoard = p => isCard(board, p)
-    return board && inBoard(path) ? { name: 'this board', includes: inBoard, required: [board.group] } : null
+    return board && inBoard(path) ? { name: 'this board', includes: inBoard, required: [board.group], hidden: { [board.group]: board.hidden } } : null
   },
   removed: (ch, id, { config }) => config.erase(boardPath(id))(ch),
 }

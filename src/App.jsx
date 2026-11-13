@@ -377,6 +377,7 @@ export default function App() {
     locked: [...new Set(scopes.flatMap(s => s.locked ?? []))],
     order: scopes.find(s => s.order)?.order ?? [],
     badges: Object.assign({}, ...scopes.map(s => s.badges)),
+    hidden: Object.assign({}, ...scopes.map(s => s.hidden)),
   } : undefined
   const fileMoves = selectedFile && views.find(v => v.id === page)?.widgets
     ?.map(w => widgetType(w.type)?.fileMoves?.(w.id, selectedFile, widgetServices)).find(Boolean)

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { CaretDown, Check, PencilSimple } from '@phosphor-icons/react'
+import { CaretDown, Check, PencilSimple, EyeSlash } from '@phosphor-icons/react'
 import { cn, own } from '@/lib/utils'
 import { PLACEHOLDER } from './ui/placeholder.jsx'
 import { Badge } from './ui/badge.jsx'
@@ -42,7 +42,7 @@ const toneOf = color => color === undefined ? undefined : `var(--tag-${color})`
 // `overdue`: their dates are past (a planner's late card): red.
 // `badges` ({ key: Component }): properties a widget shows its own way (a planner's type: widgets/planner/RecurrenceField.jsx),
 // one badge for the property, given `prop`, all `props` and `onChange`.
-export default function PropertyBadges({ props, path, files, clamp, title, className, onChange, options, onRemoveValue, valueCount, scopeName, onEditValue, chosen, dateKeys, badges, overdue }) {
+export default function PropertyBadges({ props, path, files, clamp, title, className, onChange, options, onRemoveValue, valueCount, scopeName, onEditValue, chosen, dateKeys, badges, overdue, hiddenValues }) {
   const [removing, setRemoving] = useState(null) // { key, value } being confirmed
   const [managing, setManaging] = useState(null) // the key whose values are in the dialog
   const parts = [] // [{ text }] or [{ badges: [{ id, prop, label }] }], in order
@@ -67,7 +67,7 @@ export default function PropertyBadges({ props, path, files, clamp, title, class
           : isDateProp(prop, options, dateKeys)
           ? <DateValue key={id} prop={prop} onChange={onChange} emptyLabel={dateKeys?.includes(prop.key) ? 'No date' : prop.key} late={overdue && dateKeys?.includes(prop.key)} />
           : onChange
-          ? <EditableBadge key={id} prop={prop} label={label} color={colors[prop.key].get(label)} options={options} onChange={onChange} onManage={(onEditValue || onRemoveValue) && (() => setManaging(prop.key))} />
+          ? <EditableBadge key={id} prop={prop} label={label} color={colors[prop.key].get(label)} options={options} hidden={hiddenValues?.[prop.key]} onChange={onChange} onManage={(onEditValue || onRemoveValue) && (() => setManaging(prop.key))} />
           : (
             <Badge key={id} tone={toneOf(colors[prop.key].get(label))}><span className="truncate">{label}</span></Badge>
           ))}
@@ -149,7 +149,7 @@ function DateValue({ prop, onChange, emptyLabel, late }) {
 
 // One value of a property as a badge with a ▾ that opens the property's popover
 // (`label` null: the property is empty and shows its name)
-function EditableBadge({ prop, label, color, options, onChange, onManage }) {
+function EditableBadge({ prop, label, color, options, hidden, onChange, onManage }) {
   const [open, setOpen] = useSingleOpen()
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -168,7 +168,7 @@ function EditableBadge({ prop, label, color, options, onChange, onManage }) {
       </PopoverTrigger>
       {/* Opening it doesn't focus the field (the keyboard on a phone): the panel takes the focus, a tap or Tab reaches the field */}
       <PopoverContent {...own} data-badge-popover tabIndex={-1} onOpenAutoFocus={e => { e.preventDefault(); e.currentTarget.focus() }} onCloseAutoFocus={keepFocusInOtherPopover}>
-        <ValueChooser prop={prop} options={options?.(prop.key) ?? []} onChange={onChange} onManage={onManage && (() => { setOpen(false); onManage() })} close={() => setOpen(false)} />
+        <ValueChooser prop={prop} options={options?.(prop.key) ?? []} hidden={hidden} onChange={onChange} onManage={onManage && (() => { setOpen(false); onManage() })} close={() => setOpen(false)} />
       </PopoverContent>
     </Popover>
   )
@@ -180,11 +180,11 @@ function EditableBadge({ prop, label, color, options, onChange, onManage }) {
 // again empties it) and closes. The field shows from 10 values (or with none, or without Edit values, which
 // adds too); under that the list is short enough to scan.
 const FIND_FROM = 10
-function ValueChooser({ prop, options, onChange, onManage, close }) {
+function ValueChooser({ prop, options, hidden = [], onChange, onManage, close }) {
   const [typed, setTyped] = useState('')
   const isList = Array.isArray(prop.value)
   const current = valueList(prop.value)
-  const all = [...new Set([...options, ...current])]
+  const all = [...new Set([...options, ...current, ...hidden])]
   const query = typed.trim()
   const shown = all.filter(v => v.toLowerCase().includes(query.toLowerCase()))
   const showField = all.length >= FIND_FROM || !all.length || !onManage
@@ -216,6 +216,7 @@ function ValueChooser({ prop, options, onChange, onManage, close }) {
         {shown.map(v => (
           <ListRow
             key={v} title={v} icon={current.includes(v) ? <Check /> : <span className="size-4" />} onClick={() => choose(v)}
+            trailing={hidden.includes(v) && <EyeSlash className="text-muted-foreground" />}
           />
         ))}
         {!isNew && !shown.length && <p className="px-3 py-space-sm text-sm text-muted-foreground">No values yet. Type one to add it.</p>}
