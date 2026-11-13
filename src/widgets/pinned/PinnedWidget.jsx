@@ -25,8 +25,9 @@ import { EmptyMessage } from '@/components/EmptyState.jsx'
 
 // The Pinned widget (pinned.js): "Pinned" and its ⋯ (Pin note or folder…, Edit pinned…: order them and take them out,
 // Remove widget) on top, then a card for each pinned note or folder, in a grid like a planner day's (as many columns as
-// fit, each at least 16rem; the cards of a row one height). A note's card is a board's (NoteCard: its emoji, title and description);
-// a folder's has its icon (or emoji), name and how many items it holds. A tap opens the note or folder; a card is dragged
+// fit, each at least 16rem; the cards of a row one height). Every card shows its icon (FileIcon: its emoji, else a note's or folder's
+// icon); a note's is a board's card (NoteCard: title and description), a folder's has its name and how many items it holds
+// where a description sits. A tap opens the note or folder; a card is dragged
 // into another's place (when the widget can be saved). Its ⋯: Rename, Emoji, Copy link, Remove from widget (confirmed; the
 // note or folder stays). One that's gone is dashed: a tap picks another in its place.
 export default function PinnedWidget({ id, services, onRemove }) {
@@ -161,7 +162,7 @@ function PinnedCard({ path, dir, found, services, files, canMove, onTakeOut, onR
     <NoteCard
       ref={setNodeRef}
       path={path} text={dir || !found ? undefined : services.notes[path]} files={files} menu={menu} detail={detail} progress={false}
-      icon={dir ? <span className="flex h-5 items-center"><FileIcon path={path} dir /></span> : undefined}
+      icon={<span className="flex h-5 items-center"><FileIcon path={path} dir={dir} /></span>}
       style={{ transform: CSS.Translate.toString(transform), transition }}
       className={cn(!found && 'border-dashed border-muted-foreground/50', isDragging && 'opacity-40')}
       onClick={open}

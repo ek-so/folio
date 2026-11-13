@@ -31,7 +31,7 @@ export function CardEmoji({ path, className }) {
 }
 
 // What a card of a board, a planner or the Pinned widget shows: its emoji (CardEmoji; `icon` in its place: a pinned folder's),
-// the note's title, `detail` (a muted line under it: how much a pinned folder holds), its description, the chosen `properties`'
+// the note's title, `detail` (a muted line under it, where a description sits and like one: how much a pinned folder holds), its description, the chosen `properties`'
 // values (`overdue`: a planner's late card, its title faded and its date red; `locked`: a small lock before its title) and its
 // checklist progress (`progress`; not on a Pinned widget's card). A div, not a button: the badges in it are buttons
 const NoteCard = forwardRef(function NoteCard({ path, text, properties = [], icon, detail, progress = true, always = [], scopeName, files, menu, onChange, options, onRemoveValue, valueCount, chosen, onEditValue, dateKeys, badges, overdue, locked, className, ...props }, ref) {
@@ -56,10 +56,10 @@ const NoteCard = forwardRef(function NoteCard({ path, text, properties = [], ico
         <span className={cn('min-w-0 flex-1 break-words text-sm font-medium', overdue && 'opacity-50')}>
           {locked && <LockMark />}
           {text === undefined ? fileName(path) : noteTitle(text, fileName(path))}
-          {detail && <span className="block text-xs font-normal text-muted-foreground">{detail}</span>}
         </span>
         {menu}
       </div>
+      {detail && <p className="break-words pt-space-xs text-sm text-muted-foreground">{detail}</p>}
       <PropertyBadges props={shown} path={path} files={files} clamp className="pt-space-xs" onChange={onChange} options={options} onRemoveValue={onRemoveValue} valueCount={valueCount} scopeName={scopeName} chosen={chosen} onEditValue={onEditValue} dateKeys={dateKeys} badges={badges} overdue={overdue} />
       {progress && text !== undefined && <TaskProgress {...taskProgress(text)} />}
     </div>
