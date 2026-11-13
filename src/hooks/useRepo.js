@@ -11,7 +11,7 @@ import { resolveConflicts } from '../lib/merge.js'
 import { displayName } from '../lib/files.js'
 
 const PREFETCH_WORKERS = 4
-const PULL_WAIT_MS = 3000 // how long opening a stored repo waits for GitHub's latest before showing the stored copy
+const PULL_WAIT_MS = 15000 // how long Folio shows loading instead of a stored copy while GitHub's latest comes (opening, coming back to the screen)
 const UNSAVED = 'unsaved-changes' // the toast shown while local changes can't be stored
 
 // Download every note not yet on this device, so all of them open offline.
@@ -71,6 +71,7 @@ export function useRepo(repo, onDone) {
   // count, null when unknown), or null when up to date
   const [incoming, setIncoming] = useState(null)
   const [syncError, setSyncError] = useState(null) // { ...describeSyncError(), retry } after a failed action
+  const [catchingUp, setCatchingUp] = useState(false) // pulling what's new on coming back: the content waits (loading), never older than GitHub
   const knownCommitSha = useRef(null)
   const busy = useRef(false) // a sync step is running: another waits for none, it's ignored (a double tap)
   const flashTimer = useRef()
@@ -328,9 +329,23 @@ export function useRepo(repo, onDone) {
     }, () => sync(), 'Synced', quiet)
   }
 
-  // Pull only, from the Sync menu (`quiet`: by itself, no "Pulled" toast); local changes stay, merged
-  function pullChanges(quiet = false) {
-    return run(fetchLatest, () => pullChanges(), 'Pulled', quiet)
+  // Pull only, from the Sync menu (`quiet`: by itself, no "Pulled" toast); local changes stay, merged. `hide`: the
+  // content shows loading meanwhile (`catchingUp`, typing saved first by run), for up to PULL_WAIT_MS
+  function pullChanges(quiet = false, hide = false) {
+    return run(hide ? hidden(fetchLatest) : fetchLatest, () => pullChanges(), 'Pulled', quiet)
+  }
+
+  function hidden(task) {
+    return async () => {
+      setCatchingUp(true)
+      const timer = setTimeout(() => setCatchingUp(false), PULL_WAIT_MS)
+      try {
+        return await task()
+      } finally {
+        clearTimeout(timer)
+        setCatchingUp(false)
+      }
+    }
   }
 
   // Drop every local change, including typing not yet reported by an open note
@@ -346,6 +361,6 @@ export function useRepo(repo, onDone) {
 
   return {
     remote, error, online, virtual, changes, changed, changeCount: count(changes),
-    syncing, syncState, incoming, syncError, dismissSyncError: () => setSyncError(null), update, sync, pullChanges, checkRemote, discardAll,
+    syncing, catchingUp, syncState, incoming, syncError, dismissSyncError: () => setSyncError(null), update, sync, pullChanges, checkRemote, discardAll,
   }
 }

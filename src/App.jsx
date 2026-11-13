@@ -711,6 +711,11 @@ export default function App() {
             <Settings login={auth.user.login} repo={auth.repo} theme={theme} onTheme={setTheme} emojiNames={icons.canEdit ? { count: emojiNames.length, onMove: moveEmojisToIcons } : null} />
           ) : page === PAGE.DOCS ? (
             <Documentation />
+          ) : repo.catchingUp ? (
+            // Back on screen with new commits on GitHub: loading while they're pulled, not what was there before
+            <div className="flex justify-center py-12">
+              <Spinner />
+            </div>
           ) : page === PAGE.ASSETS ? (
             <Assets files={shown} added={assets.added} backlinks={links.index.backlinks} onOpen={path => setSelectedFile(path, PAGE.FILES)} onReveal={path => openFolder(path.slice(0, Math.max(path.lastIndexOf('/'), 0)), PAGE.FILES)} itemActions={{ onRename: handleRename, onDuplicate: handleDuplicate, onDelete: handleDelete, onMove: handleMove, folders: allFolders }} />
           ) : !view && page === PAGE.GRAPH ? (

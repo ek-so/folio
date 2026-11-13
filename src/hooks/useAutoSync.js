@@ -9,7 +9,8 @@ const PAUSE_AFTER_FAILURE_MS = 5 * 60 * 1000
 // Sync by itself, so the Sync button is only a backup (`repo`: useRepo's). While the app is on screen and online:
 //   - when it opens (and once back online), a full Sync;
 //   - every PULL_EVERY_MS, and when it comes back to the screen or online, a check for new commits on GitHub (one cheap
-//     request), pulled and merged when there are some;
+//     request), pulled and merged when there are some; coming back to the screen, the content shows loading while
+//     they're pulled, so what was there before never shows as current;
 //   - PUSH_AFTER_MS after the last local change, a Sync (pull, merge, push); at once when the app goes off screen.
 // Nothing runs while another step does or the app is hidden. All of it is quiet (no toasts when it works; a failure opens
 // the error sheet as Sync's does, then it pauses for PAUSE_AFTER_FAILURE_MS). `blocked` (a count, e.g. broken links)
@@ -36,9 +37,9 @@ export function useAutoSync(repo, repoName, blocked, onBlocked) {
     warned.current = 0
     repo.sync(true).then(after)
   }
-  const pull = async () => {
+  const pull = async (hide = false) => {
     if (!ready() || document.visibilityState !== 'visible') return
-    if (await latest.current.repo.checkRemote() && ready()) after(await latest.current.repo.pullChanges(true))
+    if (await latest.current.repo.checkRemote() && ready()) after(await latest.current.repo.pullChanges(true, hide))
   }
 
   // Opening (or back online after opening offline): one full Sync, or a pull when pushing is blocked
@@ -52,14 +53,15 @@ export function useAutoSync(repo, repoName, blocked, onBlocked) {
   // Pulling: on a timer, and when the app comes back to the screen or online
   useEffect(() => {
     const id = setInterval(pull, PULL_EVERY_MS)
-    const onVisible = () => { if (document.visibilityState === 'visible') pull(); else push() } // going off screen: push now
+    const onVisible = () => { if (document.visibilityState === 'visible') pull(true); else push() } // going off screen: push now
+    const onOnline = () => pull()
     document.addEventListener('visibilitychange', onVisible)
-    window.addEventListener('online', pull)
+    window.addEventListener('online', onOnline)
     window.addEventListener('pagehide', push)
     return () => {
       clearInterval(id)
       document.removeEventListener('visibilitychange', onVisible)
-      window.removeEventListener('online', pull)
+      window.removeEventListener('online', onOnline)
       window.removeEventListener('pagehide', push)
     }
   }, [])
