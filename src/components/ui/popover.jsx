@@ -12,6 +12,8 @@ function Popover({ open, defaultOpen, onOpenChange, ...props }) {
   return <PopoverPrimitive.Root open={isOpen} onOpenChange={setOpen} {...props} />
 }
 const PopoverTrigger = PopoverPrimitive.Trigger
+// What it opens beside when no trigger is (a dot tapped on the Graph's canvas)
+const PopoverAnchor = PopoverPrimitive.Anchor
 
 const PopoverContent = React.forwardRef(function PopoverContent({ className, align = 'start', sideOffset = 6, collisionPadding = 8, ...props }, ref) {
   const keepOnScreen = useKeepOnScreen(ref) // too wide for its side (a phone): overlays what opened it
@@ -33,4 +35,4 @@ const PopoverContent = React.forwardRef(function PopoverContent({ className, ali
   )
 })
 
-export { Popover, PopoverTrigger, PopoverContent }
+export { Popover, PopoverTrigger, PopoverAnchor, PopoverContent }

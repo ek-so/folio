@@ -65,9 +65,3 @@ export function movedPinned(settings, from, to, isDir) {
 
 // Whether a repo path is a note that can be pinned: a markdown file, not one of the app's settings
 export const isNote = path => path.toLowerCase().endsWith('.md') && !path.startsWith('.folio/')
-
-// How many files and folders are right inside `folder` ('' the root), of `files` and `folders` (paths)
-export function itemsIn(folder, files, folders) {
-  const inside = path => (folder ? path.startsWith(folder + '/') : true) && !path.slice(folder ? folder.length + 1 : 0).includes('/')
-  return files.filter(inside).length + folders.filter(f => f !== folder && inside(f)).length
-}

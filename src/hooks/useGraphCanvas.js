@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 import { forceSimulation, forceLink, forceManyBody, forceCenter, forceCollide } from 'd3-force'
 
 // The Graph page's canvas (lib/graph.js data): a force layout (d3-force) drawn on `canvasRef`, which fills its box.
-// Drag a dot to move it, drag the background to pan, scroll or pinch to zoom; a tap on a dot calls `onOpen(node)`.
+// Drag a dot to move it, drag the background to pan, scroll or pinch to zoom; a tap on a dot calls `onSelect(node, { x, y })`, where it was tapped in the canvas (px).
 // Hovering a dot (a mouse) brings out it, its lines and their dots. Positions are kept by id when the data changes.
 // Colors are the theme's tokens, read at each frame so a theme change shows at once. Until the view is panned, zoomed or
 // a dot dragged, it follows the layout as it settles, the whole graph fitted in the canvas (at most at 1.5×).
@@ -12,10 +12,10 @@ const MIN_ZOOM = 0.15, MAX_ZOOM = 4
 const FIT_MAX = 1.5, FIT_PAD = 40 // the fitted view's largest zoom, and its margin in px
 const LABELS_FROM = 0.9 // zoom from which every dot shows its name (else only the hovered one and its neighbors)
 
-export function useGraphCanvas(canvasRef, data, onOpen) {
+export function useGraphCanvas(canvasRef, data, onSelect) {
   const state = useRef({ nodes: [], edges: [], view: { x: 0, y: 0, k: 1 }, hover: null, size: { w: 0, h: 0 }, touched: false })
-  const openRef = useRef(onOpen)
-  openRef.current = onOpen
+  const selectRef = useRef(onSelect)
+  selectRef.current = onSelect
   const simRef = useRef(null)
   const drawRef = useRef(() => {})
 
@@ -178,7 +178,7 @@ export function useGraphCanvas(canvasRef, data, onOpen) {
         node.fx = null
         node.fy = null
         simRef.current?.alphaTarget(0)
-        if (!moved && e.type === 'pointerup') openRef.current(node)
+        if (!moved && e.type === 'pointerup') { const p = point(e); selectRef.current(node, { x: p.px, y: p.py }) }
       }
       if (e.pointerType === 'mouse') canvas.style.cursor = s.hover ? 'pointer' : 'grab'
     }

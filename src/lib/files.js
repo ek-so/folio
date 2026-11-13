@@ -43,3 +43,9 @@ export function parseRepo(value) {
   const parts = value.trim().split('/')
   return parts.length === 2 && parts[0] && parts[1] ? parts : null
 }
+
+// How many files and folders are right inside `folder` ('' the root), of `files` and `folders` (paths)
+export function itemsIn(folder, files, folders) {
+  const inside = path => (folder ? path.startsWith(folder + '/') : true) && !path.slice(folder ? folder.length + 1 : 0).includes('/')
+  return files.filter(inside).length + folders.filter(f => f !== folder && inside(f)).length
+}
