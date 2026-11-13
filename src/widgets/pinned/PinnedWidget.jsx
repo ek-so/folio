@@ -156,6 +156,7 @@ function PinnedCard({ path, dir, found, services, files, canMove, onTakeOut, onR
       )}
     </div>
   )
+  const location = path.includes('/') ? path.slice(0, path.lastIndexOf('/')) : services.repoName // the folder it's in
   const detail = !found ? `This ${dir ? 'folder' : 'note'} is gone.${onReplace ? ' Tap to select another.' : ''}`
     : dir ? plural(itemsIn(path, services.files, services.folders), 'item') : undefined
   return (
@@ -163,6 +164,7 @@ function PinnedCard({ path, dir, found, services, files, canMove, onTakeOut, onR
       ref={setNodeRef}
       path={path} text={dir || !found ? undefined : services.notes[path]} files={files} menu={menu} detail={detail} progress={false}
       dir={dir}
+      location={location}
       style={{ transform: CSS.Translate.toString(transform), transition }}
       className={cn(!found && 'border-dashed border-muted-foreground/50', isDragging && 'opacity-40')}
       onClick={open}
