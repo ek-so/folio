@@ -1,6 +1,6 @@
 import { useMemo, useEffect, useLayoutEffect, useRef, useState, forwardRef, useImperativeHandle } from 'react'
 import { safeHtml } from '../lib/sanitize.js'
-import { renderBlocks, tapOffset, taskOffsets, resolveImage, linkSpans, listsIn, moveListItem, firstWord } from '../lib/markdown.js'
+import { renderBlocks, tapOffset, taskOffsets, resolveImage, linkSpans, splitImageAlt, imageSpans, withImageWidth, listsIn, moveListItem, firstWord } from '../lib/markdown.js'
 import { useRepoImages } from '../hooks/useRepoImages.js'
 import { linkSpots, openLink } from '../lib/previewLinks.js'
 import { cn, isPortaled } from '../lib/utils.js'
@@ -11,6 +11,7 @@ import { DateField } from './DateBadge.jsx'
 import { useDateEdits } from '../hooks/useDateEdits.js'
 import { useLinkEdits } from '../hooks/useLinkEdits.jsx'
 import ListGrip from './ListGrip.jsx'
+import ImageHandle from './ImageHandle.jsx'
 import { DndContext, closestCenter } from '@dnd-kit/core'
 import { useDragSensors } from '../hooks/useDragSensors.js'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
@@ -107,6 +108,7 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
   const [links, setLinks] = useState([]) // link spots for LinkBadge
   const [dates, setDates] = useState([]) // date spots for DateBadge
   const [grips, setGrips] = useState([]) // list item spots for ListGrip
+  const [handles, setHandles] = useState([]) // image spots for ImageHandle
   const sensors = useDragSensors()
 
   useImperativeHandle(handle, () => ({
@@ -147,6 +149,21 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
       summary.insertAdjacentHTML('afterbegin', '<span class="summary-caret" aria-hidden="true"></span>')
     }
     const lists = onChange ? listGrips(tpl.content, content) : []
+    // Images: the width in their alt text ("photo|300") is applied and taken out of the alt; with `onChange`, each in
+    // a frame with a spot for its resize handle, where the page's images line up with the markdown's (not in a link)
+    const imgs = [...tpl.content.querySelectorAll('img')]
+    const aligned = onChange && imgs.length === imageSpans(content).length
+    imgs.forEach((img, i) => {
+      const { alt, width } = splitImageAlt(img.getAttribute('alt') ?? '')
+      img.setAttribute('alt', alt)
+      if (width) img.style.width = `${width}px`
+      if (!aligned || img.closest('a')) return
+      const frame = document.createElement('span')
+      frame.className = 'image-frame'
+      img.replaceWith(frame)
+      frame.append(img)
+      frame.insertAdjacentHTML('beforeend', `<span class="image-handle" data-image="${i}"></span>`)
+    })
     return [tpl.innerHTML, repoImages(tpl.content, path).map(([, repoPath]) => repoPath), lists]
   }, [content, path, files, spans, Boolean(onChange)])
 
@@ -189,6 +206,7 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
     setLinks([...ref.current.querySelectorAll('.link-spot')])
     setDates([...ref.current.querySelectorAll('.date-spot')])
     setGrips([...ref.current.querySelectorAll('.list-grip')])
+    setHandles([...ref.current.querySelectorAll('.image-handle')])
   }, [withImages])
 
   // Always up-to-date handler without re-attaching the listener
@@ -246,7 +264,7 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
       }
       return
     }
-    if (e.target.closest('a, img, summary, .link-spot, .list-grip')) return // summary opens/closes its accordion
+    if (e.target.closest('a, img, summary, .link-spot, .list-grip, .image-handle')) return // summary opens/closes its accordion
     if (isDoubleTap(e)) onDoubleTap?.(offsetAt(e.clientX, e.clientY, e.target))
   }
 
@@ -298,6 +316,8 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
           </SortableContext>
         ))}
       </DndContext>
+      {handles.map(spot => createPortal(
+        <ImageHandle spot={spot} onResize={width => onChange(withImageWidth(content, imageSpans(content)[Number(spot.dataset.image)], width))} />, spot, `image-${spot.dataset.image}`))}
       {linkEdits.dialogs}
       {footer}
       {brokenTip && (

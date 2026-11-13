@@ -216,6 +216,45 @@ export function linkSpans(source) {
   return spans
 }
 
+// An image's width, as Obsidian writes it, after its alt text: ![alt|300](a.png), or |300x200 (the height is
+// ignored). Other viewers show it as part of the alt text, which only appears when the image can't load.
+// `alt`: the alt text as written; gives { alt, width } (`width` null when it has none)
+export function splitImageAlt(alt) {
+  const m = alt.match(/^(.*?)\s*\|\s*(\d+)(?:x\d+)?\s*$/)
+  return m && Number(m[2]) > 0 ? { alt: m[1], width: Number(m[2]) } : { alt, width: null }
+}
+
+// Every markdown image in `source`, in the order the preview shows them: [{ start, end, altStart, altEnd }]
+// (offsets into `source`; the alt text is between altStart and altEnd)
+export function imageSpans(source) {
+  const markdown = blankFrontMatter(source)
+  const tokens = marked.lexer(markdown)
+  const spans = []
+  let offset = 0
+  for (const token of tokens) {
+    const start = markdown.indexOf(token.raw, offset)
+    if (start === -1) continue
+    offset = start + token.raw.length
+    let at = start
+    marked.walkTokens([token], t => {
+      if (t.type !== 'image') return
+      const found = markdown.indexOf(t.raw, at)
+      if (found === -1 || found >= offset) return
+      at = found + t.raw.length
+      const altEnd = t.raw.indexOf('](')
+      if (altEnd < 2) return
+      spans.push({ start: found, end: at, altStart: found + 2, altEnd: found + altEnd })
+    })
+  }
+  return spans
+}
+
+// `text` with the image at `span` given `width` (px; null: no width, the image as it comes)
+export function withImageWidth(text, span, width) {
+  const { alt } = splitImageAlt(text.slice(span.altStart, span.altEnd))
+  return text.slice(0, span.altStart) + (width ? `${alt}|${width}` : alt) + text.slice(span.altEnd)
+}
+
 // The markdown for a link named `name` to `url`; a bare URL stays bare while it has no other name
 export function linkMarkdown(name, url, bare) {
   const u = url.trim()

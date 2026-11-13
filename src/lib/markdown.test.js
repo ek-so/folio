@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest'
 // Date badges leave out this year (dateLabel): the tests' dates are read as of another year, so they keep theirs
 beforeAll(() => { vi.useFakeTimers({ now: new Date(2030, 0, 1), toFake: ['Date'] }) })
 afterAll(() => { vi.useRealTimers() })
-import { renderBlocks, tapOffset, taskOffsets, taskProgress, linkSpans, linkMarkdown, replaceLink, repoLink, listsIn, moveListItem, continueList, highlightMarkdown, keyLines, renderInline } from './markdown.js'
+import { renderBlocks, tapOffset, taskOffsets, taskProgress, linkSpans, linkMarkdown, replaceLink, repoLink, listsIn, moveListItem, continueList, highlightMarkdown, keyLines, renderInline, splitImageAlt, imageSpans, withImageWidth } from './markdown.js'
 
 describe('markdown', () => {
   it('tags each block with its source range', () => {
@@ -162,5 +162,17 @@ describe('continueList', () => {
     expect(enter('plain')).toBeNull()
     expect(enter('- a', 1)).toBeNull() // cursor inside the marker
     expect(enter('-a')).toBeNull()
+  })
+
+  it('reads and writes an image\'s width in its alt text', () => {
+    expect(splitImageAlt('photo|300')).toEqual({ alt: 'photo', width: 300 })
+    expect(splitImageAlt('photo | 300x200')).toEqual({ alt: 'photo', width: 300 })
+    expect(splitImageAlt('a|b')).toEqual({ alt: 'a|b', width: null })
+    const md = 'Text\n\n![one](a.png) and ![two|120](b.png "t")\n\n```\n![no](c.png)\n```\n'
+    const spans = imageSpans(md)
+    expect(spans).toHaveLength(2)
+    expect(withImageWidth(md, spans[0], 200)).toContain('![one|200](a.png)')
+    expect(withImageWidth(md, spans[1], 300)).toContain('![two|300](b.png "t")')
+    expect(withImageWidth(md, spans[1], null)).toContain('![two](b.png "t")')
   })
 })

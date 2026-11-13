@@ -14,6 +14,8 @@
 .editor-preview :is(ul, ol) { --list-pad: 20px; }
 .editor-preview :is(ul, ol):has(> li > .list-grip) { padding-left: calc(var(--list-pad) + var(--grip-w)); }
 .editor-preview li:has(> .list-grip) { position: relative; }
+.editor-preview .image-frame { position: relative; display: inline-block; max-width: 100%; vertical-align: top; }
+.editor-preview .image-handle { position: absolute; top: 50%; right: 8px; translate: 0 -50%; }
 .editor-preview .list-grip { position: absolute; top: 0; right: calc(100% + var(--list-pad)); width: var(--grip-w); height: 1lh; }
 .editor-preview li.list-dragging { z-index: 1; background: var(--card); border-radius: 8px; box-shadow: var(--shadow-md); }
 .editor-preview ul:has(> .task-item) { padding-left: 0; --list-pad: 0px; }
