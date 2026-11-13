@@ -47,13 +47,15 @@ import { PAGE, mainPages } from './lib/pages.js'
 import { isConfigPath, addView, renameView, removeView, VIEWS_PATH, DEFAULT_VIEWS, parseViews, serializeViews, addWidget, removeWidget, moveWidget, renameWidget, moveView, setViewIcon } from './lib/viewsConfig.js'
 import { withKeys, withValue, copyTitled, withNoteTitle, noteTitle } from './lib/frontmatter.js'
 import { widgetType, widgetTitle } from './widgets/index.js'
-import { urlForPage, pageForUrl, existingView } from './lib/url.js'
+import { urlForPage, pageForUrl } from './lib/url.js'
 import { fileView, folderView, startTrails, currentView, openView, trailTo, movedTrails, keptTrails, upView, START } from './lib/views.js'
 import { toast } from 'sonner'
 import { Toaster } from './components/ui/sonner.jsx'
 import { TooltipProvider } from './components/ui/tooltip.jsx'
 import { SingleOpenProvider } from './hooks/useSingleOpen.jsx'
 import { useSearchShortcut } from './hooks/useSearchShortcut.js'
+import { useAddressBar } from './hooks/useAddressBar.js'
+import { useExpandedFolders } from './hooks/useExpandedFolders.js'
 import { useAutoSync } from './hooks/useAutoSync.js'
 import { cache } from './lib/cache.js'
 import { archiveDay, inArchive, staleArchiveDays, KEEP_DAYS } from './lib/archive.js'
@@ -142,54 +144,17 @@ export default function App() {
   const [uploadClash, setUploadClash] = useState(null) // { name, folder, resolve } while asking
   const [uploadErrors, setUploadErrors] = useState([]) // [name, reason] after adding files
   const mainRef = useRef(null) // the page's column: the phone top bar hides while it scrolls
-  const started = useRef(false) // false until the first URL is set (replaced, not pushed)
-  const replaceNext = useRef(false) // the next URL change replaces the history entry
-  const known = useRef({ files: new Set(), folders: [] }) // what exists, for Back / Forward
 
   useEffect(() => { storage.setTrails(trails) }, [trails])
   useEffect(() => { storage.setPage(page) }, [page])
 
   // The title bar's folder tree: the folders open in it
-  const [expanded, setExpanded] = useState(() => new Set(storage.getExpanded()))
-  useEffect(() => { storage.setExpanded([...expanded]) }, [expanded])
-  const toggleFolder = path => setExpanded(prev => {
-    const next = new Set(prev)
-    if (!next.delete(path)) next.add(path)
-    return next
-  })
+  const [expanded, toggleFolder] = useExpandedFolders()
 
-  // Keep the browser URL in sync with the main page you're on and its view:
-  // each new page, folder or file is a history entry, so Back and Forward move
-  // between them. Changes that only follow a rename or delete replace the
-  // entry instead. Settings, Broken links and Documentation leave the address as it is.
+  // The browser's address follows the main page you're on and its view; Back / Forward move between them
+  // (useAddressBar; Settings, Broken links, Documentation and Assets leave the address as it is)
   const url = page === mainPage ? urlForPage(BASE, page, view) : null
-  useEffect(() => {
-    if (!url) return
-    const here = window.location.pathname + window.location.search
-    if (here !== url) {
-      if (started.current && !replaceNext.current) history.pushState(null, '', url)
-      else history.replaceState(history.state, '', url)
-    }
-    started.current = true
-    replaceNext.current = false
-  }, [url])
-
-  // Back / Forward: show the folder or file the URL names (or what's left of it)
-  useEffect(() => {
-    const onPop = () => {
-      const found = pageForUrl(BASE, window.location.pathname, window.location.search)
-      if (!found) return
-      window.dispatchEvent(new Event('folio:flush')) // typing in an open note first
-      let { page: to, view } = found
-      const { files, folders } = known.current
-      if (view && files.size) view = existingView(view, files, folders)
-      if (urlForPage(BASE, to, view) !== window.location.pathname + window.location.search) replaceNext.current = true
-      setPage(to)
-      setTrails(o => ({ ...o, [to]: trailTo(to, o[to], view) }))
-    }
-    window.addEventListener('popstate', onPop)
-    return () => window.removeEventListener('popstate', onPop)
-  }, [])
+  const replaceNext = useAddressBar(BASE, url, () => ({ files, folders: allFolders }), setPage, setTrails)
 
   // What File manager, the folder tree and Search show: the config folder stays out of them
   const shown = useMemo(() => Object.fromEntries(Object.entries(virtual).filter(([path]) => !isConfigPath(path))), [virtual])
@@ -203,7 +168,6 @@ export default function App() {
     if (Object.keys(next).some(id => next[id].length !== trails[id].length)) followTrails(next)
   }, [virtual])
   const files = useMemo(() => new Set(Object.keys(shown)), [shown])
-  known.current = { files, folders: allFolders }
   const links = useLinkIndex(virtual, changes)
   const symlinks = useSymlinks(virtual)
   // The other way round: source path -> paths of the links pointing to it
@@ -420,7 +384,7 @@ export default function App() {
   // Every page's trail after a rename, delete or discard (`next`); the address
   // is replaced, not added to history (only when it shows: not on Settings / Broken links / Documentation)
   function followTrails(next) {
-    if (page === mainPage && urlForPage(BASE, page, currentView(page, next[page])) !== url) replaceNext.current = true
+    if (page === mainPage && urlForPage(BASE, page, currentView(page, next[page])) !== url) replaceNext()
     setTrails(next)
   }
 

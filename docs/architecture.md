@@ -34,6 +34,7 @@ App flow: **Auth → RepoSetup → FileBrowser / Editor / FileViewer**. `App.jsx
 - `useConfigFile` — one `.folio` settings file read and written through parse and serialize (never saved over when unreadable): `useLocks`, `useIcons`, `useAssets` are built on it.
 - `useAssets` — `added`, and `record`, `moved`, `removed` as changes.
 - `useEmojis` — the emoji picker's whole list (`unicode-emoji-json`, its own chunk, loaded once), without what the device can't draw.
+- `useAddressBar` — the browser's address follows the main page and its view (a history entry each); Back / Forward show what it names (`replaceNext()` after a rename or delete). `useExpandedFolders` — the title bar tree's open folders, kept for the session.
 - `useSearchShortcut` — ⌘K / Ctrl+K anywhere opens Search (App, once signed in to a repo), never over an open dialog or sheet.
 - `useGraphCanvas` — the Graph page's canvas: d3-force layout, drawing with the theme's tokens, drag, pan, zoom, tap to open.
 - `useDragSensors` — how every drag starts (mouse after 5px, touch after holding 0.25s): board, planner, a note's lists, Edit list.
