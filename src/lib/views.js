@@ -19,9 +19,10 @@ const isStart = (page, view) => !view || (page === PAGE.FILES && !view.file && !
 export const START = 'start'
 
 // Where ← leads from `view` in `page`: in File manager a level up (a file's folder, a folder's parent; null from
-// the root, its start); in any other page (a view, Graph) back to the page's own start (START)
-export function upView(page, view) {
-  if (page !== PAGE.FILES) return START
+// the root, its start); in any other page (a view, Graph) back along its `trail`, the way you drilled down, to the
+// page's own start (START) from the first view
+export function upView(page, view, trail = []) {
+  if (page !== PAGE.FILES) return trail.at(-2) ?? START
   if (view.file) return folderView(view.folder)
   return view.folder ? folderView(parentOf(view.folder)) : null
 }

@@ -36,7 +36,9 @@ describe('views', () => {
     expect(upView(PAGE.FILES, folderView('a/b'))).toEqual(folderView('a'))
     expect(upView(PAGE.FILES, folderView('a'))).toEqual(folderView(''))
     expect(upView(PAGE.FILES, folderView(''))).toBe(null)
-    expect(upView(PAGE.HOME, fileView('a/b.md'))).toBe(START)
-    expect(upView(PAGE.HOME, folderView('a'))).toBe(START)
+    expect(upView(PAGE.HOME, fileView('a/b.md'), [fileView('a/b.md')])).toBe(START)
+    const trail = [folderView('a'), folderView('a/b'), fileView('a/b/c.md')]
+    expect(upView(PAGE.HOME, trail[2], trail)).toEqual(folderView('a/b'))
+    expect(upView(PAGE.HOME, trail[1], trail.slice(0, 2))).toEqual(folderView('a'))
   })
 })

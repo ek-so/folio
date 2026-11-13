@@ -128,9 +128,10 @@ export default function App() {
     if (id === page && trailOf(id).length) setTrails(o => ({ ...o, [id]: [] }))
     setPage(id)
   }
-  // ← in the title bar (lib/views.js `upView`): in File manager a level up, elsewhere the page's start
-  const up = view && upView(mainPage, view)
-  const goUp = up && (() => up === START ? setTrails(o => ({ ...o, [mainPage]: [] })) : show(up))
+  // ← in the title bar (lib/views.js `upView`): in File manager a level up, elsewhere back along the page's trail
+  const up = view && upView(mainPage, view, trailOf(mainPage))
+  const goUp = up && (() => up === START ? setTrails(o => ({ ...o, [mainPage]: [] }))
+    : mainPage === PAGE.FILES ? show(up) : setTrails(o => ({ ...o, [mainPage]: trailTo(mainPage, o[mainPage], up) })))
   const [newFile, setNewFile] = useState(null) // { folder, kind, keys?, values?, stay? } while the sheet is open (keys: a new note's properties; stay: don't open it)
   const [viewDialog, setViewDialog] = useState(null) // { kind: 'rename' | 'delete', view } while a view's dialog is open
   const [viewsSettings, setViewsSettings] = useState(false) // Views settings is open: add, order and remove views
