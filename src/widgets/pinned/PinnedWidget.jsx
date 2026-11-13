@@ -13,11 +13,11 @@ import { DndContext, closestCenter } from '@dnd-kit/core'
 import { SortableContext, useSortable, rectSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { useDragSensors } from '@/hooks/useDragSensors.js'
-import { cn, own } from '@/lib/utils.js'
+import { cn, own, isPortaled } from '@/lib/utils.js'
 import { displayName, itemsIn } from '@/lib/files.js'
 import { fileItem } from '@/lib/folderNotes.js'
 import { plural } from '@/lib/plural.js'
-import { parsePinned, settingsOf, settingsWrite, addedItem, removedItem, replacedItem, reorderedItem } from './pinned.js'
+import { parsePinned, settingsOf, settingsWrite, addedItem, removedItem, replacedItem, reorderedItem, isPinnedFolder } from './pinned.js'
 import { PinPicker } from './PinnedSetup.jsx'
 import WidgetFrame from '@/components/WidgetFrame.jsx'
 import MoreButton from '@/components/MoreButton.jsx'
@@ -59,7 +59,7 @@ export default function PinnedWidget({ id, services, onRemove }) {
             {settings.items.map((entry, i) => (
               <PinnedCard
                 key={entry.path} path={entry.path} services={services} files={files} canMove={canEdit}
-                dir={folders.has(entry.path)} found={folders.has(entry.path) || !!files[entry.path]}
+                dir={isPinnedFolder(entry.path)} found={isPinnedFolder(entry.path) ? folders.has(entry.path) : !!files[entry.path]}
                 onTakeOut={canEdit ? () => setRemoving(i) : null}
                 onReplace={canEdit ? (to, first = ch => ch) => services.update(ch => change(replacedItem(settings, entry.path, to))(first(ch))) : null}
               />
@@ -94,7 +94,7 @@ export default function PinnedWidget({ id, services, onRemove }) {
       <EditListModal
         title="Edit pinned"
         description="Drag them into order. Taking one out keeps the note or folder."
-        items={settings.items.map(n => ({ id: n.path, icon: <FileIcon path={n.path} dir={folders.has(n.path)} />, title: displayName(n.path) }))}
+        items={settings.items.map(n => ({ id: n.path, icon: <FileIcon path={n.path} dir={isPinnedFolder(n.path)} />, title: displayName(n.path) }))}
         onMove={(from, to) => save(reorderedItem(settings, from, to))}
         onRemove={item => setRemoving(settings.items.findIndex(n => n.path === item.id))}
         empty="Nothing pinned"
@@ -104,7 +104,7 @@ export default function PinnedWidget({ id, services, onRemove }) {
     {removing !== null && settings?.items[removing] && (
       <ConfirmModal
         title={`Remove “${displayName(settings.items[removing].path)}” from this widget?`}
-        description={`The ${folders.has(settings.items[removing].path) ? 'folder' : 'note'} itself stays.`}
+        description={`The ${isPinnedFolder(settings.items[removing].path) ? 'folder' : 'note'} itself stays.`}
         onConfirm={() => { save(removedItem(settings, removing)); setRemoving(null) }}
         onClose={() => setRemoving(null)}
       />
@@ -121,9 +121,10 @@ function PinnedCard({ path, dir, found, services, files, canMove, onTakeOut, onR
   const [replacing, setReplacing] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const item = dir ? { path, name: path.split('/').pop(), type: 'dir' } : fileItem(path)
-  const open = found
-    ? cardClick(path, files, services.openFile, services.openFolder)
-    : () => { if (onReplace) setReplacing(true) }
+  // A note's card opens the note (or a link in its description what that points to), a folder's the folder
+  const open = !found ? () => { if (onReplace) setReplacing(true) }
+    : dir ? e => { if (!isPortaled(e)) services.openFolder(path) }
+    : cardClick(path, files, services.openFile, services.openFolder)
   const menu = (
     <div className="contents" {...own}>
       <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>

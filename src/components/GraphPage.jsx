@@ -17,15 +17,16 @@ import { useGraphCanvas } from '../hooks/useGraphCanvas.js'
 
 // Graph: every file and folder as a dot (notes in the accent, other files grey, folders outlined, the repo's root the
 // largest), joined to its folder by a solid line, and linked files by a dotted one (lib/graph.js). The canvas fills the
-// page (useGraphCanvas): drag, pan, zoom. A tap on a dot opens a popover beside it (`DotInfo`); only its Open opens the file
+// page (useGraphCanvas): drag, pan, zoom; Tab goes through its dots (a hidden list of buttons). A tap on a dot opens a popover beside it (`DotInfo`); only its Open opens the file
 // or folder, in Graph's trail. `files`: the repo's files; `backlinks`: the link index's; `notes`: the notes' texts on
 // this device ({ path: text })
 export default function GraphPage({ page, files, backlinks, notes, repoName, onOpenFile, onOpenFolder }) {
   const data = useMemo(() => graphData(files, backlinks, repoName), [files, backlinks, repoName])
   const canvas = useRef(null)
   const [open, setOpen] = useSingleOpen()
-  const [picked, setPicked] = useState(null) // { node, at: { x, y } }: the tapped dot and where, in the canvas
-  useGraphCanvas(canvas, data, (node, at) => { setPicked({ node, at }); setOpen(true) })
+  const [picked, setPicked] = useState(null) // { node, at: { x, y }, keyboard }: the tapped dot and where, in the canvas
+  const pick = (node, at, keyboard = false) => { setPicked({ node, at, keyboard }); setOpen(true) }
+  const graph = useGraphCanvas(canvas, data, pick)
   const openPicked = () => {
     setOpen(false)
     const { node } = picked
@@ -36,12 +37,25 @@ export default function GraphPage({ page, files, backlinks, notes, repoName, onO
     <PageLayout>
       <Surface title={<TitleBar page={page} />} full>
         <div className="relative flex min-h-0 flex-1">
-          <canvas ref={canvas} aria-label="Graph of the repo's files and folders" className="min-h-0 w-full flex-1" />
+          <canvas ref={canvas} aria-hidden className="min-h-0 w-full flex-1" />
+          {/* The dots for the keyboard and screen readers: a button each, out of sight; focusing one brings its dot out,
+              Enter opens its popover, with the focus in it */}
+          <ul aria-label="Files and folders in the graph" className="sr-only">
+            {data.nodes.map(node => (
+              <li key={node.id}>
+                <button
+                  type="button"
+                  onFocus={() => graph.highlight(node.id)} onBlur={() => graph.highlight(null)}
+                  onClick={() => pick(node, graph.pointOf(node.id), true)}
+                >{node.name}</button>
+              </li>
+            ))}
+          </ul>
           {data.nodes.length <= 1 && <EmptyMessage size="lg" className="absolute inset-x-0 top-0">No files yet.</EmptyMessage>}
           {picked && (
             <Popover open={open} onOpenChange={setOpen}>
               <PopoverAnchor className="pointer-events-none absolute size-0" style={{ left: picked.at.x, top: picked.at.y }} />
-              <PopoverContent side="right" align="start" sideOffset={12} className="w-72" onOpenAutoFocus={e => e.preventDefault()}>
+              <PopoverContent side="right" align="start" sideOffset={12} className="w-72" onOpenAutoFocus={e => { if (!picked.keyboard) e.preventDefault() }}>
                 <DotInfo node={picked.node} data={data} files={files} text={notes[picked.node.id]} onOpen={openPicked} onClose={() => setOpen(false)} />
               </PopoverContent>
             </Popover>

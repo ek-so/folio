@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { parsePinned, serializePinned, settingsOf, settingsWrite, movedPinned, isNote, addedItem, removedItem, replacedItem, reorderedItem } from './pinned.js'
+import { isPinnedFolder, parsePinned, serializePinned, settingsOf, settingsWrite, movedPinned, isNote, addedItem, removedItem, replacedItem, reorderedItem } from './pinned.js'
 
 describe('pinned widget', () => {
   it('reads its settings, an older Notes widget too, or nothing from bad text', () => {
@@ -46,5 +46,6 @@ describe('pinned widget', () => {
 
   it('tells notes from other files', () => {
     expect(['a/b.md', 'README.MD', 'pic.png', '.folio/x.md'].filter(isNote)).toEqual(['a/b.md', 'README.MD'])
+    expect(['Plans', 'Gone/Folder', 'a.md'].filter(isPinnedFolder)).toEqual(['Plans', 'Gone/Folder']) // gone or not
   })
 })

@@ -65,3 +65,6 @@ export function movedPinned(settings, from, to, isDir) {
 
 // Whether a repo path is a note that can be pinned: a markdown file, not one of the app's settings
 export const isNote = path => path.toLowerCase().endsWith('.md') && !path.startsWith('.folio/')
+
+// Whether a pinned path is a folder: only notes and folders are pinned, so anything but a note, there or gone
+export const isPinnedFolder = path => !isNote(path)

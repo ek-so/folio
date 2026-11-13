@@ -1,9 +1,9 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { forceSimulation, forceLink, forceManyBody, forceCenter, forceCollide } from 'd3-force'
 
 // The Graph page's canvas (lib/graph.js data): a force layout (d3-force) drawn on `canvasRef`, which fills its box.
 // Drag a dot to move it, drag the background to pan, scroll or pinch to zoom; a tap on a dot calls `onSelect(node, { x, y })`, where it was tapped in the canvas (px).
-// Hovering a dot (a mouse) brings out it, its lines and their dots. Positions are kept by id when the data changes.
+// Hovering a dot (a mouse), or `highlight(id)` (the keyboard), brings out it, its lines and their dots. Positions are kept by id when the data changes.
 // Colors are the theme's tokens, read at each frame so a theme change shows at once. Until the view is panned, zoomed or
 // a dot dragged, it follows the layout as it settles, the whole graph fitted in the canvas (at most at 1.5×).
 const RADIUS = { root: 9, folder: 6, note: 4.5, file: 3.5 }
@@ -234,4 +234,15 @@ export function useGraphCanvas(canvasRef, data, onSelect) {
     simRef.current = sim
     return () => sim.stop()
   }, [data])
+
+  // For the keyboard (GraphPage's list of dots): `highlight(id)` brings a dot out as a hover does (null: none),
+  // `pointOf(id)` is where it is in the canvas ({ x, y }, px)
+  return useMemo(() => ({
+    highlight: id => { const s = state.current; s.hover = s.nodes.find(n => n.id === id) ?? null; drawRef.current() },
+    pointOf: id => {
+      const s = state.current
+      const n = s.nodes.find(node => node.id === id)
+      return n ? { x: s.size.w / 2 + s.view.x + n.x * s.view.k, y: s.size.h / 2 + s.view.y + n.y * s.view.k } : { x: s.size.w / 2, y: s.size.h / 2 }
+    },
+  }), [])
 }
