@@ -7,19 +7,24 @@ import { Popover, PopoverTrigger, PopoverContent } from './ui/popover.jsx'
 import { DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent } from './ui/dropdown-menu.jsx'
 import { useIconsContext } from '../hooks/useIcons.js'
 import { ToggleGroup, ToggleGroupItem } from './ui/toggle-group.jsx'
-import { searchEmojis } from '../lib/emojis.js'
+import { emojiGroups, searchEmojis } from '../lib/emojis.js'
+import { useEmojis } from '../hooks/useEmojis.js'
 import { leadingEmoji } from '../lib/icons.js'
 import { EmptyMessage } from './EmptyState.jsx'
 
-// Custom: neither shadcn nor Phosphor has an emoji picker, and a library's would bring its own look. A ToggleGroup of
-// the emojis in lib/emojis.js, a search field (words like "home" or "money"; an emoji pasted into it is picked at once)
+// Custom: neither shadcn nor Phosphor has an emoji picker, and a library's would bring its own look. Every emoji the
+// device draws (lib/emojis.js, hooks/useEmojis.js; Suggested alone until the list loads, or when it can't), in a scrolling
+// box of groups under small titles, each a ToggleGroup; a search field (words like "home" or "money"; an emoji pasted into it is picked at once)
 // and a button back to the default icon (a plain control: the emoji comes back with one pick, so nothing is confirmed).
 
 // The picker's content: `value` (the chosen emoji, '' for none) and `onPick(emoji)` ('' takes it out; a view, a file's
 // ⋯ sub menu or the popover below hold it)
+const SUGGESTED_ONLY = emojiGroups([], 0)
+
 export function EmojiGrid({ value, onPick, onDone }) {
   const [query, setQuery] = useState('')
-  const found = searchEmojis(query)
+  const groups = useEmojis() ?? SUGGESTED_ONLY
+  const found = query.trim() ? [{ name: null, emojis: searchEmojis(groups, query) }] : groups.map(g => ({ name: g.name, emojis: g.emojis.map(e => e.emoji) }))
   const pick = emoji => { onPick(emoji); onDone?.() }
   return (
     <div className="flex w-72 max-w-full flex-col gap-space-sm" onKeyDown={e => e.stopPropagation()}>
@@ -32,14 +37,21 @@ export function EmojiGrid({ value, onPick, onDone }) {
           <ArrowCounterClockwise />
         </Button>
       </div>
-      {!found.length && <EmptyMessage size="sm">No emoji found</EmptyMessage>}
-      <ToggleGroup type="single" value={value} onValueChange={v => { if (v) pick(v) }} aria-label="Emojis" className="grid grid-cols-8 gap-0">
-        {found.map(emoji => (
-          <ToggleGroupItem key={emoji} value={emoji} variant="grid" aria-label={emoji} className={cn('size-control-md px-0 text-base', value === emoji && 'bg-secondary')}>
-            {emoji}
-          </ToggleGroupItem>
+      <div className="-mx-space-xs flex max-h-72 flex-col gap-space-sm overflow-y-auto overscroll-y-contain px-space-xs">
+        {!found[0].emojis.length && <EmptyMessage size="sm">No emoji found</EmptyMessage>}
+        {found.map(group => group.emojis.length > 0 && (
+          <section key={group.name ?? 'found'} className="flex flex-col gap-space-xs">
+            {group.name && <h3 className="px-space-xs text-xs font-medium text-muted-foreground">{group.name}</h3>}
+            <ToggleGroup type="single" value={value} onValueChange={v => { if (v) pick(v) }} aria-label={group.name ?? 'Emojis found'} className="grid grid-cols-8 gap-0">
+              {group.emojis.map(emoji => (
+                <ToggleGroupItem key={emoji} value={emoji} variant="grid" aria-label={emoji} className={cn('size-control-md px-0 text-base', value === emoji && 'bg-secondary')}>
+                  {emoji}
+                </ToggleGroupItem>
+              ))}
+            </ToggleGroup>
+          </section>
         ))}
-      </ToggleGroup>
+      </div>
     </div>
   )
 }

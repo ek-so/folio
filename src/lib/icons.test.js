@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { searchEmojis } from './emojis.js'
+import { searchEmojis, emojiGroups } from './emojis.js'
 import { emojiNamed, withAdoptedIcon, parseIcons, serializeIcons, leadingEmoji, withoutEmoji, iconOf, withIcon, movedIcons, removedIcons } from './icons.js'
 
 describe('icons', () => {
@@ -39,10 +39,17 @@ describe('icons', () => {
   })
 
   it('searches the emojis by the words that start theirs', () => {
-    expect(searchEmojis('').length).toBeGreaterThan(80)
-    expect(searchEmojis('hom')).toEqual(['🏠'])
-    expect(searchEmojis('coffee')).toEqual(['☕'])
-    expect(searchEmojis('xyz')).toEqual([])
+    const data = [{ name: 'Travel & Places', emojis: [
+      { emoji: '🏠', name: 'house', emoji_version: '0.6' }, { emoji: '🏡', name: 'house with garden', emoji_version: '0.6' },
+      { emoji: '🛝', name: 'playground slide', emoji_version: '14.0' },
+    ] }]
+    const groups = emojiGroups(data, 13)
+    expect(groups.map(g => g.name)).toEqual(['Suggested', 'Travel & Places'])
+    expect(groups[1].emojis.map(e => e.emoji)).toEqual(['🏠', '🏡']) // newer than the device draws: left out
+    expect(searchEmojis(groups, 'hom')).toEqual(['🏠']) // Suggested's words
+    expect(searchEmojis(groups, 'house gar')).toEqual(['🏡']) // its name's
+    expect(searchEmojis(groups, 'coffee')).toEqual(['☕'])
+    expect(searchEmojis(groups, 'xyz')).toEqual([])
   })
 
   it('finds the names an emoji can leave, shallowest first', () => {
