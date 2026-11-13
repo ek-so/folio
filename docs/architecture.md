@@ -5,6 +5,7 @@ App flow: **Auth → RepoSetup → FileBrowser / Editor / FileViewer**. `App.jsx
 ## Code map
 **`lib/` (pure logic, tested where noted)**
 - `github.js` — every GitHub API call (`init(token)`, `setRepo`); blob reads go through the offline cache; failures are tagged with the step they happened at.
+- `merge.js` — what changed both here and on GitHub, merged: text line by line, a note's properties one by one, other files kept both (`mergeText`, `resolveConflicts`). Tested.
 - `changes.js` — the model of local changes (edits, uploads, renames, deletes, new files) layered over the remote tree; `editNote` applies an edit to one note. Tested.
 - `markdown.js` — preview rendering (blocks tagged with their source range, accordions, date spots), every date rewritten after editing, in the text and the properties (`withFixedDates`), where the preview shows dates (`dateSpans`) and one moved to another day (`withDay`, `valueDate`), tap-to-source, task checkboxes, editor highlighting, image paths.
 - `previewLinks.js` — links in rendered markdown: `decorateLinks`, `inlineHtml`, `openLink`.

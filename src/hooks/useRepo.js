@@ -1,12 +1,14 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { toast } from 'sonner'
-import { getTree, getBlobBase64, commitTree, isNetworkError, getLatestCommitSha, changedFileCount, blobSha, encodeText, uploadBlob } from '../lib/github.js'
+import { getTree, getBlob, getBlobBase64, commitTree, isNetworkError, getLatestCommitSha, changedFileCount, blobSha, encodeText, uploadBlob } from '../lib/github.js'
 import { cache } from '../lib/cache.js'
 import { localChanges } from '../lib/storage.js'
 import { describeSyncError } from '../lib/syncErrors.js'
 import {
-  empty, normalize, count, virtualFiles, changedPaths, conflicts, discard, settle, treeEntries, commitMessage, filesAfter,
+  empty, normalize, count, virtualFiles, changedPaths, conflicts, settle, treeEntries, commitMessage, filesAfter,
 } from '../lib/changes.js'
+import { resolveConflicts } from '../lib/merge.js'
+import { displayName } from '../lib/files.js'
 
 const PREFETCH_WORKERS = 4
 const PULL_WAIT_MS = 3000 // how long opening a stored repo waits for GitHub's latest before showing the stored copy
@@ -63,7 +65,6 @@ export function useRepo(repo, onDone) {
   const [online, setOnline] = useState(() => navigator.onLine)
   const [changes, setChanges] = useState(empty)
   const changesRef = useRef(changes)
-  const [conflictPaths, setConflictPaths] = useState([])
   const [syncing, setSyncing] = useState(false)
   const [syncState, setSyncState] = useState('idle') // idle | error | offline
   // GitHub has commits this device hasn't pulled: { files } (changed-file
@@ -206,11 +207,35 @@ export function useRepo(repo, onDone) {
     if (!remoteRef.current) setError('You\'re offline, and this repo isn\'t saved on this device yet.')
   }
 
-  // Fetch the latest tree; warn about conflicts with local changes
+  // What changed both here and on GitHub since this device had it, merged into the local changes so nothing is lost
+  // (lib/merge.js: line by line for text, both kept for other files); a toast names what was merged. Typing in an open
+  // note is saved first
+  async function mergeConflicts(latest) {
+    window.dispatchEvent(new Event('folio:flush'))
+    const ch = changesRef.current
+    const origs = conflicts(ch, latest.files)
+    if (!origs.length) return
+    const texts = {}
+    for (const orig of origs) {
+      const remote = latest.files[orig]
+      if (orig in ch.edits && remote) texts[orig] = { base: ch.base[orig] ? await getBlob(ch.base[orig]) : '', remote: await getBlob(remote.sha) }
+      // gone from GitHub, kept here only moved: its bytes are uploaded again, so this device must have them
+      else if (!remote && ch.moves[orig] && !(orig in ch.edits) && !(orig in ch.uploads)) await getBlobBase64(ch.base[orig])
+    }
+    let merged = []
+    update(current => {
+      const result = resolveConflicts(current, latest.files, conflicts(current, latest.files), texts)
+      merged = result.merged
+      return result.changes
+    })
+    if (merged.length) toast.success(`Merged with GitHub: ${merged.map(displayName).join(', ')}`, { description: 'Changed both here and on GitHub. Both versions are kept where they overlap.' })
+  }
+
+  // Fetch the latest tree; what changed on both sides is merged
   async function fetchLatest() {
     const latest = await pull()
     setError('')
-    setConflictPaths(conflicts(changesRef.current, latest.files))
+    await mergeConflicts(latest)
   }
 
   async function refresh() {
@@ -251,8 +276,7 @@ export function useRepo(repo, onDone) {
   }
 
   // Runs a sync step, after the typing in an open note is saved; one at a time (one asked for meanwhile is ignored): success reports through onDone, failure flashes on the Sync
-  // button; `quiet` reports nothing on success (the automatic sync). A task returning false ends without a toast (e.g. stopped for
-  // conflicts). Offline isn't an error (the button says Offline); anything
+  // button; `quiet` reports nothing on success (the automatic sync). A task returning false ends without a toast. Offline isn't an error (the button says Offline); anything
   // else opens the error sheet, whose Try again repeats `retry`. Resolves to whether it ran (false: another step was running).
   async function run(task, retry, doneMessage = 'Synced', quiet = false) {
     if (busy.current) return false
@@ -281,11 +305,7 @@ export function useRepo(repo, onDone) {
     return run(async () => {
       const latest = await pull()
       setError('')
-      const conflicted = conflicts(changesRef.current, latest.files)
-      if (conflicted.length) {
-        setConflictPaths(conflicted)
-        return false
-      }
+      await mergeConflicts(latest)
       await push(latest)
     }, () => sync(), 'Synced', quiet)
   }
@@ -295,22 +315,9 @@ export function useRepo(repo, onDone) {
     return run(fetchLatest, pullChanges, 'Pulled')
   }
 
-  function pushLocal() {
-    return run(async () => {
-      await push(await pull())
-      setConflictPaths([])
-    }, pushLocal)
-  }
-
-  function takeRemote() {
-    update(ch => discard(ch, conflictPaths))
-    setConflictPaths([])
-  }
-
   // Drop every local change, including typing not yet reported by an open note
   function discardAll() {
     window.dispatchEvent(new Event('folio:flush'))
-    setConflictPaths([])
     localChanges.clear(repo)
     toast.dismiss(UNSAVED)
     const prev = changesRef.current
@@ -321,7 +328,6 @@ export function useRepo(repo, onDone) {
 
   return {
     remote, error, online, virtual, changes, changed, changeCount: count(changes),
-    conflictPaths, dismissConflicts: () => setConflictPaths([]),
-    syncing, syncState, incoming, syncError, dismissSyncError: () => setSyncError(null), update, sync, pullChanges, pushLocal, takeRemote, discardAll,
+    syncing, syncState, incoming, syncError, dismissSyncError: () => setSyncError(null), update, sync, pullChanges, discardAll,
   }
 }

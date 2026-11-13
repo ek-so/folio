@@ -13,7 +13,6 @@ import PageIcon from './components/PageIcon.jsx'
 import Assets from './components/Assets.jsx'
 import { useAssets } from './hooks/useAssets.js'
 import EmojiPicker from './components/EmojiPicker.jsx'
-import ConflictModal from './components/ConflictModal.jsx'
 import SyncButton from './components/SyncButton.jsx'
 import SearchSheet from './components/SearchSheet.jsx'
 import ConfirmModal from './components/ConfirmModal.jsx'
@@ -610,7 +609,7 @@ export default function App() {
   }
 
   // Folio syncs by itself once when it opens (and, if it opened offline, when it's back online), without a toast when it
-  // works; what goes wrong shows as it does for Sync (conflicts, the error sheet), and broken links stop it with a message
+  // works; what goes wrong shows as it does for Sync (the error sheet), and broken links stop it with a message
   // (the check Sync offers first) instead of a sheet opening on its own. Nothing to say offline: the Sync button does.
   const autoSynced = useRef(null)
   useEffect(() => {
@@ -946,16 +945,6 @@ export default function App() {
             kind={newFile.kind}
             onCreate={handleCreate}
             onClose={() => setNewFile(null)}
-          />
-        )}
-
-        {repo.conflictPaths.length > 0 && (
-          <ConflictModal
-            paths={repo.conflictPaths}
-            busy={repo.syncing}
-            onPushLocal={repo.pushLocal}
-            onUseRemote={repo.takeRemote}
-            onClose={repo.dismissConflicts}
           />
         )}
 
