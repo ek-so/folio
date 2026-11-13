@@ -25,7 +25,7 @@ App flow: **Auth → RepoSetup → FileBrowser / Editor / FileViewer**. `App.jsx
 - `pages.js` — page ids and the title and icon of every page.
 - `columns.js` (File manager's Columns), `url.js` (address bar), `resize.js`, `files.js`, `cache.js` (IndexedDB), `storage.js` (localStorage), `syncErrors.js`, `updates.js`, `viewport.js`, `plural.js` ("3 notes").
 
-**`hooks/`**
+**`hooks/`** (the sync flow is tested end to end through `useRepo` against a GitHub faked in memory: `useRepo.test.jsx`)
 - `useAuth`, `useRepo` (remote tree, local changes, sync), `useNote` (a note's text, saved as you type; `beginEdit` / `endEdit`), `useLinkIndex`, `useSymlinks`, `useBlob`, `useRepoImages`, `useTheme`, `useIsDesktop`, `useSingleOpen`, `useOverlayOpen` (a popover's or menu's open state; a scroll by touch closes it).
 - `useConfig` — reads every `.folio/` file (`read(path)` → `{ ready, text }`, `readIn(ch, path)`); `write` and `erase` are changes (`ch => ch`) for `update`, so a config change can go in one step with others. Nothing can be changed until it's read, so an unreadable config is never overwritten; a failed fetch is retried on coming online or returning.
 - `useTagColors` — `colors`, `canEdit`, `set(key, value, color)` as a change.
