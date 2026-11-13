@@ -99,6 +99,7 @@ export default function ViewPage({ page, widgets = [], error, services, onAdd, o
       {renaming && (
         <RenameModal
           kind="widget"
+          placeholder={widgetTitle({ ...renaming, name: undefined }, services)}
           item={{ name: widgetTitle(renaming, services), type: 'dir' }}
           onRename={name => { onRenameWidget(renaming.id, name); setRenaming(null); return null }}
           onClose={() => setRenaming(null)}

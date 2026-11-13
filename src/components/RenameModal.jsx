@@ -10,8 +10,9 @@ import { plural } from '../lib/plural.js'
 
 // kind: what's renamed when it's not a file or folder (a view): no file extension, no links to update
 // A note on this device (`titleOf` of LinksContext) is renamed with its Title and File name together (`TitleNameFields`):
+// `placeholder`: the name an emptied field falls back to (a widget's own name is optional): shown in the empty field, and Save stays on, passing ''.
 // `onRename(name, title)` (`title` undefined when it's unchanged); anything else has the one name field and `onRename(name)`.
-export default function RenameModal({ item, onRename, onClose, kind }) {
+export default function RenameModal({ item, onRename, onClose, kind, placeholder }) {
   const isDir = item.type === 'dir'
   const [currentName, ext] = isDir ? [item.name, ''] : splitName(item.name)
   const linkInfo = useContext(LinksContext)
@@ -47,6 +48,7 @@ export default function RenameModal({ item, onRename, onClose, kind }) {
               type="text"
               value={name}
               onChange={e => { setName(e.target.value); setError('') }}
+              placeholder={placeholder}
               autoCorrect="off"
               className="bg-background border-border"
             />
@@ -59,7 +61,7 @@ export default function RenameModal({ item, onRename, onClose, kind }) {
         )}
         <div className="flex justify-end gap-space-sm">
           <Button type="button" variant="secondary" onClick={onClose}>Cancel</Button>
-          <Button type="submit" disabled={!name.trim() || (withTitle && !fields.title.trim())}>Save</Button>
+          <Button type="submit" disabled={(!name.trim() && placeholder === undefined) || (withTitle && !fields.title.trim())}>Save</Button>
         </div>
       </form>
     </BottomSheet>
