@@ -186,3 +186,25 @@ export function suggestFix(l, files) {
   const matches = Object.keys(files).filter(p => baseOf(p) === name || baseOf(p) === name + '.md')
   return matches.length === 1 ? matches[0] : null
 }
+
+// Typing a link in the editor: `[[` and what follows it on its line, up to the caret: { from, to, query } (`to` takes in
+// a `]]` right after the caret), or null
+export function typedLink(text, caret) {
+  const m = text.slice(0, caret).match(/\[\[([^[\]\n]*)$/)
+  if (!m) return null
+  return { from: caret - m[0].length, to: caret + (text.startsWith(']]', caret) ? 2 : 0), query: m[1] }
+}
+
+// The files a typed link can point to, best first: names starting with `query`, then names, then paths holding it
+// (any case); never `self` or anything hidden (a name starting with ".": .folio, .archive, .gitkeep)
+export function linkTargets(paths, query, self, limit = 8) {
+  const q = query.trim().toLowerCase()
+  const ranked = []
+  for (const path of paths) {
+    if (path === self || path.split('/').some(part => part.startsWith('.'))) continue
+    const name = fileName(path).toLowerCase()
+    const rank = name.startsWith(q) ? 0 : name.includes(q) ? 1 : path.toLowerCase().includes(q) ? 2 : -1
+    if (rank >= 0) ranked.push([rank, path])
+  }
+  return ranked.sort((a, b) => a[0] - b[0] || a[1].localeCompare(b[1])).slice(0, limit).map(([, path]) => path)
+}

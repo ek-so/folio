@@ -106,7 +106,7 @@ export default function Editor({ linkedBy, onOpenLink, path, entry, files, notes
           </EmptyMessage>
         )
       ) : mode === 'edit' ? (
-        <MarkdownEditor ref={textareaRef} content={content} onChange={change} onDone={finishEditing} locked={valueScope?.locked} />
+        <MarkdownEditor ref={textareaRef} content={content} onChange={change} onDone={finishEditing} locked={valueScope?.locked} files={files} path={path} />
       ) : (
         <MarkdownPreview
           ref={previewRef}

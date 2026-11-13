@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { extractLinks, buildIndex, rewriteLinks, suggestFix, retargetLink, resolveSymlink, SYMLINK_MODE } from './links.js'
+import { extractLinks, buildIndex, rewriteLinks, suggestFix, retargetLink, resolveSymlink, SYMLINK_MODE, typedLink, linkTargets } from './links.js'
 
 const files = {
   'Life/Packing.md': {}, 'Life/Trip.md': {}, 'Travel/Italy.md': {}, 'img/My Pic.png': {},
@@ -74,5 +74,20 @@ describe('links inside code', () => {
   it('skips mixed fences and double-backtick spans', () => {
     const md = '~~~\n```\n[a](x.md)\n~~~\n``[b](x.md)`` and [c](x.md)\n'
     expect(extractLinks(md).map(l => l.text)).toEqual(['c'])
+  })
+})
+
+describe('typing a link', () => {
+  it('finds [[ and the query up to the caret, taking in a closing ]]', () => {
+    expect(typedLink('See [[pla', 9)).toEqual({ from: 4, to: 9, query: 'pla' })
+    expect(typedLink('See [[pla]] now', 9)).toEqual({ from: 4, to: 11, query: 'pla' })
+    expect(typedLink('See [[pla\nn', 11)).toBe(null)
+    expect(typedLink('See [x](y) pla', 14)).toBe(null)
+  })
+
+  it('ranks name starts, then names, then paths; skips itself and hidden files', () => {
+    const paths = ['a/Plan.md', 'b/My plan.md', 'plans/x.md', 'Note.md', '.folio/plan.json', 'c/.gitkeep']
+    expect(linkTargets(paths, 'plan', 'Note.md')).toEqual(['a/Plan.md', 'b/My plan.md', 'plans/x.md'])
+    expect(linkTargets(paths, '', 'Note.md')).toEqual(['a/Plan.md', 'b/My plan.md', 'plans/x.md'])
   })
 })
