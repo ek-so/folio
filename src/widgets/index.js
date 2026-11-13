@@ -21,3 +21,9 @@ import planner from './planner/index.js'
 export const WIDGET_TYPES = [board, planner, pinned]
 
 export const widgetType = type => WIDGET_TYPES.find(w => w.type === type)
+
+// A view's widget's name ({ id, type, name? }): its own (Rename in its ⋯), else its kind's title or label
+export function widgetTitle(widget, services) {
+  const type = widgetType(widget.type)
+  return widget.name ?? (type ? type.title?.(widget.id, services) ?? type.label : 'Unknown widget')
+}

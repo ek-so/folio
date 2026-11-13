@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { parseViews, serializeViews, addView, renameView, removeView, isConfigPath, DEFAULT_VIEWS, addWidget, removeWidget, moveWidget, moveView, setViewIcon } from './viewsConfig.js'
+import { parseViews, serializeViews, addView, renameView, removeView, isConfigPath, DEFAULT_VIEWS, addWidget, removeWidget, moveWidget, moveView, setViewIcon, renameWidget } from './viewsConfig.js'
 
 describe('viewsConfig', () => {
   it('has Home alone without a file, and nothing from text it can\'t read', () => {
@@ -58,5 +58,13 @@ describe('viewsConfig', () => {
   it('moves a view', () => {
     const views = [{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }, { id: 'c', name: 'C' }]
     expect(moveView(views, 2, 0).map(v => v.id)).toEqual(['c', 'a', 'b'])
+  })
+
+  it('names a widget, and an empty name gives it its kind\'s again', () => {
+    const views = [{ id: 'a', name: 'A', widgets: [{ id: 'w', type: 'planner' }] }]
+    const named = renameWidget(views, 'a', 'w', '  Week ')
+    expect(named[0].widgets[0]).toEqual({ id: 'w', type: 'planner', name: 'Week' })
+    expect(parseViews(serializeViews(named))).toEqual(named)
+    expect(renameWidget(named, 'a', 'w', ' ')[0].widgets[0]).toEqual({ id: 'w', type: 'planner' })
   })
 })

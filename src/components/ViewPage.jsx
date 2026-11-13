@@ -7,20 +7,24 @@ import TitleBar from './TitleBar.jsx'
 import EditListModal from './EditListModal.jsx'
 import { Button } from './ui/button.jsx'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from './ui/dropdown-menu.jsx'
-import { WIDGET_TYPES, widgetType } from '../widgets/index.js'
+import { WIDGET_TYPES, widgetType, widgetTitle } from '../widgets/index.js'
 import MoreButton from './MoreButton.jsx'
+import RenameModal from './RenameModal.jsx'
+import { WidgetContext } from './WidgetFrame.jsx'
 
 // A view (Home…): its title bar with + (Add widget: every kind in widgets/index.js) and ⋯
 // (Edit widgets, Rename, Remove; the navigation's ⋯ keeps only Rename and Remove), over its widgets ({ id, type }), stacked full width (a dashboard),
 // and Add widget under them. Each widget is its kind's own component, given the app's `services`;
 // `onAdd(type)`, `onRemove(id)` (always confirmed first: a widget's own Remove asks here),
-// `onMove(from, to)` (Edit widgets: order and remove them in one sheet), `onRename()` and `onRemoveView()` (App's view dialogs).
+// `onMove(from, to)` (Edit widgets: order and remove them in one sheet), `onRenameWidget(id, name)` (a widget's Rename, its
+// own name; empty: its kind's again), `onRename()` and `onRemoveView()` (App's view dialogs).
 // Until the settings are read (`services.canEdit` false) nothing can be added.
 // `error`: why the views can't be changed (shown on top), or null.
-export default function ViewPage({ page, widgets = [], error, services, onAdd, onRemove, onMove, onRename, onRemoveView, canEditView }) {
+export default function ViewPage({ page, widgets = [], error, services, onAdd, onRemove, onMove, onRenameWidget, onRename, onRemoveView, canEditView }) {
   const { canEdit } = services
   const [removing, setRemoving] = useState(null) // the widget whose Remove is being confirmed
   const [editing, setEditing] = useState(false) // Edit widgets is open
+  const [renaming, setRenaming] = useState(null) // the widget being renamed
   const kinds = WIDGET_TYPES.map(t => <DropdownMenuItem key={t.type} onSelect={() => onAdd(t.type)}><t.icon /> {t.label}</DropdownMenuItem>)
   // Add widget: a menu of every kind, from `trigger`
   const addMenu = (trigger, align = 'end') => (
@@ -65,7 +69,11 @@ export default function ViewPage({ page, widgets = [], error, services, onAdd, o
             {widgets.map(w => {
               const type = widgetType(w.type)
               return type
-                ? <type.Widget key={w.id} id={w.id} services={services} onRemove={() => setRemoving(w)} />
+                ? (
+                  <WidgetContext.Provider key={w.id} value={{ name: w.name, onRename: canEdit ? () => setRenaming(w) : null }}>
+                    <type.Widget id={w.id} services={services} onRemove={() => setRemoving(w)} />
+                  </WidgetContext.Provider>
+                )
                 : <UnknownWidget key={w.id} type={w.type} canEdit={canEdit} onRemove={() => setRemoving(w)} />
             })}
             <div className="flex shrink-0 justify-center">
@@ -80,12 +88,20 @@ export default function ViewPage({ page, widgets = [], error, services, onAdd, o
           description="Drag them into the order they show on this view."
           items={widgets.map(w => {
             const type = widgetType(w.type)
-            return { id: w.id, type: w.type, icon: type ? <type.icon /> : null, title: type?.title?.(w.id, services) ?? type?.label ?? w.type }
+            return { id: w.id, type: w.type, icon: type ? <type.icon /> : null, title: type ? widgetTitle(w, services) : w.type }
           })}
           onMove={onMove}
           onRemove={setRemoving}
           empty="No widgets on this view yet."
           onClose={() => setEditing(false)}
+        />
+      )}
+      {renaming && (
+        <RenameModal
+          kind="widget"
+          item={{ name: widgetTitle(renaming, services), type: 'dir' }}
+          onRename={name => { onRenameWidget(renaming.id, name); setRenaming(null); return null }}
+          onClose={() => setRenaming(null)}
         />
       )}
       {removing && (

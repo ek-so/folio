@@ -45,9 +45,9 @@ import DeleteModal from './components/DeleteModal.jsx'
 import { useTheme } from './hooks/useTheme.js'
 import { storage } from './lib/storage.js'
 import { PAGE, mainPages } from './lib/pages.js'
-import { isConfigPath, addView, renameView, removeView, VIEWS_PATH, DEFAULT_VIEWS, parseViews, serializeViews, addWidget, removeWidget, moveWidget, moveView, setViewIcon } from './lib/viewsConfig.js'
+import { isConfigPath, addView, renameView, removeView, VIEWS_PATH, DEFAULT_VIEWS, parseViews, serializeViews, addWidget, removeWidget, moveWidget, renameWidget, moveView, setViewIcon } from './lib/viewsConfig.js'
 import { withKeys, withValue, copyTitled, withNoteTitle, noteTitle } from './lib/frontmatter.js'
-import { widgetType } from './widgets/index.js'
+import { widgetType, widgetTitle } from './widgets/index.js'
 import { urlForPage, pageForUrl, existingView } from './lib/url.js'
 import { fileView, folderView, startTrails, currentView, openView, trailTo, movedTrails, keptTrails, upView, START } from './lib/views.js'
 import { toast } from 'sonner'
@@ -723,7 +723,7 @@ export default function App() {
         // On a view's page, what its widgets show (lazily: read when the title's tree opens)
         viewTree: views.some(v => v.id === mainPage) ? () => (views.find(v => v.id === mainPage).widgets ?? []).map(w => {
           const type = widgetType(w.type)
-          return { key: w.id, name: type ? type.title?.(w.id, widgetServices) ?? type.label : 'Unknown widget', icon: type?.icon, children: type?.tree?.(w.id, widgetServices) ?? [] }
+          return { key: w.id, name: widgetTitle(w, widgetServices), icon: type?.icon, children: type?.tree?.(w.id, widgetServices) ?? [] }
         }) : null,
         expanded,
         onToggle: toggleFolder,
@@ -762,6 +762,7 @@ export default function App() {
               onAdd={type => startWidget(page, type)}
               onRemove={id => removeWidgetOf(page, id)}
               onMove={(from, to) => saveViews(moveWidget(views, page, from, to))}
+              onRenameWidget={(id, name) => saveViews(renameWidget(views, page, id, name))}
               canEditView={viewActions.canEdit}
               onRename={() => viewActions.onRename(pages.find(p => p.id === page))}
               onRemoveView={() => viewActions.onDelete(pages.find(p => p.id === page))}

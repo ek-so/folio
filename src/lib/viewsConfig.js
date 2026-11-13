@@ -1,6 +1,7 @@
 // The views in the navigation (Home and the ones added in Views settings) live
 // in the repo, like Obsidian's config folder: `.folio/views.json`,
-// { "views": [{ "id", "name", "icon" (an emoji, optional), "widgets": [{ "id", "type" }] }] }. A repo without the file has Home alone.
+// { "views": [{ "id", "name", "icon" (an emoji, optional), "widgets": [{ "id", "type", "name" (optional: its own
+// name, else its kind's) }] }] }. A repo without the file has Home alone.
 // A view's widgets show on it, in order (an old "note" widget, the Notes widget, reads as "pinned", its new name); each kind is in src/widgets/ and keeps its own settings
 // (a board: .folio/boards/<id>.json). A kind this version doesn't know is kept as it is.
 // The file is a normal local change, committed by Sync; it never shows in
@@ -29,7 +30,7 @@ export function parseViews(text) {
       if (typeof v?.id !== 'string' || typeof v?.name !== 'string' || seen.has(v.id)) continue
       seen.add(v.id)
       const widgets = Array.isArray(v.widgets)
-        ? v.widgets.filter(w => typeof w?.id === 'string' && typeof w.type === 'string').map(w => ({ id: w.id, type: w.type === 'note' ? 'pinned' : w.type }))
+        ? v.widgets.filter(w => typeof w?.id === 'string' && typeof w.type === 'string').map(w => ({ id: w.id, type: w.type === 'note' ? 'pinned' : w.type, ...(typeof w.name === 'string' && w.name.trim() && { name: w.name.trim() }) }))
         : []
       views.push({ id: v.id, name: v.name, ...(typeof v.icon === 'string' && { icon: v.icon }), ...(widgets.length && { widgets }) })
     }
@@ -87,6 +88,11 @@ export const removeWidget = (views, viewId, widgetId) => views.map(v => {
   if (v.id !== viewId) return v
   const widgets = (v.widgets ?? []).filter(w => w.id !== widgetId)
   return widgets.length ? { ...v, widgets } : { id: v.id, name: v.name }
+})
+
+// `views` with view `viewId`'s widget `widgetId` named `name` (empty: its kind's name again)
+export const renameWidget = (views, viewId, widgetId, name) => views.map(v => v.id !== viewId ? v : {
+  ...v, widgets: (v.widgets ?? []).map(w => w.id !== widgetId ? w : name.trim() ? { ...w, name: name.trim() } : { id: w.id, type: w.type }),
 })
 
 // `views` with view `viewId`'s widget at index `from` moved to index `to`
