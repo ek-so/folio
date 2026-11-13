@@ -6,7 +6,8 @@ import { Button } from './button.jsx'
 // base-height (40px), rounded row, highlighted on hover or while its ⋯ menu is
 // open. The row's own button holds `icon` (left), `title` and an optional
 // `description` and does `onClick`. A description is muted: in a row narrower than 640px (a phone, a dialog like Search) a second line under the title (the row grows for it);
-// from 640px wide (a page's list: the row's own width, a container query) it moves to the right, next to `trailing`, in the title's size, at most half the row (cut with …). `leading` sits before that button (the tree's indent and
+// from 640px wide (a page's list: the row's own width, a container query) it moves to the right, next to `trailing`, in the title's size, at most half the row (cut with …).
+// The second line is small (text-xs); `bigDescription`: a card's description's size (text-sm; a planner list's dates). `leading` sits before that button (the tree's indent and
 // chevron), `trailing` after it (⋯, a badge…). `active`: the open or selected item, accent-colored like every selection (`SELECTED`);
 // `dimmed`: a hidden file or symlink, its icon and text faded (not the row's
 // hover or ⋯); `changed`: the accent dot of local changes after the title;
@@ -15,7 +16,7 @@ import { Button } from './button.jsx'
 // A selected item (the open page in the rail, the open item in a list): light accent fill, accent text
 export const SELECTED = 'bg-primary/15 text-primary-ink hover:bg-primary/20 hover:text-primary-ink'
 
-export function ListRow({ icon, title, description, leading, trailing, onClick, active, dimmed, changed, disabled, tooltip, className, rowProps }) {
+export function ListRow({ icon, title, description, bigDescription, leading, trailing, onClick, active, dimmed, changed, disabled, tooltip, className, rowProps }) {
   // The tooltip is on the whole row, so it also explains a row that can't be opened
   return (
     <Tip content={tooltip}>
@@ -44,7 +45,7 @@ export function ListRow({ icon, title, description, leading, trailing, onClick, 
             {title}
             {changed && <span className="ml-1.5 inline-block size-1.5 rounded-full bg-primary align-middle" />}
           </span>
-          {description && <span className="block truncate text-xs text-muted-foreground @min-[40rem]:hidden">{description}</span>}
+          {description && <span className={cn('block truncate text-muted-foreground @min-[40rem]:hidden', bigDescription ? 'text-sm' : 'text-xs')}>{description}</span>}
         </span>
         {description && <span className="hidden max-w-[50%] shrink-0 truncate text-muted-foreground @min-[40rem]:block">{description}</span>}
       </Button>

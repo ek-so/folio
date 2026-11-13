@@ -393,6 +393,7 @@ function TaskRow({ path, text, overdue, locked, menu, onOpen }) {
         <span className={cn(overdue && 'text-destructive-ink')}>{date ? (overdue && daysAgo(date)) || dateLabel(date) : 'No date'}</span>
         {(kind === 'repeat' || kind === 'unset') && <> · <ArrowsClockwise className="inline size-3 align-[-0.125em]" /> {repeatLabel(repeat)}</>}
       </>}
+      bigDescription
       trailing={menu}
       onClick={() => onOpen(path)}
     />
