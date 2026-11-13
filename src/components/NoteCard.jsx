@@ -32,9 +32,9 @@ export function CardEmoji({ path, className }) {
 
 // What a card of a board, a planner or the Pinned widget shows: its emoji (CardEmoji; `icon` in its place: a pinned folder's),
 // the note's title, `detail` (a muted line under it: how much a pinned folder holds), its description, the chosen `properties`'
-// values (`overdue`: a planner's late card, its title faded and its date red; `locked`: a small lock before its title). A div,
-// not a button: the badges in it are buttons
-const NoteCard = forwardRef(function NoteCard({ path, text, properties = [], icon, detail, always = [], scopeName, files, menu, onChange, options, onRemoveValue, valueCount, chosen, onEditValue, dateKeys, badges, overdue, locked, className, ...props }, ref) {
+// values (`overdue`: a planner's late card, its title faded and its date red; `locked`: a small lock before its title) and its
+// checklist progress (`progress`; not on a Pinned widget's card). A div, not a button: the badges in it are buttons
+const NoteCard = forwardRef(function NoteCard({ path, text, properties = [], icon, detail, progress = true, always = [], scopeName, files, menu, onChange, options, onRemoveValue, valueCount, chosen, onEditValue, dateKeys, badges, overdue, locked, className, ...props }, ref) {
   const fm = text === undefined ? [] : frontMatter(text)?.props ?? []
   // With `always` (a planner's date and repeat): the description first, then those in that order (shown empty when the
   // note lacks one), then the rest in the file's order; without, all in the file's order
@@ -61,7 +61,7 @@ const NoteCard = forwardRef(function NoteCard({ path, text, properties = [], ico
         {menu}
       </div>
       <PropertyBadges props={shown} path={path} files={files} clamp className="pt-space-xs" onChange={onChange} options={options} onRemoveValue={onRemoveValue} valueCount={valueCount} scopeName={scopeName} chosen={chosen} onEditValue={onEditValue} dateKeys={dateKeys} badges={badges} overdue={overdue} />
-      {text !== undefined && <TaskProgress {...taskProgress(text)} />}
+      {progress && text !== undefined && <TaskProgress {...taskProgress(text)} />}
     </div>
   )
 })

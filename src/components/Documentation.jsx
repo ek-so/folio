@@ -32,7 +32,7 @@ const WIDGET_DOCS = {
   pinned: {
     summary: 'Notes and folders you use often, as cards on the view.',
     points: [
-      'A note shows its title, description and checklist progress; a folder how much it holds. A tap opens it.',
+      'A note shows its title and description; a folder how much it holds. A tap opens it.',
       'Drag cards into any order.',
       'Removing a card from the widget, or the widget itself, keeps the note or folder.',
     ],
