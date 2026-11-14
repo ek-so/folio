@@ -1,6 +1,6 @@
 import { useMemo, useEffect, useLayoutEffect, useRef, useState, forwardRef, useImperativeHandle } from 'react'
 import { safeHtml } from '../lib/sanitize.js'
-import { renderBlocks, tapOffset, taskOffsets, resolveImage, linkSpans, splitImageAlt, imageSpans, withImageWidth, listsIn, moveListItem, firstWord } from '../lib/markdown.js'
+import { renderBlocks, tapOffset, taskOffsets, resolveImage, linkSpans, splitImageAlt, imageSpans, withImageWidth, listsIn, moveListItem, moveBlock, firstWord } from '../lib/markdown.js'
 import { useRepoImages } from '../hooks/useRepoImages.js'
 import { linkSpots, openLink } from '../lib/previewLinks.js'
 import { cn, isPortaled } from '../lib/utils.js'
@@ -82,7 +82,19 @@ function listGrips(root, content) {
   return lists
 }
 
-// Dragging a list item only lands among its own list's items
+// Every top-level block (paragraph, heading, list, quote, code, accordion…) gets a `.block-grip` spot to drag it by
+// (ListGrip, in the note's left gutter: App.css), `data-item` its index; returns the blocks' markdown spans
+function blockGrips(root) {
+  return [...root.children].filter(el => el.matches('[data-src]')).map((block, i) => {
+    block.insertAdjacentHTML('afterbegin', `<span class="block-grip" data-item="${i}"></span>`)
+    const start = Number(block.dataset.src)
+    return { start, end: start + Number(block.dataset.len) }
+  })
+}
+
+const BLOCKS = 'blocks' // the blocks' sortable list, beside the lists' indexes
+
+// Dragging a list item only lands among its own list's items, a block among the blocks
 const ownList = args => closestCenter({ ...args, droppableContainers: args.droppableContainers.filter(c => c.data.current?.list === args.active.data.current?.list) })
 
 // <img> elements in `root` that show repo files: [img, repo path]
@@ -91,7 +103,7 @@ const repoImages = (root, notePath) => [...root.querySelectorAll('img')]
   .filter(([, repoPath]) => repoPath !== null)
 
 // Rendered note, read-only apart from task checkboxes, links' Edit link / Remove and dragging
-// list items into another order (with `onChange`). Double-tapping (or
+// list items, and the note's blocks, into another order (with `onChange`). Double-tapping (or
 // double-clicking) text calls onDoubleTap with the markdown offset of the
 // tapped word (empty space: the end of the note).
 // On mount, scrolls the block holding `scrollTo` (a markdown
@@ -108,6 +120,7 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
   const [links, setLinks] = useState([]) // link spots for LinkBadge
   const [dates, setDates] = useState([]) // date spots for DateBadge
   const [grips, setGrips] = useState([]) // list item spots for ListGrip
+  const [blockSpots, setBlockSpots] = useState([]) // block spots for ListGrip
   const [handles, setHandles] = useState([]) // image spots for ImageHandle
   const sensors = useDragSensors()
 
@@ -125,7 +138,7 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
   const spans = useMemo(() => linkSpans(content), [content])
   const linkEdits = useLinkEdits(content, onChange)
   const dateProps = useDateEdits(content, onChange)
-  const [html, imagePaths, lists] = useMemo(() => {
+  const [html, imagePaths, lists, blocks] = useMemo(() => {
     const sanitized = safeHtml(renderBlocks(content))
     const tpl = document.createElement('template')
     tpl.innerHTML = sanitized
@@ -149,6 +162,7 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
       summary.insertAdjacentHTML('afterbegin', '<span class="summary-caret" aria-hidden="true"></span>')
     }
     const lists = onChange ? listGrips(tpl.content, content) : []
+    const blocks = onChange ? blockGrips(tpl.content) : []
     // Images: the width in their alt text ("photo|300") is applied and taken out of the alt; with `onChange`, each in
     // a frame with a spot for its resize handle, where the page's images line up with the markdown's (not in a link)
     const imgs = [...tpl.content.querySelectorAll('img')]
@@ -164,7 +178,7 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
       frame.append(img)
       frame.insertAdjacentHTML('beforeend', `<span class="image-handle" data-image="${i}"></span>`)
     })
-    return [tpl.innerHTML, repoImages(tpl.content, path).map(([, repoPath]) => repoPath), lists]
+    return [tpl.innerHTML, repoImages(tpl.content, path).map(([, repoPath]) => repoPath), lists, blocks]
   }, [content, path, files, spans, Boolean(onChange)])
 
   const images = useRepoImages(imagePaths, files)
@@ -206,6 +220,7 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
     setLinks([...ref.current.querySelectorAll('.link-spot')])
     setDates([...ref.current.querySelectorAll('.date-spot')])
     setGrips([...ref.current.querySelectorAll('.list-grip')])
+    setBlockSpots([...ref.current.querySelectorAll('.block-grip')])
     setHandles([...ref.current.querySelectorAll('.image-handle')])
   }, [withImages])
 
@@ -264,7 +279,7 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
       }
       return
     }
-    if (e.target.closest('a, img, summary, .link-spot, .list-grip, .image-handle')) return // summary opens/closes its accordion
+    if (e.target.closest('a, img, summary, .link-spot, .list-grip, .block-grip, .image-handle')) return // summary opens/closes its accordion
     if (isDoubleTap(e)) onDoubleTap?.(offsetAt(e.clientX, e.clientY, e.target))
   }
 
@@ -305,11 +320,16 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
         sensors={sensors}
         collisionDetection={ownList}
         onDragEnd={({ active, over }) => {
-          const [list, from] = active.id.split(':').map(Number)
+          const { list } = active.data.current
+          const from = Number(active.id.split(':')[1])
           const to = over && over.data.current?.list === list ? Number(over.id.split(':')[1]) : from
-          if (to !== from) onChange(moveListItem(content, lists[list], from, to))
+          if (to === from) return
+          onChange(list === BLOCKS ? moveBlock(content, blocks, from, to) : moveListItem(content, lists[list], from, to))
         }}
       >
+        <SortableContext items={blocks.map((_, i) => `${BLOCKS}:${i}`)} strategy={verticalListSortingStrategy}>
+          {blockSpots.map(spot => createPortal(<ListGrip spot={spot} id={`${BLOCKS}:${spot.dataset.item}`} list={BLOCKS} />, spot, `block-${spot.dataset.item}`))}
+        </SortableContext>
         {lists.map((list, l) => (
           <SortableContext key={l} items={list.items.map((_, i) => `${l}:${i}`)} strategy={verticalListSortingStrategy}>
             {grips.filter(g => Number(g.dataset.list) === l).map(spot => createPortal(<ListGrip spot={spot} id={`${l}:${spot.dataset.item}`} list={l} />, spot, `grip-${l}-${spot.dataset.item}`))}

@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest'
 // Date badges leave out this year (dateLabel): the tests' dates are read as of another year, so they keep theirs
 beforeAll(() => { vi.useFakeTimers({ now: new Date(2030, 0, 1), toFake: ['Date'] }) })
 afterAll(() => { vi.useRealTimers() })
-import { renderBlocks, tapOffset, taskOffsets, taskProgress, linkSpans, linkMarkdown, replaceLink, repoLink, listsIn, moveListItem, continueList, highlightMarkdown, keyLines, renderInline, splitImageAlt, imageSpans, withImageWidth } from './markdown.js'
+import { renderBlocks, tapOffset, taskOffsets, taskProgress, linkSpans, linkMarkdown, replaceLink, repoLink, listsIn, moveListItem, moveBlock, continueList, highlightMarkdown, keyLines, renderInline, splitImageAlt, imageSpans, withImageWidth } from './markdown.js'
 
 describe('markdown', () => {
   it('tags each block with its source range', () => {
@@ -174,5 +174,25 @@ describe('continueList', () => {
     expect(withImageWidth(md, spans[0], 200)).toContain('![one|200](a.png)')
     expect(withImageWidth(md, spans[1], 300)).toContain('![two|300](b.png "t")')
     expect(withImageWidth(md, spans[1], null)).toContain('![two](b.png "t")')
+  })
+})
+
+describe('moveBlock', () => {
+  const blocksOf = md => [...renderBlocks(md).matchAll(/data-src="(\d+)" data-len="(\d+)"/g)].map(m => ({ start: +m[1], end: +m[1] + +m[2] }))
+  it('moves a block, keeping what lies between blocks in place', () => {
+    const md = '# Title\n\nOne.\n\n- a\n- b\n\nTwo.\n'
+    expect(moveBlock(md, blocksOf(md), 3, 1)).toBe('# Title\n\nTwo.\n\nOne.\n\n- a\n- b\n')
+    expect(moveBlock(md, blocksOf(md), 0, 3)).toBe('One.\n\n- a\n- b\n\nTwo.\n\n# Title\n')
+  })
+  it('keeps a blank line next to a moved block, so paragraphs never merge', () => {
+    const md = '# Title\nOne.\n\nTwo.'
+    expect(moveBlock(md, blocksOf(md), 2, 0)).toBe('Two.\n\n# Title\n\nOne.')
+    const out = moveBlock(md, blocksOf(md), 2, 0)
+    expect(blocksOf(out)).toHaveLength(3)
+  })
+  it('leaves the front matter and link definitions alone', () => {
+    const md = '---\ntags: [a]\n---\nOne [x].\n\n[x]: https://a.b\n\nTwo.\n'
+    const out = moveBlock(md, blocksOf(md), 1, 0)
+    expect(out).toBe('---\ntags: [a]\n---\nTwo.\n\n[x]: https://a.b\n\nOne [x].\n')
   })
 })

@@ -346,6 +346,26 @@ export function moveListItem(text, list, from, to) {
   return text.slice(0, items[0].start) + joined + text.slice(items.at(-1).end)
 }
 
+// `text` with the block at `from` of `blocks` ([{ start, end }] in order: the preview's top-level blocks, renderBlocks'
+// data-src / data-len) moved to `to`. A block's text is its markdown without the line breaks after it; what lies between
+// blocks (blank lines, link definitions) stays where it was, at least a blank line next to a block that moved, so it
+// never runs into its new neighbour
+export function moveBlock(text, blocks, from, to) {
+  if (from === to) return text
+  const bodies = blocks.map(b => text.slice(b.start, b.end).replace(/\s+$/, ''))
+  const gaps = blocks.map((b, k) => text.slice(b.start + bodies[k].length, k + 1 < blocks.length ? blocks[k + 1].start : b.start + bodies[k].length))
+  const order = blocks.map((_, k) => k)
+  const [moved] = order.splice(from, 1)
+  order.splice(to, 0, moved)
+  const joined = order.map((k, i) => {
+    if (i === order.length - 1) return bodies[k]
+    const gap = gaps[i]
+    const touched = k !== i || order[i + 1] !== i + 1
+    return bodies[k] + (touched && (gap.match(/\n/g) ?? []).length < 2 ? gap.replace(/^[ \t]*\n?/, '\n\n') : gap)
+  }).join('')
+  return text.slice(0, blocks[0].start) + joined + text.slice(blocks.at(-1).start + bodies.at(-1).length)
+}
+
 // Offsets of each task checkbox's mark (the " " or "x" in "- [ ]") in a
 // block's markdown, in order. Only a box opening a list item counts, not
 // "[x]" further along in its text.
