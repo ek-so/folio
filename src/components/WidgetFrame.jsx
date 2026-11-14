@@ -14,7 +14,7 @@ export const WidgetContext = createContext(null)
 
 // What every widget on a view is framed by (board, planner, pinned): its title row, then its body in one of its states.
 // Title row: its name (WidgetContext's, else `title`; bold) with `subtitle` under it (muted: a widget's folder), then
-// `controls` (the widget's own, such as the planner's calendar / list) and ⋯ (MoreMenu, a plain ghost button): the widget's
+// `controls` (the widget's own, such as the planner's calendar / list) and ⋯ (MoreMenu): the widget's
 // own `menu` items, then Rename (WidgetContext's `onRename`), then Remove widget (red, Trash; `onRemove`, disabled
 // without `canEdit`). Body: a spinner until `ready`; "This `noun`'s settings can't be read."
 // when not `readable`; with `folder` ({ name, missing, folders, sheetTitle, sheetText, onPick }) gone, "Its folder … is gone."
@@ -36,7 +36,7 @@ export default function WidgetFrame({ title, subtitle, noun, controls, menu, onR
         </h2>
         {controls}
         <MoreMenu
-          variant="ghost" label={`${noun[0].toUpperCase()}${noun.slice(1)} actions`}
+          label={`${noun[0].toUpperCase()}${noun.slice(1)} actions`}
           sections={[
             menu,
             own && <DropdownMenuItem disabled={!own.onRename} onSelect={own.onRename}><PencilSimple /> Rename</DropdownMenuItem>,

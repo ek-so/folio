@@ -11,15 +11,15 @@ export const REVEAL = 'pointer-fine:opacity-0 pointer-fine:group-hover:opacity-1
 // null or a fragment with nothing in it, are skipped) are separated by lines, in the order every ⋯ keeps: what only this
 // place offers, then what everything of its kind offers (an item's: Rename · Emoji · Move to… · Duplicate · Copy link ·
 // Open on GitHub · Lock), then Remove, last.
-// The button has two looks: in a title row (the view's, a widget's, an item's) a `ghost-outline` base-size button with a 20px ⋯
-// (`variant` changes it: a widget's is plain `ghost`), or `inRow`, inside something that is itself hoverable (a list row, a
-// card, a tray's title) a quiet medium one with a 16px ⋯. `reveal`: shown only while its row is hovered (REVEAL; or a class
+// The button is always empty (no fill, no border) until hovered or open, in two sizes: in a title row (the view's, a
+// widget's, an item's) a `ghost` base-size button with a 20px ⋯, or `inRow`, inside something that is itself hoverable (a
+// list row, a card, a tray's title) a quiet medium one with a 16px ⋯. `reveal`: shown only while its row is hovered (REVEAL; or a class
 // string for another group). `label` is its aria-label; `open` / `onOpenChange` control it; `align` places the menu.
-export default function MoreMenu({ label, inRow, reveal, variant, disabled, className, align = 'end', open, onOpenChange, sections }) {
+export default function MoreMenu({ label, inRow, reveal, disabled, className, align = 'end', open, onOpenChange, sections }) {
   return (
     <DropdownMenu open={open} onOpenChange={onOpenChange}>
       <DropdownMenuTrigger asChild>
-        <MoreButton inRow={inRow} reveal={reveal} variant={variant} disabled={disabled} className={className} aria-label={label} />
+        <MoreButton inRow={inRow} reveal={reveal} disabled={disabled} className={className} aria-label={label} />
       </DropdownMenuTrigger>
       <DropdownMenuContent align={align} className="w-56" onCloseAutoFocus={e => e.preventDefault()}>
         {menuSections(sections)}
@@ -43,13 +43,13 @@ const hasItems = node => !node && node !== 0 ? false
   : Array.isArray(node) ? node.some(hasItems)
   : true
 
-const MoreButton = forwardRef(function MoreButton({ inRow, reveal, variant, className, ...props }, ref) {
+const MoreButton = forwardRef(function MoreButton({ inRow, reveal, className, ...props }, ref) {
   return (
     <Button
       ref={ref}
-      variant={variant ?? (inRow ? 'ghost-quiet' : 'ghost-outline')}
+      variant={inRow ? 'ghost-quiet' : 'ghost'}
       size={inRow ? 'icon-md' : 'icon'}
-      className={cn(reveal === true ? REVEAL : reveal, className)}
+      className={cn(!inRow && 'data-[state=open]:bg-secondary', reveal === true ? REVEAL : reveal, className)}
       {...props}
     >
       <DotsThree weight="bold" size={inRow ? 16 : 20} />
