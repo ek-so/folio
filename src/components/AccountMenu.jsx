@@ -49,7 +49,7 @@ export default function AccountMenu({ trigger, current, pages, viewActions, onNa
             {pages.filter(p => p.id === PAGE.GRAPH).map(page)}
           </ul>
           {separator}
-          <ViewsTitle actions={viewActions} onPick={() => setOpen(false)} />
+          <ViewsTitle actions={viewActions} onPick={() => setOpen(false)} className="pr-2" />
           <ul>
             {pages.filter(p => p.view).map(page)}
           </ul>
