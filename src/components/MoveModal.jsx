@@ -10,6 +10,7 @@ export default function MoveModal({ item, folders, onMove, onClose }) {
       title={`Move "${item.name}" to…`}
       folders={['', ...folders].filter(f => canMoveTo(item, f))}
       onPick={folder => onMove(item, folder)}
+      pickLabel="Move here"
       onClose={onClose}
     >
       {linkedFrom > 0 && (

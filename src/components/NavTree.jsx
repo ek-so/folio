@@ -20,7 +20,7 @@ export const NavContext = createContext(null)
 
 // A row of a tree: indented by `depth`, a chevron when it has children (`open`, `onToggle`), then the ListRow
 // (`row`: its own props)
-function TreeRow({ depth, branch, open, onToggle, row }) {
+export function TreeRow({ depth, branch, open, onToggle, row }) {
   return (
     <ListRow
       rowProps={row.active ? { 'data-current': '' } : undefined}
