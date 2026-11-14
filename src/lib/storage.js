@@ -114,4 +114,13 @@ export const localChanges = {
   // false when they couldn't be stored
   set: (repo, changes) => write(localStorage, CHANGES_KEY + repo, JSON.stringify(changes)),
   clear: (repo) => write(localStorage, CHANGES_KEY + repo, null),
+  // Calls `fn(changes)` (null when cleared) when another tab stores this repo's local changes; returns the unsubscribe
+  watch: (repo, fn) => {
+    const onStorage = e => {
+      if (e.storageArea !== localStorage || e.key !== CHANGES_KEY + repo) return
+      try { fn(JSON.parse(e.newValue)) } catch { fn(null) }
+    }
+    window.addEventListener('storage', onStorage)
+    return () => window.removeEventListener('storage', onStorage)
+  },
 }

@@ -75,6 +75,8 @@ export function useRepo(repo, onDone) {
   const knownCommitSha = useRef(null)
   const busy = useRef(false) // a sync step is running: another waits for none, it's ignored (a double tap)
   const flashTimer = useRef()
+  const stored = useRef(true) // the local changes in memory are the ones stored (false while storage is full)
+  const channel = useRef(null) // to the other tabs of this repo: GitHub's state after a pull or push
 
   useEffect(() => {
     if (!repo) return
@@ -128,6 +130,35 @@ export function useRepo(repo, onDone) {
 
   useEffect(() => () => clearTimeout(flashTimer.current), [])
 
+  // Other tabs of the same repo: their local changes as they store them, and GitHub's state after they pull or push, so
+  // every tab shows the same and none overwrites another's changes (the last typing in one note wins)
+  useEffect(() => {
+    if (!repo) return
+    const unwatch = localChanges.watch(repo, next => adopt(normalize(next)))
+    const ch = typeof BroadcastChannel === 'function' ? new BroadcastChannel(`folio-tree:${repo}`) : null
+    channel.current = ch
+    if (ch) ch.onmessage = ({ data: tree }) => {
+      if (!tree?.commitSha || tree.commitSha === remoteRef.current?.commitSha) return
+      setRemoteTree(tree)
+      knownCommitSha.current = tree.commitSha
+      setIncoming(null)
+    }
+    return () => { unwatch(); ch?.close(); channel.current = null }
+  }, [repo])
+
+  // Local changes another tab stored, as this tab's (its own are the same when they're stored)
+  function adopt(next) {
+    if (!stored.current) return
+    changesRef.current = next
+    setChanges(next)
+  }
+
+  // GitHub's state this tab now has, stored and told to the other tabs
+  function shareTree(tree) {
+    cache.setTree(repo, tree)
+    channel.current?.postMessage(tree)
+  }
+
   const virtual = useMemo(() => remote ? virtualFiles(remote.files, changes) : {}, [remote, changes])
   const changed = useMemo(() => changedPaths(changes), [changes])
 
@@ -147,7 +178,8 @@ export function useRepo(repo, onDone) {
 
   // The local changes stored on this device; when they can't be (storage full), a message that stays until they are
   function keep(next) {
-    if (localChanges.set(repo, next)) return toast.dismiss(UNSAVED)
+    stored.current = localChanges.set(repo, next)
+    if (stored.current) return toast.dismiss(UNSAVED)
     toast.error("Changes can't be saved on this device: its storage is full. Sync now, or they're lost when Folio closes.", { id: UNSAVED, duration: Infinity })
   }
 
@@ -169,7 +201,7 @@ export function useRepo(repo, onDone) {
   function applyTree(latest) {
     setRemoteTree(latest)
     setOnline(true)
-    cache.setTree(repo, latest)
+    shareTree(latest)
     prefetchNotes(latest.files)
     knownCommitSha.current = latest.commitSha
     setIncoming(null)
@@ -262,13 +294,23 @@ export function useRepo(repo, onDone) {
     }
     const after = { ...latest, commitSha, treeSha, files: filesAfter(latest.files, committed, editShas) }
     setRemoteTree(after)
-    cache.setTree(repo, after)
+    shareTree(after)
     knownCommitSha.current = commitSha
     update(current => settle(current, committed, after.files))
     pull().catch(() => {}) // anything else that changed; offline is fine
   }
 
-  // Runs a sync step, after the typing in an open note is saved; one at a time (one asked for meanwhile is ignored): success reports through onDone, failure flashes on the Sync
+  // Runs `task` while no other tab of this repo runs a sync step (it waits for theirs), starting from the local changes as
+  // stored: another tab may have just pushed them
+  function exclusive(task) {
+    const locked = () => {
+      if (stored.current) adopt(normalize(localChanges.get(repo)))
+      return task()
+    }
+    return navigator.locks ? navigator.locks.request(`folio-sync:${repo}`, locked) : locked()
+  }
+
+  // Runs a sync step, after the typing in an open note is saved; one at a time, across tabs too (one asked for meanwhile in this tab is ignored): success reports through onDone, failure flashes on the Sync
   // button; `quiet` reports nothing on success (the automatic sync). A task returning false ends without a toast. Offline isn't an error (the button says Offline); anything
   // else opens the error sheet, whose Try again repeats `retry`. Resolves to how it went: true (done), 'failed' (not offline: the sheet is open)
   // or false (another step was running).
@@ -279,7 +321,7 @@ export function useRepo(repo, onDone) {
     setSyncing(true)
     setSyncError(null)
     try {
-      if (await task() !== false && !quiet) onDone?.(doneMessage)
+      if (await exclusive(task) !== false && !quiet) onDone?.(doneMessage)
     } catch (e) {
       if (isNetworkError(e)) {
         setOnline(false)
@@ -352,6 +394,7 @@ export function useRepo(repo, onDone) {
   function discardAll() {
     window.dispatchEvent(new Event('folio:flush'))
     localChanges.clear(repo)
+    stored.current = true
     toast.dismiss(UNSAVED)
     const prev = changesRef.current
     changesRef.current = empty()
