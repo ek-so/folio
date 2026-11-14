@@ -12,6 +12,8 @@ import { useDateEdits } from '../hooks/useDateEdits.js'
 import { useLinkEdits } from '../hooks/useLinkEdits.jsx'
 import ListGrip from './ListGrip.jsx'
 import ImageHandle from './ImageHandle.jsx'
+import TableFilter from './TableFilter.jsx'
+import { MIN_ROWS, repeatedWords, rowShown } from '../lib/tableFilter.js'
 import { DndContext, closestCenter } from '@dnd-kit/core'
 import { useDragSensors } from '../hooks/useDragSensors.js'
 
@@ -117,6 +119,32 @@ function dropped(content, lists, blocks, active, over, after) {
   return moveListItem(content, lists, [Number(kind), Number(from)], String(over.id).split(':').map(Number), after)
 }
 
+// A table cell's text as read: its link and date badges' spots count as what they show
+function cellText(cell) {
+  const copy = cell.cloneNode(true)
+  copy.querySelectorAll('.link-spot').forEach(s => s.replaceWith(s.dataset.text ?? ''))
+  copy.querySelectorAll('.date-spot').forEach(s => s.replaceWith(s.dataset.label ?? ''))
+  return copy.textContent.trim()
+}
+
+// Tables with at least MIN_ROWS body rows get a `.table-filter` spot (TableFilter) in each header cell whose column has
+// words used in more than one row (`data-table`: the table's index among the note's tables, `data-col`). Returns, per
+// table index, { rows: each body row's cells' text, words: { column: repeatedWords } } (none for a table left out)
+function tableFilters(root) {
+  return [...root.querySelectorAll('table')].map((table, t) => {
+    const rows = [...table.querySelectorAll('tbody tr')].map(tr => [...tr.cells].map(cellText))
+    if (rows.length < MIN_ROWS) return null
+    const words = {}
+    ;[...(table.tHead?.rows[0]?.cells ?? [])].forEach((th, c) => {
+      const found = repeatedWords(rows.map(r => r[c] ?? ''))
+      if (!found.length) return
+      words[c] = found
+      th.insertAdjacentHTML('beforeend', `<span class="table-filter" data-table="${t}" data-col="${c}"></span>`)
+    })
+    return { rows, words }
+  })
+}
+
 // <img> elements in `root` that show repo files: [img, repo path]
 const repoImages = (root, notePath) => [...root.querySelectorAll('img')]
   .map(img => [img, resolveImage(notePath, img.getAttribute('src'))])
@@ -143,6 +171,8 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
   const [drop, setDrop] = useState(null) // { id, side } of the item a list item is being dragged over
   const [blockSpots, setBlockSpots] = useState([]) // block spots for ListGrip
   const [handles, setHandles] = useState([]) // image spots for ImageHandle
+  const [filterSpots, setFilterSpots] = useState([]) // table header spots for TableFilter
+  const [filters, setFilters] = useState({}) // { table: { column: [ticked word keys] } }, while the note is open
   const sensors = useDragSensors()
 
   useImperativeHandle(handle, () => ({
@@ -159,7 +189,7 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
   const spans = useMemo(() => linkSpans(content), [content])
   const linkEdits = useLinkEdits(content, onChange)
   const dateProps = useDateEdits(content, onChange)
-  const [html, imagePaths, lists, blocks] = useMemo(() => {
+  const [html, imagePaths, lists, blocks, tables] = useMemo(() => {
     const sanitized = safeHtml(renderBlocks(content))
     const tpl = document.createElement('template')
     tpl.innerHTML = sanitized
@@ -182,6 +212,7 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
     for (const summary of tpl.content.querySelectorAll('summary')) {
       summary.insertAdjacentHTML('afterbegin', '<span class="summary-caret" aria-hidden="true"></span>')
     }
+    const tables = tableFilters(tpl.content)
     const lists = onChange ? listGrips(tpl.content, content) : []
     const blocks = onChange ? blockGrips(tpl.content) : []
     // Images: the width in their alt text ("photo|300") is applied and taken out of the alt; with `onChange`, each in
@@ -199,7 +230,7 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
       frame.append(img)
       frame.insertAdjacentHTML('beforeend', `<span class="image-handle" data-image="${i}"></span>`)
     })
-    return [tpl.innerHTML, repoImages(tpl.content, path).map(([, repoPath]) => repoPath), lists, blocks]
+    return [tpl.innerHTML, repoImages(tpl.content, path).map(([, repoPath]) => repoPath), lists, blocks, tables]
   }, [content, path, files, spans, Boolean(onChange)])
 
   const images = useRepoImages(imagePaths, files)
@@ -243,7 +274,28 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
     setGrips([...ref.current.querySelectorAll('.list-grip')])
     setBlockSpots([...ref.current.querySelectorAll('.block-grip')])
     setHandles([...ref.current.querySelectorAll('.image-handle')])
+    setFilterSpots([...ref.current.querySelectorAll('.table-filter')])
   }, [withImages])
+
+  useEffect(() => setFilters({}), [path]) // another note: no filters
+
+  // A table's ticked words that its columns still have (the note may have changed since they were ticked)
+  const tickedIn = (t, c) => (filters[t]?.[c] ?? []).filter(k => tables[t]?.words[c]?.some(w => w.key === k))
+
+  // Rows a filter leaves out are hidden; a table with none left says so in a row of its own
+  useLayoutEffect(() => {
+    ref.current.querySelectorAll('table').forEach((table, t) => {
+      const data = tables[t]
+      if (!data) return
+      const filter = Object.fromEntries(Object.keys(data.words).map(c => [c, tickedIn(t, c)]))
+      const rows = [...table.querySelectorAll('tbody tr:not(.table-filter-empty)')]
+      rows.forEach((tr, r) => { tr.hidden = !rowShown(data.rows[r], filter) })
+      table.querySelector('.table-filter-empty')?.remove()
+      if (rows.every(tr => tr.hidden)) {
+        table.tBodies[0].insertAdjacentHTML('beforeend', `<tr class="table-filter-empty"><td colspan="${table.tHead?.rows[0]?.cells.length ?? 1}">No rows match the filters.</td></tr>`)
+      }
+    })
+  }, [withImages, tables, filters])
 
   // Always up-to-date handler without re-attaching the listener
   linkHandlerRef.current = (e) => {
@@ -300,7 +352,7 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
       }
       return
     }
-    if (e.target.closest('a, img, summary, .link-spot, .list-grip, .block-grip, .image-handle')) return // summary opens/closes its accordion
+    if (e.target.closest('a, img, summary, .link-spot, .list-grip, .block-grip, .image-handle, .table-filter, .table-filter-empty')) return // summary opens/closes its accordion
     if (isDoubleTap(e)) onDoubleTap?.(offsetAt(e.clientX, e.clientY, e.target))
   }
 
@@ -358,6 +410,15 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
           return createPortal(<ListGrip spot={spot} id={id} drop={drop?.id === id ? drop.side : null} />, spot, `grip-${id}`)
         })}
       </DndContext>
+      {filterSpots.map(spot => {
+        const { table: t, col: c } = spot.dataset
+        const words = tables[t]?.words[c]
+        return words && createPortal(
+          <TableFilter
+            column={spot.parentElement.textContent} words={words} ticked={tickedIn(t, c)}
+            onChange={keys => setFilters(f => ({ ...f, [t]: { ...f[t], [c]: keys } }))}
+          />, spot, `filter-${t}-${c}`)
+      })}
       {handles.map(spot => createPortal(
         <ImageHandle spot={spot} onResize={width => onChange(withImageWidth(content, imageSpans(content)[Number(spot.dataset.image)], width))} />, spot, `image-${spot.dataset.image}`))}
       {linkEdits.dialogs}

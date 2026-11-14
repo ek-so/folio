@@ -69,3 +69,6 @@
 .editor-preview table { display: block; width: fit-content; max-width: 100%; overflow-x: auto; border-collapse: collapse; margin: 0 0 14px; font-size: 14px; }
 .editor-preview th, .editor-preview td { padding: 6px 8px; min-width: 10rem; border: 1px solid var(--border); text-align: left; vertical-align: top; }
 .editor-preview th { background: var(--secondary); font-weight: 600; }
+/* A column's filter (TableFilter) after the header's text; a table its filters leave empty says so, muted */
+.editor-preview .table-filter { display: inline-flex; vertical-align: middle; margin-inline-start: var(--space-xs); font-weight: normal; }
+.editor-preview .table-filter-empty td { color: var(--muted-foreground); font-style: italic; }
