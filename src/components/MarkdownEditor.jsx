@@ -139,7 +139,7 @@ const MarkdownEditor = forwardRef(function MarkdownEditor({ content, onChange, o
       <Popover open={suggesting && !!at} onOpenChange={open => { if (!open) setDismissed(typed?.from ?? null) }}>
         {at && <PopoverAnchor className="absolute h-0 w-0" style={{ top: at.top, left: at.left }} />}
         <PopoverContent
-          className="w-72"
+          className="w-72 rounded-md p-1" // as a menu: what it lists are choices
           updatePositionStrategy="always" // follows the caret as it moves
           onOpenAutoFocus={e => e.preventDefault()}
           onEscapeKeyDown={e => e.preventDefault()} // the textarea's Escape closes the list, keeping the editor
@@ -148,14 +148,14 @@ const MarkdownEditor = forwardRef(function MarkdownEditor({ content, onChange, o
           onPointerDown={e => e.preventDefault()} // a tap here keeps the keyboard and the editor open
           onMouseDown={e => e.preventDefault()}
         >
-          <ListBox aria-label="Link to">
+          <ListBox aria-label="Link to" className="mx-0 max-h-none gap-0">
             {targets.map((target, i) => (
               <li key={target}>
                 <ListRow
                   icon={<FileIcon path={target} />}
                   title={displayName(target)}
                   description={target.split('/').slice(0, -1).join('/')}
-                  active={i === active}
+                  className={i === active && 'bg-secondary hover:bg-secondary'} // as a menu's item under the keyboard
                   onClick={() => pick(target)}
                 />
               </li>
