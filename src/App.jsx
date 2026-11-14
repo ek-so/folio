@@ -765,6 +765,7 @@ export default function App() {
             <ViewPage
               page={page}
               widgets={views.find(v => v.id === page)?.widgets}
+              waiting={viewsFile.ready ? null : repo.online ? 'loading' : 'offline'}
               error={viewsBroken ? `The views file (${VIEWS_PATH}) can't be read, so views can't be changed here. Fix or remove it on GitHub, then Pull.` : null}
               services={widgetServices}
               onAdd={type => startWidget(page, type)}

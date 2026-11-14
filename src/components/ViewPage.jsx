@@ -11,6 +11,8 @@ import { WIDGET_TYPES, widgetType, widgetTitle } from '../widgets/index.js'
 import ViewMenu from './ViewMenu.jsx'
 import RenameModal from './RenameModal.jsx'
 import { WidgetContext } from './WidgetFrame.jsx'
+import Loading from './Loading.jsx'
+import { EmptyMessage } from './EmptyState.jsx'
 
 // A view (Home…, `view`: its page): its title bar with + (Add widget: every kind in widgets/index.js) and ⋯
 // (`ViewMenu`, as in the navigation, with App's `viewActions`), over its widgets ({ id, type }), stacked full width (a dashboard),
@@ -19,8 +21,9 @@ import { WidgetContext } from './WidgetFrame.jsx'
 // `onMove(from, to)` (Edit widgets: order and remove them in one sheet), `onRenameWidget(id, name)` (a widget's Rename, its
 // own name; empty: its kind's again). Its ⋯'s Edit widgets opens its own sheet.
 // Until the settings are read (`services.canEdit` false) nothing can be added.
-// `error`: why the views can't be changed (shown on top), or null.
-export default function ViewPage({ page, view, viewActions, widgets = [], error, services, onAdd, onRemove, onMove, onRenameWidget }) {
+// `error`: why the views can't be changed (shown on top), or null. `waiting`: the views aren't read yet: 'loading' (skeleton
+// rows in place of the widgets) or 'offline' (not on this device yet), else null.
+export default function ViewPage({ page, view, viewActions, widgets = [], error, waiting, services, onAdd, onRemove, onMove, onRenameWidget }) {
   const { canEdit } = services
   const [removing, setRemoving] = useState(null) // the widget whose Remove is being confirmed
   const [editing, setEditing] = useState(false) // Edit widgets is open
@@ -43,7 +46,11 @@ export default function ViewPage({ page, view, viewActions, widgets = [], error,
       }>
         <div className="flex min-h-0 flex-1 flex-col gap-space overflow-y-auto p-space">
           {error && <p className="text-center text-sm text-destructive-ink">{error}</p>}
-          {widgets.length === 0 ? (
+          {waiting === 'loading' ? (
+            <Loading className="p-0" />
+          ) : waiting === 'offline' ? (
+            <EmptyMessage size="lg">This view isn't saved on this device yet. Connect to the internet to see it.</EmptyMessage>
+          ) : widgets.length === 0 ? (
             <div className="flex flex-1 flex-col items-center justify-center gap-space py-12 text-center">
               <p className="text-sm text-muted-foreground">Nothing on this view yet.</p>
               {addMenu(<Button variant="secondary" disabled={!canEdit}><Plus /> Add widget</Button>, 'center')}
