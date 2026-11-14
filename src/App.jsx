@@ -658,8 +658,8 @@ export default function App() {
     canEdit: viewsReady,
     onEditViews: () => setEditingViews(true),
     onNewView: () => setNewView(true),
-    // Edit widgets opens the view with its sheet (ViewPage's)
-    onEditWidgets: v => { choosePage(v.id); setEditWidgetsOf(v.id) },
+    // Edit widgets (the view page's ⋯): its sheet
+    onEditWidgets: v => setEditWidgetsOf(v.id),
     onRename: v => setViewDialog({ kind: 'rename', view: v }),
     onDelete: v => setViewDialog({ kind: 'delete', view: v }),
   }
