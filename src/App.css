@@ -7,7 +7,7 @@
 .editor-preview ul { list-style-type: disc; padding-left: 20px; margin: 0 0 14px; }
 .editor-preview ol { list-style-type: decimal; padding-left: 20px; margin: 0 0 14px; }
 .editor-preview li { margin: 4px 0; }
-/* A list item's drag handle (ListGrip), always shown, inside the text column before its marker: a list that can be
+/* A list item's drag handle (ListGrip), shown like a block's (below), inside the text column before its marker: a list that can be
    dragged indents by the grip's width (--grip-w) more, and the grip sits there; --list-pad is how far its list
    indents its items past the marker */
 .editor-preview { --grip-w: 24px; }
@@ -16,7 +16,7 @@
 .editor-preview li:has(> .list-grip) { position: relative; }
 .editor-preview .image-frame { position: relative; display: inline-block; max-width: 100%; vertical-align: top; }
 .editor-preview .image-handle { position: absolute; top: 50%; right: 8px; translate: 0 -50%; }
-.editor-preview .list-grip { position: absolute; top: 0; right: calc(100% + var(--list-pad)); width: var(--grip-w); height: 1lh; }
+.editor-preview .list-grip { position: absolute; top: 0; right: calc(100% + var(--list-pad)); width: var(--grip-w); height: 1lh; opacity: 0.5; }
 .editor-preview :is(li, [data-src]).list-drop-before { box-shadow: 0 -2px 0 var(--primary); }
 .editor-preview :is(li, [data-src]).list-drop-after { box-shadow: 0 2px 0 var(--primary); }
 .editor-preview :is(li, [data-src]).list-dragging { position: relative; z-index: 1; background: var(--card); border-radius: 8px; box-shadow: var(--shadow-md); }
@@ -27,7 +27,8 @@
 /* A list has no grip of its own: its items are dragged one by one (it still takes drops, the grip's block is its drop target) */
 .editor-preview > [data-src]:has(> :is(ul, ol) > li > .list-grip) > .block-grip { display: none; }
 @media (pointer: fine) {
-  .editor-preview .block-grip { opacity: 0; transition: opacity 0.15s; }
+  .editor-preview :is(.block-grip, .list-grip) { opacity: 0; transition: opacity 0.15s; }
+  .editor-preview li:hover:not(:has(li:hover)) > .list-grip, .editor-preview .list-grip:focus-within, .editor-preview li.list-dragging > .list-grip { opacity: 1; }
   .editor-preview > [data-src]:hover > .block-grip, .editor-preview .block-grip:focus-within, .editor-preview > .list-dragging > .block-grip { opacity: 1; }
 }
 .editor-preview ul:has(> .task-item) { padding-left: 0; --list-pad: 0px; }
