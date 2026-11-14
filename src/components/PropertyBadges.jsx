@@ -41,8 +41,9 @@ const toneOf = color => color === undefined ? undefined : `var(--tag-${color})`
 // `dateKeys`: properties that are always dates (a planner's date), a calendar even while none has a value yet, reading "No date" while empty or not a day;
 // `overdue`: their dates are past (a planner's late card): red.
 // `badges` ({ key: Component }): properties a widget shows its own way (a planner's type: widgets/planner/RecurrenceField.jsx),
-// one badge for the property, given `prop`, all `props` and `onChange`.
-export default function PropertyBadges({ props, path, files, clamp, title, className, onChange, options, onRemoveValue, valueCount, scopeName, onEditValue, chosen, dateKeys, badges, overdue, hiddenValues }) {
+// one badge for the property, given `prop`, all `props` and `onChange`. `unit`: what has the values in the dialogs' words
+// ('note'; a table's cell: 'row').
+export default function PropertyBadges({ props, path, files, clamp, title, className, onChange, options, onRemoveValue, valueCount, scopeName, onEditValue, chosen, dateKeys, badges, overdue, hiddenValues, unit = 'note' }) {
   const [removing, setRemoving] = useState(null) // { key, value } being confirmed
   const [managing, setManaging] = useState(null) // the key whose values are in the dialog
   const parts = [] // [{ text }] or [{ badges: [{ id, prop, label }] }], in order
@@ -76,7 +77,7 @@ export default function PropertyBadges({ props, path, files, clamp, title, class
   const confirm = removing && (
     <ConfirmModal
       title={`Remove “${removing.value}” from ${removing.key}?`}
-      description={`It becomes empty in ${plural(valueCount(removing.key, removing.value), 'note')} in ${scopeName}. It changes on GitHub when you sync.`}
+      description={`It becomes empty in ${plural(valueCount(removing.key, removing.value), unit)} in ${scopeName}. It changes on GitHub when you sync.`}
       onConfirm={() => { onRemoveValue(removing.key, removing.value); setRemoving(null) }}
       onClose={() => setRemoving(null)}
     />
@@ -94,6 +95,7 @@ export default function PropertyBadges({ props, path, files, clamp, title, class
       onEdit={onEditValue && ((from, to, color) => onEditValue(managing, from, to, color))}
       onRemove={onRemoveValue && (value => { setManaging(null); setRemoving({ key: managing, value }) })}
       onClose={() => setManaging(null)}
+      unit={unit}
     />
   )
   if (!title) return <div className={cn('flex flex-col gap-space-sm', className)}>{body}{confirm}{manage}</div>

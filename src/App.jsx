@@ -69,6 +69,7 @@ import {
 } from './lib/changes.js'
 import { plural } from './lib/plural.js'
 import { useNoteExport } from './hooks/useNoteExport.js'
+import { useTables, TablesContext } from './hooks/useTables.js'
 
 const BASE = import.meta.env.BASE_URL
 // The page and view the address the app was opened at names (not the bare root)
@@ -88,6 +89,12 @@ export default function App() {
   const tagColors = useTagColors(config)
   const locks = useLocks(config) // files locked against editing (lib/locks.js)
   const icons = useIcons(config) // the emoji icons of files and folders (lib/icons.js)
+  const tables = useTables(config) // the types picked for notes' table columns (lib/tables.js)
+  const tablesInfo = useMemo(() => ({
+    of: tables.of,
+    onType: tables.canEdit ? (path, column, type) => update(tables.setType(path, column, type)) : undefined,
+    onColor: tables.canEdit ? (path, column, value, color, from) => update(tables.setColor(path, column, value, color, from)) : undefined,
+  }), [tables.canEdit, tables.key])
   const iconsInfo = useMemo(() => ({ iconOf: icons.iconOf, onSet: icons.canEdit ? (path, emoji) => update(icons.set(path, emoji)) : undefined }), [icons.canEdit, icons.key])
   const assets = useAssets(config) // when files were added, for the Assets page (lib/assets.js)
   const viewsFile = config.read(VIEWS_PATH)
@@ -218,7 +225,7 @@ export default function App() {
       const type = widgetType(w.type)
       if (type?.moved) next = type.moved(next, w.id, item.path, to, item.type === 'dir', widgetServices)
     }
-    return assets.moved(item.path, to, item.type === 'dir')(icons.moved(item.path, to, item.type === 'dir')(locks.moved(item.path, to, item.type === 'dir')(next))) // a lock, an emoji and when it was added go where their file goes (the archive too)
+    return tables.moved(item.path, to, item.type === 'dir')(assets.moved(item.path, to, item.type === 'dir')(icons.moved(item.path, to, item.type === 'dir')(locks.moved(item.path, to, item.type === 'dir')(next)))) // a lock, an emoji, table columns' types and when it was added go where their file goes (the archive too)
   }
 
   // `fn` (ch => ch) as a change that never edits a locked note's text: what it changed there is put back (keptEdits).
@@ -477,7 +484,7 @@ export default function App() {
   // A locked file (or a folder with one in it) isn't removed: a message says so
   function handleDelete(item) {
     if (lockedIn(item)) return toast.error(`“${item.name}” ${item.type === 'dir' ? 'has locked files' : 'is locked'}. Unlock ${item.type === 'dir' ? 'them' : 'it'} to remove it.`)
-    if (inArchive(item.path)) return update(ch => assets.removed(item.path, item.type === 'dir')(icons.removed(item.path, item.type === 'dir')(locks.removed(item.path, item.type === 'dir')(remove(ch, filesOf(ch), item.path, item.type === 'dir')))))
+    if (inArchive(item.path)) return update(ch => tables.removed(item.path, item.type === 'dir')(assets.removed(item.path, item.type === 'dir')(icons.removed(item.path, item.type === 'dir')(locks.removed(item.path, item.type === 'dir')(remove(ch, filesOf(ch), item.path, item.type === 'dir'))))))
     const { to } = archive(item)
     toast.success(`“${item.name}” moved to the archive`, {
       action: { label: 'Undo', onClick: () => unarchive({ ...item, path: to, name: to.slice(to.lastIndexOf('/') + 1) }, item.path) },
@@ -726,6 +733,7 @@ export default function App() {
   return (
     <LinksContext.Provider value={linkInfo}>
       <IconsContext.Provider value={iconsInfo}>
+      <TablesContext.Provider value={tablesInfo}>
       <ItemActionsContext.Provider value={itemActions}>
       <NavContext.Provider value={{
         listDir: dir => listDir(shown, dir, repo.changed),
@@ -985,6 +993,7 @@ export default function App() {
       </TooltipProvider>
       </NavContext.Provider>
       </ItemActionsContext.Provider>
+      </TablesContext.Provider>
       </IconsContext.Provider>
     </LinksContext.Provider>
   )

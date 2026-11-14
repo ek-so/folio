@@ -17,8 +17,8 @@ import { EmptyMessage } from './EmptyState.jsx'
 // its name (only ✓ and ✕ show on it until you accept or dismiss): Save (✓) renames that value, keeping its color, everywhere in the same scope
 // (`scopeName`; `count(value)`: in how many notes); a name another value has merges them, in that one's color.
 // `replaces`: the value Add replaces on this note (a single-value property), said under the field. Save with
-// nothing changed saves nothing.
-export default function ValuesModal({ name, values, colors, count, scopeName, replaces, onAdd, onEdit, onRemove, onClose }) {
+// nothing changed saves nothing. `unit`: what has the values ('note'; a table's 'row').
+export default function ValuesModal({ name, values, colors, count, scopeName, replaces, onAdd, onEdit, onRemove, onClose, unit = 'note' }) {
   const [editing, setEditing] = useState(null) // { value, name } while a row is edited
   const [typed, setTyped] = useState('')
   const query = typed.trim()
@@ -44,7 +44,7 @@ export default function ValuesModal({ name, values, colors, count, scopeName, re
     // Focus goes to the sheet itself, not the field (the keyboard on a phone)
     <BottomSheet
       title={`Edit ${name}`}
-      description={`Renaming or recoloring a value applies to every note that has it in ${scopeName}.`}
+      description={`Renaming or recoloring a value applies to every ${unit} that has it in ${scopeName}.`}
       onClose={onClose}
       onOpenAutoFocus={e => { e.preventDefault(); e.currentTarget?.focus() }}
     >
@@ -59,7 +59,7 @@ export default function ValuesModal({ name, values, colors, count, scopeName, re
           />
           <Button type="submit" variant="success" size="icon" aria-label="Add" tooltip="Add" disabled={!query} className="shrink-0"><Check /></Button>
         </form>
-        {replaces && query && query !== replaces && <p className="-mt-space-xs px-space-xs text-xs text-muted-foreground">Adding it replaces “{replaces}” on this note.</p>}
+        {replaces && query && query !== replaces && <p className="-mt-space-xs px-space-xs text-xs text-muted-foreground">Adding it replaces “{replaces}” on this {unit}.</p>}
         <ListBox>
           {values.map(v => editing?.value === v ? (
             <li key={v}>
@@ -70,7 +70,7 @@ export default function ValuesModal({ name, values, colors, count, scopeName, re
               >
                 <p className="px-space-xs text-xs text-muted-foreground">
                   {values.some(o => o !== v && o === editing.name.trim()) ? `“${editing.name.trim()}” already exists. They become one value. ` : ''}
-                  {plural(count(v), 'note')} with it in {scopeName}.
+                  {plural(count(v), unit)} with it in {scopeName}.
                 </p>
               </InlineRename>
             </li>

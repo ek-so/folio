@@ -12,6 +12,7 @@ App flow: **Auth → RepoSetup → FileBrowser / Editor / FileViewer**. `App.jsx
 - `dates.js` — dates typed in a note's text: finding them in any clear format (`findDates`) and their one written form "17 Oct 2026, 14:30" (`formatDate`), and how a badge shows one: without the year when it's this year (`dateLabel`). Tested; `markdown.js`'s `withFixedDates` rewrites a note with it.
 - `frontmatter.js` — a note's properties (read, add and remove keys, set, rename and remove values, colors of values, title, and `valueActions`: what a values dialog does over a set of notes, shared by the preview and the board). Tested.
 - `tagColors.js` — picked value colors in `.folio/colors.json`. Tested.
+- `tables.js` — notes' table columns: types (`detectType`, `cellValue`), sorting and filtering (`sortedRows`, `cellPasses`), writing cells back into the table's markdown (`tableRows`, `withCells`), and the picked types and colors in `.folio/tables.json`. Tested.
 - `locks.js` — files locked against editing, `.folio/locks.json` (`toggledLock`, `movedLocks`, `removedLocks`). Tested.
 - `icons.js` — the emoji that replaces a file's or folder's icon, `.folio/icons.json` (`iconOf`, `withIcon`, `movedIcons`, `removedIcons`), and `leadingEmoji` / `withoutEmoji` for names that start with one. Tested.
 - `search.js` — notes found by what they say, with a snippet (`searchNotes`). Tested.
@@ -31,7 +32,7 @@ App flow: **Auth → RepoSetup → FileBrowser / Editor / FileViewer**. `App.jsx
 - `useTagColors` — `colors`, `canEdit`, `set(key, value, color)` as a change.
 - `useLocks` — `isLocked(path)`, `canEdit`, and `toggle`, `moved`, `removed` as changes.
 - `useIcons` — `iconOf(path)`, `canEdit`, and `set`, `moved`, `removed` as changes; `IconsContext` (App) gives every `FileIcon` and `ItemMenu` the icons and `onSet`. `ItemActionsContext` (App, `components/ItemMenu.jsx`) gives every file's and folder's ⋯ what it does (rename, move, duplicate, remove, lock, show in folder, its GitHub address).
-- `useConfigFile` — one `.folio` settings file read and written through parse and serialize (never saved over when unreadable): `useLocks`, `useIcons`, `useAssets` are built on it.
+- `useConfigFile` — one `.folio` settings file read and written through parse and serialize (never saved over when unreadable): `useLocks`, `useIcons`, `useAssets`, `useTables` are built on it.
 - `useAssets` — `added`, and `record`, `moved`, `removed` as changes.
 - `useEmojis` — the emoji picker's whole list (`unicode-emoji-json`, its own chunk, loaded once), without what the device can't draw.
 - `useAddressBar` — the browser's address follows the main page and its view (a history entry each); Back / Forward show what it names (`replaceNext()` after a rename or delete). `useExpandedFolders` — the title bar tree's open folders, kept for the session.

@@ -12,8 +12,10 @@ import { useDateEdits } from '../hooks/useDateEdits.js'
 import { useLinkEdits } from '../hooks/useLinkEdits.jsx'
 import ListGrip from './ListGrip.jsx'
 import ImageHandle from './ImageHandle.jsx'
-import TableFilter from './TableFilter.jsx'
-import { MIN_ROWS, repeatedWords, rowShown } from '../lib/tableFilter.js'
+import TableColumn from './TableColumn.jsx'
+import TableCell from './TableCell.jsx'
+import { detectType, tableRows, withCells, sortedRows, cellPasses, columnValues, cellValues, checkboxText } from '../lib/tables.js'
+import { useTablesContext } from '../hooks/useTables.js'
 import { DndContext, closestCenter } from '@dnd-kit/core'
 import { useDragSensors } from '../hooks/useDragSensors.js'
 
@@ -127,21 +129,41 @@ function cellText(cell) {
   return copy.textContent.trim()
 }
 
-// Tables with at least MIN_ROWS body rows get a `.table-filter` spot (TableFilter) in each header cell whose column has
-// words used in more than one row (`data-table`: the table's index among the note's tables, `data-col`). Returns, per
-// table index, { rows: each body row's cells' text, words: { column: repeatedWords } } (none for a table left out)
-function tableFilters(root) {
+// A cell that is only a link
+const onlyLink = cell => cell.querySelectorAll('.link-spot').length === 1 && !cell.textContent.trim()
+
+const CELL_TYPES = ['select', 'multi', 'date', 'checkbox'] // shown as badges or a checkbox in the cell's place
+
+// Every table with a header gets a `.table-column` spot in each header cell (TableColumn: `data-table`, the table's
+// index among the note's tables, `data-col`); a select's, multi-select's, date's or checkbox's cell gets a `.table-cell`
+// spot in place of its text (TableCell: `data-row`, its body row); a number's is aligned right. A column's type is the
+// one picked for its name (`picked`: lib/tables.js), else what its cells look like. Returns, per table index,
+// { columns: [{ name, type, detected, picked }], texts: each body row's cells' text, edit } (each body row's `data-row` its index; null for a table left
+// out); `edit` ({ start, raw }: where the table's markdown is in `content`) only when its rows line up with the markdown's
+function tableColumns(root, content, picked) {
   return [...root.querySelectorAll('table')].map((table, t) => {
-    const rows = [...table.querySelectorAll('tbody tr')].map(tr => [...tr.cells].map(cellText))
-    if (rows.length < MIN_ROWS) return null
-    const words = {}
-    ;[...(table.tHead?.rows[0]?.cells ?? [])].forEach((th, c) => {
-      const found = repeatedWords(rows.map(r => r[c] ?? ''))
-      if (!found.length) return
-      words[c] = found
-      th.insertAdjacentHTML('beforeend', `<span class="table-filter" data-table="${t}" data-col="${c}"></span>`)
+    const heads = [...(table.tHead?.rows[0]?.cells ?? [])]
+    const rows = [...(table.tBodies[0]?.rows ?? [])]
+    if (!heads.length || !rows.length) return null
+    const cells = rows.map(tr => [...tr.cells].map(td => ({ text: cellText(td), link: onlyLink(td) })))
+    const block = table.closest('[data-src]')
+    const start = Number(block?.dataset.src)
+    const raw = block ? content.slice(start, start + Number(block.dataset.len)) : ''
+    const md = block?.querySelectorAll('table').length === 1 && tableRows(raw)
+    const columns = heads.map((th, c) => {
+      const name = cellText(th)
+      const detected = detectType(cells.map(r => r[c] ?? { text: '', link: false }))
+      const chosen = picked[name]?.type
+      th.insertAdjacentHTML('beforeend', `<span class="table-column" data-table="${t}" data-col="${c}"></span>`)
+      return { name, type: chosen ?? detected, detected, picked: chosen }
     })
-    return { rows, words }
+    rows.forEach((tr, r) => { tr.dataset.row = r })
+    rows.forEach((tr, r) => [...tr.cells].forEach((td, c) => {
+      const type = columns[c]?.type
+      if (type === 'number') td.classList.add('table-number')
+      if (CELL_TYPES.includes(type)) td.innerHTML = `<span class="table-cell" data-table="${t}" data-row="${r}" data-col="${c}"></span>`
+    }))
+    return { columns, texts: cells.map(r => r.map(c => c.text)), edit: md && md.length === rows.length ? { start, raw } : null }
   })
 }
 
@@ -171,8 +193,13 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
   const [drop, setDrop] = useState(null) // { id, side } of the item a list item is being dragged over
   const [blockSpots, setBlockSpots] = useState([]) // block spots for ListGrip
   const [handles, setHandles] = useState([]) // image spots for ImageHandle
-  const [filterSpots, setFilterSpots] = useState([]) // table header spots for TableFilter
-  const [filters, setFilters] = useState({}) // { table: { column: [ticked word keys] } }, while the note is open
+  const [columnSpots, setColumnSpots] = useState([]) // table header spots for TableColumn
+  const [cellSpots, setCellSpots] = useState([]) // table cell spots for TableCell
+  const [tableViews, setTableViews] = useState({}) // { table: { sort: { col, dir }, filters: { col: filter } } }, while the note is open
+  const tableSettings = useTablesContext()
+  const pickedNow = tableSettings.of(path)
+  const pickedKey = JSON.stringify(pickedNow)
+  const picked = useMemo(() => pickedNow, [pickedKey]) // the note's columns' picked types and colors, a new object only when they change
   const sensors = useDragSensors()
 
   useImperativeHandle(handle, () => ({
@@ -212,7 +239,7 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
     for (const summary of tpl.content.querySelectorAll('summary')) {
       summary.insertAdjacentHTML('afterbegin', '<span class="summary-caret" aria-hidden="true"></span>')
     }
-    const tables = tableFilters(tpl.content)
+    const tables = tableColumns(tpl.content, content, picked)
     const lists = onChange ? listGrips(tpl.content, content) : []
     const blocks = onChange ? blockGrips(tpl.content) : []
     // Images: the width in their alt text ("photo|300") is applied and taken out of the alt; with `onChange`, each in
@@ -231,7 +258,7 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
       frame.insertAdjacentHTML('beforeend', `<span class="image-handle" data-image="${i}"></span>`)
     })
     return [tpl.innerHTML, repoImages(tpl.content, path).map(([, repoPath]) => repoPath), lists, blocks, tables]
-  }, [content, path, files, spans, Boolean(onChange)])
+  }, [content, path, files, spans, Boolean(onChange), picked])
 
   const images = useRepoImages(imagePaths, files)
 
@@ -274,28 +301,63 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
     setGrips([...ref.current.querySelectorAll('.list-grip')])
     setBlockSpots([...ref.current.querySelectorAll('.block-grip')])
     setHandles([...ref.current.querySelectorAll('.image-handle')])
-    setFilterSpots([...ref.current.querySelectorAll('.table-filter')])
+    setColumnSpots([...ref.current.querySelectorAll('.table-column')])
+    setCellSpots([...ref.current.querySelectorAll('.table-cell')])
   }, [withImages])
 
-  useEffect(() => setFilters({}), [path]) // another note: no filters
+  useEffect(() => setTableViews({}), [path]) // another note: no sorting or filters
 
-  // A table's ticked words that its columns still have (the note may have changed since they were ticked)
-  const tickedIn = (t, c) => (filters[t]?.[c] ?? []).filter(k => tables[t]?.words[c]?.some(w => w.key === k))
-
-  // Rows a filter leaves out are hidden; a table with none left says so in a row of its own
+  // Rows sorted by a column, those a filter leaves out hidden; a table with none left says so in a row of its own
   useLayoutEffect(() => {
     ref.current.querySelectorAll('table').forEach((table, t) => {
       const data = tables[t]
-      if (!data) return
-      const filter = Object.fromEntries(Object.keys(data.words).map(c => [c, tickedIn(t, c)]))
-      const rows = [...table.querySelectorAll('tbody tr:not(.table-filter-empty)')]
-      rows.forEach((tr, r) => { tr.hidden = !rowShown(data.rows[r], filter) })
-      table.querySelector('.table-filter-empty')?.remove()
+      const body = table.tBodies[0]
+      if (!data || !body) return
+      body.querySelector('.table-filter-empty')?.remove()
+      const rows = [...body.rows].sort((a, b) => a.dataset.row - b.dataset.row) // in the note's order, whatever a sort did
+      const view = tableViews[t] ?? {}
+      const column = c => data.texts.map(r => r[c] ?? '')
+      const order = view.sort && data.columns[view.sort.col] ? sortedRows(data.columns[view.sort.col].type, column(view.sort.col), view.sort.dir) : rows.map((_, r) => r)
+      order.forEach(r => body.append(rows[r]))
+      rows.forEach((tr, r) => {
+        tr.hidden = !Object.entries(view.filters ?? {}).every(([c, f]) => !data.columns[c] || cellPasses(data.columns[c].type, data.texts[r][c] ?? '', f))
+      })
       if (rows.every(tr => tr.hidden)) {
-        table.tBodies[0].insertAdjacentHTML('beforeend', `<tr class="table-filter-empty"><td colspan="${table.tHead?.rows[0]?.cells.length ?? 1}">No rows match the filters.</td></tr>`)
+        body.insertAdjacentHTML('beforeend', `<tr class="table-filter-empty"><td colspan="${data.columns.length}">No rows match the filters.</td></tr>`)
       }
     })
-  }, [withImages, tables, filters])
+  }, [withImages, tables, tableViews])
+
+  // `content` with a table's cells written (`edits`: [{ row, col, text }])
+  const writeCells = (t, edits) => {
+    const { start, raw } = tables[t].edit
+    onChange(content.slice(0, start) + withCells(raw, edits) + content.slice(start + raw.length))
+  }
+  const setView = (t, edit) => setTableViews(v => ({ ...v, [t]: edit(v[t] ?? {}) }))
+
+  // What a typed column's cells need (TableCell): its values, colors and counts, and, with `onChange`, its values'
+  // removal and renaming in every row (and their colors, saved for the note's column)
+  function columnOf(t, c) {
+    const { columns, texts, edit } = tables[t]
+    const { name, type } = columns[c]
+    const cells = texts.map(r => r[c] ?? '')
+    const has = (text, v) => type === 'multi' ? cellValues(text).includes(v) : text.trim() === v
+    const rewrite = (from, to) => writeCells(t, cells.flatMap((text, row) => !has(text, from) ? [] : [{
+      row, col: c, text: type === 'multi' ? [...new Set(cellValues(text).map(x => x === from ? to : x).filter(Boolean))].join(', ') : to,
+    }]))
+    const editable = onChange && edit
+    return {
+      options: columnValues(type, cells),
+      colors: picked[name]?.colors ?? {},
+      count: v => cells.filter(text => has(text, v)).length,
+      checkboxText: checked => checkboxText(cells, checked),
+      onRemoveValue: editable && (v => rewrite(v, '')),
+      onEditValue: editable && tableSettings.onColor && ((from, to, color) => {
+        if (to !== from) rewrite(from, to)
+        tableSettings.onColor(path, name, to, color, to !== from ? from : undefined)
+      }),
+    }
+  }
 
   // Always up-to-date handler without re-attaching the listener
   linkHandlerRef.current = (e) => {
@@ -352,7 +414,7 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
       }
       return
     }
-    if (e.target.closest('a, img, summary, .link-spot, .list-grip, .block-grip, .image-handle, .table-filter, .table-filter-empty')) return // summary opens/closes its accordion
+    if (e.target.closest('a, img, summary, .link-spot, .list-grip, .block-grip, .image-handle, .table-column, .table-cell, .table-filter-empty')) return // summary opens/closes its accordion
     if (isDoubleTap(e)) onDoubleTap?.(offsetAt(e.clientX, e.clientY, e.target))
   }
 
@@ -410,14 +472,31 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
           return createPortal(<ListGrip spot={spot} id={id} drop={drop?.id === id ? drop.side : null} />, spot, `grip-${id}`)
         })}
       </DndContext>
-      {filterSpots.map(spot => {
+      {columnSpots.map(spot => {
         const { table: t, col: c } = spot.dataset
-        const words = tables[t]?.words[c]
-        return words && createPortal(
-          <TableFilter
-            column={spot.parentElement.textContent} words={words} ticked={tickedIn(t, c)}
-            onChange={keys => setFilters(f => ({ ...f, [t]: { ...f[t], [c]: keys } }))}
-          />, spot, `filter-${t}-${c}`)
+        const col = tables[t]?.columns[c]
+        if (!col) return null
+        const view = tableViews[t] ?? {}
+        const cells = tables[t].texts.map(r => r[c] ?? '')
+        return createPortal(
+          <TableColumn
+            name={col.name} type={col.type} detected={col.detected} picked={col.picked}
+            onType={tableSettings.onType && (type => { tableSettings.onType(path, col.name, type); setView(t, v => ({ ...v, filters: { ...v.filters, [c]: null } })) })}
+            sort={view.sort?.col === Number(c) ? view.sort.dir : null}
+            onSort={dir => setView(t, v => ({ ...v, sort: dir ? { col: Number(c), dir } : null }))}
+            filter={view.filters?.[c]} onFilter={f => setView(t, v => ({ ...v, filters: { ...v.filters, [c]: f } }))}
+            values={['select', 'multi'].includes(col.type) ? columnValues(col.type, cells).map(value => ({ value, count: cells.filter(x => col.type === 'multi' ? cellValues(x).includes(value) : x.trim() === value).length })) : []}
+          />, spot, `column-${t}-${c}`)
+      })}
+      {cellSpots.map(spot => {
+        const { table: t, row: r, col: c } = spot.dataset
+        const col = tables[t]?.columns[c]
+        if (!col) return null
+        return createPortal(
+          <TableCell
+            type={col.type} name={col.name} text={tables[t].texts[r][c] ?? ''} column={columnOf(t, c)}
+            onChange={onChange && tables[t].edit ? text => writeCells(t, [{ row: Number(r), col: Number(c), text }]) : undefined}
+          />, spot, `cell-${t}-${r}-${c}`)
       })}
       {handles.map(spot => createPortal(
         <ImageHandle spot={spot} onResize={width => onChange(withImageWidth(content, imageSpans(content)[Number(spot.dataset.image)], width))} />, spot, `image-${spot.dataset.image}`))}
