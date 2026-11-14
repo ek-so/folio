@@ -2,7 +2,7 @@ import { createContext, useContext, useState } from 'react'
 import { Trash, FolderOpen, PencilSimple } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils.js'
 import { DropdownMenuItem } from './ui/dropdown-menu.jsx'
-import Spinner from './Spinner.jsx'
+import Loading from './Loading.jsx'
 import EmptyState from './EmptyState.jsx'
 import FolderSheet from './FolderSheet.jsx'
 import MoreMenu from './MoreMenu.jsx'
@@ -23,7 +23,7 @@ export const WidgetContext = createContext(null)
 export default function WidgetFrame({ title, subtitle, noun, controls, menu, onRemove, canEdit, ready, readable, folder, className, children }) {
   const [relocating, setRelocating] = useState(false) // picking another folder, its own being gone
   const own = useContext(WidgetContext)
-  const body = !ready ? <div className="flex justify-center py-12"><Spinner /></div>
+  const body = !ready ? <Loading rows={3} className="p-0" />
     : !readable ? <EmptyMessage>This {noun}'s settings can't be read.</EmptyMessage>
     : folder?.missing ? <EmptyState message={`Its folder “${folder.name}” is gone.`} action={{ label: 'Select folder', icon: <FolderOpen />, onClick: () => setRelocating(true), disabled: !canEdit }} />
     : children()

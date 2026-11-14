@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { flushSync } from 'react-dom'
 import { Check, PencilSimple, LockSimple } from '@phosphor-icons/react'
 import { Button } from './ui/button.jsx'
-import Spinner from './Spinner.jsx'
+import Loading from './Loading.jsx'
 import FilePage from './FilePage.jsx'
 import ColumnSubmenu from './ColumnSubmenu.jsx'
 import MarkdownPreview from './MarkdownPreview.jsx'
@@ -94,7 +94,7 @@ export default function Editor({ linkedBy, onOpenLink, path, entry, files, notes
     >
       {loading || loadError ? (
         loading ? (
-          <div className="flex justify-center py-12"><Spinner /></div>
+          <Loading kind="text" />
         ) : (
           <EmptyMessage size="lg" className="px-space">
             Couldn't open this note. It isn't saved on this device yet — connect to the internet and pull to refresh.

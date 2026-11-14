@@ -14,7 +14,7 @@ import { withoutEmoji } from '../lib/icons.js'
 import { fileKind, LINK_ERRORS } from '../lib/files.js'
 import FileIcon, { iconTint } from './FileIcon.jsx'
 import SymlinkedBy from './SymlinkedBy.jsx'
-import Spinner from './Spinner.jsx'
+import Loading from './Loading.jsx'
 import PageLayout from './PageLayout.jsx'
 import { cn } from '@/lib/utils.js'
 import { Separator } from './ui/separator.jsx'
@@ -211,11 +211,7 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
         onDragLeave={e => { if (!e.currentTarget.contains(e.relatedTarget)) { setFilesOver(false); setDragOverPath(null) } }}
         onDrop={e => { if (isFileDrag(e)) dropFiles(e, path) }}
       >
-        {loading && (
-          <div className="flex justify-center py-12">
-            <Spinner />
-          </div>
-        )}
+        {loading && <Loading kind={layout === 'cards' ? 'cards' : 'list'} />}
         {error && <p className="text-destructive-ink text-sm text-center pt-space px-space">{error}</p>}
         {notice && <p className="text-muted-foreground text-xs text-center pt-3 px-space">{notice}</p>}
         {!loading && !error && items.length === 0 && layout !== 'columns' && (

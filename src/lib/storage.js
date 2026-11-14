@@ -1,4 +1,4 @@
-const RECENT_KEY = 'folio_recent'
+const RECENT_KEY = 'folio_recent_'
 const TOKEN_KEY = 'brain_gh_token'
 const REPO_KEY = 'brain_gh_repo'
 const REPOS_KEY = 'folio_repos'
@@ -77,15 +77,13 @@ export const storage = {
     else delete days[id]
     write(sessionStorage, PLANNER_DAYS_KEY, JSON.stringify(days))
   },
+  // Files recently opened in the open repo, latest first; kept on this device per repo, so Search lists them in a new session too
   getRecentFiles: () => {
-    try { return JSON.parse(read(sessionStorage, RECENT_KEY)) || [] } catch { return [] }
+    try { return JSON.parse(read(localStorage, RECENT_KEY + storage.getRepo())) || [] } catch { return [] }
   },
   addRecentFile: (path) => {
-    try {
-      const prev = JSON.parse(read(sessionStorage, RECENT_KEY)) || []
-      const next = [path, ...prev.filter(p => p !== path)].slice(0, 15)
-      write(sessionStorage, RECENT_KEY, JSON.stringify(next))
-    } catch {}
+    const next = [path, ...storage.getRecentFiles().filter(p => p !== path)].slice(0, 15)
+    write(localStorage, RECENT_KEY + storage.getRepo(), JSON.stringify(next))
   },
   // Repos used on this device ('owner/repo'), latest first
   getRepos: () => {
@@ -95,14 +93,17 @@ export const storage = {
     const next = [repo, ...storage.getRepos().filter(r => r !== repo)].slice(0, 8)
     write(localStorage, REPOS_KEY, JSON.stringify(next))
   },
-  // What's open in this repo: the page stays, the trails, open folders, recent files and planners' picked days go
+  // What's open in this repo: the page stays, the trails, open folders and planners' picked days go (recent files are per repo)
   clearRepoSession: () => {
-    for (const key of [TRAILS_KEY, EXPANDED_KEY, RECENT_KEY, PLANNER_DAYS_KEY]) write(sessionStorage, key, null)
+    for (const key of [TRAILS_KEY, EXPANDED_KEY, PLANNER_DAYS_KEY]) write(sessionStorage, key, null)
   },
   // Everything tied to the signed-in account; theme stays
   clearSession: () => {
+    let recents = []
+    try { recents = Object.keys(localStorage).filter(key => key.startsWith(RECENT_KEY)) } catch {}
+    for (const key of recents) write(localStorage, key, null)
     for (const key of [TOKEN_KEY, REPO_KEY, REPOS_KEY, USER_KEY]) write(localStorage, key, null)
-    for (const key of [TRAILS_KEY, PAGE_KEY, EXPANDED_KEY, RECENT_KEY, PLANNER_DAYS_KEY]) write(sessionStorage, key, null)
+    for (const key of [TRAILS_KEY, PAGE_KEY, EXPANDED_KEY, PLANNER_DAYS_KEY]) write(sessionStorage, key, null)
   },
 }
 

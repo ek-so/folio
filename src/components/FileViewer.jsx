@@ -1,5 +1,5 @@
 import FilePage from './FilePage.jsx'
-import Spinner from './Spinner.jsx'
+import Loading from './Loading.jsx'
 import PdfView from './PdfView.jsx'
 import { useBlob } from '../hooks/useBlob.js'
 import { fileKind, imageMime } from '../lib/files.js'
@@ -21,7 +21,7 @@ export default function FileViewer({ path, entry, ...page }) {
       {error ? (
         <EmptyMessage size="lg" className="px-space">{MESSAGES[error]}</EmptyMessage>
       ) : !base64 ? (
-        <div className="flex justify-center py-12"><Spinner /></div>
+        <Loading kind="block" />
       ) : kind === 'pdf' ? (
         <PdfView base64={base64} />
       ) : (

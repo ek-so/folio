@@ -31,6 +31,7 @@ import { NavRail, TopBar } from './components/AppNav.jsx'
 import GraphPage from './components/GraphPage.jsx'
 import Settings from './components/Settings.jsx'
 import Spinner from './components/Spinner.jsx'
+import Loading from './components/Loading.jsx'
 import { useAuth } from './hooks/useAuth.js'
 import { useRepo } from './hooks/useRepo.js'
 import { useConfig } from './hooks/useConfig.js'
@@ -752,11 +753,7 @@ export default function App() {
           ) : (<>
             {/* Back on screen with new commits on GitHub: loading while they're pulled, not what was there before. The page
                 stays mounted (hidden), so an open dialog or the note being edited keeps what's typed in it */}
-            {repo.catchingUp && (
-              <div className="flex justify-center py-12">
-                <Spinner />
-              </div>
-            )}
+            {repo.catchingUp && <Loading />}
             <div className={repo.catchingUp ? 'hidden' : 'contents'}>
             {page === PAGE.ASSETS ? (
             <Assets files={shown} added={assets.added} backlinks={links.index.backlinks} onOpen={path => setSelectedFile(path, PAGE.FILES)} />

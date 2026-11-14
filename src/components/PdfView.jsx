@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import Spinner from './Spinner.jsx'
+import Loading from './Loading.jsx'
 import { EmptyMessage } from './EmptyState.jsx'
 
 // Loaded on first use, so the app itself stays small
@@ -98,7 +98,7 @@ export default function PdfView({ base64 }) {
 
   return (
     <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto p-space">
-      {status === 'loading' && <div className="flex justify-center py-12"><Spinner /></div>}
+      {status === 'loading' && <Loading kind="block" className="p-0" />}
       {status === 'error' && <EmptyMessage size="lg" className="px-space">Couldn't show this PDF.</EmptyMessage>}
       <div ref={pagesRef} className="flex flex-col gap-space" />
     </div>
