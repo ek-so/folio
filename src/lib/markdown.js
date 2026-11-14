@@ -333,17 +333,53 @@ export function listsIn(raw) {
   return lists
 }
 
-// `text` with the item at `from` of `list` (from listsIn, offsets into `text`) moved to `to`,
-// its sub-items with it; the blank lines between items stay where they were and an ordered
-// list is numbered again from its first number
-export function moveListItem(text, list, from, to) {
-  const { items } = list
-  const parts = items.map(i => text.slice(i.start, i.end).match(/^([\s\S]*?)(\n*)$/))
-  const bodies = parts.map(p => p[1])
-  const [moved] = bodies.splice(from, 1)
-  bodies.splice(to, 0, moved)
-  const joined = bodies.map((body, k) => (list.ordered ? body.replace(/^([ \t]*)\d+/, (_, sp) => sp + (list.first + k)) : body) + parts[k][2]).join('')
-  return text.slice(0, items[0].start) + joined + text.slice(items.at(-1).end)
+// `text` with the item `from` ([list, item]; lists from listsIn, offsets into `text`) moved before the
+// item `to` ([list, item]), or after it (`after`), into any list, its sub-items with it. It takes the
+// target list's marker and indent, the gaps between items follow the target's, and the ordered lists it
+// touches are numbered again from their first number. Unchanged when it would stay where it is.
+export function moveListItem(text, lists, from, to, after = false) {
+  const source = lists[from[0]]
+  const item = source.items[from[1]]
+  const targetList = lists[to[0]]
+  const target = targetList.items[to[1]]
+  const next = targetList.items[to[1] + (after ? 1 : 0)]
+  if ((target.start >= item.start && target.start < item.end) || next === item) return text
+  const textEnd = i => i.start + text.slice(i.start, i.end).replace(/\n+$/, '').length
+  const itemEnd = textEnd(item)
+  const prev = source.items[from[1] - 1]
+  // the item and the gap after it go; the last item of a list takes the gap before it instead
+  const cut = from[1] === source.items.length - 1 && prev ? [textEnd(prev), itemEnd] : [item.start, item.end]
+  // the gap between the items it lands among: the one after the target, else the one before it
+  const gapOf = i => text.slice(textEnd(i), i.end)
+  const prevTarget = targetList.items[to[1] - 1]
+  const gap = (target.end > textEnd(target) && to[1] < targetList.items.length - 1 ? gapOf(target) : prevTarget ? gapOf(prevTarget) : '\n').replace(/[^\n]/g, '') || '\n'
+  // the item rewritten for its new list: indent, marker (a number is fixed below), sub-lines moved along
+  const marker = i => text.slice(i.start).match(LIST_MARKER)
+  const [whole, oldLead, , number] = marker(item)
+  const [, newLead, bullet, , delimiter] = marker(targetList.items[0])
+  const space = whole.slice(oldLead.length + (number ? number.length + 1 : 1)) || ' '
+  const newMarker = targetList.ordered ? `${targetList.first}${delimiter}` : bullet
+  const widthChange = newLead.length + newMarker.length - (oldLead.length + (number ? number.length + 1 : 1))
+  const [first, ...rest] = text.slice(item.start, itemEnd).split('\n')
+  const moved = [newLead + newMarker + space + first.slice(whole.length),
+    ...rest.map(line => {
+      const lead = line.startsWith(oldLead) ? newLead + line.slice(oldLead.length) : line
+      if (!lead.trim()) return lead
+      return widthChange > 0 ? ' '.repeat(widthChange) + lead : lead.replace(new RegExp(`^ {0,${-widthChange}}`), '')
+    })].join('\n')
+  const at = next ? next.start : textEnd(targetList.items.at(-1))
+  const insert = next ? moved + gap : gap + moved
+  const out = at > cut[0]
+    ? text.slice(0, cut[0]) + text.slice(cut[1], at) + insert + text.slice(at)
+    : text.slice(0, at) + insert + text.slice(at, cut[0]) + text.slice(cut[1])
+  // renumber the ordered lists where the item left and where it landed
+  const landed = at > cut[0] ? at - (cut[1] - cut[0]) : at
+  const left = at > cut[0] ? cut[0] : cut[0] + insert.length
+  let result = out
+  const fixes = listsIn(out).filter(l => l.ordered && [landed, left].some(p => p >= l.items[0].start && p <= l.items.at(-1).end))
+    .flatMap(l => l.items.map((it, k) => ({ it, number: l.first + k }))).sort((a, b) => b.it.start - a.it.start)
+  for (const { it, number } of fixes) result = result.slice(0, it.start) + result.slice(it.start).replace(/^([ \t]*)\d+/, (_, sp) => sp + number)
+  return result
 }
 
 // `text` with the block at `from` of `blocks` ([{ start, end }] in order: the preview's top-level blocks, renderBlocks'

@@ -14,7 +14,6 @@ import ListGrip from './ListGrip.jsx'
 import ImageHandle from './ImageHandle.jsx'
 import { DndContext, closestCenter } from '@dnd-kit/core'
 import { useDragSensors } from '../hooks/useDragSensors.js'
-import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 
 // Text node and offset under a screen point
 function caretAt(x, y) {
@@ -92,10 +91,31 @@ function blockGrips(root) {
   })
 }
 
-const BLOCKS = 'blocks' // the blocks' sortable list, beside the lists' indexes
+const BLOCKS = 'blocks' // the blocks' ids ("blocks:3"), beside the lists' ("2:1": list, item)
 
-// Dragging a list item only lands among its own list's items, a block among the blocks
-const ownList = args => closestCenter({ ...args, droppableContainers: args.droppableContainers.filter(c => c.data.current?.list === args.active.data.current?.list) })
+// A dragged list item lands next to any item of the note but its own sub-items, a block next to another block
+const otherOfKind = args => {
+  const { active } = args
+  const block = String(active.id).startsWith(BLOCKS)
+  return closestCenter({ ...args, droppableContainers: args.droppableContainers.filter(c => String(c.id).startsWith(BLOCKS) === block && (block || !active.data.current.item.contains(c.node.current) || c.node.current === active.data.current.item)) })
+}
+
+// Below the middle of the item or block it is over, a dragged one lands after it, else before
+const dropAfter = ({ active, over }) => {
+  const moved = active.rect.current.translated
+  return Boolean(moved && over) && moved.top + moved.height / 2 > over.rect.top + over.rect.height / 2
+}
+
+// `content` with what was dragged (`active`, a block or list item) moved next to what it was dropped on (`over`)
+function dropped(content, lists, blocks, active, over, after) {
+  const [kind, from] = String(active.id).split(':')
+  const [, to] = String(over.id).split(':')
+  if (kind === BLOCKS) {
+    const at = Number(to) + (after ? 1 : 0)
+    return moveBlock(content, blocks, Number(from), Number(from) < at ? at - 1 : at)
+  }
+  return moveListItem(content, lists, [Number(kind), Number(from)], String(over.id).split(':').map(Number), after)
+}
 
 // <img> elements in `root` that show repo files: [img, repo path]
 const repoImages = (root, notePath) => [...root.querySelectorAll('img')]
@@ -120,6 +140,7 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
   const [links, setLinks] = useState([]) // link spots for LinkBadge
   const [dates, setDates] = useState([]) // date spots for DateBadge
   const [grips, setGrips] = useState([]) // list item spots for ListGrip
+  const [drop, setDrop] = useState(null) // { id, side } of the item a list item is being dragged over
   const [blockSpots, setBlockSpots] = useState([]) // block spots for ListGrip
   const [handles, setHandles] = useState([]) // image spots for ImageHandle
   const sensors = useDragSensors()
@@ -318,23 +339,24 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
       {dates.map((spot, i) => createPortal(<DateField inline label={spot.dataset.label} onClick={handleClick} {...dateProps(spot, i)} />, spot, `date-${i}`))}
       <DndContext
         sensors={sensors}
-        collisionDetection={ownList}
-        onDragEnd={({ active, over }) => {
-          const { list } = active.data.current
-          const from = Number(active.id.split(':')[1])
-          const to = over && over.data.current?.list === list ? Number(over.id.split(':')[1]) : from
-          if (to === from) return
-          onChange(list === BLOCKS ? moveBlock(content, blocks, from, to) : moveListItem(content, lists[list], from, to))
+        collisionDetection={otherOfKind}
+        onDragMove={e => setDrop(e.over ? { id: e.over.id, side: dropAfter(e) ? 'after' : 'before' } : null)}
+        onDragCancel={() => setDrop(null)}
+        onDragEnd={e => {
+          setDrop(null)
+          if (!e.over) return
+          const moved = dropped(content, lists, blocks, e.active, e.over, dropAfter(e))
+          if (moved !== content) onChange(moved)
         }}
       >
-        <SortableContext items={blocks.map((_, i) => `${BLOCKS}:${i}`)} strategy={verticalListSortingStrategy}>
-          {blockSpots.map(spot => createPortal(<ListGrip spot={spot} id={`${BLOCKS}:${spot.dataset.item}`} list={BLOCKS} />, spot, `block-${spot.dataset.item}`))}
-        </SortableContext>
-        {lists.map((list, l) => (
-          <SortableContext key={l} items={list.items.map((_, i) => `${l}:${i}`)} strategy={verticalListSortingStrategy}>
-            {grips.filter(g => Number(g.dataset.list) === l).map(spot => createPortal(<ListGrip spot={spot} id={`${l}:${spot.dataset.item}`} list={l} />, spot, `grip-${l}-${spot.dataset.item}`))}
-          </SortableContext>
-        ))}
+        {blockSpots.map(spot => {
+          const id = `${BLOCKS}:${spot.dataset.item}`
+          return createPortal(<ListGrip spot={spot} id={id} drop={drop?.id === id ? drop.side : null} />, spot, `block-${spot.dataset.item}`)
+        })}
+        {grips.map(spot => {
+          const id = `${spot.dataset.list}:${spot.dataset.item}`
+          return createPortal(<ListGrip spot={spot} id={id} drop={drop?.id === id ? drop.side : null} />, spot, `grip-${id}`)
+        })}
       </DndContext>
       {handles.map(spot => createPortal(
         <ImageHandle spot={spot} onResize={width => onChange(withImageWidth(content, imageSpans(content)[Number(spot.dataset.image)], width))} />, spot, `image-${spot.dataset.image}`))}

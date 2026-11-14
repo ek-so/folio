@@ -78,11 +78,24 @@ describe('markdown', () => {
   })
 
   it('moves a list item with its sub-items, renumbering an ordered list', () => {
-    const md = 'Intro\n\n- a\n  - a1\n- b\n- c'
-    const [list] = listsIn(md.slice(7)).map(l => ({ ...l, items: l.items.map(i => ({ start: i.start + 7, end: i.end + 7 })) }))
-    expect(moveListItem(md, list, 0, 2)).toBe('Intro\n\n- b\n- c\n- a\n  - a1')
-    const ol = '1. one\n2. two\n\n3. three\n'
-    expect(moveListItem(ol, listsIn(ol)[0], 2, 0)).toBe('1. three\n2. one\n\n3. two\n')
+    const md = '- a\n  - a1\n- b\n- c'
+    expect(moveListItem(md, listsIn(md), [0, 0], [0, 2], true)).toBe('- b\n- c\n- a\n  - a1')
+    expect(moveListItem(md, listsIn(md), [0, 2], [0, 0])).toBe('- c\n- a\n  - a1\n- b')
+    expect(moveListItem(md, listsIn(md), [0, 1], [0, 1], true)).toBe(md)
+    const ol = '1. one\n2. two\n3. three\n'
+    expect(moveListItem(ol, listsIn(ol), [0, 2], [0, 0])).toBe('1. three\n2. one\n3. two\n')
+    const loose = '- a\n\n- b\n\n- c\n'
+    expect(moveListItem(loose, listsIn(loose), [0, 2], [0, 0])).toBe('- c\n\n- a\n\n- b\n')
+  })
+
+  it('moves a list item into another list, taking its marker and indent', () => {
+    const md = '# A\n\n- a1\n- a2\n\n# B\n\n1. b1\n2. b2\n'
+    const lists = listsIn(md)
+    expect(moveListItem(md, lists, [0, 0], [1, 1], true)).toBe('# A\n\n- a2\n\n# B\n\n1. b1\n2. b2\n3. a1\n')
+    expect(moveListItem(md, lists, [1, 1], [0, 0])).toBe('# A\n\n- b2\n- a1\n- a2\n\n# B\n\n1. b1\n')
+    const nested = '- a\n  - a1\n- b\n'
+    expect(moveListItem(nested, listsIn(nested), [0, 1], [1, 0])).toBe('- a\n  - b\n  - a1\n')
+    expect(moveListItem(nested, listsIn(nested), [0, 0], [1, 0])).toBe(nested)
   })
 
   it('renders smart-punctuated dashes as a divider', () => {
