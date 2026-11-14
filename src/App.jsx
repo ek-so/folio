@@ -4,7 +4,7 @@ import RepoSetup from './components/RepoSetup.jsx'
 import FileBrowser from './components/FileBrowser.jsx'
 import Editor from './components/Editor.jsx'
 import FileViewer from './components/FileViewer.jsx'
-import { fileKind } from './lib/files.js'
+import { fileKind, parentOf } from './lib/files.js'
 import PullToRefresh from './components/PullToRefresh.jsx'
 import NewFileModal from './components/NewFileModal.jsx'
 import EditListModal from './components/EditListModal.jsx'
@@ -37,6 +37,7 @@ import { useConfig } from './hooks/useConfig.js'
 import { useTagColors } from './hooks/useTagColors.js'
 import { useLocks } from './hooks/useLocks.js'
 import { useIcons, IconsContext } from './hooks/useIcons.js'
+import { ItemActionsContext } from './components/ItemMenu.jsx'
 import { emojiNamed } from './lib/icons.js'
 import ViewPage from './components/ViewPage.jsx'
 import RenameModal from './components/RenameModal.jsx'
@@ -134,6 +135,7 @@ export default function App() {
     : mainPage === PAGE.FILES ? show(up) : setTrails(o => ({ ...o, [mainPage]: trailTo(mainPage, o[mainPage], up) })))
   const [newFile, setNewFile] = useState(null) // { folder, kind, keys?, values?, stay? } while the sheet is open (keys: a new note's properties; stay: don't open it)
   const [viewDialog, setViewDialog] = useState(null) // { kind: 'rename' | 'delete', view } while a view's dialog is open
+  const [editWidgetsOf, setEditWidgetsOf] = useState(null) // the view whose Edit widgets sheet is open
   const [viewsSettings, setViewsSettings] = useState(false) // Views settings is open: add, order and remove views
   const [adding, setAdding] = useState(null) // { viewId, type } while a new widget's Setup is open
   const [confirmSignOut, setConfirmSignOut] = useState(false)
@@ -178,7 +180,7 @@ export default function App() {
     return out
   }, [symlinks])
   // A link's name in a source's header: go to the folder holding the link
-  const openLink = link => openFolder(link.slice(0, Math.max(link.lastIndexOf('/'), 0)))
+  const openLink = link => openFolder(parentOf(link))
 
   // Notes whose links change if `item` moves to `to` (their path -> new text),
   // from `edits` (the latest local changes). The moved notes' own links are
@@ -329,10 +331,8 @@ export default function App() {
   // settings files, and the app's own ways to change and open files
   const widgetServices = {
     canEdit: viewsReady && !!repo.remote,
-    // Locked files (lib/locks.js): `locked(path)`; Lock / Unlock in a card's ⋯ (`toggleLock`, only when `canLock`)
+    // Locked files (lib/locks.js): `locked(path)` (Lock / Unlock is in every file's ⋯, ItemMenu)
     locked: path => locks.isLocked(path),
-    canLock: locks.canEdit,
-    toggleLock: path => update(locks.toggle(path)),
     files: Object.keys(shown),
     folders: allFolders,
     notes: links.notes,
@@ -344,12 +344,11 @@ export default function App() {
     update: fn => update(guarded(fn)), // a widget never edits a locked note
     openFile: path => setSelectedFile(path),
     openFolder: path => openFolder(path),
+    // A widget's folder shown in File manager (its Show folder)
+    revealFolder: path => revealFolder(path),
     // A move that's refused shows as a toast; true when it's done
     move: (item, folder) => { const error = handleMove(item, folder); if (error) toast.error(error); return !error },
     moveAll,
-    rename: (item, name, title) => handleRename(item, name, title),
-    duplicate: item => handleDuplicate(item),
-    remove: item => handleDelete(item),
     // Several files to the archive at once (a board column's cards), told in one toast
     removeAll: items => {
       items.forEach(item => archive(item))
@@ -388,6 +387,23 @@ export default function App() {
   function followTrails(next) {
     if (page === mainPage && urlForPage(BASE, page, currentView(page, next[page])) !== url) replaceNext()
     setTrails(next)
+  }
+
+  // A folder (`path`, '' the root) shown in File manager: Show in folder, a widget's Show folder
+  function revealFolder(path) {
+    openFolder(path, PAGE.FILES)
+  }
+
+  // Where a file or folder is on GitHub (Open on GitHub): its place as GitHub has it (before a rename here), undefined when
+  // GitHub doesn't have it yet
+  function githubUrl(item) {
+    const remote = repo.remote
+    if (!remote) return undefined
+    const orig = item.type === 'dir' ? item.path : virtual[item.path]?.orig
+    const there = item.type === 'dir' ? Object.keys(remote.files).some(p => p.startsWith(orig + '/')) : orig in remote.files
+    if (!there) return undefined
+    const encoded = [remote.branch, ...orig.split('/')].map(encodeURIComponent).join('/')
+    return `https://github.com/${auth.repo}/${item.type === 'dir' ? 'tree' : 'blob'}/${encoded}`
   }
 
   // A copy of the file `item` next to it ("x 2.md"; a note's title gets " (copy)"); a symlink isn't copied (a toast says so)
@@ -640,8 +656,22 @@ export default function App() {
   const viewActions = {
     canEdit: viewsReady,
     onSettings: () => setViewsSettings(true),
+    // Edit widgets opens the view with its sheet (ViewPage's)
+    onEditWidgets: v => { choosePage(v.id); setEditWidgetsOf(v.id) },
     onRename: v => setViewDialog({ kind: 'rename', view: v }),
     onDelete: v => setViewDialog({ kind: 'delete', view: v }),
+  }
+  // What every file's and folder's ⋯ does (ItemMenu)
+  const itemActions = {
+    onRename: handleRename,
+    onDuplicate: handleDuplicate,
+    onDelete: handleDelete,
+    onMove: handleMove,
+    folders: allFolders,
+    isLocked: locks.isLocked,
+    onToggleLock: locks.canEdit ? path => update(locks.toggle(path)) : null,
+    onReveal: item => revealFolder(parentOf(item.path)),
+    githubUrl: item => githubUrl(item),
   }
   const menu = {
     brokenCount: links.index.broken.length,
@@ -675,6 +705,7 @@ export default function App() {
   return (
     <LinksContext.Provider value={linkInfo}>
       <IconsContext.Provider value={iconsInfo}>
+      <ItemActionsContext.Provider value={itemActions}>
       <NavContext.Provider value={{
         listDir: dir => listDir(shown, dir, repo.changed),
         views,
@@ -689,7 +720,6 @@ export default function App() {
         }) : null,
         expanded,
         onToggle: toggleFolder,
-        itemActions: { onRename: handleRename, onDuplicate: handleDuplicate, onDelete: handleDelete, onMove: handleMove, folders: allFolders },
         onOpenFolder: openFolder,
         onOpenFile: setSelectedFile,
         onBack: page === mainPage ? goUp : null,
@@ -717,7 +747,7 @@ export default function App() {
               <Spinner />
             </div>
           ) : page === PAGE.ASSETS ? (
-            <Assets files={shown} added={assets.added} backlinks={links.index.backlinks} onOpen={path => setSelectedFile(path, PAGE.FILES)} onReveal={path => openFolder(path.slice(0, Math.max(path.lastIndexOf('/'), 0)), PAGE.FILES)} itemActions={{ onRename: handleRename, onDuplicate: handleDuplicate, onDelete: handleDelete, onMove: handleMove, folders: allFolders }} />
+            <Assets files={shown} added={assets.added} backlinks={links.index.backlinks} onOpen={path => setSelectedFile(path, PAGE.FILES)} />
           ) : !view && page === PAGE.GRAPH ? (
             <GraphPage page={page} files={shown} backlinks={links.index.backlinks} notes={links.notes} repoName={auth.repo.split('/')[1]} onOpenFile={path => setSelectedFile(path)} onOpenFolder={path => openFolder(path)} />
           ) : !view ? (
@@ -730,9 +760,10 @@ export default function App() {
               onRemove={id => removeWidgetOf(page, id)}
               onMove={(from, to) => saveViews(moveWidget(views, page, from, to))}
               onRenameWidget={(id, name) => saveViews(renameWidget(views, page, id, name))}
-              canEditView={viewActions.canEdit}
-              onRename={() => viewActions.onRename(pages.find(p => p.id === page))}
-              onRemoveView={() => viewActions.onDelete(pages.find(p => p.id === page))}
+              view={pages.find(p => p.id === page)}
+              viewActions={viewActions}
+              editing={editWidgetsOf === page}
+              onCloseEditing={() => setEditWidgetsOf(null)}
             />
           ) : page === PAGE.LINKS ? (
             <BrokenLinks
@@ -749,11 +780,6 @@ export default function App() {
               onOpenLink={openLink}
               path={selectedFile}
               entry={entry}
-              onRename={handleRename}
-              onDuplicate={handleDuplicate}
-              onDelete={handleDelete}
-              onMove={handleMove}
-              folders={allFolders}
             />
           ) : entry ? (
             <Editor
@@ -771,11 +797,6 @@ export default function App() {
                 update(ch => setEdit(ch, virtual[selectedFile], content, original))}
               onNavigate={openFolder}
               onOpenFile={setSelectedFile}
-              onRename={handleRename}
-              onDuplicate={handleDuplicate}
-              onDelete={handleDelete}
-              onMove={handleMove}
-              folders={allFolders}
               columns={fileMoves}
               valueScope={valueScope}
               backlinks={links.index.backlinks[selectedFile]}
@@ -790,11 +811,6 @@ export default function App() {
               loading={!repo.remote && !repo.error}
               error={repo.error}
               notice={repo.remote?.truncated ? 'This repo is too large to list in full; some files are missing.' : ''}
-              onRename={handleRename}
-              onDuplicate={handleDuplicate}
-              onDelete={handleDelete}
-              onMove={handleMove}
-              folders={allFolders}
               onSelect={setSelectedFile}
               onNewFile={(f, kind) => setNewFile({ folder: f, kind })}
               onUpload={handleUpload}
@@ -933,6 +949,7 @@ export default function App() {
         </SingleOpenProvider>
       </TooltipProvider>
       </NavContext.Provider>
+      </ItemActionsContext.Provider>
       </IconsContext.Provider>
     </LinksContext.Provider>
   )

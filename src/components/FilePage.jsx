@@ -7,8 +7,8 @@ import TitleBar from './TitleBar.jsx'
 
 // Screen for one open file (note, image or PDF):
 // the content box: TitleBar (← and name) with ⋯ and
-// `actions`, and the file's content. `lock`: ItemMenu's (a note's Lock / Unlock).
-export default function FilePage({ linkedBy, onOpenLink, path, name, changed, onRename, onDuplicate, onDelete, onMove, folders, columns, lock, actions, children }) {
+// `actions`, and the file's content. `extra`: what only this page's ⋯ offers (ItemMenu's; a board card's Move to column).
+export default function FilePage({ linkedBy, onOpenLink, path, name, changed, extra, actions, children }) {
   return (
     <PageLayout>
       <Surface title={
@@ -17,7 +17,7 @@ export default function FilePage({ linkedBy, onOpenLink, path, name, changed, on
           changed={changed}
           badge={linkedBy?.length ? <SymlinkedBy links={linkedBy} onOpen={onOpenLink} /> : null}
         >
-          <ItemMenu item={fileItem(path)} onRename={onRename} onDuplicate={onDuplicate} onDelete={onDelete} onMove={onMove} folders={folders} columns={columns} lock={lock} />
+          <ItemMenu item={fileItem(path)} extra={extra} />
           {actions}
         </TitleBar>
       }>

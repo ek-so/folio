@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { DotsThree, Globe, FileText, File, Folder, LinkBreak, PencilSimple, Trash } from '@phosphor-icons/react'
 import CopyLinkItem from './CopyLinkItem.jsx'
+import { menuSections } from './MoreMenu.jsx'
 import { cn, own } from '@/lib/utils.js'
 import { Badge } from './ui/badge.jsx'
 import { Button } from './ui/button.jsx'
@@ -57,9 +58,13 @@ export default function LinkBadge({ href, text, kind, path, onEdit, onRemove }) 
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" onCloseAutoFocus={e => e.preventDefault()}>
-          <CopyLinkItem link={copied} />
-          {onEdit && <DropdownMenuItem onSelect={onEdit}><PencilSimple /> Edit link</DropdownMenuItem>}
-          {onRemove && <DropdownMenuItem variant="destructive" onSelect={onRemove}><Trash /> Remove</DropdownMenuItem>}
+          {menuSections([
+            <>
+              <CopyLinkItem link={copied} />
+              {onEdit && <DropdownMenuItem onSelect={onEdit}><PencilSimple /> Edit link</DropdownMenuItem>}
+            </>,
+            onRemove && <DropdownMenuItem variant="destructive" onSelect={onRemove}><Trash /> Remove</DropdownMenuItem>,
+          ])}
         </DropdownMenuContent>
       </DropdownMenu>
     </span>

@@ -13,8 +13,7 @@ import { EmptyMessage } from './EmptyState.jsx'
 
 // What the title bar's folder tree needs from App: `listDir(dir)`, `symlinks`, the `current`
 // path (open file or folder), the open `file` (null for a folder), `dir` (the open folder, or the open file's), the open folders
-// (`expanded`, `onToggle`), `onOpenFolder` / `onOpenFile`, `itemActions` for each row's ⋯
-// (ItemMenu's onRename / onDuplicate / onDelete / onMove / folders, as in File manager), the title
+// (`expanded`, `onToggle`), `onOpenFolder` / `onOpenFile` (each row's ⋯ is ItemMenu, as in File manager), the title
 // bar's `onBack` (null without a step back), `viewTree()` (on a view's page: its widgets and what they show, as nodes; null elsewhere), and for the root's RepoMenu the open `repo`, the `repos` used on
 // this device and `onSwitchRepo(repo)`.
 export const NavContext = createContext(null)
@@ -62,7 +61,7 @@ function Rows({ dir, depth }) {
           disabled: !openable,
           tooltip: link?.error ? `${item.name} ${LINK_ERRORS[link.error]}` : link?.path ? `Symlinked from ${link.path}` : undefined,
           onClick: () => folder ? nav.onOpenFolder(item.path) : nav.onOpenFile(item.path), // a symlink opens its source (App)
-          trailing: <ItemMenu item={item} {...nav.itemActions} inList hoverReveal />,
+          trailing: <ItemMenu item={item} inList hoverReveal />,
           active: nav.current === item.path,
         }} />
         {open && <ul><Rows dir={item.path} depth={depth + 1} /></ul>}
@@ -85,7 +84,7 @@ function NodeRows({ nodes, depth, expanded, onToggle }) {
           icon: <FileIcon path={node.path} dir={node.dir} />,
           title: node.name,
           onClick: () => node.dir ? nav.onOpenFolder(node.path) : nav.onOpenFile(node.path),
-          trailing: <ItemMenu item={node.dir ? { path: node.path, name: node.path.split('/').pop(), type: 'dir' } : fileItem(node.path)} {...nav.itemActions} inList hoverReveal />,
+          trailing: <ItemMenu item={node.dir ? { path: node.path, name: node.path.split('/').pop(), type: 'dir' } : fileItem(node.path)} inList hoverReveal />,
           active: nav.current === node.path,
         } : {
           icon: Icon && <Icon className="text-muted-foreground" />,

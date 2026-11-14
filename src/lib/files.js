@@ -22,6 +22,9 @@ export function fileKind(path) {
   return IMAGE_MIME[ext] ? 'image' : 'file'
 }
 
+// The folder a path is in ('' at the root)
+export const parentOf = path => path.slice(0, Math.max(path.lastIndexOf('/'), 0))
+
 // A note's own name: last path segment without ".md" (what a link to it says)
 export const fileName = path => path.split('/').pop().replace(/\.md$/, '')
 

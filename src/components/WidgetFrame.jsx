@@ -1,11 +1,11 @@
 import { createContext, useContext, useState } from 'react'
 import { Trash, FolderOpen, PencilSimple } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils.js'
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from './ui/dropdown-menu.jsx'
+import { DropdownMenuItem } from './ui/dropdown-menu.jsx'
 import Spinner from './Spinner.jsx'
 import EmptyState from './EmptyState.jsx'
 import FolderSheet from './FolderSheet.jsx'
-import MoreButton from './MoreButton.jsx'
+import MoreMenu from './MoreMenu.jsx'
 import { EmptyMessage } from './EmptyState.jsx'
 
 // What the view (ViewPage) tells each widget's frame: its own `name` (Rename in its ⋯; none: the kind's title) and
@@ -14,13 +14,13 @@ export const WidgetContext = createContext(null)
 
 // What every widget on a view is framed by (board, planner, pinned): its title row, then its body in one of its states.
 // Title row: its name (WidgetContext's, else `title`; bold) with `subtitle` under it (muted: a widget's folder), then
-// `controls` (the widget's own, such as the planner's calendar / list) and ⋯ (a plain ghost button): the widget's own
-// `menu` items, a separator, Rename (WidgetContext's `onRename`) and `removeLabel` (red, Trash; `onRemove`, disabled
+// `controls` (the widget's own, such as the planner's calendar / list) and ⋯ (MoreMenu, a plain ghost button): the widget's
+// own `menu` items, then Rename (WidgetContext's `onRename`), then Remove widget (red, Trash; `onRemove`, disabled
 // without `canEdit`). Body: a spinner until `ready`; "This `noun`'s settings can't be read."
 // when not `readable`; with `folder` ({ name, missing, folders, sheetTitle, sheetText, onPick }) gone, "Its folder … is gone."
 // and Select folder (FolderSheet: another folder for it); else `children()` (only called then: it may rely on the
 // settings). `className` goes on the frame.
-export default function WidgetFrame({ title, subtitle, noun, controls, menu, removeLabel, onRemove, canEdit, ready, readable, folder, className, children }) {
+export default function WidgetFrame({ title, subtitle, noun, controls, menu, onRemove, canEdit, ready, readable, folder, className, children }) {
   const [relocating, setRelocating] = useState(false) // picking another folder, its own being gone
   const own = useContext(WidgetContext)
   const body = !ready ? <div className="flex justify-center py-12"><Spinner /></div>
@@ -35,17 +35,14 @@ export default function WidgetFrame({ title, subtitle, noun, controls, menu, rem
           {subtitle !== undefined && <span className="truncate text-sm text-muted-foreground">{subtitle}</span>}
         </h2>
         {controls}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <MoreButton variant="ghost" aria-label={`${noun[0].toUpperCase()}${noun.slice(1)} actions`} />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" onCloseAutoFocus={e => e.preventDefault()}>
-            {menu}
-            <DropdownMenuSeparator />
-            {own && <DropdownMenuItem disabled={!own.onRename} onSelect={own.onRename}><PencilSimple /> Rename</DropdownMenuItem>}
-            <DropdownMenuItem variant="destructive" disabled={!canEdit} onSelect={onRemove}><Trash /> {removeLabel}</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <MoreMenu
+          variant="ghost" label={`${noun[0].toUpperCase()}${noun.slice(1)} actions`}
+          sections={[
+            menu,
+            own && <DropdownMenuItem disabled={!own.onRename} onSelect={own.onRename}><PencilSimple /> Rename</DropdownMenuItem>,
+            <DropdownMenuItem variant="destructive" disabled={!canEdit} onSelect={onRemove}><Trash /> Remove widget</DropdownMenuItem>,
+          ]}
+        />
       </div>
       {body}
       {relocating && folder && (

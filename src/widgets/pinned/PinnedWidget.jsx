@@ -1,14 +1,10 @@
 import { useMemo, useState } from 'react'
-import { PencilSimple, Plus, ListBullets, Trash } from '@phosphor-icons/react'
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu.jsx'
-import RenameModal from '@/components/RenameModal.jsx'
+import { Plus, ListBullets } from '@phosphor-icons/react'
+import { DropdownMenuItem } from '@/components/ui/dropdown-menu.jsx'
 import ConfirmModal from '@/components/ConfirmModal.jsx'
 import EditListModal from '@/components/EditListModal.jsx'
 import FileIcon from '@/components/FileIcon.jsx'
 import NoteCard, { ownListeners, cardClick } from '@/components/NoteCard.jsx'
-import { EmojiSubmenu } from '@/components/EmojiPicker.jsx'
-import CopyLinkItem from '@/components/CopyLinkItem.jsx'
-import { repoLink } from '@/lib/markdown.js'
 import { DndContext, closestCenter } from '@dnd-kit/core'
 import { SortableContext, useSortable, rectSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
@@ -20,7 +16,7 @@ import { plural } from '@/lib/plural.js'
 import { parsePinned, settingsOf, settingsWrite, addedItem, removedItem, replacedItem, reorderedItem, isPinnedFolder } from './pinned.js'
 import { PinPicker } from './PinnedSetup.jsx'
 import WidgetFrame from '@/components/WidgetFrame.jsx'
-import MoreButton from '@/components/MoreButton.jsx'
+import ItemMenu from '@/components/ItemMenu.jsx'
 import { EmptyMessage } from '@/components/EmptyState.jsx'
 
 // The Pinned widget (pinned.js): "Pinned" and its ⋯ (Pin note or folder…, Edit pinned…: order them and take them out,
@@ -28,8 +24,8 @@ import { EmptyMessage } from '@/components/EmptyState.jsx'
 // fit, each at least 16rem; the cards of a row one height). Every card shows its icon (FileIcon: its emoji, else a note's or folder's
 // icon); a note's is a board's card (NoteCard: title and description), a folder's has its name and how many items it holds
 // where a description sits. A tap opens the note or folder; a card is dragged
-// into another's place (when the widget can be saved). Its ⋯: Rename, Emoji, Copy link, Remove from widget (confirmed; the
-// note or folder stays). One that's gone is dashed: a tap picks another in its place.
+// into another's place (when the widget can be saved). Its ⋯ is its file's or folder's (ItemMenu: Show in folder, the core),
+// with Remove from widget (confirmed; the note or folder stays) in place of Remove; one that's gone has only that. One that's gone is dashed: a tap picks another in its place.
 export default function PinnedWidget({ id, services, onRemove }) {
   const file = settingsOf(services.config.read, id)
   const settings = file.ready && file.text !== undefined ? parsePinned(file.text) : null
@@ -78,7 +74,7 @@ export default function PinnedWidget({ id, services, onRemove }) {
   // Its dialogs sit beside its frame
   return <>
     <WidgetFrame
-      title="Pinned" noun="Pinned widget" menu={menu} removeLabel="Remove widget" onRemove={onRemove} canEdit={services.canEdit}
+      title="Pinned" noun="Pinned widget" menu={menu} onRemove={onRemove} canEdit={services.canEdit}
       ready={file.ready} readable={!!settings}
     >{body}</WidgetFrame>
     {adding && (
@@ -118,9 +114,7 @@ export default function PinnedWidget({ id, services, onRemove }) {
 // `onTakeOut` (null: it can't be) asks to remove it from the widget
 function PinnedCard({ path, dir, found, services, files, canMove, onTakeOut, onReplace }) {
   const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({ id: path, disabled: !canMove })
-  const [renaming, setRenaming] = useState(false)
   const [replacing, setReplacing] = useState(false)
-  const [menuOpen, setMenuOpen] = useState(false)
   const item = dir ? { path, name: path.split('/').pop(), type: 'dir' } : fileItem(path)
   // A note's card opens the note (or a link in its description what that points to), a folder's the folder
   const open = !found ? () => { if (onReplace) setReplacing(true) }
@@ -128,29 +122,10 @@ function PinnedCard({ path, dir, found, services, files, canMove, onTakeOut, onR
     : cardClick(path, files, services.openFile, services.openFolder)
   const menu = (
     <div className="contents" {...own}>
-      <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
-        <DropdownMenuTrigger asChild>
-          <MoreButton inRow reveal aria-label={`Actions for ${displayName(path)}`} className="-my-1.5 -mr-1.5" />
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" onCloseAutoFocus={e => e.preventDefault()}>
-          <DropdownMenuItem disabled={!found} onSelect={() => setRenaming(true)}><PencilSimple /> Rename</DropdownMenuItem>
-          {found && <EmojiSubmenu path={path} onDone={() => setMenuOpen(false)} />}
-          <CopyLinkItem link={repoLink(path)} disabled={!found} />
-          <DropdownMenuSeparator />
-          <DropdownMenuItem variant="destructive" disabled={!onTakeOut} onSelect={onTakeOut}><Trash /> Remove from widget</DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-      {renaming && (
-        <RenameModal
-          item={item}
-          onRename={(name, title) => {
-            const error = services.rename(item, name, title)
-            if (!error) setRenaming(false)
-            return error
-          }}
-          onClose={() => setRenaming(false)}
-        />
-      )}
+      <ItemMenu
+        item={found ? item : null} reveal inList hoverReveal label={`Actions for ${displayName(path)}`} className="-my-1.5 -mr-1.5"
+        remove={{ label: 'Remove from widget', onSelect: onTakeOut }}
+      />
       {replacing && (
         <PinPicker title={`Select ${dir ? 'folder' : 'note'}`} services={services} onPick={(to, first) => { setReplacing(false); onReplace(to, first) }} onClose={() => setReplacing(false)} />
       )}

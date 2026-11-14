@@ -92,7 +92,7 @@ export function NavRail({ page, pages, hrefOf, viewActions, onPage, onSearch, re
           {pageButton(p)}
           {!collapsed && (
             <div className="absolute inset-y-0 right-1 flex items-center">
-              <ViewMenu view={p} disabled={!viewActions.canEdit} onRename={viewActions.onRename} onDelete={viewActions.onDelete} />
+              <ViewMenu view={p} actions={viewActions} inRow />
             </div>
           )}
         </div>

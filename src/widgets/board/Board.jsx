@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { Trash, PencilSimple, Tag, Columns, Check, CaretDown, Rows } from '@phosphor-icons/react'
+import { Trash, PencilSimple, Tag, Columns, Check, CaretDown, Rows, FolderOpen } from '@phosphor-icons/react'
 import { DndContext, DragOverlay, closestCenter, closestCorners, pointerWithin } from '@dnd-kit/core'
 import { useDragSensors } from '@/hooks/useDragSensors.js'
 import { SortableContext, useSortable, arrayMove, horizontalListSortingStrategy, verticalListSortingStrategy } from '@dnd-kit/sortable'
@@ -20,7 +20,7 @@ import { LOOSE, looseName } from './board.js'
 import { KEEP_DAYS } from '@/lib/archive.js'
 import { useBoard } from './useBoard.js'
 import { plural } from '@/lib/plural.js'
-import MoreButton from '@/components/MoreButton.jsx'
+import MoreMenu from '@/components/MoreMenu.jsx'
 
 // Drag ids: a column's and a card's
 const colId = key => 'col:' + key
@@ -61,6 +61,7 @@ export default function Board({ id, services, onRemove }) {
   const menu = <>
     <DropdownMenuItem disabled={off} onSelect={() => setChoosing('columns')}><Columns /> Columns</DropdownMenuItem>
     <DropdownMenuItem disabled={off} onSelect={() => setChoosing('properties')}><Tag /> Properties</DropdownMenuItem>
+    <DropdownMenuItem disabled={!board || data?.missing} onSelect={() => services.revealFolder(board.folder)}><FolderOpen /> Show folder</DropdownMenuItem>
   </>
 
   let body // only when its settings are read and its folder is there (WidgetFrame shows the other states)
@@ -162,7 +163,7 @@ export default function Board({ id, services, onRemove }) {
   return <>
     <WidgetFrame
       title="Board" subtitle={board ? board.folder || services.repoName : undefined} noun="board" menu={menu}
-      removeLabel="Remove board" onRemove={onRemove} canEdit={canEdit} ready={ready} readable={!!board}
+      onRemove={onRemove} canEdit={canEdit} ready={ready} readable={!!board}
       folder={board && { name: board.folder, missing: data.missing, folders: ['', ...services.folders], sheetTitle: 'Board from folder…', sheetText: 'Its files, in subfolders too, become the cards, in a column per status.', onPick: act.setFolder }}
     >{() => body}</WidgetFrame>
       {renaming && (
@@ -266,15 +267,14 @@ function Column({ column, canEdit, count, more, onShowMore, onNewCard, onRename,
           {/* With a mouse on a wider screen the count and ⋯ share one spot (a grid cell); on phones and touch they sit side by side */}
           <div className="flex shrink-0 items-center gap-space-xs md:pointer-fine:grid md:pointer-fine:*:[grid-area:1/1]">
             <span className="pointer-events-none flex h-control-md min-w-control-md items-center justify-center text-sm tabular-nums text-muted-foreground md:pointer-fine:group-hover/title:opacity-0 md:pointer-fine:group-has-[[data-state=open]]/title:opacity-0 md:pointer-fine:group-has-[:focus-visible]/title:opacity-0">{count}</span>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <MoreButton inRow aria-label={`Actions for ${column.name}`} disabled={!canEdit} className="md:pointer-fine:opacity-0 md:pointer-fine:group-hover/title:opacity-100 md:pointer-fine:focus-visible:opacity-100 md:pointer-fine:data-[state=open]:opacity-100" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" onCloseAutoFocus={e => e.preventDefault()}>
-                <DropdownMenuItem onSelect={onRename}><PencilSimple /> Rename</DropdownMenuItem>
-                <DropdownMenuItem variant="destructive" onSelect={onDelete}><Trash /> Remove</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <MoreMenu
+              inRow label={`Actions for ${column.name}`} disabled={!canEdit}
+              reveal="md:pointer-fine:opacity-0 md:pointer-fine:group-hover/title:opacity-100 md:pointer-fine:focus-visible:opacity-100 md:pointer-fine:data-[state=open]:opacity-100"
+              sections={[
+                <DropdownMenuItem key="rename" onSelect={onRename}><PencilSimple /> Rename</DropdownMenuItem>,
+                <DropdownMenuItem key="remove" variant="destructive" onSelect={onDelete}><Trash /> Remove</DropdownMenuItem>,
+              ]}
+            />
           </div>
         </div>
       )}

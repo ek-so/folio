@@ -4,6 +4,7 @@ import { Check, PencilSimple, LockSimple } from '@phosphor-icons/react'
 import { Button } from './ui/button.jsx'
 import Spinner from './Spinner.jsx'
 import FilePage from './FilePage.jsx'
+import ColumnSubmenu from './ColumnSubmenu.jsx'
 import MarkdownPreview from './MarkdownPreview.jsx'
 import Backlinks from './Backlinks.jsx'
 import MarkdownEditor from './MarkdownEditor.jsx'
@@ -20,7 +21,7 @@ import { EmptyMessage } from './EmptyState.jsx'
 // `locked` (lib/locks.js): nothing in it can be changed (no ✏️, double tap, ticks, list dragging, badges' values or
 // links' edits); a lock icon takes ✏️'s place and unlocks it (`onToggleLock`, also Lock / Unlock in ⋯; none when the
 // locks can't be saved). Renaming, moving and duplicating stay.
-export default function Editor({ linkedBy, onOpenLink, path, entry, files, notes, onEditNotes, tagColors, edited, onEdit, onNavigate, onOpenFile, onRename, onDuplicate, onDelete, onMove, folders, columns, valueScope, backlinks, locked, onToggleLock }) {
+export default function Editor({ linkedBy, onOpenLink, path, entry, files, notes, onEditNotes, tagColors, edited, onEdit, onNavigate, onOpenFile, columns, valueScope, backlinks, locked, onToggleLock }) {
   const { content, change, loading, loadError, beginEdit, endEdit } = useNote(entry, edited, onEdit, valueScope?.required, valueScope?.order)
   const [mode, setMode] = useState('preview')
   const [editedAt, setEditedAt] = useState(null) // offset to show when back in preview
@@ -74,13 +75,7 @@ export default function Editor({ linkedBy, onOpenLink, path, entry, files, notes
       path={path}
       name={fileName}
       changed={ready && edited !== undefined}
-      onRename={onRename}
-      onDuplicate={onDuplicate}
-      onDelete={onDelete}
-      onMove={onMove}
-      folders={folders}
-      columns={locked ? undefined : columns}
-      lock={{ locked, onToggle: onToggleLock }}
+      extra={columns && !locked && <ColumnSubmenu columns={columns.columns} column={columns.column} onSelect={columns.onSelect} />}
       actions={<>
         {locked ? (
           <Button variant="ghost-outline" size="icon" aria-label="Unlock" tooltip="Locked: tap to unlock" disabled={!onToggleLock} onClick={onToggleLock}>

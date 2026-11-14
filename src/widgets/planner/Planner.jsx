@@ -1,6 +1,6 @@
 import { toast } from 'sonner'
 import { Fragment, useState, useMemo, useRef, useCallback, useEffect, useLayoutEffect } from 'react'
-import { Tag, Plus, CalendarBlank, CrosshairSimple, CalendarDots, ListBullets, ArrowsClockwise, SortAscending, Check } from '@phosphor-icons/react'
+import { Tag, Plus, CalendarBlank, CrosshairSimple, CalendarDots, ListBullets, ArrowsClockwise, SortAscending, Check, FolderOpen } from '@phosphor-icons/react'
 import { DndContext, DragOverlay, useDroppable, pointerWithin } from '@dnd-kit/core'
 import { SortableContext, useSortable, arrayMove, rectSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
@@ -158,6 +158,7 @@ export default function Planner({ id, services, onRemove }) {
         </DropdownMenuSubContent>
       </DropdownMenuSub>
     )}
+    <DropdownMenuItem disabled={!planner || missing} onSelect={() => services.revealFolder(planner.folder)}><FolderOpen /> Show folder</DropdownMenuItem>
   </>
 
   let body // only when its settings are read and its folder is there (WidgetFrame shows the other states)
@@ -304,7 +305,7 @@ export default function Planner({ id, services, onRemove }) {
   return <>
     <WidgetFrame
       title="Planner" subtitle={planner ? planner.folder || services.repoName : undefined} noun="planner" controls={controls} menu={menu}
-      removeLabel="Remove planner" onRemove={onRemove} canEdit={canEdit} ready={ready} readable={!!planner}
+      onRemove={onRemove} canEdit={canEdit} ready={ready} readable={!!planner}
       folder={planner && { name: planner.folder, missing, folders: ['', ...services.folders], sheetTitle: 'Planner from folder…', sheetText: 'Its notes become cards, each on the day of its date.', onPick: act.setFolder }}
     >{() => body}</WidgetFrame>
       {planner && (

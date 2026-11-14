@@ -1,95 +1,49 @@
 import { useState } from 'react'
-import { PencilSimple, Trash, Columns, Copy, TextAlignLeft, CheckCircle, Lock, LockOpen } from '@phosphor-icons/react'
+import { Columns, TextAlignLeft, CheckCircle } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button.jsx'
 import { Input } from '@/components/ui/input.jsx'
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu.jsx'
-import { EmojiSubmenu } from '@/components/EmojiPicker.jsx'
+import { DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu.jsx'
 import ColumnSubmenu from '@/components/ColumnSubmenu.jsx'
 import BottomSheet from '@/components/BottomSheet.jsx'
-import DeleteModal from '@/components/DeleteModal.jsx'
-import RenameModal from '@/components/RenameModal.jsx'
-import CopyLinkItem from '@/components/CopyLinkItem.jsx'
-import { repoLink } from '@/lib/markdown.js'
 import { cn, own } from '@/lib/utils.js'
 import { fileItem } from '@/lib/folderNotes.js'
 import { properties, valueList, DESCRIPTION } from '@/lib/frontmatter.js'
-import MoreButton from './MoreButton.jsx'
+import ItemMenu from './ItemMenu.jsx'
 
-// The CardMenu props every widget's card gives the same way (a board's, a planner's): its description, and
-// editing it (`act`: the widget's useFolderNotes actions), renaming (title and file name together), duplicating (`services`: the app's) and removing it.
-// `text`: its note (undefined when it isn't on this device). The widget adds its own (Mark as done, Move to column)
-// A locked card (lib/locks.js) has no Edit description and no Remove; Lock / Unlock toggles it.
-export const cardActions = (path, text, act, services) => {
-  const locked = services.locked(path)
-  return {
-    path,
-    description: text === undefined ? '' : valueList(properties(text)[DESCRIPTION] ?? '').join(', '),
-    onDescription: act.canEditText(path) && !locked ? value => act.setDescription(path, value) : undefined,
-    onRename: (name, title) => services.rename(fileItem(path), name, title),
-    onDuplicate: () => services.duplicate(fileItem(path)),
-    onDelete: locked ? undefined : () => act.deleteCard(path),
-    lock: { locked, onToggle: services.canLock ? () => services.toggleLock(path) : undefined },
-  }
-}
+// The CardMenu props every widget's card gives the same way (a board's, a planner's): its description and editing it
+// (`act`: the widget's useFolderNotes actions). `text`: its note (undefined when it isn't on this device). The widget adds
+// its own (Mark as done, Move to column). A locked card (lib/locks.js) has no Edit description.
+export const cardActions = (path, text, act, services) => ({
+  path,
+  description: text === undefined ? '' : valueList(properties(text)[DESCRIPTION] ?? '').join(', '),
+  onDescription: act.canEditText(path) && !services.locked(path) ? value => act.setDescription(path, value) : undefined,
+})
 
-// A card's ⋯ menu, a board's and a planner's (hidden until the card is hovered with a mouse, always shown on touch):
-// Mark as done (only with `onDone`, a planner's), Add / Edit
-// description (`description`, its text; only with `onDescription`, a note on this device), Rename (its title and file
-// name together, `RenameModal`; `onRename(name, title)` returns an error or null), Emoji (its note's icon, as in a file's ⋯: `EmojiGrid`, `IconsContext`; the card shows it before its title), Duplicate (a copy of the file next to it), Copy link (`repoLink`), Move to column (only with `columns`, a board's: a submenu of its
-// columns, then Edit columns… that opens its Columns dialog) and Remove (the file, to the archive like anywhere else, confirmed). `columns`: [{ key, name }] shown,
-// `column`: the card's key. `inRow`: in a list row (a planner's list view), which has its own padding: none pulled into the corner. Its dialogs are in a `contents` div so a click in them stays
-// theirs, never the card's.
-export default function CardMenu({ path, description, columns, column, onDone, onDescription, onRename, onDuplicate, onMove, onEditColumns, onDelete, inRow, lock }) {
-  const [editing, setEditing] = useState(null) // 'description' while its dialog is open
-  const [renaming, setRenaming] = useState(false)
-  const item = fileItem(path)
-  const [deleting, setDeleting] = useState(false)
-  const [open, setOpen] = useState(false)
+// A card's ⋯, a board's and a planner's (hidden until the card is hovered with a mouse, always shown on touch): its file's
+// ItemMenu (Show in folder, the core, Remove) with what only a card offers on top: Mark as done (only with `onDone`, a
+// planner's), Add / Edit description (`description`, its text; only with `onDescription`, a note on this device) and Move
+// to column (only with `columns`, a board's: a submenu of its columns, `column` the card's key, then Edit columns… that
+// opens its Columns dialog; `onMove(key)`). `inRow`: in a list row (a planner's list view), which has its own padding:
+// none pulled into the corner. Its dialogs are in a `contents` div so a click in them stays theirs, never the card's.
+export default function CardMenu({ path, description, columns, column, onDone, onDescription, onMove, onEditColumns, inRow }) {
+  const [editing, setEditing] = useState(false) // the description's dialog is open
   return (
     <div className="contents" {...own}>
-      <DropdownMenu open={open} onOpenChange={setOpen}>
-        <DropdownMenuTrigger asChild>
-          <MoreButton inRow reveal aria-label="Card actions" className={cn(!inRow && '-my-1.5 -mr-1.5')} />
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" onCloseAutoFocus={e => e.preventDefault()}>
-          {onDone && <>
-            <DropdownMenuItem onSelect={onDone}><CheckCircle /> Mark as done</DropdownMenuItem>
-            <DropdownMenuSeparator />
-          </>}
-          {onDescription && <DropdownMenuItem onSelect={() => setEditing('description')}><TextAlignLeft /> {description ? 'Edit' : 'Add'} description</DropdownMenuItem>}
-          <DropdownMenuItem onSelect={() => setRenaming(true)}><PencilSimple /> Rename</DropdownMenuItem>
-          <EmojiSubmenu path={path} onDone={() => setOpen(false)} />
-          <DropdownMenuItem onSelect={onDuplicate}><Copy /> Duplicate</DropdownMenuItem>
-          <CopyLinkItem link={repoLink(path)} />
-          {lock && <DropdownMenuItem disabled={!lock.onToggle} onSelect={lock.onToggle}>{lock.locked ? <><LockOpen /> Unlock</> : <><Lock /> Lock</>}</DropdownMenuItem>}
+      <ItemMenu
+        item={fileItem(path)} reveal inList hoverReveal label="Card actions" className={cn(!inRow && '-my-1.5 -mr-1.5')}
+        extra={<>
+          {onDone && <DropdownMenuItem onSelect={onDone}><CheckCircle /> Mark as done</DropdownMenuItem>}
+          {onDescription && <DropdownMenuItem onSelect={() => setEditing(true)}><TextAlignLeft /> {description ? 'Edit' : 'Add'} description</DropdownMenuItem>}
           {columns && (
             <ColumnSubmenu columns={columns} column={column} onSelect={onMove}>
               <DropdownMenuSeparator />
               <DropdownMenuItem onSelect={onEditColumns}><Columns /> Edit columns…</DropdownMenuItem>
             </ColumnSubmenu>
           )}
-          {onDelete && <>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem variant="destructive" onSelect={() => setDeleting(true)}><Trash /> Remove</DropdownMenuItem>
-          </>}
-        </DropdownMenuContent>
-      </DropdownMenu>
-      {editing === 'description' && (
-        <TextModal title={description ? 'Edit description' : 'Add description'} label="Description" value={description} onSave={value => { setEditing(null); onDescription(value) }} onClose={() => setEditing(null)} />
-      )}
-      {renaming && (
-        <RenameModal
-          item={item}
-          onRename={(name, title) => { const err = onRename(name, title); if (!err) setRenaming(false); return err }}
-          onClose={() => setRenaming(false)}
-        />
-      )}
-      {deleting && (
-        <DeleteModal
-          item={item}
-          onDelete={() => { setDeleting(false); onDelete() }}
-          onClose={() => setDeleting(false)}
-        />
+        </>}
+      />
+      {editing && (
+        <TextModal title={description ? 'Edit description' : 'Add description'} label="Description" value={description} onSave={value => { setEditing(false); onDescription(value) }} onClose={() => setEditing(false)} />
       )}
     </div>
   )

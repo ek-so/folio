@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { fileItem, isTechnical, editNotes, withNoteKeys } from '@/lib/folderNotes.js'
+import { isTechnical, editNotes, withNoteKeys } from '@/lib/folderNotes.js'
 import { editNote } from '@/lib/changes.js'
 import { DESCRIPTION, frontMatter, withoutKeys, renameKey, keyNameError, withValue, valueActions } from '@/lib/frontmatter.js'
 
@@ -44,8 +44,6 @@ export function useFolderNotes(services, folder) {
     canEditText: path => services.notes[path] !== undefined,
     // The card's description (kept, empty when emptied: every note of a widget has one)
     setDescription: (path, text) => editOne(path, t => withValue(t, DESCRIPTION, text)),
-    // The card's note deleted, like any delete (the app's: links and trails follow)
-    deleteCard: path => services.remove(fileItem(path)),
     // `from` renamed `to` (and given `color`), or `value` taken out, in the property `key` in every note
     editValue: values.editValue,
     removeValue: values.removeValue,

@@ -23,7 +23,7 @@ import { useIsDesktop } from '../hooks/useIsDesktop.js'
 import { useIconsContext } from '../hooks/useIcons.js'
 import { EmptyMessage } from './EmptyState.jsx'
 
-export default function FileBrowser({ path, onNavigate, listDir, loading, error, notice, onSelect, onNewFile, onRename, onDuplicate, onDelete, onMove, folders, onUpload, onDropMove, symlinks = {}, linkedBy, onOpenLink }) {
+export default function FileBrowser({ path, onNavigate, listDir, loading, error, notice, onSelect, onNewFile, onUpload, onDropMove, symlinks = {}, linkedBy, onOpenLink }) {
   const { iconOf } = useIconsContext()
   // Symlinked folders sort with the folders
   const isFolder = i => i.type === 'dir' || symlinks[i.path]?.kind === 'folder'
@@ -152,7 +152,7 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
           // Where a link points: the browser's own tooltip on hover
           tooltip={link?.path ? `Symlinked from ${link.path}` : undefined}
           trailing={<>
-            <ItemMenu item={item} onRename={onRename} onDuplicate={onDuplicate} onDelete={onDelete} onMove={onMove} folders={folders} inList hoverReveal={cards || columns} />
+            <ItemMenu item={item} inList hoverReveal={cards || columns} />
             {columns && isFolder(item) && <CaretRight className="shrink-0 text-muted-foreground" />}
           </>}
           active={active}
@@ -174,7 +174,7 @@ export default function FileBrowser({ path, onNavigate, listDir, loading, error,
           nameMenu={path ? undefined : <RepoMenu />}
           badge={linkedBy?.length ? <SymlinkedBy links={linkedBy} onOpen={onOpenLink} /> : null}
         >
-          <ItemMenu item={path ? { name: currentFolder, path, type: 'dir' } : null} onRename={onRename} onDelete={onDelete} onMove={onMove} folders={folders} view={layout} onView={setView} />
+          <ItemMenu item={path ? { name: currentFolder, path, type: 'dir' } : null} view={layout} onView={setView} />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button size="icon" aria-label="New" className="shrink-0">
