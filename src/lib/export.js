@@ -60,21 +60,20 @@ export function exportText(text, fallback) {
 
 const escape = s => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c])
 
-// The note as a page to print (or save as PDF): its title, then its text rendered. Only images the page can load on its
-// own stay (a web or data address); the repo's own aren't reachable from it. The page is printed, not shown in the app,
-// so it has its own print style (black on white), not the app's tokens.
-export function exportPage(text, fallback, name) {
+// The note as a page to print (or save as PDF): its title, then its text rendered, with its own style, for a shadow root
+// (so the app's styles don't reach it). Only images the page can load on its own stay (a web or data address); the
+// repo's own aren't reachable from it. The page is printed, not shown in the app, so it has its own print style (black
+// on white), not the app's tokens.
+export function exportPage(text, fallback) {
   const { body, title } = parts(text, fallback)
   const doc = new DOMParser().parseFromString(safeHtml(marked.parse(blankFrontMatter(body))), 'text/html')
   for (const img of doc.querySelectorAll('img')) if (!/^(https?:|data:image\/)/i.test(img.getAttribute('src') ?? '')) img.remove()
   for (const box of doc.querySelectorAll('input')) box.removeAttribute('disabled') // a disabled box prints grey
-  return `<!doctype html><html><head><meta charset="utf-8"><title>${escape(name)}</title><style>${PRINT_STYLE}</style></head>`
-    + `<body>${title ? `<h1>${escape(title)}</h1>` : ''}${doc.body.innerHTML}</body></html>`
+  return `<style>${PRINT_STYLE}</style>${title ? `<h1>${escape(title)}</h1>` : ''}${doc.body.innerHTML}`
 }
 
 const PRINT_STYLE = `
-@page { margin: 2cm; }
-body { font: 11pt/1.5 Georgia, 'Times New Roman', serif; color: #000; background: #fff; margin: 0; }
+:host { display: block; font: 11pt/1.5 Georgia, 'Times New Roman', serif; color: #000; background: #fff; }
 h1, h2, h3, h4, h5, h6 { font-family: system-ui, sans-serif; line-height: 1.25; break-after: avoid; }
 h1 { font-size: 20pt; } h2 { font-size: 16pt; } h3 { font-size: 13pt; }
 a { color: inherit; }
@@ -83,6 +82,6 @@ pre, code { font: 9.5pt ui-monospace, monospace; }
 pre { white-space: pre-wrap; border: 1px solid #ccc; padding: 0.5em; }
 blockquote { margin-left: 0; padding-left: 1em; border-left: 3px solid #ccc; }
 table { border-collapse: collapse; } th, td { border: 1px solid #ccc; padding: 0.25em 0.5em; text-align: left; }
-ul:has(> li > input) { list-style: none; padding-left: 1em; }
+li:has(> input) { list-style: none; } input { accent-color: #000; margin: 0 0.4em 0 -1.4em; }
 pre, blockquote, table, img, li { break-inside: avoid; }
 `
