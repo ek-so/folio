@@ -16,14 +16,14 @@
 .editor-preview li:has(> .list-grip) { position: relative; }
 .editor-preview .image-frame { position: relative; display: inline-block; max-width: 100%; vertical-align: top; }
 .editor-preview .image-handle { position: absolute; top: 50%; right: 8px; translate: 0 -50%; }
-.editor-preview .list-grip { position: absolute; top: 0; right: calc(100% + var(--list-pad)); width: var(--grip-w); height: 1lh; opacity: 0.5; }
+.editor-preview .list-grip { position: absolute; top: 0; right: calc(100% + var(--list-pad)); width: var(--grip-w); height: 1lh; opacity: 0.8; }
 .editor-preview :is(li, [data-src]).list-drop-before { box-shadow: 0 -2px 0 var(--primary); }
 .editor-preview :is(li, [data-src]).list-drop-after { box-shadow: 0 2px 0 var(--primary); }
 .editor-preview :is(li, [data-src]).list-dragging { position: relative; z-index: 1; background: var(--card); border-radius: 8px; box-shadow: var(--shadow-md); }
 /* Blocks' grips: in a left gutter as wide as a grip, at the block's first line; with a mouse only while it's hovered, on touch faint */
 .editor-preview:has(> [data-src] > .block-grip) { padding-left: calc(var(--space) + var(--grip-w)); }
 .editor-preview > [data-src]:has(> .block-grip) { position: relative; }
-.editor-preview .block-grip { position: absolute; top: 0; right: 100%; width: var(--grip-w); height: 1lh; opacity: 0.5; }
+.editor-preview .block-grip { position: absolute; top: 0; right: 100%; width: var(--grip-w); height: 1lh; opacity: 0.8; }
 /* A list has no grip of its own: its items are dragged one by one (it still takes drops, the grip's block is its drop target) */
 .editor-preview > [data-src]:has(> :is(ul, ol) > li > .list-grip) > .block-grip { display: none; }
 @media (pointer: fine) {

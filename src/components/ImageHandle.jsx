@@ -45,7 +45,7 @@ export default function ImageHandle({ spot, onResize }) {
   return (
     <span
       role="slider" tabIndex={0} aria-label="Resize image" aria-orientation="horizontal" aria-valuemin={MIN}
-      className="flex h-control-md w-control-sm cursor-ew-resize touch-none items-center justify-center rounded-full bg-card text-muted-foreground shadow-md ring-1 ring-border outline-none transition-opacity hover:text-foreground focus-visible:ring-ring [.image-frame:hover_&]:opacity-100 opacity-0 focus-visible:opacity-100 [@media(hover:none)]:opacity-100"
+      className="flex h-control-md w-control-sm cursor-ew-resize touch-none items-center justify-center rounded-full bg-card text-foreground/60 shadow-md ring-1 ring-border outline-none transition-opacity hover:text-foreground focus-visible:ring-ring [.image-frame:hover_&]:opacity-100 opacity-0 focus-visible:opacity-100 [@media(hover:none)]:opacity-100"
       onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up} onKeyDown={key}
     >
       <DotsSixVertical className="size-4" />

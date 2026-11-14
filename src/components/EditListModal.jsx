@@ -44,7 +44,7 @@ function Row({ item, onRemove }) {
   return (
     <li ref={setNodeRef} style={{ transform: CSS.Translate.toString(transform), transition }} className={cn(isDragging && 'relative z-10')}>
       <ListRow
-        leading={<DotsSixVertical className="ml-space-sm size-4 shrink-0 text-muted-foreground" />}
+        leading={<DotsSixVertical className="ml-space-sm size-4 shrink-0 text-foreground/60" />}
         icon={item.icon}
         title={item.title}
         className={cn('cursor-grab touch-manipulation select-none [-webkit-touch-callout:none] [&_button]:cursor-grab', isDragging && 'bg-secondary shadow-md')}

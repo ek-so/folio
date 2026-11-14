@@ -22,7 +22,7 @@ export default function ListGrip({ spot, id, drop }) {
     item.classList.toggle('list-drop-after', drop === 'after')
   }, [item, drop])
   return (
-    <span ref={setActivatorNodeRef} aria-label="Drag to move" className="flex size-full cursor-grab touch-manipulation items-center justify-center rounded-sm text-muted-foreground hover:bg-secondary" {...attributes} {...listeners}>
+    <span ref={setActivatorNodeRef} aria-label="Drag to move" className="flex size-full cursor-grab touch-manipulation items-center justify-center rounded-sm text-foreground/60 hover:bg-secondary hover:text-foreground" {...attributes} {...listeners}>
       <DotsSixVertical className="size-4" />
     </span>
   )

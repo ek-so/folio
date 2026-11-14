@@ -14,7 +14,7 @@ export const Tray = forwardRef(function Tray({ className, ...props }, ref) {
 export function TrayTitle({ grip, children }) {
   return (
     <div className="flex min-h-control-md items-center gap-1 pl-space-sm pr-space-xs">
-      {grip && <DotsSixVertical className="size-4 shrink-0 text-muted-foreground" aria-hidden />}
+      {grip && <DotsSixVertical className="size-4 shrink-0 text-foreground/60" aria-hidden />}
       <h3 className="min-w-0 flex-1 truncate text-sm font-semibold">{children}</h3>
     </div>
   )
