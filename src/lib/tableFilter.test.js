@@ -10,6 +10,10 @@ describe('table filter', () => {
     ])
   })
 
+  it('leaves out little words like "and" and "etc"', () => {
+    expect(repeatedWords(['bread and milk', 'eggs and milk, etc', 'tea or coffee etc'])).toEqual([{ key: 'milk', label: 'milk', count: 2 }])
+  })
+
   it('counts a word once per row', () => {
     expect(repeatedWords(['go go', 'stop'])).toEqual([])
   })
