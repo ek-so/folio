@@ -1,4 +1,4 @@
-// The views in the navigation (Home and the ones added in Views settings) live
+// The views in the navigation (Home and the ones added in Edit views) live
 // in the repo, like Obsidian's config folder: `.folio/views.json`,
 // { "views": [{ "id", "name", "icon" (an emoji, optional), "widgets": [{ "id", "type", "name" (optional: its own
 // name, else its kind's) }] }] }. A repo without the file has Home alone.

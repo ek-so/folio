@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { List, SidebarSimple, MagnifyingGlass, Images, LinkBreak, BookOpen, Gear, SignOut, SlidersHorizontal } from '@phosphor-icons/react'
+import { List, SidebarSimple, MagnifyingGlass, Images, LinkBreak, BookOpen, Gear, SignOut, Plus } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils.js'
 import { Button } from './ui/button.jsx'
 import { Separator } from './ui/separator.jsx'
@@ -26,10 +26,10 @@ import PageIcon from './PageIcon.jsx'
 // they meet, 8px each: the rail's right and the content box's left. On top a header row, level with the title
 // bars' rows (8px and a 1px top edge like the boxes' outline above it): the app's name (Folio, bold) and a
 // button that collapses the rail to icons only (remembered on this device; expanded, its edge is a drag handle);
-// then a separator like every other; Search, Sync, File manager, Assets and Graph (plain items, no separator between them), a separator, the views, Views settings,
+// then a separator like every other; Search, Sync, File manager, Assets and Graph (plain items, no separator between them), a separator, the views (with none, New view, which opens Edit views),
 // and at the bottom Broken links (count), Settings and Sign out.
 // `pages`: the main pages (lib/pages.js): the views, File manager and Graph. With a
-// mouse, a view shows its ⋯ (Rename / Remove: `viewActions`) on hover; the collapsed rail has none, and Views settings is an icon.
+// mouse, a view shows its ⋯ (`ViewMenu`, `viewActions`) on hover; the collapsed rail has none, and New view is an icon.
 // A plain click (not one that opens a new tab or window): the app handles it in place
 const plainClick = e => e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey
 
@@ -97,9 +97,11 @@ export function NavRail({ page, pages, hrefOf, viewActions, onPage, onSearch, re
           )}
         </div>
       ))}
-      <Button variant="ghost" tooltip={hint('Views settings')} tooltipSide="right" disabled={!viewActions.canEdit} className={cn('justify-start gap-3 font-normal', collapsed && 'size-control justify-center px-0')} onClick={viewActions.onSettings}>
-        <SlidersHorizontal /> {label('Views settings')}
-      </Button>
+      {!pages.some(p => p.view) && (
+        <Button variant="ghost" tooltip={hint('New view')} tooltipSide="right" disabled={!viewActions.canEdit} className={cn('justify-start gap-3 font-normal', collapsed && 'size-control justify-center px-0')} onClick={viewActions.onEditViews}>
+          <Plus /> {label('New view')}
+        </Button>
+      )}
       <div className="flex-1" />
       {separator}
       <Button variant="ghost" tooltip={hint('Broken links')} tooltipSide="right" aria-current={page === PAGE.LINKS ? 'page' : undefined} className={cn(item(PAGE.LINKS), 'relative')} onClick={() => onPage(PAGE.LINKS)}>

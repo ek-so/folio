@@ -136,7 +136,7 @@ export default function App() {
   const [newFile, setNewFile] = useState(null) // { folder, kind, keys?, values?, stay? } while the sheet is open (keys: a new note's properties; stay: don't open it)
   const [viewDialog, setViewDialog] = useState(null) // { kind: 'rename' | 'delete', view } while a view's dialog is open
   const [editWidgetsOf, setEditWidgetsOf] = useState(null) // the view whose Edit widgets sheet is open
-  const [viewsSettings, setViewsSettings] = useState(false) // Views settings is open: add, order and remove views
+  const [editingViews, setEditingViews] = useState(false) // Edit views is open: add, order and remove views
   const [adding, setAdding] = useState(null) // { viewId, type } while a new widget's Setup is open
   const [confirmSignOut, setConfirmSignOut] = useState(false)
   const [confirmDiscard, setConfirmDiscard] = useState(false)
@@ -652,10 +652,10 @@ export default function App() {
 
   // A symlink never opens itself (opening one opens its source instead)
   const entry = selectedFile && !(selectedFile in symlinks) && virtual[selectedFile]
-  // Views settings, and Rename / Delete of a view (the dialogs below)
+  // Edit views, Edit widgets, and Rename / Delete of a view (the dialogs below)
   const viewActions = {
     canEdit: viewsReady,
-    onSettings: () => setViewsSettings(true),
+    onEditViews: () => setEditingViews(true),
     // Edit widgets opens the view with its sheet (ViewPage's)
     onEditWidgets: v => { choosePage(v.id); setEditWidgetsOf(v.id) },
     onRename: v => setViewDialog({ kind: 'rename', view: v }),
@@ -870,9 +870,9 @@ export default function App() {
           />
         )}
 
-        {viewsSettings && (
+        {editingViews && (
           <EditListModal
-            title="Views settings"
+            title="Edit views"
             description="Drag them into order. Removing a view removes its widgets; the notes stay."
             items={pages.filter(p => p.view).map(p => ({ id: p.id, icon: <span onPointerDown={e => e.stopPropagation()}><EmojiPicker emoji={p.emoji} label={`Emoji of ${p.title}`} fallback={<PageIcon page={p} />} onChange={emoji => saveViews(setViewIcon(views, p.id, emoji))} className="size-control-md" /></span>, title: <PageTitle page={p} />, label: p.title, view: p }))}
             onMove={(from, to) => saveViews(moveView(views, from, to))}
@@ -880,7 +880,7 @@ export default function App() {
             addLabel="New view"
             onAdd={name => { saveViews(addView(views, name).views); return null }}
             empty="No views"
-            onClose={() => setViewsSettings(false)}
+            onClose={() => setEditingViews(false)}
           />
         )}
 
