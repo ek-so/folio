@@ -32,6 +32,7 @@ import GraphPage from './components/GraphPage.jsx'
 import Settings from './components/Settings.jsx'
 import Spinner from './components/Spinner.jsx'
 import Loading from './components/Loading.jsx'
+import { formatDate } from './lib/dates.js'
 import { useAuth } from './hooks/useAuth.js'
 import { useRepo } from './hooks/useRepo.js'
 import { useConfig } from './hooks/useConfig.js'
@@ -134,7 +135,7 @@ export default function App() {
   const up = view && upView(mainPage, view, trailOf(mainPage))
   const goUp = up && (() => up === START ? setTrails(o => ({ ...o, [mainPage]: [] }))
     : mainPage === PAGE.FILES ? show(up) : setTrails(o => ({ ...o, [mainPage]: trailTo(mainPage, o[mainPage], up) })))
-  const [newFile, setNewFile] = useState(null) // { folder, kind, keys?, values?, stay? } while the sheet is open (keys: a new note's properties; stay: don't open it)
+  const [newFile, setNewFile] = useState(null) // { folder, kind, keys?, values?, stay?, date? } while the sheet is open (keys: a new note's properties; stay: don't open it; date: { key, value } a date property the sheet asks for)
   const [viewDialog, setViewDialog] = useState(null) // { kind: 'rename' | 'delete', view } while a view's dialog is open
   const [editingViews, setEditingViews] = useState(false) // Edit views is open: add, order and remove views
   const [newView, setNewView] = useState(false) // New view (the navigation's Views ⋯) asks for its name
@@ -357,7 +358,7 @@ export default function App() {
     },
     createFolder: (parent, name) => createFolder(parent, name),
     // `keys`: the properties it starts with, empty; `stay`: don't open it
-    newNote: (folder, { keys, values, stay } = {}) => setNewFile({ folder, kind: 'note', keys, values, stay }),
+    newNote: (folder, { keys, values, stay, date } = {}) => setNewFile({ folder, kind: 'note', keys, values, stay, date }),
     // A Pinned widget's new note, made in one step with the widget (noteToAdd)
     addNote: (folder, name, title) => noteToAdd(folder, name, [], title),
     // A done note archived (archive): `edit` applied to its text first, in the same step. { to: its new path, text: its
@@ -497,7 +498,7 @@ export default function App() {
     return { path, change: ch => add(ch, repo.remote.files, path, Object.entries(values).reduce((t, [k, v]) => withValue(t, k, v), withKeys(`# ${title || name}\n\n`, keys))) }
   }
 
-  function handleCreate(name, title) {
+  function handleCreate(name, title, date) {
     if (!repo.remote) return 'Files are still loading.'
     const error = nameError(name) || (newFile.kind !== 'folder' && !title ? 'Enter a title.' : null)
     if (error) return error
@@ -506,7 +507,8 @@ export default function App() {
       if (err) return err
     } else {
       // A note can start with properties, empty (a board's new card)
-      const made = noteToAdd(newFile.folder, name, newFile.keys, title, newFile.values)
+      const values = date && newFile.date ? { ...newFile.values, [newFile.date.key]: formatDate(date) } : newFile.values
+      const made = noteToAdd(newFile.folder, name, newFile.keys, title, values)
       if (made.error) return made.error
       update(made.change)
       if (!newFile.stay) setSelectedFile(made.path)
@@ -948,6 +950,7 @@ export default function App() {
           <NewFileModal
             folder={newFile.folder}
             kind={newFile.kind}
+            date={newFile.date?.value}
             onCreate={handleCreate}
             onClose={() => setNewFile(null)}
           />

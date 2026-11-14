@@ -140,8 +140,8 @@ export default function Planner({ id, services, onRemove }) {
     <Segmented iconOnly label="View" value={view} onChange={pickView} options={[['calendar', 'Calendar', CalendarDots], ['list', 'List', ListBullets]]} />
   )
   const menu = <>
-    {/* On the day shown: the selected one in the calendar, today in the list */}
-    <DropdownMenuItem disabled={off || !planner || missing} onSelect={() => act.newCard(view === 'list' ? today : selected)}><Plus /> New task</DropdownMenuItem>
+    {/* Its date picked in the sheet, starting on the day shown: the selected one in the calendar, today in the list */}
+    <DropdownMenuItem disabled={off || !planner || missing} onSelect={() => act.newCard(view === 'list' ? today : selected, true)}><Plus /> New task</DropdownMenuItem>
     <DropdownMenuItem disabled={off} onSelect={() => setChoosing(true)}><Tag /> Properties</DropdownMenuItem>
     {/* How a day's cards are ordered: the calendar's (the list goes by date); the current one ticked */}
     {view === 'calendar' && planner && !missing && (
