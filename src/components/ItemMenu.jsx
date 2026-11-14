@@ -20,8 +20,8 @@ export const ItemActionsContext = createContext(null)
 // The ⋯ of a file or folder ({ name, path, type }) everywhere it shows: file manager, tree, title bar, Assets, a board's
 // or planner's card, a pinned note or folder. Its sections (MoreMenu):
 //   - what only this place offers (`extra`: Mark as done, Edit description, Move to column…), and Show in folder (`reveal`);
-//   - the core, the same everywhere: Rename · Emoji · Move to… · Duplicate (files) · Copy link · Open on GitHub · Lock (notes);
-//   - Remove (to the archive, confirmed; none for a locked note), or `remove` ({ label, onSelect }, confirmed by the caller:
+//   - the core, the same everywhere: Rename · Emoji · Move to… · Duplicate (files) · Copy link · Open on GitHub · Lock (files);
+//   - Remove (to the archive, confirmed; none for a locked file), or `remove` ({ label, onSelect }, confirmed by the caller:
 //     a pinned item's Remove from widget).
 // With no `item` (the root folder; a pinned item that's gone) only `extra` and `remove` show. `view` / `onView` (File
 // manager's title bar): an icon-only List | Cards | Columns switch on top (Columns from 768px). `inList`: inside a row (a
@@ -36,9 +36,8 @@ export default function ItemMenu({ item, extra, reveal, remove, view, onView, in
   const [open, setOpen] = useState(false)
   const desktop = useIsDesktop()
   const file = item && item.type !== 'dir'
-  const note = file && item.path.endsWith('.md')
-  const locked = note && actions.isLocked(item.path)
-  const github = item && actions.githubUrl(item)
+  const locked = file && actions.isLocked(item.path)
+  const github = open && item && actions.githubUrl(item) // worked out only while the menu is open
 
   const core = item && <>
     <DropdownMenuItem onSelect={() => setRenaming(true)}><PencilSimple /> Rename</DropdownMenuItem>
@@ -51,7 +50,7 @@ export default function ItemMenu({ item, extra, reveal, remove, view, onView, in
         <a href={github} target="_blank" rel="noreferrer"><GithubLogo /> Open on GitHub</a>
       </DropdownMenuItem>
     )}
-    {note && (
+    {file && (
       <DropdownMenuItem disabled={!actions.onToggleLock} onSelect={() => actions.onToggleLock(item.path)}>
         {locked ? <><LockOpen /> Unlock</> : <><Lock /> Lock</>}
       </DropdownMenuItem>

@@ -7,15 +7,13 @@ import { cn } from '@/lib/utils.js'
 import { Button } from './ui/button.jsx'
 import { ListRow, ListBox } from './ui/list-row.jsx'
 import BottomSheet from './BottomSheet.jsx'
-import AddNameField from './AddNameField.jsx'
 import { EmptyMessage } from './EmptyState.jsx'
 
 // A sheet to edit a list of `items` ([{ id, icon, title, label? (its name when `title` isn't text) }]; a view's widgets, the views, a Pinned widget's notes and folders): drag them into
 // order (with a mouse right away, on touch after holding 0.25s, like a board's cards; each drop
 // calls `onMove(from, to)`, indexes, at once), remove one with its ✕ (`onRemove(item)`, confirmed
-// by the caller). `addLabel` and `onAdd(name)`: a field under the list to add one by name (returns an error
-// message, or null). `empty`: the text when there's nothing.
-export default function EditListModal({ title, description, items, onMove, onRemove, addLabel, onAdd, empty, onClose }) {
+// by the caller). `empty`: the text when there's nothing.
+export default function EditListModal({ title, description, items, onMove, onRemove, empty, onClose }) {
   const sensors = useDragSensors()
   const ids = items.map(i => i.id)
   const onDragEnd = ({ active, over }) => {
@@ -32,7 +30,6 @@ export default function EditListModal({ title, description, items, onMove, onRem
             </ListBox>
           </SortableContext>
         </DndContext>
-        {onAdd && <AddNameField label={addLabel} onAdd={onAdd} />}
         <div className="flex justify-end">
           <Button onClick={onClose}>Done</Button>
         </div>

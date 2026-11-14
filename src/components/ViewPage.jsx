@@ -17,13 +17,13 @@ import { WidgetContext } from './WidgetFrame.jsx'
 // and Add widget under them. Each widget is its kind's own component, given the app's `services`;
 // `onAdd(type)`, `onRemove(id)` (always confirmed first: a widget's own Remove asks here),
 // `onMove(from, to)` (Edit widgets: order and remove them in one sheet), `onRenameWidget(id, name)` (a widget's Rename, its
-// own name; empty: its kind's again). `editing`: the Edit widgets sheet is open (App's, so the navigation's ⋯ opens it too),
-// `onCloseEditing()` closes it.
+// own name; empty: its kind's again). Its ⋯'s Edit widgets opens its own sheet.
 // Until the settings are read (`services.canEdit` false) nothing can be added.
 // `error`: why the views can't be changed (shown on top), or null.
-export default function ViewPage({ page, view, viewActions, widgets = [], error, services, onAdd, onRemove, onMove, onRenameWidget, editing, onCloseEditing }) {
+export default function ViewPage({ page, view, viewActions, widgets = [], error, services, onAdd, onRemove, onMove, onRenameWidget }) {
   const { canEdit } = services
   const [removing, setRemoving] = useState(null) // the widget whose Remove is being confirmed
+  const [editing, setEditing] = useState(false) // Edit widgets is open
   const [renaming, setRenaming] = useState(null) // the widget being renamed
   const kinds = WIDGET_TYPES.map(t => <DropdownMenuItem key={t.type} onSelect={() => onAdd(t.type)}><t.icon /> {t.label}</DropdownMenuItem>)
   // Add widget: a menu of every kind, from `trigger`
@@ -37,7 +37,7 @@ export default function ViewPage({ page, view, viewActions, widgets = [], error,
     <PageLayout>
       <Surface wide title={
         <TitleBar page={page}>
-          {view && <ViewMenu view={view} actions={viewActions} />}
+          {view && <ViewMenu view={view} actions={{ ...viewActions, onEditWidgets: () => setEditing(true) }} />}
           {addMenu(<Button size="icon" aria-label="Add widget" tooltip="Add widget" disabled={!canEdit} className="shrink-0"><Plus /></Button>)}
         </TitleBar>
       }>
@@ -76,7 +76,7 @@ export default function ViewPage({ page, view, viewActions, widgets = [], error,
           onMove={onMove}
           onRemove={setRemoving}
           empty="No widgets on this view yet."
-          onClose={onCloseEditing}
+          onClose={() => setEditing(false)}
         />
       )}
       {renaming && (

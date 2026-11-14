@@ -18,7 +18,8 @@ const TEXT_LAYOUT = 'w-full h-full p-space font-mono text-base leading-relaxed w
 // tapping elsewhere or Escape. Scrolling keeps editing.
 // Enter in a list continues it (`continueList`).
 // Typing `[[` suggests the repo's files (`files`, never the note's own `path`) in a popover at the caret, narrowed by
-// what's typed after it (`typedLink`, `linkTargets`); ↑ ↓ choose, Enter or Tab or a tap puts in the link to it, from the
+// what's typed after it (`typedLink`, `linkTargets`); ↑ ↓ choose, Enter (once something's typed or chosen; right after
+// `[[` it's a new line) or Tab or a tap puts in the link to it, from the
 // repo's root as Copy link makes it (`repoLink`), and Escape closes the list (not the editor).
 // `locked`: property keys that can't be changed here (a planner's date and repeat: their badges change them): their lines
 // (`keyLines`) are greyed out, and typing that would change, add or remove one is refused, with a message.
@@ -38,13 +39,16 @@ const MarkdownEditor = forwardRef(function MarkdownEditor({ content, onChange, o
   const [scrollTop, setScrollTop] = useState(0)
   const [dismissed, setDismissed] = useState(null) // the `[[` whose suggestions Escape (or a tap outside) closed
   const [active, setActive] = useState(0)
+  const [chosen, setChosen] = useState(false) // ↑ or ↓ was used for this query: Enter picks even before anything's typed
   const [at, setAt] = useState(null) // { top, left } of the `[[`, inside the editor
   const typed = caret === null ? null : typedLink(content, caret)
   const query = typed?.query
   const targets = useMemo(() => query === undefined ? [] : linkTargets(Object.keys(files), query, path), [files, query, path])
   const suggesting = targets.length > 0 && dismissed !== typed.from
 
-  useEffect(() => setActive(0), [query])
+  const current = Math.min(active, targets.length - 1) // the list can shrink under it (files changed by a pull)
+  useEffect(() => { setActive(0); setChosen(false) }, [query])
+  useEffect(() => { if (!typed) setDismissed(null) }, [typed?.from]) // a `[[` that's gone: a new one there suggests again
   useLayoutEffect(() => {
     if (!suggesting) return
     const mark = markRef.current
@@ -83,15 +87,17 @@ const MarkdownEditor = forwardRef(function MarkdownEditor({ content, onChange, o
 
   // While suggesting links: ↑ ↓ choose, Enter or Tab picks, Escape closes the list. Otherwise Enter in a list starts the next item
   function handleKeyDown(e) {
-    if (suggesting && !e.nativeEvent.isComposing) {
+    // With a modifier the keys do what they always do (Shift+↑ selects…); Enter right after `[[` is a new line
+    if (suggesting && !e.nativeEvent.isComposing && !e.shiftKey && !e.altKey && !e.metaKey && !e.ctrlKey) {
       const move = { ArrowDown: 1, ArrowUp: -1 }[e.key]
       if (move) {
         e.preventDefault()
-        return setActive(i => (i + move + targets.length) % targets.length)
+        setChosen(true)
+        return setActive((current + move + targets.length) % targets.length)
       }
-      if (e.key === 'Enter' || e.key === 'Tab') {
+      if (e.key === 'Tab' || (e.key === 'Enter' && (query || chosen))) {
         e.preventDefault()
-        return pick(targets[active])
+        return pick(targets[current])
       }
       if (e.key === 'Escape') return setDismissed(typed.from)
     }
@@ -155,7 +161,7 @@ const MarkdownEditor = forwardRef(function MarkdownEditor({ content, onChange, o
                   icon={<FileIcon path={target} />}
                   title={displayName(target)}
                   description={target.split('/').slice(0, -1).join('/')}
-                  className={i === active && 'bg-secondary hover:bg-secondary'} // as a menu's item under the keyboard
+                  className={i === current && 'bg-secondary hover:bg-secondary'} // as a menu's item under the keyboard
                   onClick={() => pick(target)}
                 />
               </li>

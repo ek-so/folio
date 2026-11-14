@@ -135,7 +135,6 @@ export default function App() {
     : mainPage === PAGE.FILES ? show(up) : setTrails(o => ({ ...o, [mainPage]: trailTo(mainPage, o[mainPage], up) })))
   const [newFile, setNewFile] = useState(null) // { folder, kind, keys?, values?, stay? } while the sheet is open (keys: a new note's properties; stay: don't open it)
   const [viewDialog, setViewDialog] = useState(null) // { kind: 'rename' | 'delete', view } while a view's dialog is open
-  const [editWidgetsOf, setEditWidgetsOf] = useState(null) // the view whose Edit widgets sheet is open
   const [editingViews, setEditingViews] = useState(false) // Edit views is open: add, order and remove views
   const [newView, setNewView] = useState(false) // New view (the navigation's Views ⋯) asks for its name
   const [adding, setAdding] = useState(null) // { viewId, type } while a new widget's Setup is open
@@ -395,16 +394,25 @@ export default function App() {
     openFolder(path, PAGE.FILES)
   }
 
-  // Where a file or folder is on GitHub (Open on GitHub): its place as GitHub has it (before a rename here), undefined when
-  // GitHub doesn't have it yet
+  // Where a file or folder is on GitHub (Open on GitHub): its place as GitHub has it (before a rename or move here; a
+  // folder's, found through a file in it that GitHub has), undefined when GitHub doesn't have it yet
   function githubUrl(item) {
     const remote = repo.remote
     if (!remote) return undefined
-    const orig = item.type === 'dir' ? item.path : virtual[item.path]?.orig
+    const orig = item.type === 'dir' ? origFolder(item.path, remote.files) : virtual[item.path]?.orig
     const there = item.type === 'dir' ? Object.keys(remote.files).some(p => p.startsWith(orig + '/')) : orig in remote.files
     if (!there) return undefined
     const encoded = [remote.branch, ...orig.split('/')].map(encodeURIComponent).join('/')
     return `https://github.com/${auth.repo}/${item.type === 'dir' ? 'tree' : 'blob'}/${encoded}`
+  }
+
+  // The folder `path` as GitHub has it: where a file in it that GitHub has came from, less the file's place in the folder
+  function origFolder(path, remoteFiles) {
+    for (const [p, entry] of Object.entries(virtual)) {
+      const rest = p.slice(path.length)
+      if (p.startsWith(path + '/') && entry.orig in remoteFiles && entry.orig.endsWith(rest)) return entry.orig.slice(0, -rest.length)
+    }
+    return path
   }
 
   // A copy of the file `item` next to it ("x 2.md"; a note's title gets " (copy)"); a symlink isn't copied (a toast says so)
@@ -653,13 +661,11 @@ export default function App() {
 
   // A symlink never opens itself (opening one opens its source instead)
   const entry = selectedFile && !(selectedFile in symlinks) && virtual[selectedFile]
-  // Edit views, Edit widgets, and Rename / Delete of a view (the dialogs below)
+  // New view, Edit views, and Rename / Delete of a view (the dialogs below)
   const viewActions = {
     canEdit: viewsReady,
     onEditViews: () => setEditingViews(true),
     onNewView: () => setNewView(true),
-    // Edit widgets (the view page's ⋯): its sheet
-    onEditWidgets: v => setEditWidgetsOf(v.id),
     onRename: v => setViewDialog({ kind: 'rename', view: v }),
     onDelete: v => setViewDialog({ kind: 'delete', view: v }),
   }
@@ -743,12 +749,16 @@ export default function App() {
             <Settings login={auth.user.login} repo={auth.repo} theme={theme} onTheme={setTheme} emojiNames={icons.canEdit ? { count: emojiNames.length, onMove: moveEmojisToIcons } : null} />
           ) : page === PAGE.DOCS ? (
             <Documentation />
-          ) : repo.catchingUp ? (
-            // Back on screen with new commits on GitHub: loading while they're pulled, not what was there before
-            <div className="flex justify-center py-12">
-              <Spinner />
-            </div>
-          ) : page === PAGE.ASSETS ? (
+          ) : (<>
+            {/* Back on screen with new commits on GitHub: loading while they're pulled, not what was there before. The page
+                stays mounted (hidden), so an open dialog or the note being edited keeps what's typed in it */}
+            {repo.catchingUp && (
+              <div className="flex justify-center py-12">
+                <Spinner />
+              </div>
+            )}
+            <div className={repo.catchingUp ? 'hidden' : 'contents'}>
+            {page === PAGE.ASSETS ? (
             <Assets files={shown} added={assets.added} backlinks={links.index.backlinks} onOpen={path => setSelectedFile(path, PAGE.FILES)} />
           ) : !view && page === PAGE.GRAPH ? (
             <GraphPage page={page} files={shown} backlinks={links.index.backlinks} notes={links.notes} repoName={auth.repo.split('/')[1]} onOpenFile={path => setSelectedFile(path)} onOpenFolder={path => openFolder(path)} />
@@ -764,8 +774,6 @@ export default function App() {
               onRenameWidget={(id, name) => saveViews(renameWidget(views, page, id, name))}
               view={pages.find(p => p.id === page)}
               viewActions={viewActions}
-              editing={editWidgetsOf === page}
-              onCloseEditing={() => setEditWidgetsOf(null)}
             />
           ) : page === PAGE.LINKS ? (
             <BrokenLinks
@@ -822,6 +830,8 @@ export default function App() {
               onOpenLink={openLink}
             />
           )}
+            </div>
+          </>)}
           </main>
           </div>
         </PullToRefresh>
@@ -893,8 +903,6 @@ export default function App() {
             items={pages.filter(p => p.view).map(p => ({ id: p.id, icon: <span onPointerDown={e => e.stopPropagation()}><EmojiPicker emoji={p.emoji} label={`Emoji of ${p.title}`} fallback={<PageIcon page={p} />} onChange={emoji => saveViews(setViewIcon(views, p.id, emoji))} className="size-control-md" /></span>, title: <PageTitle page={p} />, label: p.title, view: p }))}
             onMove={(from, to) => saveViews(moveView(views, from, to))}
             onRemove={item => setViewDialog({ kind: 'delete', view: item.view })}
-            addLabel="New view"
-            onAdd={name => { saveViews(addView(views, name).views); return null }}
             empty="No views"
             onClose={() => setEditingViews(false)}
           />

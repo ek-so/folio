@@ -29,7 +29,7 @@ import PageIcon from './PageIcon.jsx'
 // then a separator like every other; Search, Sync, File manager, Assets and Graph (plain items, no separator between them), a separator, the views under their title (`ViewsTitle`: "Views" and its ⋯),
 // and at the bottom Broken links (count), Settings and Sign out.
 // `pages`: the main pages (lib/pages.js): the views, File manager and Graph. With a
-// mouse, a view shows its ⋯ (`ViewMenu`, `viewActions`) on hover; the collapsed rail has none of them, nor the title.
+// mouse, a view shows its ⋯ (`ViewMenu`, `viewActions`) on hover; the collapsed rail has none of them, and the title only its ⋯.
 // A plain click (not one that opens a new tab or window): the app handles it in place
 const plainClick = e => e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey
 
@@ -87,7 +87,7 @@ export function NavRail({ page, pages, hrefOf, viewActions, onPage, onSearch, re
       </Button>
       {pages.filter(p => p.id === PAGE.GRAPH).map(p => <div key={p.id}>{pageButton(p)}</div>)}
       {separator}
-      {!collapsed && <ViewsTitle actions={viewActions} />}
+      <ViewsTitle actions={viewActions} collapsed={collapsed} />
       {pages.filter(p => p.view).map(p => (
         <div key={p.id} className="group relative">
           {pageButton(p)}
