@@ -7,16 +7,13 @@
 .editor-preview ul { list-style-type: disc; padding-left: 20px; margin: 0 0 14px; }
 .editor-preview ol { list-style-type: decimal; padding-left: 20px; margin: 0 0 14px; }
 .editor-preview li { margin: 4px 0; }
-/* A list item's drag handle (ListGrip), shown like a block's (below), inside the text column before its marker: a list that can be
-   dragged indents by the grip's width (--grip-w) more, and the grip sits there; --list-pad is how far its list
-   indents its items past the marker */
+/* A list item's drag handle (ListGrip), shown like a block's (below): in the same left gutter, so the list sits on the
+   text's own level. Its list item isn't positioned, so it is placed against its block (the gutter edge) and, with no
+   `top`, stays on the item's first line */
 .editor-preview { --grip-w: 24px; }
-.editor-preview :is(ul, ol) { --list-pad: 20px; }
-.editor-preview :is(ul, ol):has(> li > .list-grip) { padding-left: calc(var(--list-pad) + var(--grip-w)); }
-.editor-preview li:has(> .list-grip) { position: relative; }
 .editor-preview .image-frame { position: relative; display: inline-block; max-width: 100%; vertical-align: top; }
 .editor-preview .image-handle { position: absolute; top: 50%; right: 8px; translate: 0 -50%; }
-.editor-preview .list-grip { position: absolute; top: 0; right: calc(100% + var(--list-pad)); width: var(--grip-w); height: 1lh; opacity: 0.8; }
+.editor-preview .list-grip { position: absolute; right: 100%; width: var(--grip-w); height: 1lh; opacity: 0.8; }
 .editor-preview :is(li, [data-src]).list-drop-before { box-shadow: 0 -2px 0 var(--primary); }
 .editor-preview :is(li, [data-src]).list-drop-after { box-shadow: 0 2px 0 var(--primary); }
 .editor-preview :is(li, [data-src]).list-dragging { position: relative; z-index: 1; background: var(--card); border-radius: 8px; box-shadow: var(--shadow-md); }
@@ -31,8 +28,7 @@
   .editor-preview li:hover:not(:has(li:hover)) > .list-grip, .editor-preview .list-grip:focus-within, .editor-preview li.list-dragging > .list-grip { opacity: 1; }
   .editor-preview > [data-src]:hover > .block-grip, .editor-preview .block-grip:focus-within, .editor-preview > .list-dragging > .block-grip { opacity: 1; }
 }
-.editor-preview ul:has(> .task-item) { padding-left: 0; --list-pad: 0px; }
-.editor-preview ul:has(> .task-item):has(> li > .list-grip) { padding-left: var(--grip-w); }
+.editor-preview ul:has(> .task-item) { padding-left: 0; }
 /* A plain item among tasks: its bullet in the checkbox's place, its text in line with theirs */
 .editor-preview ul:has(> .task-item) > li:not(.task-item) { list-style: none; position: relative; padding-left: 24px; }
 .editor-preview ul:has(> .task-item) > li:not(.task-item)::before { content: ''; position: absolute; left: 5px; top: calc((1lh - 6px) / 2); width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
