@@ -137,6 +137,7 @@ export default function App() {
   const [viewDialog, setViewDialog] = useState(null) // { kind: 'rename' | 'delete', view } while a view's dialog is open
   const [editWidgetsOf, setEditWidgetsOf] = useState(null) // the view whose Edit widgets sheet is open
   const [editingViews, setEditingViews] = useState(false) // Edit views is open: add, order and remove views
+  const [newView, setNewView] = useState(false) // New view (the navigation's Views ⋯) asks for its name
   const [adding, setAdding] = useState(null) // { viewId, type } while a new widget's Setup is open
   const [confirmSignOut, setConfirmSignOut] = useState(false)
   const [confirmDiscard, setConfirmDiscard] = useState(false)
@@ -656,6 +657,7 @@ export default function App() {
   const viewActions = {
     canEdit: viewsReady,
     onEditViews: () => setEditingViews(true),
+    onNewView: () => setNewView(true),
     // Edit widgets opens the view with its sheet (ViewPage's)
     onEditWidgets: v => { choosePage(v.id); setEditWidgetsOf(v.id) },
     onRename: v => setViewDialog({ kind: 'rename', view: v }),
@@ -867,6 +869,20 @@ export default function App() {
             confirm="Sign out"
             onConfirm={signOut}
             onClose={() => setConfirmSignOut(false)}
+          />
+        )}
+
+        {newView && (
+          <NewFileModal
+            kind="view"
+            onCreate={name => {
+              const added = addView(views, name)
+              saveViews(added.views)
+              setNewView(false)
+              choosePage(added.id)
+              return null
+            }}
+            onClose={() => setNewView(false)}
           />
         )}
 

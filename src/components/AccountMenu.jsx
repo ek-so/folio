@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { Gear, SignOut, LinkBreak, BookOpen, Plus, Images } from '@phosphor-icons/react'
+import { Gear, SignOut, LinkBreak, BookOpen, Images } from '@phosphor-icons/react'
 import { PAGE } from '../lib/pages.js'
-import ViewMenu from './ViewMenu.jsx'
+import ViewMenu, { ViewsTitle } from './ViewMenu.jsx'
 import PageTitle from './PageTitle.jsx'
 import PageIcon from './PageIcon.jsx'
 import AppLogo from './AppLogo.jsx'
@@ -12,7 +12,7 @@ import { Sheet, SheetTrigger, SheetContent, SheetTitle, SheetDescription } from 
 
 // The phone navigation, opened by `trigger` (a Button): a left sheet that floats 8px from the screen's edges,
 // titled with the app's name (its ✕ is the sheet's own). The main pages (`pages`): File manager, Assets and Graph, then the views
-// (each with its ⋯: `ViewMenu`, `viewActions`; with none, New view, which opens Edit views); then, pinned to the bottom of the sheet,
+// under their title (`ViewsTitle`: "Views" and its ⋯), each with its ⋯ (`ViewMenu`, `viewActions`); then, pinned to the bottom of the sheet,
 // Broken links (count), Documentation, Settings and Sign out. `current` is the open page, highlighted. Choosing a page closes it.
 export default function AccountMenu({ trigger, current, pages, viewActions, onNavigate, brokenCount, onSignOut }) {
   const [open, setOpen] = useState(false)
@@ -49,9 +49,9 @@ export default function AccountMenu({ trigger, current, pages, viewActions, onNa
             {pages.filter(p => p.id === PAGE.GRAPH).map(page)}
           </ul>
           {separator}
+          <ViewsTitle actions={viewActions} onPick={() => setOpen(false)} />
           <ul>
             {pages.filter(p => p.view).map(page)}
-            {!pages.some(p => p.view) && <li><ListRow icon={<Plus />} title="New view" disabled={!viewActions.canEdit} onClick={go(viewActions.onEditViews)} /></li>}
           </ul>
           <div className="mt-auto">
           {separator}

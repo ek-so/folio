@@ -7,9 +7,10 @@ import { useTitleName } from '../hooks/useTitleName.js'
 
 // Creates the note or folder locally; it reaches GitHub on the next sync.
 // A note asks for both its Title and its File name (`TitleNameFields`: the name follows the title until it's typed in);
-// a folder only its name. `onCreate(name, title)`.
+// a folder or a view (`kind="view"`, one in the navigation) only its name. `onCreate(name, title)`.
 export default function NewFileModal({ folder, kind, onCreate, onClose }) {
-  const isFolder = kind === 'folder'
+  const isFolder = kind !== 'note' // one name: a folder's or a view's
+  const noun = kind === 'view' ? 'View' : 'Folder'
   const fields = useTitleName()
   const [folderName, setFolderName] = useState('')
   const [error, setError] = useState('')
@@ -23,13 +24,13 @@ export default function NewFileModal({ folder, kind, onCreate, onClose }) {
 
   return (
     <BottomSheet
-      title={isFolder ? 'New folder' : 'New note'}
+      title={`New ${kind}`}
       description={folder ? `in ${folder}` : undefined}
       onClose={onClose}
     >
       <form onSubmit={handleCreate} className="flex flex-col gap-3">
         {isFolder
-          ? <Input type="text" placeholder="Folder name" aria-label="Folder name" value={folderName} onChange={e => { setFolderName(e.target.value); setError('') }} autoCorrect="off" autoCapitalize="words" className="bg-background border-border font-normal" />
+          ? <Input type="text" placeholder={`${noun} name`} aria-label={`${noun} name`} value={folderName} onChange={e => { setFolderName(e.target.value); setError('') }} autoCorrect="off" autoCapitalize="words" className="bg-background border-border font-normal" />
           : <TitleNameFields fields={fields} onEdit={() => setError('')} />}
         {error && <p className="text-destructive-ink text-xs">{error}</p>}
         <div className="flex justify-end gap-space-sm">
