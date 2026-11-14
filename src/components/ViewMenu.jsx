@@ -32,7 +32,7 @@ export function ViewsTitle({ actions, onPick = () => {}, className, collapsed })
   const disabled = !actions.canEdit
   const pick = fn => () => { onPick(); fn() }
   return (
-    <div className={cn('flex min-h-control-md items-center gap-space-sm', collapsed ? 'justify-center' : 'pl-3 pr-1', className)}>
+    <div className={cn('flex min-h-control items-center gap-space-sm', collapsed ? 'justify-center' : 'pl-3 pr-1', className)}>
       <h2 className={collapsed ? 'sr-only' : 'min-w-0 flex-1 truncate text-xs font-medium text-muted-foreground'}>Views</h2>
       <MoreMenu
         label="Views actions" inRow
