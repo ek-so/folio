@@ -68,6 +68,7 @@ import {
   upload, replaceUpload, freePath, virtualFiles, splitName, editNote, duplicate, keptEdits, MAX_UPLOAD_BYTES,
 } from './lib/changes.js'
 import { plural } from './lib/plural.js'
+import { useNoteExport } from './hooks/useNoteExport.js'
 
 const BASE = import.meta.env.BASE_URL
 // The page and view the address the app was opened at names (not the bare root)
@@ -430,6 +431,14 @@ export default function App() {
     })
   }
 
+  // A note's latest text for Export (typing in it saved first; a symlink's is its source's), undefined when it isn't on this device
+  const exportNote = useNoteExport(path => {
+    window.dispatchEvent(new Event('folio:flush'))
+    const ch = repo.latest()
+    const entry = filesOf(ch)[symlinks[path]?.path ?? path]
+    return entry && entry.mode !== SYMLINK_MODE ? ch.edits[entry.orig] ?? links.remoteText(entry.sha) : undefined
+  })
+
   // `ch` with `item` moved into today's folder of the archive (lib/archive.js; a taken name gets a number), and its path there
   // Links to it are rewritten (so an undo puts them back); widgets and pages don't follow it: for them it's gone
   function archived(ch, item) {
@@ -683,6 +692,7 @@ export default function App() {
     onToggleLock: locks.canEdit ? path => update(locks.toggle(path)) : null,
     onReveal: item => revealFolder(parentOf(item.path)),
     githubUrl: item => githubUrl(item),
+    onExport: exportNote,
   }
   const menu = {
     brokenCount: links.index.broken.length,

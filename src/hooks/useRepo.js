@@ -404,6 +404,6 @@ export function useRepo(repo, onDone) {
 
   return {
     remote, error, online, virtual, changes, changed, changeCount: count(changes),
-    syncing, catchingUp, syncState, incoming, syncError, dismissSyncError: () => setSyncError(null), update, sync, pullChanges, checkRemote, discardAll,
+    syncing, catchingUp, syncState, incoming, syncError, dismissSyncError: () => setSyncError(null), update, latest: () => changesRef.current, sync, pullChanges, checkRemote, discardAll,
   }
 }

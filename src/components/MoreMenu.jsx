@@ -10,7 +10,7 @@ export const REVEAL = 'pointer-fine:opacity-0 pointer-fine:group-hover:opacity-1
 // Every ⋯ menu: the ⋯ button and its menu, one width (`w-56`) everywhere. Its `sections` (an array; empty ones, false or
 // null or a fragment with nothing in it, are skipped) are separated by lines, in the order every ⋯ keeps: what only this
 // place offers, then what everything of its kind offers (an item's: Rename · Emoji · Move to… · Duplicate · Copy link ·
-// Open on GitHub · Lock), then Remove, last.
+// Open on GitHub · Export · Lock), then Remove, last.
 // The button is always empty (no fill, no border) until hovered or open, in two sizes: in a title row (the view's, a
 // widget's, an item's) a `ghost` base-size button with a 20px ⋯, or `inRow`, inside something that is itself hoverable (a
 // list row, a card, a tray's title) a quiet medium one with a 16px ⋯. `reveal`: shown only while its row is hovered (REVEAL; or a class
