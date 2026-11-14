@@ -24,6 +24,8 @@
 .editor-preview:has(> [data-src] > .block-grip) { padding-left: calc(var(--space) + var(--grip-w)); }
 .editor-preview > [data-src]:has(> .block-grip) { position: relative; }
 .editor-preview .block-grip { position: absolute; top: 0; right: 100%; width: var(--grip-w); height: 1lh; opacity: 0.5; }
+/* A list has no grip of its own: its items are dragged one by one (it still takes drops, the grip's block is its drop target) */
+.editor-preview > [data-src]:has(> :is(ul, ol) > li > .list-grip) > .block-grip { display: none; }
 @media (pointer: fine) {
   .editor-preview .block-grip { opacity: 0; transition: opacity 0.15s; }
   .editor-preview > [data-src]:hover > .block-grip, .editor-preview .block-grip:focus-within, .editor-preview > .list-dragging > .block-grip { opacity: 1; }
