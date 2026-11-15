@@ -16,7 +16,7 @@ const TEXT_LAYOUT = 'w-full h-full p-space font-mono text-base leading-relaxed w
 //
 // Closing the keyboard in any way calls onDone (back to preview): iOS Done,
 // tapping elsewhere or Escape. Scrolling keeps editing.
-// Enter in a list continues it (`continueList`).
+// Enter in a list continues it (`continueList`). Ctrl/⌘+Z undoes, Shift+Ctrl/⌘+Z and Ctrl+Y redo (`onUndo`, `onRedo`).
 // Typing `[[` suggests the repo's files (`files`, never the note's own `path`) in a popover at the caret, narrowed by
 // what's typed after it (`typedLink`, `linkTargets`); ↑ ↓ choose, Enter (once something's typed or chosen; right after
 // `[[` it's a new line) or Tab or a tap puts in the link to it, from the
@@ -27,7 +27,7 @@ const NONE = []
 
 const NO_FILES = {}
 
-const MarkdownEditor = forwardRef(function MarkdownEditor({ content, onChange, onDone, locked: lockedKeys = NONE, files = NO_FILES, path }, textareaRef) {
+const MarkdownEditor = forwardRef(function MarkdownEditor({ content, onChange, onUndo, onRedo, onDone, locked: lockedKeys = NONE, files = NO_FILES, path }, textareaRef) {
   const lockedKey = lockedKeys.join('\n')
   const locked = useMemo(() => lockedKey ? lockedKey.split('\n') : NONE, [lockedKey]) // the same list while its keys are
   const highlightRef = useRef()
@@ -87,6 +87,12 @@ const MarkdownEditor = forwardRef(function MarkdownEditor({ content, onChange, o
 
   // While suggesting links: ↑ ↓ choose, Enter or Tab picks, Escape closes the list. Otherwise Enter in a list starts the next item
   function handleKeyDown(e) {
+    // Undo and redo are the editor's own (the browser's would lose track of the text the app sets)
+    const key = e.key.toLowerCase()
+    if ((e.metaKey || e.ctrlKey) && !e.altKey && (key === 'z' || (key === 'y' && !e.shiftKey))) {
+      e.preventDefault()
+      return key === 'y' || e.shiftKey ? onRedo?.() : onUndo?.()
+    }
     // With a modifier the keys do what they always do (Shift+↑ selects…); Enter right after `[[` is a new line
     if (suggesting && !e.nativeEvent.isComposing && !e.shiftKey && !e.altKey && !e.metaKey && !e.ctrlKey) {
       const move = { ArrowDown: 1, ArrowUp: -1 }[e.key]

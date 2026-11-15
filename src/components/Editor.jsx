@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { flushSync } from 'react-dom'
-import { Check, PencilSimple, LockSimple } from '@phosphor-icons/react'
+import { Check, PencilSimple, LockSimple, ArrowUUpLeft, ArrowUUpRight } from '@phosphor-icons/react'
 import { Button } from './ui/button.jsx'
 import Loading from './Loading.jsx'
 import FilePage from './FilePage.jsx'
@@ -9,6 +9,7 @@ import MarkdownPreview from './MarkdownPreview.jsx'
 import Backlinks from './Backlinks.jsx'
 import MarkdownEditor from './MarkdownEditor.jsx'
 import { useNote } from '../hooks/useNote.js'
+import { useUndo } from '../hooks/useUndo.js'
 import { displayName } from '../lib/files.js'
 import { frontMatter, withValue, valueActions } from '../lib/frontmatter.js'
 import PropertyBadges from './PropertyBadges.jsx'
@@ -17,7 +18,8 @@ import { EmptyMessage } from './EmptyState.jsx'
 // A note: its file name in the TitleBar (editing it renames the file), the
 // whole markdown shown as preview; ✏️ in the title bar edits the markdown,
 // starting where you were reading, and a double tap starts at the tapped
-// word. Edits save on their own; ✓ (same spot) switches back to preview, writing typed dates in one format.
+// word. While editing, Undo and Redo take the ⋯'s place (also Ctrl/⌘+Z, Shift+Ctrl/⌘+Z and Ctrl+Y: `useUndo`); a tap
+// on them keeps the keyboard and the editor open. Edits save on their own; ✓ (same spot) switches back to preview, writing typed dates in one format.
 // `locked` (lib/locks.js): nothing in it can be changed (no ✏️, double tap, ticks, list dragging, badges' values or
 // links' edits); a lock icon takes ✏️'s place and unlocks it (`onToggleLock`, also Lock / Unlock in ⋯; none when the
 // locks can't be saved). Renaming, moving and duplicating stay.
@@ -27,6 +29,13 @@ export default function Editor({ linkedBy, onOpenLink, path, entry, files, notes
   const [editedAt, setEditedAt] = useState(null) // offset to show when back in preview
   const textareaRef = useRef()
   const previewRef = useRef()
+  const history = useUndo(content, change)
+  // After an undo or redo, the cursor at the end of what changed
+  const restore = at => {
+    if (at === null) return
+    requestAnimationFrame(() => { textareaRef.current?.focus(); textareaRef.current?.setSelectionRange(at, at) })
+  }
+  const keepFocus = e => e.preventDefault() // a tap on Undo or Redo doesn't take the focus out of the text
 
   // Inside the tap, so the textarea gets focus and mobile keyboards open
   // `pos`: markdown offset to put the cursor at (a double tap); ✏️ starts at
@@ -76,7 +85,16 @@ export default function Editor({ linkedBy, onOpenLink, path, entry, files, notes
       name={fileName}
       changed={ready && edited !== undefined}
       extra={columns && !locked && <ColumnSubmenu columns={columns.columns} column={columns.column} onSelect={columns.onSelect} />}
+      menu={mode !== 'edit'}
       actions={<>
+        {mode === 'edit' && !locked && <>
+          <Button variant="ghost" size="icon" aria-label="Undo" tooltip="Undo" disabled={!history.canUndo} onPointerDown={keepFocus} onMouseDown={keepFocus} onClick={() => restore(history.undo())}>
+            <ArrowUUpLeft />
+          </Button>
+          <Button variant="ghost" size="icon" aria-label="Redo" tooltip="Redo" disabled={!history.canRedo} onPointerDown={keepFocus} onMouseDown={keepFocus} onClick={() => restore(history.redo())}>
+            <ArrowUUpRight />
+          </Button>
+        </>}
         {locked ? (
           <Button variant="ghost-outline" size="icon" aria-label="Unlock" tooltip="Locked: tap to unlock" disabled={!onToggleLock} onClick={onToggleLock}>
             <LockSimple />
@@ -101,7 +119,7 @@ export default function Editor({ linkedBy, onOpenLink, path, entry, files, notes
           </EmptyMessage>
         )
       ) : mode === 'edit' ? (
-        <MarkdownEditor ref={textareaRef} content={content} onChange={change} onDone={finishEditing} locked={valueScope?.locked} files={files} path={path} />
+        <MarkdownEditor ref={textareaRef} content={content} onChange={history.onChange} onUndo={() => restore(history.undo())} onRedo={() => restore(history.redo())} onDone={finishEditing} locked={valueScope?.locked} files={files} path={path} />
       ) : (
         <MarkdownPreview
           ref={previewRef}
