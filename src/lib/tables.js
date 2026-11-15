@@ -65,12 +65,9 @@ function withColumn(tables, path, name, edit) {
 // `type` picked for the column (null: back to the one its cells look like)
 export const withColumnType = (tables, path, name, type) => withColumn(tables, path, name, c => ({ ...c, type: type ?? undefined }))
 
-// `color` picked for one of the column's values; `from`: the value it had before a rename (its color is dropped)
-export const withValueColor = (tables, path, name, value, color, from) => withColumn(tables, path, name, c => {
-  const colors = { ...c.colors }
-  if (from !== undefined) delete colors[from]
-  return { ...c, colors: { ...colors, [value]: color } }
-})
+// `color` picked for one of the column's values
+export const withValueColor = (tables, path, name, value, color) =>
+  withColumn(tables, path, name, c => ({ ...c, colors: { ...c.colors, [value]: color } }))
 
 // The settings follow their note when it moves, and go with it when it's deleted
 export const movedTables = movedMap
@@ -202,22 +199,13 @@ export const isFiltering = filter => filter != null && (typeof filter === 'strin
 
 // --- The table's markdown ---
 
-// A table line's cells: [{ start, end }] (offsets in the line, the text between its pipes, spaces included). A pipe
-// escaped (\|) or inside `code` doesn't split.
+// A table line's cells: [{ start, end }] (offsets in the line, the text between its pipes, spaces included). Only an
+// escaped pipe (\|) doesn't split: as on GitHub, one inside `code` does too.
 function lineCells(line) {
   const pipes = []
-  let tick = 0
   for (let i = 0; i < line.length; i++) {
-    const c = line[i]
-    if (c === '\\') { i++; continue }
-    if (c === '`') {
-      let n = 1
-      while (line[i + n] === '`') n++
-      tick = tick === 0 ? n : tick === n ? 0 : tick
-      i += n - 1
-      continue
-    }
-    if (c === '|' && !tick) pipes.push(i)
+    if (line[i] === '\\') i++
+    else if (line[i] === '|') pipes.push(i)
   }
   const lead = line.trimStart().startsWith('|') ? pipes.shift() : -1
   const cells = []

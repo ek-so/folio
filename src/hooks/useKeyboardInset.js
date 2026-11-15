@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 // The part of the screen the page can be seen in, with the on-screen keyboard open: { keyboard (its height, 0 when
 // closed), top, height } (the visual viewport's). iOS doesn't shrink the page for the keyboard: bottom-fixed elements
 // would sit behind it, and to show the caret it scrolls the whole page up, taking the top of the app off the screen.
+// Only while something is typed in: a pinch-zoom shrinks the visual viewport too, with no keyboard.
 export function useVisualViewport() {
   const [frame, setFrame] = useState({ keyboard: 0, top: 0, height: 0 })
 
@@ -13,6 +14,8 @@ export function useVisualViewport() {
     // innerHeight shrinks with the keyboard too, which would hide the gap
     const update = () => {
       const layout = document.documentElement.clientHeight
+      const typing = document.activeElement?.matches('textarea, input, select, [contenteditable]:not([contenteditable=false])')
+      if (!typing) return setFrame(f => f.keyboard ? { keyboard: 0, top: 0, height: 0 } : f)
       const next = { keyboard: Math.max(0, Math.round(layout - vv.height - vv.offsetTop)), top: Math.round(vv.offsetTop), height: Math.round(vv.height) }
       setFrame(f => f.keyboard === next.keyboard && f.top === next.top && f.height === next.height ? f : next)
     }

@@ -151,7 +151,7 @@ const CELL_TYPES = ['select', 'multi', 'date', 'checkbox'] // shown as badges or
 
 // Every table with a header gets a `.table-column` spot in each header cell (TableColumn: `data-table`, the table's
 // index among the note's tables, `data-col`); a select's, multi-select's, date's or checkbox's cell gets a `.table-cell`
-// spot in place of its text (TableCell: `data-row`, its body row); a number's is aligned right. A column's type is the
+// spot in place of its text (kept hidden) (TableCell: `data-row`, its body row); a number's is aligned right. A column's type is the
 // one picked for its name (`picked`: lib/tables.js), else what its cells look like. Returns, per table index,
 // { columns: [{ name, type, detected, picked }], texts: each body row's cells' text, edit } (each body row's `data-row` its index; null for a table left
 // out); `edit` ({ start, raw }: where the table's markdown is in `content`) only when its rows line up with the markdown's
@@ -176,7 +176,8 @@ function tableColumns(root, content, picked) {
     rows.forEach((tr, r) => [...tr.cells].forEach((td, c) => {
       const type = columns[c]?.type
       if (type === 'number') td.classList.add('table-number')
-      if (CELL_TYPES.includes(type)) td.innerHTML = `<span class="table-cell" data-table="${t}" data-row="${r}" data-col="${c}"></span>`
+      // Its own content stays, hidden: the note's date badges and images are matched to the text by their order
+      if (CELL_TYPES.includes(type)) td.innerHTML = `<span hidden>${td.innerHTML}</span><span class="table-cell" data-table="${t}" data-row="${r}" data-col="${c}"></span>`
     }))
     return { columns, texts: cells.map(r => r.map(c => c.text)), edit: md && md.length === rows.length ? { start, raw } : null }
   })
@@ -370,7 +371,7 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
       onRemoveValue: editable && (v => rewrite(v, '')),
       onEditValue: editable && tableSettings.onColor && ((from, to, color) => {
         if (to !== from) rewrite(from, to)
-        tableSettings.onColor(path, name, to, color, to !== from ? from : undefined)
+        tableSettings.onColor(path, name, to, color) // the old value keeps its color: another table with this column may still have it
       }),
     }
   }

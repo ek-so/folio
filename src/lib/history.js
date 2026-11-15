@@ -14,10 +14,8 @@ export const shownFiles = files => files
   .map(f => f.path.endsWith(KEEP) || f.path === '.gitkeep' ? { ...f, path: f.path.slice(0, -KEEP.length) || '', folder: true } : f)
   .filter(f => f.path)
 
-// A commit for the page: { sha, date, files, mine } (`mine`: pushed from this device, `pushed` the shas it pushed)
-export const commitEntry = (commit, files, pushed) => ({
-  sha: commit.sha, date: commit.date, files: shownFiles(files), mine: pushed.includes(commit.sha),
-})
+// A commit for the page: { sha, date, files } (whether this device pushed it is worked out when it's shown)
+export const commitEntry = (commit, files) => ({ sha: commit.sha, date: commit.date, files: shownFiles(files) })
 
 // The local changes (lib/changes.js) as files: [{ path, status, from }]
 export function unsyncedFiles(ch) {

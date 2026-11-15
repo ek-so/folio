@@ -55,5 +55,5 @@ function print(html, name) {
   window.addEventListener('afterprint', cleanup)
   window.print()
   // Where print() doesn't wait for the dialog and afterprint never comes: once the app is used again
-  setTimeout(() => window.addEventListener('pointerdown', cleanup, true))
+  setTimeout(() => { if (!done) window.addEventListener('pointerdown', cleanup, true) })
 }

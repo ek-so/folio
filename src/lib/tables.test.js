@@ -45,10 +45,12 @@ describe('tables', () => {
   })
 
   it('writes cells back into the table\'s markdown', () => {
-    const raw = '| A | B |\n|---|---|\n| 1 | x |\n| `a|b` | 2\n| 3 |\n'
+    const raw = '| A | B |\n|---|---|\n| 1 | x |\n| a\\|b | 2\n| 3 |\n'
     expect(tableRows(raw).map(r => r.cells.length)).toEqual([2, 2, 1])
     expect(withCells(raw, [{ row: 0, col: 1, text: 'a|b' }, { row: 2, col: 1, text: 'new' }, { row: 1, col: 0, text: 'z' }]))
       .toBe('| A | B |\n|---|---|\n| 1 | a\\|b |\n| z | 2\n| 3 | new |\n')
+    // As on GitHub, a pipe in `code` splits cells too, so the columns line up with the preview's
+    expect(withCells('| a | b | c |\n|---|---|---|\n| `p|q` | r |\n', [{ row: 0, col: 1, text: 'X' }])).toBe('| a | b | c |\n|---|---|---|\n| `p| X | r |\n')
     expect(tableRows('> | A |\n> |---|\n')).toBe(null)
   })
 
@@ -65,8 +67,8 @@ describe('tables', () => {
   it('keeps picked types and colors per note and column', () => {
     let t = withColumnType({}, 'a.md', 'Status', 'select')
     t = withValueColor(t, 'a.md', 'Status', 'Done', 3)
-    t = withValueColor(t, 'a.md', 'Status', 'Finished', 3, 'Done')
-    expect(parseTables(serializeTables(t))).toEqual({ 'a.md': { Status: { type: 'select', colors: { Finished: 3 } } } })
+    t = withValueColor(t, 'a.md', 'Status', 'Finished', 3)
+    expect(parseTables(serializeTables(t))).toEqual({ 'a.md': { Status: { type: 'select', colors: { Done: 3, Finished: 3 } } } })
     expect(withColumnType(withColumnType({}, 'a.md', 'S', 'date'), 'a.md', 'S', null)).toEqual({})
     expect(parseTables('nope')).toBe(null)
     expect(parseTables(undefined)).toEqual({})

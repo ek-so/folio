@@ -2,16 +2,16 @@ import { describe, it, expect } from 'vitest'
 import { commitEntry, unsyncedFiles, mergedHistory, shownCommits, whenLabel } from './history.js'
 
 describe('recent updates', () => {
-  it('lists a commit\'s files without the app\'s settings, marking this device\'s', () => {
+  it('lists a commit\'s files without the app\'s settings', () => {
     const files = [{ path: 'a.md', status: 'modified' }, { path: '.folio/views.json', status: 'modified' }, { path: 'New/.gitkeep', status: 'added' }]
-    expect(commitEntry({ sha: 's', date: 'd' }, files, ['s'])).toEqual({
-      sha: 's', date: 'd', mine: true,
+    expect(commitEntry({ sha: 's', date: 'd' }, files)).toEqual({
+      sha: 's', date: 'd',
       files: [{ path: 'a.md', status: 'modified' }, { path: 'New', status: 'added', folder: true }],
     })
   })
 
   it('shows a file moved to the archive as archived', () => {
-    expect(commitEntry({ sha: 's' }, [{ path: '.archive/2026-11-15/a.md', status: 'renamed', from: 'Notes/a.md' }], []).files)
+    expect(commitEntry({ sha: 's' }, [{ path: '.archive/2026-11-15/a.md', status: 'renamed', from: 'Notes/a.md' }]).files)
       .toEqual([{ path: 'Notes/a.md', status: 'archived' }])
   })
 

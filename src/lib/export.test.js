@@ -11,6 +11,10 @@ describe('export', () => {
     expect(exportText(note, 'Plan')).toBe('Plan\n\nSome bold and a link.\n\n- [x] one\n- two\n\n1. a\n2. b\n\n> quoted\n')
   })
 
+  it('keeps code and escaped characters as written', () => {
+    expect(exportText('Use `a < b && c` and \\<tag\\> 5 \\& 6\n', 'n')).toBe('n\n\nUse a < b && c and <tag> 5 & 6\n')
+  })
+
   it('puts the title on top when the text doesn\'t start with it', () => {
     expect(exportText('---\ntitle: Trip\n---\nPack & go\n', 'trip')).toBe('Trip\n\nPack & go\n')
     expect(exportText('Just text\n', 'note')).toBe('note\n\nJust text\n')

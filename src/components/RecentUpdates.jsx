@@ -1,9 +1,11 @@
-import { ArrowUp, ArrowDown, ClockCounterClockwise, WifiSlash, Warning } from '@phosphor-icons/react'
+import { useMemo } from 'react'
+import { ArrowUp, ArrowDown, WifiSlash, Warning } from '@phosphor-icons/react'
 import Surface from './Surface.jsx'
 import TitleBar from './TitleBar.jsx'
 import PageLayout from './PageLayout.jsx'
 import FileIcon from './FileIcon.jsx'
 import Loading from './Loading.jsx'
+import { EmptyMessage } from './EmptyState.jsx'
 import { Tip } from './ui/tooltip.jsx'
 import { ListRow } from './ui/list-row.jsx'
 import { Button } from './ui/button.jsx'
@@ -33,7 +35,7 @@ export default function RecentUpdates({ repo, remote, online, changes, files, on
   const history = useHistory(repo, remote?.branch, remote?.commitSha, online)
   const unsynced = unsyncedFiles(changes)
   const commits = shownCommits(history.commits ?? [])
-  const folders = new Set(Object.keys(files).flatMap(p => p.split('/').slice(0, -1).map((_, i, parts) => parts.slice(0, i + 1).join('/'))))
+  const folders = useMemo(() => new Set(Object.keys(files).flatMap(p => p.split('/').slice(0, -1).map((_, i, parts) => parts.slice(0, i + 1).join('/')))), [files])
   const exists = f => f.status !== 'removed' && f.status !== 'archived' && (f.folder ? folders.has(f.path) : f.path in files)
 
   const fileRows = list => (
@@ -73,10 +75,7 @@ export default function RecentUpdates({ repo, remote, online, changes, files, on
 
             {history.commits === null || (history.status === 'loading' && !commits.length) ? <Loading rows={6} />
               : !commits.length ? (history.status === 'idle' && !unsynced.length && (
-                <div className="flex flex-col items-center gap-space-sm py-12 text-muted-foreground">
-                  <ClockCounterClockwise className="size-8" />
-                  <p className="text-sm">No updates yet.</p>
-                </div>
+                <EmptyMessage size="lg">{history.hasMore ? 'No files changed in the latest updates.' : 'No updates yet.'}</EmptyMessage>
               )) : commits.map((c, i) => (
                 <section key={c.sha} className="flex flex-col gap-space">
                   {(i > 0 || unsynced.length > 0) && <Separator />}
@@ -90,7 +89,7 @@ export default function RecentUpdates({ repo, remote, online, changes, files, on
                 </section>
               ))}
 
-            {history.hasMore && commits.length > 0 && online && (
+            {history.hasMore && history.commits?.length > 0 && online && ( // also when the latest only changed settings
               <Button variant="secondary" className="self-center" disabled={history.status === 'more'} onClick={history.more}>
                 {history.status === 'more' ? 'Loading…' : 'Show more'}
               </Button>

@@ -24,7 +24,7 @@ const inline = tokens => (tokens ?? []).map(t =>
     : t.type === 'image' ? t.text
       : t.type === 'html' ? ''
         : t.tokens ? inline(t.tokens)
-          : t.type === 'escape' || t.type === 'codespan' ? t.text
+          : t.type === 'escape' || t.type === 'codespan' ? decode(t.text) // the lexer gives them HTML-escaped
             : decode(t.text ?? '')).join('')
 
 const decode = s => s.replace(/&(amp|lt|gt|quot|#39);/g, (_, e) => ({ amp: '&', lt: '<', gt: '>', quot: '"', '#39': "'" })[e])

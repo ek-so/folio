@@ -95,7 +95,7 @@ export default function App() {
   const tablesInfo = useMemo(() => ({
     of: tables.of,
     onType: tables.canEdit ? (path, column, type) => update(tables.setType(path, column, type)) : undefined,
-    onColor: tables.canEdit ? (path, column, value, color, from) => update(tables.setColor(path, column, value, color, from)) : undefined,
+    onColor: tables.canEdit ? (path, column, value, color) => update(tables.setColor(path, column, value, color)) : undefined,
   }), [tables.canEdit, tables.key])
   const iconsInfo = useMemo(() => ({ iconOf: icons.iconOf, onSet: icons.canEdit ? (path, emoji) => update(icons.set(path, emoji)) : undefined }), [icons.canEdit, icons.key])
   const assets = useAssets(config) // when files were added, for the Assets page (lib/assets.js)
