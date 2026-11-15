@@ -71,6 +71,7 @@ import {
 import { plural } from './lib/plural.js'
 import { useNoteExport } from './hooks/useNoteExport.js'
 import { useTables, TablesContext } from './hooks/useTables.js'
+import { useVisualViewport } from './hooks/useKeyboardInset.js'
 
 const BASE = import.meta.env.BASE_URL
 // The page and view the address the app was opened at names (not the bare root)
@@ -158,6 +159,7 @@ export default function App() {
   const [uploadClash, setUploadClash] = useState(null) // { name, folder, resolve } while asking
   const [uploadErrors, setUploadErrors] = useState([]) // [name, reason] after adding files
   const mainRef = useRef(null) // the page's column: the phone top bar hides while it scrolls
+  const viewport = useVisualViewport() // the part of the screen seen with the keyboard open
 
   useEffect(() => { storage.setTrails(trails) }, [trails])
   useEffect(() => { storage.setPage(page) }, [page])
@@ -760,7 +762,9 @@ export default function App() {
       }}>
       <TooltipProvider>
         <SingleOpenProvider>
-      <div className="flex flex-col h-full bg-background">
+      {/* With the keyboard open, the app fills just the part of the screen still seen (iOS would otherwise scroll it
+          up to show the caret, taking the title bar and its ✓ off the screen): only the text scrolls, inside its box */}
+      <div className="flex flex-col h-full bg-background" style={viewport.keyboard ? { position: 'fixed', insetInline: 0, top: viewport.top, height: viewport.height } : undefined}>
         <Toaster theme={theme} />
         <PullToRefresh onRefresh={() => window.location.reload()}>
           <div className="flex flex-1 min-h-0">

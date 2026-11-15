@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react'
 
-// Height of the on-screen keyboard (0 when closed). iOS doesn't shrink the
-// page for the keyboard, so bottom-fixed elements would sit behind it; the
-// visual viewport shows how much is covered.
-export function useKeyboardInset() {
-  const [inset, setInset] = useState(0)
+// The part of the screen the page can be seen in, with the on-screen keyboard open: { keyboard (its height, 0 when
+// closed), top, height } (the visual viewport's). iOS doesn't shrink the page for the keyboard: bottom-fixed elements
+// would sit behind it, and to show the caret it scrolls the whole page up, taking the top of the app off the screen.
+export function useVisualViewport() {
+  const [frame, setFrame] = useState({ keyboard: 0, top: 0, height: 0 })
 
   useEffect(() => {
     const vv = window.visualViewport
@@ -13,18 +13,24 @@ export function useKeyboardInset() {
     // innerHeight shrinks with the keyboard too, which would hide the gap
     const update = () => {
       const layout = document.documentElement.clientHeight
-      setInset(Math.max(0, Math.round(layout - vv.height - vv.offsetTop)))
+      const next = { keyboard: Math.max(0, Math.round(layout - vv.height - vv.offsetTop)), top: Math.round(vv.offsetTop), height: Math.round(vv.height) }
+      setFrame(f => f.keyboard === next.keyboard && f.top === next.top && f.height === next.height ? f : next)
     }
     update()
     vv.addEventListener('resize', update)
     vv.addEventListener('scroll', update)
     window.addEventListener('focusin', update)
+    window.addEventListener('focusout', update)
     return () => {
       window.removeEventListener('focusin', update)
+      window.removeEventListener('focusout', update)
       vv.removeEventListener('resize', update)
       vv.removeEventListener('scroll', update)
     }
   }, [])
 
-  return inset
+  return frame
 }
+
+// Height of the on-screen keyboard (0 when closed)
+export const useKeyboardInset = () => useVisualViewport().keyboard

@@ -12,13 +12,13 @@ export function useHideOnScroll(host, resetKey) {
   const shown = useRef(true) // what the effect below last decided
   useEffect(() => { shown.current = true; setHidden(false) }, [resetKey])
   useEffect(() => {
-    let last = { target: null, top: 0 }
+    let last = new WeakMap() // where each scroll area was when it last counted (the editor scrolls two at once: its text and its highlighting)
     let settleUntil = 0
     const set = hide => {
       if (hide === !shown.current) return
       shown.current = !hide
       settleUntil = Date.now() + SETTLE_MS
-      last = { target: null, top: 0 }
+      last = new WeakMap()
       setHidden(hide)
     }
     const onScroll = e => {
@@ -28,12 +28,12 @@ export function useHideOnScroll(host, resetKey) {
       if (el.scrollHeight - el.clientHeight <= 1 || Date.now() < settleUntil) return
       // iOS bounce reports positions outside the real range
       const top = Math.max(0, Math.min(el.scrollTop, el.scrollHeight - el.clientHeight))
-      if (last.target !== el) last = { target: el, top }
-      const delta = top - last.top
+      if (!last.has(el)) last.set(el, top)
+      const delta = top - last.get(el)
       if (top < SHOW_ABOVE) set(false)
       else if (delta >= STEP) set(true)
       else if (delta <= -STEP) set(false)
-      if (Math.abs(delta) >= STEP) last.top = top
+      if (Math.abs(delta) >= STEP) last.set(el, top)
     }
     document.addEventListener('scroll', onScroll, { capture: true, passive: true })
     return () => document.removeEventListener('scroll', onScroll, { capture: true })
