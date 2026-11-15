@@ -4,8 +4,8 @@ import { commitEntry, unsyncedFiles, mergedHistory, historyDays, dayTitle, timeO
 describe('recent updates', () => {
   it('lists a commit\'s files without the app\'s settings, marking this device\'s', () => {
     const files = [{ path: 'a.md', status: 'modified' }, { path: '.folio/views.json', status: 'modified' }, { path: 'New/.gitkeep', status: 'added' }]
-    expect(commitEntry({ sha: 's', date: 'd', message: 'Update 2 files\n\n- x' }, files, ['s'])).toEqual({
-      sha: 's', date: 'd', message: 'Update 2 files', mine: true,
+    expect(commitEntry({ sha: 's', date: 'd' }, files, ['s'])).toEqual({
+      sha: 's', date: 'd', mine: true,
       files: [{ path: 'a.md', status: 'modified' }, { path: 'New', status: 'added', folder: true }],
     })
   })

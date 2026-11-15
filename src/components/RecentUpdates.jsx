@@ -15,11 +15,14 @@ import { displayName } from '../lib/files.js'
 import { useHistory } from '../hooks/useHistory.js'
 import { cn } from '@/lib/utils.js'
 
+// An update's title: how many files it changed (their names are listed under it)
+const updated = count => `Updated ${plural(count, 'file')}`
+
 const STATUS = { added: 'Added', modified: 'Changed', removed: 'Removed', renamed: 'Renamed', archived: 'Removed', copied: 'Copied', changed: 'Changed' }
 
 // Page of what changed lately (Recent updates, under File manager): first what changed on this device and isn't
 // synced yet (`changes`, lib/changes.js), then GitHub's commits, newest first, by day (`useHistory`): each with an ↑
-// when this device pushed it, else an ↓ (another device, or GitHub itself), its message and, on the right, its time, a
+// when this device pushed it, else an ↓ (another device, or GitHub itself), "Updated 3 files" and, on the right, its time, a
 // line between one update and the next, and the files it
 // changed, each saying how (Added, Changed, Removed, Renamed); a file or folder that's still there opens (`onOpen(path,
 // folder)`), a removed one only shows. The app's own settings (`.folio/`) aren't listed. Offline, what was loaded before.
@@ -57,7 +60,7 @@ export default function RecentUpdates({ repo, remote, online, changes, files, on
             {unsynced.length > 0 && (
               <section className="flex flex-col gap-space-xs">
                 {heading('Not synced yet')}
-                <CommitTitle icon={ArrowUp} tip="Made on this device, waiting for Sync" quiet message={plural(unsynced.length, 'file')} />
+                <CommitTitle icon={ArrowUp} tip="Made on this device, waiting for Sync" quiet message={updated(unsynced.length)} />
                 {fileRows(unsynced)}
               </section>
             )}
@@ -78,7 +81,7 @@ export default function RecentUpdates({ repo, remote, online, changes, files, on
                       <div className="flex flex-col gap-space-xs">
                         <CommitTitle
                           icon={c.mine ? ArrowUp : ArrowDown} tip={c.mine ? 'Synced from this device' : 'From another device or GitHub'}
-                          message={c.message} time={timeOf(c.date)}
+                          message={updated(c.files.length)} time={timeOf(c.date)}
                         />
                         {fileRows(c.files)}
                       </div>
@@ -99,7 +102,7 @@ export default function RecentUpdates({ repo, remote, online, changes, files, on
   )
 }
 
-// A commit's line above its files: ↑ (this device's, accent) or ↓, its message, and its time on the right, muted, in
+// A commit's line above its files: ↑ (this device's, accent) or ↓, its title (`message`), and its time on the right, muted, in
 // line with the files' Added / Changed…
 function CommitTitle({ icon: Icon, tip, message, time, quiet }) {
   return (

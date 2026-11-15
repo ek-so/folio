@@ -105,10 +105,10 @@ export async function changedFileCount(base, head) {
 }
 
 // Up to `count` commits of `branch`, newest first, from `from` (a sha: that one first) or the branch's latest:
-// [{ sha, date, message }]
+// [{ sha, date }]
 export async function listCommits(branch, count, from) {
   const { data } = await octokit.rest.repos.listCommits({ owner, repo, sha: from ?? branch, per_page: count, request: { fetch: fetchFresh } })
-  return data.map(c => ({ sha: c.sha, date: c.commit.committer?.date ?? c.commit.author?.date, message: c.commit.message }))
+  return data.map(c => ({ sha: c.sha, date: c.commit.committer?.date ?? c.commit.author?.date }))
 }
 
 // The files a commit changed: [{ path, status ('added' | 'modified' | 'removed' | 'renamed' | …), from (a rename's old path) }]
