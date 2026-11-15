@@ -18,6 +18,9 @@ import { cn } from '@/lib/utils.js'
 // An update's title: how many files it changed (their names are listed under it)
 const updated = count => `Updated ${plural(count, 'file')}`
 
+// A file's line under its name (beside it on a wide row): where it was renamed from, else its folder
+const describe = f => f.from ? `from ${f.from}` : f.path.includes('/') ? f.path.slice(0, f.path.lastIndexOf('/')) : undefined
+
 const STATUS = { added: 'Added', modified: 'Changed', removed: 'Removed', renamed: 'Renamed', archived: 'Removed', copied: 'Copied', changed: 'Changed' }
 
 // Page of what changed lately (Recent updates, under File manager), one update after another with a line between: first
@@ -39,9 +42,15 @@ export default function RecentUpdates({ repo, remote, online, changes, files, on
         <li key={`${f.status}:${f.path}`}>
           <ListRow
             icon={<FileIcon path={f.path} dir={f.folder} />} title={displayName(f.path)}
-            description={f.from ? `from ${f.from}` : f.path.includes('/') ? f.path.slice(0, f.path.lastIndexOf('/')) : undefined}
+            description={describe(f)}
             dimmed={!exists(f)} disabled={!exists(f)} onClick={() => onOpen(f.path, f.folder)}
-            trailing={<span className={cn('px-space-sm text-sm @min-[40rem]:text-base', f.status === 'added' ? 'text-success-ink' : f.status === 'removed' || f.status === 'archived' ? 'text-destructive-ink' : f.status === 'modified' || f.status === 'changed' ? 'text-warning-ink' : 'text-muted-foreground')}>{STATUS[f.status] ?? f.status}</span>}
+            trailing={
+              // The title's size; on a wide row, a dot between it and the description beside it (8px on each side)
+              <span className="flex items-center gap-space-sm pr-space-sm text-base">
+                {describe(f) && <span aria-hidden className="-ml-space-xs hidden text-muted-foreground @min-[40rem]:inline">·</span>}
+                <span className={cn(f.status === 'added' ? 'text-success-ink' : f.status === 'removed' || f.status === 'archived' ? 'text-destructive-ink' : f.status === 'modified' || f.status === 'changed' ? 'text-warning-ink' : 'text-muted-foreground')}>{STATUS[f.status] ?? f.status}</span>
+              </span>
+            }
           />
         </li>
       ))}
