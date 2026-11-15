@@ -16,7 +16,7 @@ import TableColumn from './TableColumn.jsx'
 import TableCell from './TableCell.jsx'
 import { detectType, tableRows, withCells, sortedRows, cellPasses, columnValues, cellValues, checkboxText } from '../lib/tables.js'
 import { useTablesContext } from '../hooks/useTables.js'
-import { DndContext, closestCenter } from '@dnd-kit/core'
+import { DndContext, DragOverlay, closestCenter } from '@dnd-kit/core'
 import { useDragSensors } from '../hooks/useDragSensors.js'
 
 // Text node and offset under a screen point
@@ -110,6 +110,21 @@ const dropAfter = ({ active, over }) => {
   return Boolean(moved && over) && moved.top + moved.height / 2 > over.rect.top + over.rect.height / 2
 }
 
+// A dragged item's copy only goes up and down
+const upAndDown = ({ transform }) => ({ ...transform, x: 0 })
+
+// The copy of a dragged item or block that follows the pointer (DragOverlay): its HTML as the preview shows it, a list
+// item inside a list of its kind so it keeps its marker
+function ghostHtml(item) {
+  const copy = item.cloneNode(true)
+  copy.classList.remove('list-drop-before', 'list-drop-after')
+  copy.querySelectorAll('.block-grip, .list-grip').forEach(g => g.remove()) // its handles stay behind
+  if (item.tagName !== 'LI') return copy.outerHTML
+  const list = item.parentElement
+  const start = list.tagName === 'OL' ? ` start="${(Number(list.getAttribute('start')) || 1) + [...list.children].indexOf(item)}"` : ''
+  return `<${list.tagName.toLowerCase()}${start} class="${list.className}">${copy.outerHTML}</${list.tagName.toLowerCase()}>`
+}
+
 // `content` with what was dragged (`active`, a block or list item) moved next to what it was dropped on (`over`)
 function dropped(content, lists, blocks, active, over, after) {
   const [kind, from] = String(active.id).split(':')
@@ -191,6 +206,7 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
   const [dates, setDates] = useState([]) // date spots for DateBadge
   const [grips, setGrips] = useState([]) // list item spots for ListGrip
   const [drop, setDrop] = useState(null) // { id, side } of the item a list item is being dragged over
+  const [ghost, setGhost] = useState(null) // the dragged item's HTML, for its copy under the pointer
   const [blockSpots, setBlockSpots] = useState([]) // block spots for ListGrip
   const [handles, setHandles] = useState([]) // image spots for ImageHandle
   const [columnSpots, setColumnSpots] = useState([]) // table header spots for TableColumn
@@ -454,10 +470,12 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
       <DndContext
         sensors={sensors}
         collisionDetection={otherOfKind}
-        onDragMove={e => setDrop(e.over ? { id: e.over.id, side: dropAfter(e) ? 'after' : 'before' } : null)}
-        onDragCancel={() => setDrop(null)}
+        onDragStart={e => setGhost(ghostHtml(e.active.data.current.item))}
+        onDragMove={e => setDrop(e.over && e.over.id !== e.active.id ? { id: e.over.id, side: dropAfter(e) ? 'after' : 'before' } : null)}
+        onDragCancel={() => { setDrop(null); setGhost(null) }}
         onDragEnd={e => {
           setDrop(null)
+          setGhost(null)
           if (!e.over) return
           const moved = dropped(content, lists, blocks, e.active, e.over, dropAfter(e))
           if (moved !== content) onChange(moved)
@@ -471,6 +489,9 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
           const id = `${spot.dataset.list}:${spot.dataset.item}`
           return createPortal(<ListGrip spot={spot} id={id} drop={drop?.id === id ? drop.side : null} />, spot, `grip-${id}`)
         })}
+        <DragOverlay modifiers={[upAndDown]} dropAnimation={null}>
+          {ghost && <div className="editor-preview drag-ghost leading-relaxed text-base" dangerouslySetInnerHTML={{ __html: ghost }} />}
+        </DragOverlay>
       </DndContext>
       {columnSpots.map(spot => {
         const { table: t, col: c } = spot.dataset

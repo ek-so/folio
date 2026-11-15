@@ -14,14 +14,17 @@
 .editor-preview .image-frame { position: relative; display: inline-block; max-width: 100%; vertical-align: top; }
 .editor-preview .image-handle { position: absolute; top: 50%; right: 8px; translate: 0 -50%; }
 .editor-preview .list-grip { position: absolute; right: 100%; width: var(--grip-w); height: 1lh; opacity: 0.8; }
-/* Where a dragged item or block lands: a line above or under the one it's over, drawn over the dragged item (which
-   covers that one while it's held there), taking no room */
+/* Where a dragged item or block lands, as Notion shows it: a line in the gap above or under the one it's over, the
+   resize handle's (2px, the accent, rounded), taking no room. The dragged one stays in place, faded; its copy under the
+   pointer (DragOverlay, `.drag-ghost`) is half see-through, so the line shows through it */
 .editor-preview :is(li, [data-src]).list-drop-before::before, .editor-preview :is(li, [data-src]).list-drop-after::after {
-  content: ''; display: block; position: relative; z-index: 2; height: 2px; border-radius: 1px; background: var(--primary); pointer-events: none;
+  content: ''; display: block; position: relative; z-index: 2; height: 2px; border-radius: 9999px; background: var(--primary); pointer-events: none;
 }
-.editor-preview :is(li, [data-src]).list-drop-before::before { margin-bottom: -2px; translate: 0 -2px; }
-.editor-preview :is(li, [data-src]).list-drop-after::after { margin-top: -2px; translate: 0 2px; }
-.editor-preview :is(li, [data-src]).list-dragging { position: relative; z-index: 1; background: var(--card); border-radius: 8px; box-shadow: var(--shadow-md); }
+.editor-preview :is(li, [data-src]).list-drop-before::before { margin-bottom: -2px; translate: 0 -3px; }
+.editor-preview :is(li, [data-src]).list-drop-after::after { margin-top: -2px; translate: 0 3px; }
+.editor-preview :is(li, [data-src]).list-dragging { opacity: 0.4; }
+.editor-preview.drag-ghost { padding: 0; opacity: 0.5; pointer-events: none; }
+.editor-preview.drag-ghost :is(ul, ol) { margin: 0; }
 /* Blocks' grips: in a left gutter as wide as a grip, at the block's first line; with a mouse only while it's hovered, on touch faint */
 .editor-preview:has(> [data-src] > .block-grip) { padding-left: calc(var(--space) + var(--grip-w)); }
 .editor-preview > [data-src]:has(> .block-grip) { position: relative; }
