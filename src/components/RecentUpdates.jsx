@@ -41,7 +41,7 @@ export default function RecentUpdates({ repo, remote, online, changes, files, on
             icon={<FileIcon path={f.path} dir={f.folder} />} title={displayName(f.path)}
             description={f.from ? `from ${f.from}` : f.path.includes('/') ? f.path.slice(0, f.path.lastIndexOf('/')) : undefined}
             dimmed={!exists(f)} disabled={!exists(f)} onClick={() => onOpen(f.path, f.folder)}
-            trailing={<span className={cn('px-space-sm text-sm', f.status === 'added' ? 'text-success-ink' : f.status === 'removed' || f.status === 'archived' ? 'text-destructive-ink' : f.status === 'modified' || f.status === 'changed' ? 'text-warning-ink' : 'text-muted-foreground')}>{STATUS[f.status] ?? f.status}</span>}
+            trailing={<span className={cn('px-space-sm text-sm @min-[40rem]:text-base', f.status === 'added' ? 'text-success-ink' : f.status === 'removed' || f.status === 'archived' ? 'text-destructive-ink' : f.status === 'modified' || f.status === 'changed' ? 'text-warning-ink' : 'text-muted-foreground')}>{STATUS[f.status] ?? f.status}</span>}
           />
         </li>
       ))}
