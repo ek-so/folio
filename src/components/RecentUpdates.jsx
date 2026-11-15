@@ -56,7 +56,7 @@ export default function RecentUpdates({ repo, remote, online, changes, files, on
             {history.status === 'failed' && <Notice icon={Warning} action={<Button variant="secondary" onClick={history.retry}>Try again</Button>}>Couldn't load the updates from GitHub.</Notice>}
 
             {unsynced.length > 0 && (
-              <section className="flex flex-col gap-space-xs">
+              <section className="flex flex-col">
                 <CommitTitle icon={ArrowUp} tip="Made on this device, waiting for Sync" quiet message={updated(unsynced.length)} time="Not synced yet" />
                 {fileRows(unsynced)}
               </section>
@@ -71,7 +71,7 @@ export default function RecentUpdates({ repo, remote, online, changes, files, on
               )) : commits.map((c, i) => (
                 <section key={c.sha} className="flex flex-col gap-space">
                   {(i > 0 || unsynced.length > 0) && <Separator />}
-                  <div className="flex flex-col gap-space-xs">
+                  <div className="flex flex-col">
                     <CommitTitle
                       icon={c.mine ? ArrowUp : ArrowDown} tip={c.mine ? 'Synced from this device' : 'From another device or GitHub'}
                       message={updated(c.files.length)} time={whenLabel(c.date)}
@@ -93,16 +93,16 @@ export default function RecentUpdates({ repo, remote, online, changes, files, on
   )
 }
 
-// A commit's line above its files: ↑ (this device's, accent) or ↓, its title (`message`), and its time on the right, muted, in
-// line with the files' Added / Changed…
+// A commit's line above its files, a small muted title like the rail's Views, as tall as a row: ↑ (this device's,
+// accent) or ↓, its title (`message`), and its time on the right, in line with the files' Added / Changed…
 function CommitTitle({ icon: Icon, tip, message, time, quiet }) {
   return (
-    <div className="flex min-w-0 items-center gap-space-sm pl-3 pr-space text-sm">
+    <div className="flex min-h-control min-w-0 items-center gap-space-sm pl-3 pr-space text-xs font-medium text-muted-foreground">
       <Tip content={tip}>
         <span className={cn('flex shrink-0', Icon === ArrowUp && !quiet ? 'text-primary' : 'text-muted-foreground')} aria-label={tip} role="img"><Icon className="size-4" /></span>
       </Tip>
-      <span className="min-w-0 flex-1 truncate font-medium">{message}</span>
-      {time && <span className="shrink-0 tabular-nums text-muted-foreground">{time}</span>}
+      <span className="min-w-0 flex-1 truncate">{message}</span>
+      {time && <span className="shrink-0 tabular-nums">{time}</span>}
     </div>
   )
 }
