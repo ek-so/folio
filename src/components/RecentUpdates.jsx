@@ -7,6 +7,7 @@ import Loading from './Loading.jsx'
 import { Tip } from './ui/tooltip.jsx'
 import { ListRow } from './ui/list-row.jsx'
 import { Button } from './ui/button.jsx'
+import { Separator } from './ui/separator.jsx'
 import { PAGE } from '../lib/pages.js'
 import { historyDays, timeOf, unsyncedFiles } from '../lib/history.js'
 import { plural } from '../lib/plural.js'
@@ -18,7 +19,8 @@ const STATUS = { added: 'Added', modified: 'Changed', removed: 'Removed', rename
 
 // Page of what changed lately (Recent updates, under File manager): first what changed on this device and isn't
 // synced yet (`changes`, lib/changes.js), then GitHub's commits, newest first, by day (`useHistory`): each with an ↑
-// when this device pushed it, else an ↓ (another device, or GitHub itself), its time and message, and the files it
+// when this device pushed it, else an ↓ (another device, or GitHub itself), its message and, on the right, its time, a
+// line between one update and the next, and the files it
 // changed, each saying how (Added, Changed, Removed, Renamed); a file or folder that's still there opens (`onOpen(path,
 // folder)`), a removed one only shows. The app's own settings (`.folio/`) aren't listed. Offline, what was loaded before.
 export default function RecentUpdates({ repo, remote, online, changes, files, onOpen }) {
@@ -55,7 +57,7 @@ export default function RecentUpdates({ repo, remote, online, changes, files, on
             {unsynced.length > 0 && (
               <section className="flex flex-col gap-space-xs">
                 {heading('Not synced yet')}
-                <CommitTitle icon={ArrowUp} tip="Made on this device, waiting for Sync" quiet title={plural(unsynced.length, 'file')} />
+                <CommitTitle icon={ArrowUp} tip="Made on this device, waiting for Sync" quiet message={plural(unsynced.length, 'file')} />
                 {fileRows(unsynced)}
               </section>
             )}
@@ -66,16 +68,20 @@ export default function RecentUpdates({ repo, remote, online, changes, files, on
                   <ClockCounterClockwise className="size-8" />
                   <p className="text-sm">No updates yet.</p>
                 </div>
-              )) : days.map(day => (
+              )) : days.map((day, d) => (
                 <section key={day.title} className="flex flex-col gap-space-sm">
+                  {(d > 0 || unsynced.length > 0) && <Separator />}
                   {heading(day.title)}
-                  {day.commits.map(c => (
-                    <div key={c.sha} className="flex flex-col gap-space-xs">
-                      <CommitTitle
-                        icon={c.mine ? ArrowUp : ArrowDown} tip={c.mine ? 'Synced from this device' : 'From another device or GitHub'}
-                        title={timeOf(c.date)} message={c.message}
-                      />
-                      {fileRows(c.files)}
+                  {day.commits.map((c, i) => (
+                    <div key={c.sha} className="flex flex-col gap-space-sm">
+                      {i > 0 && <Separator />}
+                      <div className="flex flex-col gap-space-xs">
+                        <CommitTitle
+                          icon={c.mine ? ArrowUp : ArrowDown} tip={c.mine ? 'Synced from this device' : 'From another device or GitHub'}
+                          message={c.message} time={timeOf(c.date)}
+                        />
+                        {fileRows(c.files)}
+                      </div>
                     </div>
                   ))}
                 </section>
@@ -93,15 +99,16 @@ export default function RecentUpdates({ repo, remote, online, changes, files, on
   )
 }
 
-// A commit's line above its files: ↑ (this device's, accent) or ↓, its time and, muted, its message
-function CommitTitle({ icon: Icon, tip, title, message, quiet }) {
+// A commit's line above its files: ↑ (this device's, accent) or ↓, its message, and its time on the right, muted, in
+// line with the files' Added / Changed…
+function CommitTitle({ icon: Icon, tip, message, time, quiet }) {
   return (
-    <div className="flex min-w-0 items-center gap-space-sm px-3 text-sm">
+    <div className="flex min-w-0 items-center gap-space-sm pl-3 pr-space text-sm">
       <Tip content={tip}>
         <span className={cn('flex shrink-0', Icon === ArrowUp && !quiet ? 'text-primary' : 'text-muted-foreground')} aria-label={tip} role="img"><Icon className="size-4" /></span>
       </Tip>
-      <span className="shrink-0 font-medium tabular-nums">{title}</span>
-      {message && <span className="min-w-0 truncate text-muted-foreground">{message}</span>}
+      <span className="min-w-0 flex-1 truncate font-medium">{message}</span>
+      {time && <span className="shrink-0 tabular-nums text-muted-foreground">{time}</span>}
     </div>
   )
 }
