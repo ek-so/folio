@@ -104,6 +104,19 @@ export async function changedFileCount(base, head) {
   }
 }
 
+// Up to `count` commits of `branch`, newest first, from `from` (a sha: that one first) or the branch's latest:
+// [{ sha, date, message }]
+export async function listCommits(branch, count, from) {
+  const { data } = await octokit.rest.repos.listCommits({ owner, repo, sha: from ?? branch, per_page: count, request: { fetch: fetchFresh } })
+  return data.map(c => ({ sha: c.sha, date: c.commit.committer?.date ?? c.commit.author?.date, message: c.commit.message }))
+}
+
+// The files a commit changed: [{ path, status ('added' | 'modified' | 'removed' | 'renamed' | …), from (a rename's old path) }]
+export async function commitFiles(sha) {
+  const { data } = await octokit.rest.repos.getCommit({ owner, repo, ref: sha })
+  return (data.files ?? []).map(f => ({ path: f.filename, status: f.status, ...(f.previous_filename ? { from: f.previous_filename } : {}) }))
+}
+
 // Tags errors with the sync step they happened in, for the error details sheet
 const step = (name, promise) => promise.catch(e => {
   if (e && typeof e === 'object' && !e.step) e.step = name

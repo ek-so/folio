@@ -1,4 +1,6 @@
 const RECENT_KEY = 'folio_recent_'
+const PUSHED_KEY = 'folio_pushed_'
+const PUSHED_MAX = 500
 const TOKEN_KEY = 'brain_gh_token'
 const REPO_KEY = 'brain_gh_repo'
 const REPOS_KEY = 'folio_repos'
@@ -98,9 +100,18 @@ export const storage = {
     for (const key of [TRAILS_KEY, EXPANDED_KEY, PLANNER_DAYS_KEY]) write(sessionStorage, key, null)
   },
   // Everything tied to the signed-in account; theme stays
+  // The commits this device pushed to `repo` (their shas, latest first, the last PUSHED_MAX): Recent updates marks them ↑
+  getPushed: (repo) => {
+    try { return JSON.parse(read(localStorage, PUSHED_KEY + repo)) || [] } catch { return [] }
+  },
+  addPushed: (repo, sha) => {
+    let shas = []
+    try { shas = JSON.parse(read(localStorage, PUSHED_KEY + repo)) || [] } catch {}
+    write(localStorage, PUSHED_KEY + repo, JSON.stringify([sha, ...shas.filter(s => s !== sha)].slice(0, PUSHED_MAX)))
+  },
   clearSession: () => {
     let recents = []
-    try { recents = Object.keys(localStorage).filter(key => key.startsWith(RECENT_KEY)) } catch {}
+    try { recents = Object.keys(localStorage).filter(key => key.startsWith(RECENT_KEY) || key.startsWith(PUSHED_KEY)) } catch {}
     for (const key of recents) write(localStorage, key, null)
     for (const key of [TOKEN_KEY, REPO_KEY, REPOS_KEY, USER_KEY]) write(localStorage, key, null)
     for (const key of [TRAILS_KEY, PAGE_KEY, EXPANDED_KEY, PLANNER_DAYS_KEY]) write(sessionStorage, key, null)

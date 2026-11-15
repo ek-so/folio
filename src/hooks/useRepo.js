@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useMemo } from 'react'
 import { toast } from 'sonner'
 import { getTree, getBlob, getBlobBase64, fileOn, isOutOfDate, commitTree, isNetworkError, getLatestCommitSha, changedFileCount, blobSha, encodeText, uploadBlob } from '../lib/github.js'
 import { cache } from '../lib/cache.js'
-import { localChanges } from '../lib/storage.js'
+import { storage, localChanges } from '../lib/storage.js'
 import { describeSyncError } from '../lib/syncErrors.js'
 import {
   empty, normalize, count, virtualFiles, changedPaths, conflicts, settle, treeEntries, commitMessage, filesAfter,
@@ -287,6 +287,7 @@ export function useRepo(repo, onDone) {
     const onGitHub = new Set(Object.values(latest.files).map(f => f.sha)) // a duplicate's bytes may be there already
     for (const sha of new Set(Object.values(committed.uploads))) if (!onGitHub.has(sha)) await uploadBlob(sha)
     const { commitSha, treeSha } = await commitTree(latest, treeEntries(committed, latest.files), commitMessage(committed))
+    storage.addPushed(repo, commitSha) // Recent updates marks it as this device's
     const editShas = {}
     for (const [orig, text] of Object.entries(committed.edits)) {
       editShas[orig] = await blobSha(text)

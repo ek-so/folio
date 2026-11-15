@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { List, SidebarSimple, MagnifyingGlass, Images, LinkBreak, BookOpen, Gear, SignOut } from '@phosphor-icons/react'
+import { List, SidebarSimple, MagnifyingGlass, Images, LinkBreak, BookOpen, Gear, SignOut, ClockCounterClockwise } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils.js'
 import { Button } from './ui/button.jsx'
 import { Separator } from './ui/separator.jsx'
@@ -26,7 +26,7 @@ import PageIcon from './PageIcon.jsx'
 // they meet, 8px each: the rail's right and the content box's left. On top a header row, level with the title
 // bars' rows (8px and a 1px top edge like the boxes' outline above it): the app's name (Folio, bold) and a
 // button that collapses the rail to icons only (remembered on this device; expanded, its edge is a drag handle);
-// then a separator like every other; the views under their title (`ViewsTitle`: "Views" and its ⋯), a separator, Search, Sync, File manager, Assets and Graph (plain items, no separator between them),
+// then a separator like every other; the views under their title (`ViewsTitle`: "Views" and its ⋯), a separator, Search, Sync, File manager, Recent updates, Assets and Graph (plain items, no separator between them),
 // and at the bottom Broken links (count), Settings and Sign out.
 // `pages`: the main pages (lib/pages.js): the views, File manager and Graph. With a
 // mouse, a view shows its ⋯ (`ViewMenu`, `viewActions`) on hover; the collapsed rail has none of them, and the title only its ⋯.
@@ -86,7 +86,7 @@ export function NavRail({ page, pages, hrefOf, viewActions, onPage, onSearch, re
         </div>
       ))}
       {separator}
-      {/* Under the views: Search, Sync, File manager, Assets and Graph, plain items like the others. Search shows its
+      {/* Under the views: Search, Sync, File manager, Recent updates, Assets and Graph, plain items like the others. Search shows its
           shortcut (⌘K / Ctrl+K, lib/shortcuts.js) on its right, or in its tooltip when collapsed */}
       <Button variant="ghost" tooltip={hint(`Search ${SEARCH_KEYS.join(IS_MAC ? '' : '+')}`)} tooltipSide="right" aria-keyshortcuts={IS_MAC ? 'Meta+K' : 'Control+K'} className={cn('justify-start gap-3 font-normal', collapsed && 'size-control justify-center px-0')} onClick={onSearch}>
         <MagnifyingGlass /> {label('Search')}
@@ -94,6 +94,9 @@ export function NavRail({ page, pages, hrefOf, viewActions, onPage, onSearch, re
       </Button>
       {renderSync(collapsed)}
       {pages.filter(p => p.id === PAGE.FILES).map(p => <div key={p.id}>{pageButton(p)}</div>)}
+      <Button variant="ghost" tooltip={hint('Recent updates')} tooltipSide="right" aria-current={page === PAGE.HISTORY ? 'page' : undefined} className={item(PAGE.HISTORY)} onClick={() => onPage(PAGE.HISTORY)}>
+        <ClockCounterClockwise /> {label('Recent updates')}
+      </Button>
       <Button variant="ghost" tooltip={hint('Assets')} tooltipSide="right" aria-current={page === PAGE.ASSETS ? 'page' : undefined} className={item(PAGE.ASSETS)} onClick={() => onPage(PAGE.ASSETS)}>
         <Images /> {label('Assets')}
       </Button>
