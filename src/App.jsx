@@ -110,7 +110,7 @@ export default function App() {
   const { theme, setTheme } = useTheme()
   const [openPage, setPage] = useState(() => (reloaded && storage.getPage()) || (deepLink ? deepLink.page : storage.getPage() || PAGE.HOME))
   // A view that's gone (deleted here or on another device) falls back to the first page; until the config is read, the remembered page stays
-  const fixedPage = openPage === PAGE.SETTINGS || openPage === PAGE.LINKS || openPage === PAGE.DOCS || openPage === PAGE.ASSETS || openPage === PAGE.HISTORY
+  const fixedPage = openPage === PAGE.SETTINGS || openPage === PAGE.LINKS || openPage === PAGE.DOCS || openPage === PAGE.ASSETS
   const page = fixedPage || !viewsFile.ready || pages.some(p => p.id === openPage) ? openPage : pages[0].id
   // The main page files and folders open in (File manager when Settings / Broken links / Documentation is open)
   const mainPage = fixedPage ? PAGE.FILES : page
@@ -780,10 +780,10 @@ export default function App() {
                 stays mounted (hidden), so an open dialog or the note being edited keeps what's typed in it */}
             {repo.catchingUp && <Loading />}
             <div className={repo.catchingUp ? 'hidden' : 'contents'}>
-            {page === PAGE.HISTORY ? (
-            <RecentUpdates repo={auth.repo} remote={repo.remote} online={repo.online} changes={changes} files={virtual} onOpen={(path, folder) => folder ? openFolder(path, PAGE.FILES) : setSelectedFile(path, PAGE.FILES)} />
-          ) : page === PAGE.ASSETS ? (
+            {page === PAGE.ASSETS ? (
             <Assets files={shown} added={assets.added} backlinks={links.index.backlinks} onOpen={path => setSelectedFile(path, PAGE.FILES)} />
+          ) : !view && page === PAGE.HISTORY ? (
+            <RecentUpdates repo={auth.repo} remote={repo.remote} online={repo.online} changes={changes} files={virtual} onOpen={(path, folder) => folder ? openFolder(path) : setSelectedFile(path)} />
           ) : !view && page === PAGE.GRAPH ? (
             <GraphPage page={page} files={shown} backlinks={links.index.backlinks} notes={links.notes} repoName={auth.repo.split('/')[1]} onOpenFile={path => setSelectedFile(path)} onOpenFolder={path => openFolder(path)} />
           ) : !view ? (

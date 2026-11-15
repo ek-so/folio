@@ -4,7 +4,8 @@ import { leadingEmoji, withoutEmoji } from './icons.js'
 // The app's pages (`page` in App). Home and the views added in Edit views
 // (lib/viewsConfig.js, kept in the repo) are pages too, each with its own id;
 // `HOME` is the first view's id in a repo without a config. File manager and
-// Graph, Recent updates, Assets, Settings, Broken links and Documentation are fixed (Recent updates, Assets, Settings, Broken links and Documentation are not in `mainPages`).
+// Graph, Recent updates, Assets, Settings, Broken links and Documentation are fixed (Assets, Settings, Broken links and Documentation are not in `mainPages`:
+// what they open, opens in File manager).
 export const PAGE = { HOME: 'home', FILES: 'files', GRAPH: 'graph', SETTINGS: 'settings', LINKS: 'links', DOCS: 'docs', ASSETS: 'assets', HISTORY: 'history' }
 
 const FIXED = [
@@ -29,5 +30,6 @@ export function pageInfo(id, views = []) {
   return { id, title: view ? name || 'Untitled' : '', untitled: !!view && !name, icon: File, emoji, view: true }
 }
 
-// The main pages, in the navigation's order: the views, File manager, Graph
-export const mainPages = views => [...views.map(v => pageInfo(v.id, views)), pageInfo(PAGE.FILES), pageInfo(PAGE.GRAPH)]
+// The main pages, each with its own trail of what was opened in it (lib/views.js): the views, File manager, Graph and
+// Recent updates
+export const mainPages = views => [...views.map(v => pageInfo(v.id, views)), pageInfo(PAGE.FILES), pageInfo(PAGE.GRAPH), pageInfo(PAGE.HISTORY)]
