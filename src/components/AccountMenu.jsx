@@ -11,8 +11,8 @@ import { Separator } from './ui/separator.jsx'
 import { Sheet, SheetTrigger, SheetContent, SheetTitle, SheetDescription } from './ui/sheet.jsx'
 
 // The phone navigation, opened by `trigger` (a Button): a left sheet that floats 8px from the screen's edges,
-// titled with the app's name (its ✕ is the sheet's own). The main pages (`pages`): File manager, Assets and Graph, then the views
-// under their title (`ViewsTitle`: "Views" and its ⋯), each with its ⋯ (`ViewMenu`, `viewActions`); then, pinned to the bottom of the sheet,
+// titled with the app's name (its ✕ is the sheet's own). First the views under their title (`ViewsTitle`: "Views" and
+// its ⋯), each with its ⋯ (`ViewMenu`, `viewActions`), then the other main pages (`pages`): File manager, Assets and Graph; then, pinned to the bottom of the sheet,
 // Broken links (count), Documentation, Settings and Sign out. `current` is the open page, highlighted. Choosing a page closes it.
 export default function AccountMenu({ trigger, current, pages, viewActions, onNavigate, brokenCount, onSignOut }) {
   const [open, setOpen] = useState(false)
@@ -43,15 +43,15 @@ export default function AccountMenu({ trigger, current, pages, viewActions, onNa
           </div>
         </div>
         <nav aria-label="Main" className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-y-contain p-space" data-no-pull>
+          <ViewsTitle actions={viewActions} onPick={() => setOpen(false)} className="pr-2" />
+          <ul>
+            {pages.filter(p => p.view).map(page)}
+          </ul>
+          {separator}
           <ul>
             {pages.filter(p => p.id === PAGE.FILES).map(page)}
             {fixed(PAGE.ASSETS, Images, 'Assets')}
             {pages.filter(p => p.id === PAGE.GRAPH).map(page)}
-          </ul>
-          {separator}
-          <ViewsTitle actions={viewActions} onPick={() => setOpen(false)} className="pr-2" />
-          <ul>
-            {pages.filter(p => p.view).map(page)}
           </ul>
           <div className="mt-auto">
           {separator}
