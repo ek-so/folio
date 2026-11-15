@@ -88,10 +88,10 @@ export default function Editor({ linkedBy, onOpenLink, path, entry, files, notes
       menu={mode !== 'edit'}
       actions={<>
         {mode === 'edit' && !locked && <>
-          <Button variant="ghost" size="icon" aria-label="Undo" tooltip="Undo" disabled={!history.canUndo} onPointerDown={keepFocus} onMouseDown={keepFocus} onClick={() => restore(history.undo())}>
+          <Button variant="ghost-outline" size="icon" aria-label="Undo" tooltip="Undo" disabled={!history.canUndo} onPointerDown={keepFocus} onMouseDown={keepFocus} onClick={() => restore(history.undo())}>
             <ArrowUUpLeft />
           </Button>
-          <Button variant="ghost" size="icon" aria-label="Redo" tooltip="Redo" disabled={!history.canRedo} onPointerDown={keepFocus} onMouseDown={keepFocus} onClick={() => restore(history.redo())}>
+          <Button variant="ghost-outline" size="icon" aria-label="Redo" tooltip="Redo" disabled={!history.canRedo} onPointerDown={keepFocus} onMouseDown={keepFocus} onClick={() => restore(history.redo())}>
             <ArrowUUpRight />
           </Button>
         </>}
