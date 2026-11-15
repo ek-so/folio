@@ -210,6 +210,7 @@
   --color-primary-ink: color-mix(in oklab, var(--primary) var(--ink), var(--foreground));
   --color-destructive-ink: color-mix(in oklab, var(--destructive) var(--ink), var(--foreground));
   --color-success-ink: color-mix(in oklab, var(--success) var(--ink), var(--foreground));
+  --color-warning-ink: color-mix(in oklab, var(--callout-warning) var(--ink), var(--foreground));
   --color-primary-foreground: var(--primary-foreground);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);

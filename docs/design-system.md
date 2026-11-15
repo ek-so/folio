@@ -37,7 +37,7 @@ Never hardcode colors; use the semantic tokens (light and dark values in `src/in
 | `border-border` | Dividers, input borders |
 | `text-foreground` / `text-muted-foreground` | Primary / secondary text |
 | `bg-primary` / `text-primary` | Accent (a muted teal green): fills and icons |
-| `text-primary-ink` / `text-destructive-ink` / `text-success-ink` | Every colored text (links, Today, red menu items and errors, green text): the color mixed with the text color by `--ink` (70%), so it's darker on light and lighter on dark. Badge values (`--tag-N`) and callout titles mix the same way. Never `text-primary` for text |
+| `text-primary-ink` / `text-destructive-ink` / `text-success-ink` / `text-warning-ink` | Every colored text (links, Today, red menu items and errors, green text, amber for something changed: Recent updates' Changed; from `--callout-warning`): the color mixed with the text color by `--ink` (70%), so it's darker on light and lighter on dark. Badge values (`--tag-N`) and callout titles mix the same way. Never `text-primary` for text |
 | `bg-destructive` | Errors, danger |
 | `bg-success` / `text-success-foreground` | Success (green) |
 | `bg-segment` / `bg-segment-active` | Segmented toggle track / selected segment (`Segmented`: fits its content by default, labeled segments 12px on their sides, icon-only ones square, 32px; `stretch`: as wide as its place, segments sharing it equally, 4px on their sides) |

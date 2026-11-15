@@ -24,7 +24,7 @@ const STATUS = { added: 'Added', modified: 'Changed', removed: 'Removed', rename
 // what changed on this device and isn't synced yet (`changes`, lib/changes.js; "Not synced yet" on its right), then
 // GitHub's commits, newest first (`useHistory`): each with an ↑ when this device pushed it, else an ↓ (another device,
 // or GitHub itself), "Updated 3 files" and, on the right, when ("Today, 13:32", "Jun 13, 14:39"), and the files it
-// changed, each saying how (Added, Changed, Removed, Renamed); a file or folder that's still there opens (`onOpen(path,
+// changed, each saying how (Added in green, Changed in amber, Removed in red, Renamed); a file or folder that's still there opens (`onOpen(path,
 // folder)`), a removed one only shows. The app's own settings (`.folio/`) aren't listed. Offline, what was loaded before.
 export default function RecentUpdates({ repo, remote, online, changes, files, onOpen }) {
   const history = useHistory(repo, remote?.branch, remote?.commitSha, online)
@@ -41,7 +41,7 @@ export default function RecentUpdates({ repo, remote, online, changes, files, on
             icon={<FileIcon path={f.path} dir={f.folder} />} title={displayName(f.path)}
             description={f.from ? `from ${f.from}` : f.path.includes('/') ? f.path.slice(0, f.path.lastIndexOf('/')) : undefined}
             dimmed={!exists(f)} disabled={!exists(f)} onClick={() => onOpen(f.path, f.folder)}
-            trailing={<span className={cn('px-space-sm text-sm', f.status === 'added' ? 'text-primary' : f.status === 'removed' || f.status === 'archived' ? 'text-destructive-ink' : 'text-muted-foreground')}>{STATUS[f.status] ?? f.status}</span>}
+            trailing={<span className={cn('px-space-sm text-sm', f.status === 'added' ? 'text-success-ink' : f.status === 'removed' || f.status === 'archived' ? 'text-destructive-ink' : f.status === 'modified' || f.status === 'changed' ? 'text-warning-ink' : 'text-muted-foreground')}>{STATUS[f.status] ?? f.status}</span>}
           />
         </li>
       ))}
