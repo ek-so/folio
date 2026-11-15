@@ -9,7 +9,7 @@ import { ListRow } from './ui/list-row.jsx'
 import { Button } from './ui/button.jsx'
 import { Separator } from './ui/separator.jsx'
 import { PAGE } from '../lib/pages.js'
-import { historyDays, timeOf, unsyncedFiles } from '../lib/history.js'
+import { shownCommits, whenLabel, unsyncedFiles } from '../lib/history.js'
 import { plural } from '../lib/plural.js'
 import { displayName } from '../lib/files.js'
 import { useHistory } from '../hooks/useHistory.js'
@@ -20,16 +20,16 @@ const updated = count => `Updated ${plural(count, 'file')}`
 
 const STATUS = { added: 'Added', modified: 'Changed', removed: 'Removed', renamed: 'Renamed', archived: 'Removed', copied: 'Copied', changed: 'Changed' }
 
-// Page of what changed lately (Recent updates, under File manager): first what changed on this device and isn't
-// synced yet (`changes`, lib/changes.js), then GitHub's commits, newest first, by day (`useHistory`): each with an ↑
-// when this device pushed it, else an ↓ (another device, or GitHub itself), "Updated 3 files" and, on the right, its time, a
-// line between one update and the next, and the files it
+// Page of what changed lately (Recent updates, under File manager), one update after another with a line between: first
+// what changed on this device and isn't synced yet (`changes`, lib/changes.js; "Not synced yet" on its right), then
+// GitHub's commits, newest first (`useHistory`): each with an ↑ when this device pushed it, else an ↓ (another device,
+// or GitHub itself), "Updated 3 files" and, on the right, when ("Today, 13:32", "Jun 13, 14:39"), and the files it
 // changed, each saying how (Added, Changed, Removed, Renamed); a file or folder that's still there opens (`onOpen(path,
 // folder)`), a removed one only shows. The app's own settings (`.folio/`) aren't listed. Offline, what was loaded before.
 export default function RecentUpdates({ repo, remote, online, changes, files, onOpen }) {
   const history = useHistory(repo, remote?.branch, remote?.commitSha, online)
   const unsynced = unsyncedFiles(changes)
-  const days = historyDays(history.commits ?? [])
+  const commits = shownCommits(history.commits ?? [])
   const folders = new Set(Object.keys(files).flatMap(p => p.split('/').slice(0, -1).map((_, i, parts) => parts.slice(0, i + 1).join('/'))))
   const exists = f => f.status !== 'removed' && f.status !== 'archived' && (f.folder ? folders.has(f.path) : f.path in files)
 
@@ -47,8 +47,6 @@ export default function RecentUpdates({ repo, remote, online, changes, files, on
       ))}
     </ul>
   )
-  const heading = text => <h2 className="px-3 pt-space-sm text-xs font-medium text-muted-foreground">{text}</h2>
-
   return (
     <PageLayout>
       <Surface title={<TitleBar page={PAGE.HISTORY} />}>
@@ -59,38 +57,31 @@ export default function RecentUpdates({ repo, remote, online, changes, files, on
 
             {unsynced.length > 0 && (
               <section className="flex flex-col gap-space-xs">
-                {heading('Not synced yet')}
-                <CommitTitle icon={ArrowUp} tip="Made on this device, waiting for Sync" quiet message={updated(unsynced.length)} />
+                <CommitTitle icon={ArrowUp} tip="Made on this device, waiting for Sync" quiet message={updated(unsynced.length)} time="Not synced yet" />
                 {fileRows(unsynced)}
               </section>
             )}
 
-            {history.commits === null || (history.status === 'loading' && !days.length) ? <Loading rows={6} />
-              : !days.length ? (history.status === 'idle' && (
+            {history.commits === null || (history.status === 'loading' && !commits.length) ? <Loading rows={6} />
+              : !commits.length ? (history.status === 'idle' && !unsynced.length && (
                 <div className="flex flex-col items-center gap-space-sm py-12 text-muted-foreground">
                   <ClockCounterClockwise className="size-8" />
                   <p className="text-sm">No updates yet.</p>
                 </div>
-              )) : days.map((day, d) => (
-                <section key={day.title} className="flex flex-col gap-space-sm">
-                  {(d > 0 || unsynced.length > 0) && <Separator />}
-                  {heading(day.title)}
-                  {day.commits.map((c, i) => (
-                    <div key={c.sha} className="flex flex-col gap-space-sm">
-                      {i > 0 && <Separator />}
-                      <div className="flex flex-col gap-space-xs">
-                        <CommitTitle
-                          icon={c.mine ? ArrowUp : ArrowDown} tip={c.mine ? 'Synced from this device' : 'From another device or GitHub'}
-                          message={updated(c.files.length)} time={timeOf(c.date)}
-                        />
-                        {fileRows(c.files)}
-                      </div>
-                    </div>
-                  ))}
+              )) : commits.map((c, i) => (
+                <section key={c.sha} className="flex flex-col gap-space">
+                  {(i > 0 || unsynced.length > 0) && <Separator />}
+                  <div className="flex flex-col gap-space-xs">
+                    <CommitTitle
+                      icon={c.mine ? ArrowUp : ArrowDown} tip={c.mine ? 'Synced from this device' : 'From another device or GitHub'}
+                      message={updated(c.files.length)} time={whenLabel(c.date)}
+                    />
+                    {fileRows(c.files)}
+                  </div>
                 </section>
               ))}
 
-            {history.hasMore && days.length > 0 && online && (
+            {history.hasMore && commits.length > 0 && online && (
               <Button variant="secondary" className="self-center" disabled={history.status === 'more'} onClick={history.more}>
                 {history.status === 'more' ? 'Loading…' : 'Show more'}
               </Button>

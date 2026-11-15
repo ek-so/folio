@@ -13,7 +13,7 @@ App flow: **Auth → RepoSetup → FileBrowser / Editor / FileViewer**. `App.jsx
 - `frontmatter.js` — a note's properties (read, add and remove keys, set, rename and remove values, colors of values, title, and `valueActions`: what a values dialog does over a set of notes, shared by the preview and the board). Tested.
 - `tagColors.js` — picked value colors in `.folio/colors.json`. Tested.
 - `undo.js` — the note editor's undo history: `startHistory`, `recorded` (a burst of typing is one step), `undone`, `redone`, `changedAt` (where the cursor goes). Tested.
-- `history.js` — Recent updates: a commit's files as listed (`shownFiles`, `commitEntry`), the unsynced changes (`unsyncedFiles`), pages of commits merged (`mergedHistory`), days (`historyDays`). Tested.
+- `history.js` — Recent updates: a commit's files as listed (`shownFiles`, `commitEntry`), the unsynced changes (`unsyncedFiles`), pages of commits merged (`mergedHistory`), those with files to show (`shownCommits`), when each was made (`whenLabel`). Tested.
 - `tables.js` — notes' table columns: types (`detectType`, `cellValue`), sorting and filtering (`sortedRows`, `cellPasses`), writing cells back into the table's markdown (`tableRows`, `withCells`), and the picked types and colors in `.folio/tables.json`. Tested.
 - `locks.js` — files locked against editing, `.folio/locks.json` (`toggledLock`, `movedLocks`, `removedLocks`). Tested.
 - `icons.js` — the emoji that replaces a file's or folder's icon, `.folio/icons.json` (`iconOf`, `withIcon`, `movedIcons`, `removedIcons`), and `leadingEmoji` / `withoutEmoji` for names that start with one. Tested.

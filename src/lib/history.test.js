@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { commitEntry, unsyncedFiles, mergedHistory, historyDays, dayTitle, timeOf } from './history.js'
+import { commitEntry, unsyncedFiles, mergedHistory, shownCommits, whenLabel } from './history.js'
 
 describe('recent updates', () => {
   it('lists a commit\'s files without the app\'s settings, marking this device\'s', () => {
@@ -29,14 +29,11 @@ describe('recent updates', () => {
     expect(mergedHistory([], [c('a')])).toEqual([c('a')])
   })
 
-  it('groups commits by day, leaving out those with nothing to show', () => {
+  it('says when each update was made, leaving out those with nothing to show', () => {
     const now = new Date(2026, 10, 15, 12)
-    const at = (d, h) => new Date(2026, 10, d, h).toISOString()
-    const commits = [
-      { sha: '1', date: at(15, 9), files: [{}] }, { sha: '2', date: at(14, 20), files: [{}] }, { sha: '3', date: at(14, 8), files: [] }, { sha: '4', date: at(3, 8), files: [{}] },
-    ]
-    expect(historyDays(commits, now).map(d => [d.title, d.commits.map(c => c.sha)])).toEqual([['Today', ['1']], ['Yesterday', ['2']], ['3 Nov', ['4']]])
-    expect(dayTitle(new Date(2025, 0, 2), now)).toBe('2 Jan 2025')
-    expect(timeOf(new Date(2026, 0, 1, 9, 5).toISOString())).toBe('09:05')
+    expect(whenLabel(new Date(2026, 10, 15, 9, 5).toISOString(), now)).toBe('Today, 09:05')
+    expect(whenLabel(new Date(2026, 5, 13, 14, 39).toISOString(), now)).toBe('Jun 13, 14:39')
+    expect(whenLabel(new Date(2025, 0, 2, 8, 0).toISOString(), now)).toBe('Jan 2 2025, 08:00')
+    expect(shownCommits([{ sha: '1', files: [{}] }, { sha: '2', files: [] }]).map(c => c.sha)).toEqual(['1'])
   })
 })

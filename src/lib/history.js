@@ -39,28 +39,16 @@ export function mergedHistory(page, list) {
   return at === -1 ? page : [...page, ...list.slice(at + 1)]
 }
 
-const dayKey = d => `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+const sameDay = (a, b) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate()
 
-// The day a date falls on, as a title: Today, Yesterday, "3 Nov", or "3 Nov 2025" in another year
-export function dayTitle(date, now = new Date()) {
-  const yesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1)
-  if (dayKey(date) === dayKey(now)) return 'Today'
-  if (dayKey(date) === dayKey(yesterday)) return 'Yesterday'
-  return `${date.getDate()} ${MONTHS[date.getMonth()]}${date.getFullYear() === now.getFullYear() ? '' : ` ${date.getFullYear()}`}`
+// The commits with files to show
+export const shownCommits = commits => commits.filter(c => c.files.length)
+
+// When a commit was made, as its update shows it: "Today, 13:32", "Jun 13, 14:39", "Jun 13 2025, 14:39" in another year
+export function whenLabel(date, now = new Date()) {
+  const d = new Date(date)
+  const time = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+  if (sameDay(d, now)) return `Today, ${time}`
+  return `${MONTHS[d.getMonth()]} ${d.getDate()}${d.getFullYear() === now.getFullYear() ? '' : ` ${d.getFullYear()}`}, ${time}`
 }
-
-// The commits with files to show, grouped by the day they were made (local time): [{ title, commits }]
-export function historyDays(commits, now = new Date()) {
-  const days = []
-  for (const c of commits) {
-    if (!c.files.length) continue
-    const title = dayTitle(new Date(c.date), now)
-    if (days.at(-1)?.title === title) days.at(-1).commits.push(c)
-    else days.push({ title, commits: [c] })
-  }
-  return days
-}
-
-// A commit's time of day, "14:05"
-export const timeOf = date => { const d = new Date(date); return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}` }
