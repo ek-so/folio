@@ -9,7 +9,7 @@ import ConfirmModal from './ConfirmModal.jsx'
 import { displayName } from '../lib/files.js'
 import { suggestFix, fixCandidates, missingNotePath, hidden } from '../lib/links.js'
 
-// Broken links grouped by note: the note (tap to open), then each link's text, target and the line it's on, and a ⋯
+// Broken links grouped by note, each note in an outlined box: the note (tap to open), then each link's text, target and the line it's on, and a ⋯
 // with every fix, so the row keeps its width: Fix: link to name (when one file in the repo has the missing name, first),
 // Open at link (the note in the editor, the link selected), Choose file… (any file, same-name ones first), Create note (where the link points, for a link to a
 // note), Remove link (its text stays; confirmed). Used on the Broken links page and in the check before Sync.
@@ -25,12 +25,12 @@ export default function BrokenLinkList({ broken, files, actions }) {
 
   return <>
     {byNote.map(([from, items]) => (
-      <section key={from} className="border-b border-border px-space py-3 last:border-b-0">
-        <Button variant="ghost" className="-ml-3 gap-3 px-3 font-semibold" onClick={() => actions.open(from)}>
+      <section key={from} className="flex flex-col rounded-lg border border-border bg-card p-space-xs">
+        <Button variant="ghost" className="gap-3 self-start px-3 font-semibold" onClick={() => actions.open(from)}>
           <FileIcon path={from} />
           <span className="truncate">{displayName(from)}</span>
         </Button>
-        <ul className="mt-space-xs flex flex-col gap-space-sm">
+        <ul className="flex flex-col gap-space-sm pb-space-xs pl-3">
           {items.map((b, i) => {
             const fix = suggestFix(b.link, files)
             const newNote = missingNotePath(from, b.link)

@@ -13,7 +13,7 @@ export default function SyncCheckModal({ broken, files, actions, onOpenPage, onS
       description="Fix them before syncing, or sync anyway."
       onClose={onClose}
     >
-      <div className="-mx-space-lg max-h-72 overflow-y-auto border-y border-border" data-no-pull>
+      <div className="flex max-h-72 flex-col gap-space-sm overflow-y-auto" data-no-pull>
         <BrokenLinkList broken={broken} files={files} actions={actions} />
       </div>
       <div className="flex flex-wrap justify-end gap-space-sm">

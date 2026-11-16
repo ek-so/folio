@@ -22,7 +22,9 @@ export default function BrokenLinks({ broken, files, missing, actions }) {
             <p className="text-sm">No broken links</p>
           </div>
         ) : (
-          <BrokenLinkList broken={broken} files={files} actions={actions} />
+          <div className="flex flex-col gap-space p-space">
+            <BrokenLinkList broken={broken} files={files} actions={actions} />
+          </div>
         )}
       </div>
       </Surface>

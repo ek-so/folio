@@ -9,7 +9,6 @@ import { EmptyMessage } from './EmptyState.jsx'
 import { Tip } from './ui/tooltip.jsx'
 import { ListRow } from './ui/list-row.jsx'
 import { Button } from './ui/button.jsx'
-import { Separator } from './ui/separator.jsx'
 import ConfirmModal from './ConfirmModal.jsx'
 import { PAGE } from '../lib/pages.js'
 import { shownCommits, whenLabel, unsyncedFiles } from '../lib/history.js'
@@ -19,6 +18,8 @@ import { useHistory } from '../hooks/useHistory.js'
 import { cn } from '@/lib/utils.js'
 
 // An update's title: how many files it changed (their names are listed under it)
+// Each update in an outlined box, its title over its files
+const BOX = 'flex flex-col rounded-lg border border-border bg-card p-space-xs'
 const updated = count => `Updated ${plural(count, 'file')}`
 
 // A file's line under its name (beside it on a wide row): where it was renamed from, else its folder
@@ -71,7 +72,7 @@ export default function RecentUpdates({ repo, remote, online, changes, files, on
             {history.status === 'failed' && <Notice icon={Warning} action={<Button variant="secondary" onClick={history.retry}>Try again</Button>}>Couldn't load the updates from GitHub.</Notice>}
 
             {unsynced.length > 0 && (
-              <section className="flex flex-col">
+              <section className={BOX}>
                 <CommitTitle
                   icon={ArrowUp} tip="Made on this device, waiting for Sync" quiet message={updated(unsynced.length)} time="Not synced yet"
                   action={<Button variant="ghost-destructive" size="icon-md" tooltip="Discard" aria-label="Discard" onClick={onDiscard}><Trash /></Button>}
@@ -83,17 +84,14 @@ export default function RecentUpdates({ repo, remote, online, changes, files, on
             {history.commits === null || (history.status === 'loading' && !commits.length) ? <Loading rows={6} />
               : !commits.length ? (history.status === 'idle' && !unsynced.length && (
                 <EmptyMessage size="lg">{history.hasMore ? 'No files changed in the latest updates.' : 'No updates yet.'}</EmptyMessage>
-              )) : commits.map((c, i) => (
-                <section key={c.sha} className="flex flex-col gap-space">
-                  {(i > 0 || unsynced.length > 0) && <Separator />}
-                  <div className="flex flex-col">
-                    <CommitTitle
-                      icon={c.mine ? ArrowUp : ArrowDown} tip={c.mine ? 'Synced from this device' : 'From another device or GitHub'}
-                      message={updated(c.files.length)} time={whenLabel(c.date)}
-                      action={<Button variant="ghost-quiet" size="icon-md" tooltip={online ? 'Undo' : 'Undo needs the internet'} aria-label="Undo" disabled={!online} onClick={() => setUndoing(c)}><ArrowCounterClockwise /></Button>}
-                    />
-                    {fileRows(c.files)}
-                  </div>
+              )) : commits.map(c => (
+                <section key={c.sha} className={BOX}>
+                  <CommitTitle
+                    icon={c.mine ? ArrowUp : ArrowDown} tip={c.mine ? 'Synced from this device' : 'From another device or GitHub'}
+                    message={updated(c.files.length)} time={whenLabel(c.date)}
+                    action={<Button variant="ghost-quiet" size="icon-md" tooltip={online ? 'Undo' : 'Undo needs the internet'} aria-label="Undo" disabled={!online} onClick={() => setUndoing(c)}><ArrowCounterClockwise /></Button>}
+                  />
+                  {fileRows(c.files)}
                 </section>
               ))}
 
