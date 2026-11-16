@@ -4,6 +4,7 @@ import Surface from './Surface.jsx'
 import TitleBar from './TitleBar.jsx'
 import PageLayout from './PageLayout.jsx'
 import FileIcon from './FileIcon.jsx'
+import HeaderBox from './HeaderBox.jsx'
 import Loading from './Loading.jsx'
 import { EmptyMessage } from './EmptyState.jsx'
 import { Tip } from './ui/tooltip.jsx'
@@ -18,8 +19,6 @@ import { useHistory } from '../hooks/useHistory.js'
 import { cn } from '@/lib/utils.js'
 
 // An update's title: how many files it changed (their names are listed under it)
-// Each update in an outlined box, its title over its files
-const BOX = 'flex flex-col rounded-lg border border-border bg-card p-space-xs'
 const updated = count => `Updated ${plural(count, 'file')}`
 
 // A file's line under its name (beside it on a wide row): where it was renamed from, else its folder
@@ -72,27 +71,29 @@ export default function RecentUpdates({ repo, remote, online, changes, files, on
             {history.status === 'failed' && <Notice icon={Warning} action={<Button variant="secondary" onClick={history.retry}>Try again</Button>}>Couldn't load the updates from GitHub.</Notice>}
 
             {unsynced.length > 0 && (
-              <section className={BOX}>
+              <HeaderBox header={
                 <CommitTitle
                   icon={ArrowUp} tip="Made on this device, waiting for Sync" quiet message={updated(unsynced.length)} time="Not synced yet"
                   action={<Button variant="ghost-destructive" size="icon-md" tooltip="Discard" aria-label="Discard" onClick={onDiscard}><Trash /></Button>}
                 />
+              }>
                 {fileRows(unsynced)}
-              </section>
+              </HeaderBox>
             )}
 
             {history.commits === null || (history.status === 'loading' && !commits.length) ? <Loading rows={6} />
               : !commits.length ? (history.status === 'idle' && !unsynced.length && (
                 <EmptyMessage size="lg">{history.hasMore ? 'No files changed in the latest updates.' : 'No updates yet.'}</EmptyMessage>
               )) : commits.map(c => (
-                <section key={c.sha} className={BOX}>
+                <HeaderBox key={c.sha} header={
                   <CommitTitle
                     icon={c.mine ? ArrowUp : ArrowDown} tip={c.mine ? 'Synced from this device' : 'From another device or GitHub'}
                     message={updated(c.files.length)} time={whenLabel(c.date)}
                     action={<Button variant="ghost-quiet" size="icon-md" tooltip={online ? 'Undo' : 'Undo needs the internet'} aria-label="Undo" disabled={!online} onClick={() => setUndoing(c)}><ArrowCounterClockwise /></Button>}
                   />
+                }>
                   {fileRows(c.files)}
-                </section>
+                </HeaderBox>
               ))}
 
             {history.hasMore && history.commits?.length > 0 && online && ( // also when the latest only changed settings
