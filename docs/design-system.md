@@ -76,7 +76,7 @@ Never hardcode colors; use the semantic tokens (light and dark values in `src/in
 shadcn's (`ui/tooltip.jsx`): dark on light, text-sm, after 300ms (`TooltipProvider` in App), on mouse hover and keyboard focus, never on a tap. The `tooltip` prop of `Button` (`tooltipSide`), `ListRow` and `CardTile` (on the whole row, so a row that can't be opened explains why), or wrap in `Tip`.
 
 ## Overlays
-- **`ConfirmModal`:** one confirmation for every destructive action (title, description, Cancel, a red confirm button, an optional milder `alternative`). `DeleteModal` is its wording for files, folders and views.
+- **`ConfirmModal`:** one confirmation for every destructive action (title, description, Cancel, a red confirm button, an optional milder `alternative`); `safe` gives the accent button for an action that can be taken back (Recent updates' Undo). `DeleteModal` is its wording for files, folders and views.
 - **`BottomSheet`:** every prompt: a sheet on mobile, a centered Dialog from 768px. It clears a stale page lock on close. On iOS `lib/viewport.js` scrolls the page back after the keyboard closes.
 - **Dropdown menus are non-modal** (`ui/dropdown-menu`): a modal menu that opens a dialog can leave the page locked and freeze every button. An item lights up only under a mouse or with the keyboard, never left lit by a tap. On touch a menu opens on the tap, not when the finger lands, so starting a scroll on ⋯ doesn't open it.
 - **A scroll by touch closes popovers and menus** (`useOverlayOpen`, in `ui/popover` and `ui/dropdown-menu`): a finger moving outside the open panels closes them, since radix only closes on a tap outside.

@@ -167,6 +167,16 @@ export function renameError(ch, virtual, item, to) {
   return null
 }
 
+// The first path `item` ({ path, type }) can move to: `wanted` itself, else with a number ("x 2.md", "folder 2"); a path
+// it was moved away from counts as free for it (renameError), so an undo puts it back in its own place
+export function freeTarget(ch, virtual, item, wanted) {
+  const slash = wanted.lastIndexOf('/') + 1
+  const [stem, ext] = item.type === 'dir' ? [wanted.slice(slash), ''] : splitName(wanted.slice(slash))
+  let to = wanted
+  for (let n = 2; renameError(ch, virtual, item, to); n++) to = `${wanted.slice(0, slash)}${stem} ${n}${ext}`
+  return to
+}
+
 // Whether `item` can be moved into `folder` ('' is the root): not where it
 // already is, and a folder not into itself or anything inside it.
 export function canMoveTo(item, folder) {

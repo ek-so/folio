@@ -4,7 +4,7 @@ App flow: **Auth → RepoSetup → FileBrowser / Editor / FileViewer**. `App.jsx
 
 ## Code map
 **`lib/` (pure logic, tested where noted)**
-- `github.js` — every GitHub API call (`init(token)`, `setRepo`); blob reads go through the offline cache; failures are tagged with the step they happened at.
+- `github.js` — every GitHub API call (`init(token)`, `setRepo`); blob reads and a commit's files go through the offline cache; failures are tagged with the step they happened at.
 - `merge.js` — what changed both here and on GitHub, merged: text line by line, a note's properties one by one, other files kept both (`mergeText`, `resolveConflicts`). Tested.
 - `changes.js` — the model of local changes (edits, uploads, renames, deletes, new files) layered over the remote tree; `editNote` applies an edit to one note. Tested.
 - `markdown.js` — preview rendering (blocks tagged with their source range, accordions, date spots), every date rewritten after editing, in the text and the properties (`withFixedDates`), where the preview shows dates (`dateSpans`) and one moved to another day (`withDay`, `valueDate`), tap-to-source, task checkboxes, editor highlighting, image paths.
@@ -14,6 +14,7 @@ App flow: **Auth → RepoSetup → FileBrowser / Editor / FileViewer**. `App.jsx
 - `tagColors.js` — picked value colors in `.folio/colors.json`. Tested.
 - `undo.js` — the note editor's undo history: `startHistory`, `recorded` (a burst of typing is one step), `undone`, `redone`, `changedAt` (where the cursor goes). Tested.
 - `history.js` — Recent updates: a commit's files as listed (`shownFiles`, `commitEntry`), the unsynced changes (`unsyncedFiles`), pages of commits merged (`mergedHistory`), those with files to show (`shownCommits`), when each was made (`whenLabel`). Tested.
+- `revert.js` — Recent updates' Undo: an update's files back to how they were before it, as local changes, keeping what changed since (`reverted`, `sides`). Tested.
 - `tables.js` — notes' table columns: types (`detectType`, `cellValue`), sorting and filtering (`sortedRows`, `cellPasses`), writing cells back into the table's markdown (`tableRows`, `withCells`), and the picked types and colors in `.folio/tables.json`. Tested.
 - `locks.js` — files locked against editing, `.folio/locks.json` (`toggledLock`, `movedLocks`, `removedLocks`). Tested.
 - `icons.js` — the emoji that replaces a file's or folder's icon, `.folio/icons.json` (`iconOf`, `withIcon`, `movedIcons`, `removedIcons`), and `leadingEmoji` / `withoutEmoji` for names that start with one. Tested.
@@ -38,6 +39,7 @@ App flow: **Auth → RepoSetup → FileBrowser / Editor / FileViewer**. `App.jsx
 - `useAssets` — `added`, and `record`, `moved`, `removed` as changes.
 - `useUndo` — the editor's undo and redo over a note's text: `onChange`, `undo()`, `redo()` (each giving where the cursor goes), `canUndo`, `canRedo`.
 - `useHistory` — Recent updates' commits with their files: the cached list at once, the latest 20 from GitHub (`listCommits`, `commitFiles`), `more()`, `status` (loading, more, offline, failed, idle), `retry()`.
+- `useRevert` — Recent updates' Undo: `revert(sha)` reads each file before and after the commit from GitHub (`commitParent`, `fileOn`), then records `reverted` through `update`.
 - `useEmojis` — the emoji picker's whole list (`unicode-emoji-json`, its own chunk, loaded once), without what the device can't draw.
 - `useAddressBar` — the browser's address follows the main page and its view (a history entry each); Back / Forward show what it names (`replaceNext()` after a rename or delete). `useExpandedFolders` — the title bar tree's open folders, kept for the session.
 - `useSearchShortcut` — ⌘K / Ctrl+K anywhere opens Search (App, once signed in to a repo), never over an open dialog or sheet.

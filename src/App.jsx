@@ -5,7 +5,7 @@ import FileBrowser from './components/FileBrowser.jsx'
 import Editor from './components/Editor.jsx'
 import RecentUpdates from './components/RecentUpdates.jsx'
 import FileViewer from './components/FileViewer.jsx'
-import { fileKind, parentOf } from './lib/files.js'
+import { fileKind, parentOf, displayName } from './lib/files.js'
 import PullToRefresh from './components/PullToRefresh.jsx'
 import NewFileModal from './components/NewFileModal.jsx'
 import EditListModal from './components/EditListModal.jsx'
@@ -19,7 +19,7 @@ import SearchSheet from './components/SearchSheet.jsx'
 import ConfirmModal from './components/ConfirmModal.jsx'
 import UploadClashModal from './components/UploadClashModal.jsx'
 import UploadErrorsModal from './components/UploadErrorsModal.jsx'
-import { blobShaOf, toBase64 } from './lib/github.js'
+import { blobShaOf, toBase64, isNetworkError } from './lib/github.js'
 import SyncErrorModal from './components/SyncErrorModal.jsx'
 import BrokenLinks from './components/BrokenLinks.jsx'
 import Documentation from './components/Documentation.jsx'
@@ -66,10 +66,11 @@ import { archiveDay, inArchive, staleArchiveDays, KEEP_DAYS } from './lib/archiv
 import { fileItem } from './lib/folderNotes.js'
 import {
   listDir, nameError, renameTarget, renameError, createError, add, setEdit, rename, remove, getAllFolders,
-  upload, replaceUpload, freePath, virtualFiles, splitName, editNote, duplicate, keptEdits, MAX_UPLOAD_BYTES,
+  upload, replaceUpload, freePath, virtualFiles, splitName, editNote, duplicate, keptEdits, freeTarget as freeTargetIn, MAX_UPLOAD_BYTES,
 } from './lib/changes.js'
 import { plural } from './lib/plural.js'
 import { useNoteExport } from './hooks/useNoteExport.js'
+import { useRevert } from './hooks/useRevert.js'
 import { useTables, TablesContext } from './hooks/useTables.js'
 import { useVisualViewport } from './hooks/useKeyboardInset.js'
 
@@ -237,15 +238,8 @@ export default function App() {
   // Locked: `item` itself, or for a folder a file in it
   const lockedIn = item => locks.isLocked(item.path) || (item.type === 'dir' && Object.keys(virtual).some(p => p.startsWith(item.path + '/') && locks.isLocked(p)))
 
-  // The first path `item` can move to: `wanted` itself, else with a number ("x 2.md", "folder 2"); a path it was moved
-  // away from counts as free for it (renameError), so an undo puts it back in its own place
-  function freeTarget(ch, item, wanted) {
-    const slash = wanted.lastIndexOf('/') + 1
-    const [stem, ext] = item.type === 'dir' ? [wanted.slice(slash), ''] : splitName(wanted.slice(slash))
-    let to = wanted
-    for (let n = 2; renameError(ch, filesOf(ch), item, to); n++) to = `${wanted.slice(0, slash)}${stem} ${n}${ext}`
-    return to
-  }
+  // The first free path for `item` at `wanted` in `ch`'s files (changes.js `freeTarget`)
+  const freeTarget = (ch, item, wanted) => freeTargetIn(ch, filesOf(ch), item, wanted)
 
   // Every file and folder whose name starts with an emoji loses it, and the emoji becomes its icon (lib/icons.js
   // `emojiNamed`), in one step: shallowest first (a folder's files follow it), a taken name gets a number, links are
@@ -329,10 +323,7 @@ export default function App() {
       let next = ch
       for (const [path, folder] of targets) {
         const item = fileItem(path)
-        const [stem, ext] = splitName(item.name)
-        const dir = folder ? folder + '/' : ''
-        let to = dir + item.name
-        for (let n = 2; renameError(next, filesOf(next), item, to); n++) to = `${dir}${stem} ${n}${ext}`
+        const to = freeTarget(next, item, (folder ? folder + '/' : '') + item.name)
         if (to !== path) { next = relocated(next, item, to); moves.push([path, to]) }
       }
       return next
@@ -608,6 +599,21 @@ export default function App() {
     toast.success(`What was archived more than ${KEEP_DAYS} days ago is removed. Sync to remove it from GitHub.`)
   }, [repo.remote, auth.repo]) // when the repo's files load or change by Sync or Pull, not on every edit
 
+  // Recent updates' Undo: the commit `sha`'s files back to how they were before it, as local changes (lib/revert.js)
+  const revert = useRevert(repo)
+  async function undoUpdate(sha) {
+    try {
+      const { kept, left } = await revert(sha)
+      const notes = [
+        kept.length && `Kept what changed since in ${kept.map(displayName).join(', ')}.`,
+        left.length && `Gone since, left as is: ${left.map(displayName).join(', ')}.`,
+      ].filter(Boolean)
+      toast.success('Update undone. It goes to GitHub with the next sync.', notes.length ? { description: notes.join(' ') } : undefined)
+    } catch (e) {
+      toast.error(isNetworkError(e) ? "Couldn't undo: you're offline." : "Couldn't undo: GitHub didn't answer as expected. Try again.")
+    }
+  }
+
   // Drop all local changes (a note or folder that only existed locally leaves the trails)
   function discardChanges() {
     setConfirmDiscard(false)
@@ -783,7 +789,7 @@ export default function App() {
             {page === PAGE.ASSETS ? (
             <Assets files={shown} added={assets.added} backlinks={links.index.backlinks} onOpen={path => setSelectedFile(path, PAGE.FILES)} />
           ) : !view && page === PAGE.HISTORY ? (
-            <RecentUpdates repo={auth.repo} remote={repo.remote} online={repo.online} changes={changes} files={virtual} onOpen={(path, folder) => folder ? openFolder(path) : setSelectedFile(path)} />
+            <RecentUpdates repo={auth.repo} remote={repo.remote} online={repo.online} changes={changes} files={virtual} onOpen={(path, folder) => folder ? openFolder(path) : setSelectedFile(path)} onUndo={undoUpdate} onDiscard={() => setConfirmDiscard(true)} />
           ) : !view && page === PAGE.GRAPH ? (
             <GraphPage page={page} files={shown} backlinks={links.index.backlinks} notes={links.notes} repoName={auth.repo.split('/')[1]} onOpenFile={path => setSelectedFile(path)} onOpenFolder={path => openFolder(path)} />
           ) : !view ? (

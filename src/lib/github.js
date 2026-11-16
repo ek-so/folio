@@ -111,10 +111,21 @@ export async function listCommits(branch, count, from) {
   return data.map(c => ({ sha: c.sha, date: c.commit.committer?.date ?? c.commit.author?.date }))
 }
 
-// The files a commit changed: [{ path, status ('added' | 'modified' | 'removed' | 'renamed' | …), from (a rename's old path) }]
+// The files a commit changed: [{ path, status ('added' | 'modified' | 'removed' | 'renamed' | …), from (a rename's old path) }],
+// kept in the offline cache once asked for (a commit never changes)
 export async function commitFiles(sha) {
+  const cached = await cache.getCommitFiles(sha)
+  if (cached) return cached
   const { data } = await octokit.rest.repos.getCommit({ owner, repo, ref: sha })
-  return (data.files ?? []).map(f => ({ path: f.filename, status: f.status, ...(f.previous_filename ? { from: f.previous_filename } : {}) }))
+  const files = (data.files ?? []).map(f => ({ path: f.filename, status: f.status, ...(f.previous_filename ? { from: f.previous_filename } : {}) }))
+  cache.setCommitFiles(sha, files)
+  return files
+}
+
+// The commit `sha` came after (its first parent), or null for the first commit
+export async function commitParent(sha) {
+  const { data } = await octokit.rest.git.getCommit({ owner, repo, commit_sha: sha })
+  return data.parents[0]?.sha ?? null
 }
 
 // Tags errors with the sync step they happened in, for the error details sheet

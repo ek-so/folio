@@ -1,5 +1,5 @@
-import { useMemo } from 'react'
-import { ArrowUp, ArrowDown, WifiSlash, Warning } from '@phosphor-icons/react'
+import { useMemo, useState } from 'react'
+import { ArrowUp, ArrowDown, WifiSlash, Warning, ArrowCounterClockwise, Trash } from '@phosphor-icons/react'
 import Surface from './Surface.jsx'
 import TitleBar from './TitleBar.jsx'
 import PageLayout from './PageLayout.jsx'
@@ -10,6 +10,7 @@ import { Tip } from './ui/tooltip.jsx'
 import { ListRow } from './ui/list-row.jsx'
 import { Button } from './ui/button.jsx'
 import { Separator } from './ui/separator.jsx'
+import ConfirmModal from './ConfirmModal.jsx'
 import { PAGE } from '../lib/pages.js'
 import { shownCommits, whenLabel, unsyncedFiles } from '../lib/history.js'
 import { plural } from '../lib/plural.js'
@@ -31,11 +32,14 @@ const STATUS = { added: 'Added', modified: 'Changed', removed: 'Removed', rename
 // or GitHub itself), "Updated 3 files" and, on the right, when ("Today, 13:32", "Jun 13, 14:39"), and the files it
 // changed, each saying how (Added in green, Changed in amber, Removed in red, Renamed); a file or folder that's still there opens (`onOpen(path,
 // folder)`), a removed one only shows. The app's own settings (`.folio/`) aren't listed. Offline, what was loaded before.
-export default function RecentUpdates({ repo, remote, online, changes, files, onOpen }) {
+// Each update has Undo on its right (`onUndo(sha)`, confirmed; online only): its files go back to how they were before it,
+// as local changes (lib/revert.js); the changes not synced yet have Discard instead (`onDiscard`, which confirms).
+export default function RecentUpdates({ repo, remote, online, changes, files, onOpen, onUndo, onDiscard }) {
   const history = useHistory(repo, remote?.branch, remote?.commitSha, online)
   const unsynced = unsyncedFiles(changes)
   const commits = shownCommits(history.commits ?? [])
   const folders = useMemo(() => new Set(Object.keys(files).flatMap(p => p.split('/').slice(0, -1).map((_, i, parts) => parts.slice(0, i + 1).join('/')))), [files])
+  const [undoing, setUndoing] = useState(null) // the commit whose Undo is being confirmed
   const exists = f => f.status !== 'removed' && f.status !== 'archived' && (f.folder ? folders.has(f.path) : f.path in files)
 
   const fileRows = list => (
@@ -68,7 +72,10 @@ export default function RecentUpdates({ repo, remote, online, changes, files, on
 
             {unsynced.length > 0 && (
               <section className="flex flex-col">
-                <CommitTitle icon={ArrowUp} tip="Made on this device, waiting for Sync" quiet message={updated(unsynced.length)} time="Not synced yet" />
+                <CommitTitle
+                  icon={ArrowUp} tip="Made on this device, waiting for Sync" quiet message={updated(unsynced.length)} time="Not synced yet"
+                  action={<Button variant="ghost-destructive" size="icon-md" tooltip="Discard" aria-label="Discard" onClick={onDiscard}><Trash /></Button>}
+                />
                 {fileRows(unsynced)}
               </section>
             )}
@@ -83,6 +90,7 @@ export default function RecentUpdates({ repo, remote, online, changes, files, on
                     <CommitTitle
                       icon={c.mine ? ArrowUp : ArrowDown} tip={c.mine ? 'Synced from this device' : 'From another device or GitHub'}
                       message={updated(c.files.length)} time={whenLabel(c.date)}
+                      action={<Button variant="ghost-quiet" size="icon-md" tooltip={online ? 'Undo' : 'Undo needs the internet'} aria-label="Undo" disabled={!online} onClick={() => setUndoing(c)}><ArrowCounterClockwise /></Button>}
                     />
                     {fileRows(c.files)}
                   </div>
@@ -97,13 +105,22 @@ export default function RecentUpdates({ repo, remote, online, changes, files, on
           </div>
         </div>
       </Surface>
+      {undoing && (
+        <ConfirmModal
+          title="Undo this update?"
+          description={`${undoing.files.length === 1 ? 'Its file goes' : `Its ${undoing.files.length} files go`} back to how ${undoing.files.length === 1 ? 'it was' : 'they were'} before it; what changed since is kept. The update stays in the history: the undo is added as a new update on GitHub when you sync, and can itself be undone.`}
+          confirm="Undo" safe
+          onConfirm={() => { setUndoing(null); onUndo(undoing.sha) }}
+          onClose={() => setUndoing(null)}
+        />
+      )}
     </PageLayout>
   )
 }
 
 // A commit's line above its files, a small muted title like the rail's Views, as tall as a row: ↑ (this device's,
-// accent) or ↓, its title (`message`), and its time on the right, in line with the files' Added / Changed…
-function CommitTitle({ icon: Icon, tip, message, time, quiet }) {
+// accent) or ↓, its title (`message`), its time on the right, in line with the files' Added / Changed…, and `action` after it
+function CommitTitle({ icon: Icon, tip, message, time, quiet, action }) {
   return (
     <div className="flex min-h-control min-w-0 items-center gap-space-sm pl-3 pr-space text-xs font-medium text-muted-foreground">
       <Tip content={tip}>
@@ -111,6 +128,7 @@ function CommitTitle({ icon: Icon, tip, message, time, quiet }) {
       </Tip>
       <span className="min-w-0 flex-1 truncate">{message}</span>
       {time && <span className="shrink-0 tabular-nums">{time}</span>}
+      {action}
     </div>
   )
 }

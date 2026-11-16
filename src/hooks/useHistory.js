@@ -26,9 +26,7 @@ export function useHistory(repo, branch, head, online) {
     const out = []
     for (let i = 0; i < commits.length; i += AT_ONCE) {
       out.push(...await Promise.all(commits.slice(i, i + AT_ONCE).map(async c => {
-        let files = await cache.getCommitFiles(c.sha)
-        if (!files) { files = await commitFiles(c.sha); cache.setCommitFiles(c.sha, files) }
-        return commitEntry(c, files)
+        return commitEntry(c, await commitFiles(c.sha))
       })))
     }
     return out
