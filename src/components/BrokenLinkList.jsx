@@ -5,6 +5,7 @@ import { DropdownMenuItem } from './ui/dropdown-menu.jsx'
 import MoreMenu from './MoreMenu.jsx'
 import FileIcon from './FileIcon.jsx'
 import HeaderBox from './HeaderBox.jsx'
+import MiddleCut from './MiddleCut.jsx'
 import SearchSheet from './SearchSheet.jsx'
 import ConfirmModal from './ConfirmModal.jsx'
 import { displayName } from '../lib/files.js'
@@ -12,7 +13,7 @@ import { plural } from '../lib/plural.js'
 import { suggestFix, fixCandidates, missingNotePath, hidden } from '../lib/links.js'
 
 // Broken links grouped by note, each note a HeaderBox (as an update is in Recent updates): the note's name and its
-// count on top (tap the name to open it), then a ListRow per link: its text, its target as the description, the line
+// count on top (tap the name to open it), then a ListRow per link: its text, its target as the description (cut in the middle, so its end shows), the line
 // it's on as the tooltip; a tap opens the note in the editor with the link selected. Its ⋯ holds every fix: Fix: link to
 // name (first, when one file in the repo has the missing name), Choose file… (any file, same-name ones first), Create
 // name (a note where the link points, for a link to a note), Remove link (its text stays; confirmed). Used on the
@@ -37,7 +38,7 @@ export default function BrokenLinkList({ broken, files, actions }) {
             return (
               <li key={i}>
                 <ListRow
-                  icon={<LinkBreak className="text-muted-foreground" />} title={label(b)} description={b.link.target}
+                  icon={<LinkBreak className="text-muted-foreground" />} title={label(b)} description={<MiddleCut text={b.link.target} />}
                   tooltip={b.line} onClick={() => actions.openAt(b)}
                   trailing={
                     <MoreMenu

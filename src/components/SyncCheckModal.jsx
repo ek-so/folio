@@ -12,6 +12,7 @@ export default function SyncCheckModal({ broken, files, actions, onOpenPage, onS
       title={plural(n, 'broken link')}
       description="Fix them before syncing, or sync anyway."
       onClose={onClose}
+      onOpenAutoFocus={e => e.preventDefault()} // nothing focused at first: no ring on the first note's name
     >
       <div className="flex max-h-72 flex-col gap-space-sm overflow-y-auto" data-no-pull>
         <BrokenLinkList broken={broken} files={files} actions={actions} />

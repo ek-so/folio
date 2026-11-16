@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { DotsThree, Globe, FileText, File, Folder, LinkBreak, PencilSimple, Trash } from '@phosphor-icons/react'
 import CopyLinkItem from './CopyLinkItem.jsx'
+import MiddleCut from './MiddleCut.jsx'
 import { menuSections } from './MoreMenu.jsx'
 import { cn, own } from '@/lib/utils.js'
 import { Badge } from './ui/badge.jsx'
@@ -11,18 +12,6 @@ import { repoLink } from '../lib/markdown.js'
 import { useIconsContext } from '../hooks/useIcons.js'
 
 const REPO_ICONS = { note: FileText, file: File, folder: Folder, missing: LinkBreak }
-
-// A link's text cut in the middle when it doesn't fit: its end (the last TAIL characters) always shows
-const TAIL = 14
-function MiddleCut({ text }) {
-  if (text.length <= TAIL * 2) return <span className="truncate">{text}</span>
-  return (
-    <span className="flex min-w-0">
-      <span className="truncate">{text.slice(0, -TAIL)}</span>
-      <span className="shrink-0 whitespace-pre">{text.slice(-TAIL)}</span>
-    </span>
-  )
-}
 
 // A website's favicon (Google's favicon service), a globe while offline or when it has none
 function Favicon({ href }) {
