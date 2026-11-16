@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { extractLinks, buildIndex, rewriteLinks, suggestFix, retargetLink, resolveSymlink, SYMLINK_MODE, typedLink, linkTargets } from './links.js'
+import { extractLinks, buildIndex, rewriteLinks, suggestFix, retargetLink, unlinked, missingNotePath, fixCandidates, resolveSymlink, SYMLINK_MODE, typedLink, linkTargets } from './links.js'
 
 const files = {
   'Life/Packing.md': {}, 'Life/Trip.md': {}, 'Travel/Italy.md': {}, 'img/My Pic.png': {},
@@ -50,6 +50,28 @@ describe('links', () => {
     const [l] = extractLinks('[x](Italy.md)')
     expect(suggestFix(l, files)).toBe('Travel/Italy.md')
     expect(retargetLink('[x](Italy.md)', 'Life/Trip.md', l, 'Travel/Italy.md')).toBe('[x](../Travel/Italy.md)')
+    expect(suggestFix(l, { ...files, '.archive/2026-11-01/Italy.md': {} })).toBe('Travel/Italy.md')
+  })
+
+  it('offers same-name files first, then similar names, never the note itself or hidden files', () => {
+    const [l] = extractLinks('[x](Ital)')
+    const all = { 'Travel/Italy.md': {}, 'Ital.md': {}, 'Life/Trip.md': {}, '.archive/d/Ital.md': {} }
+    expect(fixCandidates(l, 'Life/Trip.md', all)).toEqual(['Ital.md', 'Travel/Italy.md'])
+  })
+
+  it('takes a link out, keeping its text', () => {
+    const md = 'See [Rome](<Ro me.md> "t") and ![pic](a.png).\n[ref]: gone.md\nend'
+    const [rome, pic, ref] = extractLinks(md)
+    expect(unlinked(md, rome)).toBe('See Rome and ![pic](a.png).\n[ref]: gone.md\nend')
+    expect(unlinked(md, pic)).toBe('See [Rome](<Ro me.md> "t") and pic.\n[ref]: gone.md\nend')
+    expect(unlinked(md, ref)).toBe('See [Rome](<Ro me.md> "t") and ![pic](a.png).\nend')
+  })
+
+  it('knows where a note would make a broken link work', () => {
+    const at = md => missingNotePath('Life/Trip.md', extractLinks(md)[0])
+    expect(at('[x](../Ideas/New%20one#top)')).toBe('Ideas/New one.md')
+    expect(at('[x](Plan.md)')).toBe('Life/Plan.md')
+    expect(at('[x](pic.png)')).toBe(null)
   })
 })
 

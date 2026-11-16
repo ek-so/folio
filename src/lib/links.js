@@ -29,7 +29,7 @@ function maskCode(md) {
 }
 
 // Every link in a note: { target, angle, targetStart, targetEnd,
-// text, textStart, textEnd } (text is null for reference definitions).
+// text, textStart, textEnd, start, end } (text is null for reference definitions; start / end: the whole link).
 // `target` is the path as written, without <…>.
 export function extractLinks(md) {
   const masked = maskCode(md)
@@ -37,11 +37,11 @@ export function extractLinks(md) {
   for (const m of masked.matchAll(INLINE_LINK)) {
     const [ts, te] = m.indices[3]
     const [xs, xe] = m.indices[2]
-    links.push(link(md, ts, te, { text: md.slice(xs, xe), textStart: xs, textEnd: xe }))
+    links.push(link(md, ts, te, { text: md.slice(xs, xe), textStart: xs, textEnd: xe, start: m.index, end: m.index + m[0].length }))
   }
   for (const m of masked.matchAll(REF_DEF)) {
     const [ts, te] = m.indices[1]
-    links.push(link(md, ts, te, { text: null }))
+    links.push(link(md, ts, te, { text: null, start: m.index, end: m.index + m[0].length }))
   }
   return links.sort((a, b) => a.targetStart - b.targetStart)
 }
@@ -177,14 +177,52 @@ export function retargetLink(text, notePath, l, newPath) {
   return text.slice(0, l.targetStart) + written + text.slice(l.targetEnd)
 }
 
-// The one file a broken link probably meant: same name (".md" optional)
-// somewhere else in the repo. Null if none or several match.
-export function suggestFix(l, files) {
+// One link (from extractLinks on `text`) taken out, its text kept: [text](x) becomes text; a reference
+// definition's line goes as a whole
+export function unlinked(text, l) {
+  if (l.text !== null) return text.slice(0, l.start) + l.text + text.slice(l.end)
+  const end = text.indexOf('\n', l.end)
+  return text.slice(0, l.start) + (end === -1 ? '' : text.slice(end + 1))
+}
+
+// The name a link points to, without its folders, ?query or #anchor ('' when none)
+const targetName = l => {
   const cut = l.target.search(/[?#]/)
-  const name = baseOf(safeDecode(cut === -1 ? l.target : l.target.slice(0, cut)))
-  if (!name) return null
-  const matches = Object.keys(files).filter(p => baseOf(p) === name || baseOf(p) === name + '.md')
+  return baseOf(safeDecode(cut === -1 ? l.target : l.target.slice(0, cut)))
+}
+
+// A path in or to something hidden (a name starting with ".": .folio, .archive, .gitkeep)
+export const hidden = path => path.split('/').some(part => part.startsWith('.'))
+
+// The files a broken link probably meant: same name (".md" optional) somewhere else in the repo, never a hidden one
+// (a copy in the archive)
+function sameName(l, files) {
+  const name = targetName(l)
+  return name ? Object.keys(files).filter(p => !hidden(p) && (baseOf(p) === name || baseOf(p) === name + '.md')) : []
+}
+
+// The one file a broken link probably meant. Null if none or several match.
+export function suggestFix(l, files) {
+  const matches = sameName(l, files)
   return matches.length === 1 ? matches[0] : null
+}
+
+// What Choose file… offers before anything is typed for a broken link in `from`: the files with its name, then
+// those whose names start with or hold it (linkTargets)
+export function fixCandidates(l, from, files, limit = 12) {
+  const name = targetName(l).replace(/\.md$/i, '')
+  const same = sameName(l, files)
+  const near = name ? linkTargets(Object.keys(files), name, from, limit) : []
+  return [...new Set([...same, ...near])].filter(p => p !== from).slice(0, limit)
+}
+
+// Where a note would make a broken link in `from` work: the path it points to (".md" added when it has no
+// extension). Null when it points to another kind of file (an image) or nowhere in the repo.
+export function missingNotePath(from, l) {
+  const path = resolveImage(from, l.target)
+  if (!path) return null
+  if (/\.md$/i.test(path)) return path
+  return /\.[^./]+$/.test(baseOf(path)) ? null : path + '.md'
 }
 
 // Typing a link in the editor: `[[` and what follows it on its line, up to the caret: { from, to, query } (`to` takes in
@@ -201,7 +239,7 @@ export function linkTargets(paths, query, self, limit = 8) {
   const q = query.trim().toLowerCase()
   const ranked = []
   for (const path of paths) {
-    if (path === self || path.split('/').some(part => part.startsWith('.'))) continue
+    if (path === self || hidden(path)) continue
     const name = fileName(path).toLowerCase()
     const rank = name.startsWith(q) ? 0 : name.includes(q) ? 1 : path.toLowerCase().includes(q) ? 2 : -1
     if (rank >= 0) ranked.push([rank, path])

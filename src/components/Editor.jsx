@@ -22,8 +22,10 @@ import { EmptyMessage } from './EmptyState.jsx'
 // on them keeps the keyboard and the editor open. Edits save on their own; ✓ (same spot) switches back to preview, writing typed dates in one format.
 // `locked` (lib/locks.js): nothing in it can be changed (no ✏️, double tap, ticks, list dragging, badges' values or
 // links' edits); a lock icon takes ✏️'s place and unlocks it (`onToggleLock`, also Lock / Unlock in ⋯; none when the
-// locks can't be saved). Renaming, moving and duplicating stay.
-export default function Editor({ linkedBy, onOpenLink, path, entry, files, notes, onEditNotes, tagColors, edited, onEdit, onNavigate, onOpenFile, columns, valueScope, backlinks, locked, onToggleLock }) {
+// locks can't be saved). Renaming, moving and duplicating stay. `editAt` ({ start, end }, a broken link's Open at
+// link): once the note is read, it opens in the editor with that text selected (a locked note: the preview at that
+// spot), then `onEditAtDone()`.
+export default function Editor({ linkedBy, onOpenLink, path, entry, files, notes, onEditNotes, tagColors, edited, onEdit, onNavigate, onOpenFile, columns, valueScope, backlinks, locked, onToggleLock, editAt, onEditAtDone }) {
   const { content, change, loading, loadError, beginEdit, endEdit } = useNote(entry, edited, onEdit, valueScope?.required, valueScope?.order)
   const [mode, setMode] = useState('preview')
   const [editedAt, setEditedAt] = useState(null) // offset to show when back in preview
@@ -39,13 +41,13 @@ export default function Editor({ linkedBy, onOpenLink, path, entry, files, notes
 
   // Inside the tap, so the textarea gets focus and mobile keyboards open
   // `pos`: markdown offset to put the cursor at (a double tap); ✏️ starts at
-  // the first block on screen
-  function startEditing(pos = previewRef.current?.visibleOffset() ?? 0) {
+  // the first block on screen. `end`: the end of the text to select from `pos`
+  function startEditing(pos = previewRef.current?.visibleOffset() ?? 0, end = pos) {
     beginEdit()
     flushSync(() => setMode('edit'))
     const textarea = textareaRef.current
     if (!textarea) return
-    textarea.setSelectionRange(pos, pos)
+    textarea.setSelectionRange(pos, end)
     textarea.focus()
   }
 
@@ -76,6 +78,15 @@ export default function Editor({ linkedBy, onOpenLink, path, entry, files, notes
 
   const fileName = displayName(path)
   const ready = !loading && !loadError
+
+  // Open at link: the link selected in the editor, once the note is read
+  useEffect(() => {
+    if (!editAt || !ready) return
+    const start = Math.min(editAt.start, content.length)
+    if (locked) setEditedAt(start)
+    else queueMicrotask(() => startEditing(start, Math.min(editAt.end, content.length))) // after this commit: it flushes a render
+    onEditAtDone()
+  }, [editAt, ready])
 
   return (
     <FilePage

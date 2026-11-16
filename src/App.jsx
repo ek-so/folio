@@ -26,7 +26,7 @@ import Documentation from './components/Documentation.jsx'
 import SyncCheckModal from './components/SyncCheckModal.jsx'
 import { useLinkIndex, LinksContext } from './hooks/useLinkIndex.js'
 import { useSymlinks } from './hooks/useSymlinks.js'
-import { rewriteLinks, retargetLink, extractLinks, SYMLINK_MODE } from './lib/links.js'
+import { rewriteLinks, retargetLink, unlinked, missingNotePath, extractLinks, SYMLINK_MODE } from './lib/links.js'
 import { NavContext } from './components/NavTree.jsx'
 import { NavRail, TopBar } from './components/AppNav.jsx'
 import GraphPage from './components/GraphPage.jsx'
@@ -157,6 +157,7 @@ export default function App() {
   const [searchOpen, setSearchOpen] = useState(false)
   useSearchShortcut(() => { if (auth.user && auth.repo) setSearchOpen(true) }) // ⌘K / Ctrl+K, signed in
   const [syncCheck, setSyncCheck] = useState(false) // broken-links sheet before syncing
+  const [editAt, setEditAt] = useState(null) // { path, start, end }: a note to open in the editor with that text selected (Open at link)
   const [uploadClash, setUploadClash] = useState(null) // { name, folder, resolve } while asking
   const [uploadErrors, setUploadErrors] = useState([]) // [name, reason] after adding files
   const mainRef = useRef(null) // the page's column: the phone top bar hides while it scrolls
@@ -643,20 +644,40 @@ export default function App() {
     }
   }, [syncCheck, links.index.broken.length])
 
-  // Point a broken link at the file it most likely meant
-  function fixBrokenLink(broken, targetPath) {
+  // One broken link changed by `edit(text, link)` in its note's latest text (the index may lag behind typing: the
+  // same link is found again there)
+  function editBrokenLink(broken, edit) {
     const entry = virtual[broken.from]
     update(ch => {
       const text = ch.edits[entry.orig] ?? links.remoteText(entry.sha)
       if (text === undefined) return ch
-      // The index may lag behind typing: find the same link in the latest text
       const found = extractLinks(text)
       const l = found.find(x => x.target === broken.link.target && x.targetStart === broken.link.targetStart)
         ?? found.find(x => x.target === broken.link.target)
       if (!l) return ch
-      const fixed = retargetLink(text, broken.from, l, targetPath)
-      return setEdit(ch, entry, fixed, links.remoteText(entry.sha) ?? '')
+      return setEdit(ch, entry, edit(text, l), links.remoteText(entry.sha) ?? '')
     })
+  }
+
+  // What can be done to a broken link where it's listed (BrokenLinkList: the Broken links page, the check before
+  // Sync); opening a note leaves the check
+  const brokenLinkActions = {
+    open: path => { setSyncCheck(false); setSelectedFile(path) },
+    openAt: b => {
+      setSyncCheck(false)
+      setEditAt({ path: b.from, start: b.link.targetStart, end: b.link.targetEnd })
+      setSelectedFile(b.from)
+    },
+    fix: (b, path) => editBrokenLink(b, (text, l) => retargetLink(text, b.from, l, path)),
+    unlink: b => editBrokenLink(b, unlinked),
+    create: b => {
+      const path = missingNotePath(b.from, b.link)
+      const slash = path.lastIndexOf('/')
+      const name = path.slice(slash + 1, -3)
+      const made = noteToAdd(path.slice(0, Math.max(slash, 0)), name, [], name)
+      if (made.error) toast.error(made.error)
+      else update(made.change)
+    },
   }
 
   // Another repo: typing in the open note is saved first (local changes are
@@ -811,8 +832,7 @@ export default function App() {
               broken={links.index.broken}
               files={virtual}
               missing={links.missing}
-              onOpen={setSelectedFile}
-              onFix={fixBrokenLink}
+              actions={brokenLinkActions}
             />
           ) : entry && ['image', 'pdf'].includes(fileKind(selectedFile)) ? (
             <FileViewer
@@ -842,6 +862,8 @@ export default function App() {
               valueScope={valueScope}
               backlinks={links.index.backlinks[selectedFile]}
               locked={locks.isLocked(selectedFile)}
+              editAt={editAt?.path === selectedFile ? editAt : null}
+              onEditAtDone={() => setEditAt(null)}
               onToggleLock={locks.canEdit ? () => update(locks.toggle(selectedFile)) : undefined}
             />
           ) : (
@@ -871,8 +893,7 @@ export default function App() {
         <SyncCheckModal
           broken={links.index.broken}
           files={virtual}
-          onFix={fixBrokenLink}
-          onOpenNote={path => { setSyncCheck(false); setSelectedFile(path) }}
+          actions={brokenLinkActions}
           onOpenPage={() => { setSyncCheck(false); setPage(PAGE.LINKS) }}
           onSyncAnyway={() => { setSyncCheck(false); repo.sync() }}
           onClose={() => setSyncCheck(false)}

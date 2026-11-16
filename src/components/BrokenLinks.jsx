@@ -6,7 +6,7 @@ import BrokenLinkList from './BrokenLinkList.jsx'
 import PageLayout from './PageLayout.jsx'
 
 // Page listing every internal link that points at nothing (BrokenLinkList).
-export default function BrokenLinks({ broken, files, missing, onOpen, onFix }) {
+export default function BrokenLinks({ broken, files, missing, actions }) {
   return (
     <PageLayout>
       <Surface title={<TitleBar page={PAGE.LINKS} />}>
@@ -22,7 +22,7 @@ export default function BrokenLinks({ broken, files, missing, onOpen, onFix }) {
             <p className="text-sm">No broken links</p>
           </div>
         ) : (
-          <BrokenLinkList broken={broken} files={files} onOpen={onOpen} onFix={onFix} />
+          <BrokenLinkList broken={broken} files={files} actions={actions} />
         )}
       </div>
       </Surface>
