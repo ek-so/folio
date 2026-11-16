@@ -71,12 +71,10 @@ export default function RecentUpdates({ repo, remote, online, changes, files, on
             {history.status === 'failed' && <Notice icon={Warning} action={<Button variant="secondary" onClick={history.retry}>Try again</Button>}>Couldn't load the updates from GitHub.</Notice>}
 
             {unsynced.length > 0 && (
-              <HeaderBox header={
-                <CommitTitle
-                  icon={ArrowUp} tip="Made on this device, waiting for Sync" quiet message={updated(unsynced.length)} time="Not synced yet"
-                  action={<Button variant="ghost-destructive" size="icon-md" tooltip="Discard" aria-label="Discard" onClick={onDiscard}><Trash /></Button>}
-                />
-              }>
+              <HeaderBox
+                icon={<Direction icon={ArrowUp} tip="Made on this device, waiting for Sync" quiet />} title={updated(unsynced.length)} meta="Not synced yet"
+                action={<Button variant="ghost-destructive" size="icon-md" tooltip="Discard" aria-label="Discard" onClick={onDiscard}><Trash /></Button>}
+              >
                 {fileRows(unsynced)}
               </HeaderBox>
             )}
@@ -85,13 +83,12 @@ export default function RecentUpdates({ repo, remote, online, changes, files, on
               : !commits.length ? (history.status === 'idle' && !unsynced.length && (
                 <EmptyMessage size="lg">{history.hasMore ? 'No files changed in the latest updates.' : 'No updates yet.'}</EmptyMessage>
               )) : commits.map(c => (
-                <HeaderBox key={c.sha} header={
-                  <CommitTitle
-                    icon={c.mine ? ArrowUp : ArrowDown} tip={c.mine ? 'Synced from this device' : 'From another device or GitHub'}
-                    message={updated(c.files.length)} time={whenLabel(c.date)}
-                    action={<Button variant="ghost-quiet" size="icon-md" tooltip={online ? 'Undo' : 'Undo needs the internet'} aria-label="Undo" disabled={!online} onClick={() => setUndoing(c)}><ArrowCounterClockwise /></Button>}
-                  />
-                }>
+                <HeaderBox
+                  key={c.sha}
+                  icon={<Direction icon={c.mine ? ArrowUp : ArrowDown} tip={c.mine ? 'Synced from this device' : 'From another device or GitHub'} />}
+                  title={updated(c.files.length)} meta={whenLabel(c.date)}
+                  action={<Button variant="ghost-quiet" size="icon-md" tooltip={online ? 'Undo' : 'Undo needs the internet'} aria-label="Undo" disabled={!online} onClick={() => setUndoing(c)}><ArrowCounterClockwise /></Button>}
+                >
                   {fileRows(c.files)}
                 </HeaderBox>
               ))}
@@ -117,22 +114,15 @@ export default function RecentUpdates({ repo, remote, online, changes, files, on
   )
 }
 
-// A commit's line above its files, a small muted title like the rail's Views, as tall as a row: ↑ (this device's,
-// accent) or ↓, its title (`message`), its time on the right, in line with the files' Added / Changed…, and `action` after it
-function CommitTitle({ icon: Icon, tip, message, time, quiet, action }) {
+// An update's ↑ (this device's, accent; `quiet`: not synced yet, muted) or ↓ (muted), its meaning in a tooltip
+function Direction({ icon: Icon, tip, quiet }) {
   return (
-    <div className="flex min-h-control min-w-0 items-center gap-space-sm pl-3 pr-space text-xs font-medium text-muted-foreground">
-      <Tip content={tip}>
-        <span className={cn('flex shrink-0', Icon === ArrowUp && !quiet ? 'text-primary' : 'text-muted-foreground')} aria-label={tip} role="img"><Icon className="size-4" /></span>
-      </Tip>
-      <span className="min-w-0 flex-1 truncate">{message}</span>
-      {time && <span className="shrink-0 tabular-nums">{time}</span>}
-      {action}
-    </div>
+    <Tip content={tip}>
+      <span className={cn('flex shrink-0', Icon === ArrowUp && !quiet ? 'text-primary' : 'text-muted-foreground')} aria-label={tip} role="img"><Icon className="size-4" /></span>
+    </Tip>
   )
 }
 
-// A line saying why the list may be out of date, with what to do
 function Notice({ icon: Icon, children, action }) {
   return (
     <div className="flex items-center gap-space-sm rounded-sm bg-secondary/60 px-3 py-space-sm text-sm text-muted-foreground">
