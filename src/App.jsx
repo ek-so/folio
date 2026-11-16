@@ -717,6 +717,7 @@ export default function App() {
     onEditViews: () => setEditingViews(true),
     onNewView: () => setNewView(true),
     onRename: v => setViewDialog({ kind: 'rename', view: v }),
+    onIcon: (v, emoji) => saveViews(setViewIcon(views, v.id, emoji)),
     onDelete: v => setViewDialog({ kind: 'delete', view: v }),
   }
   // What every file's and folder's ⋯ does (ItemMenu)
@@ -953,7 +954,7 @@ export default function App() {
           <EditListModal
             title="Edit views"
             description="Drag them into order. Removing a view removes its widgets; the notes stay."
-            items={pages.filter(p => p.view).map(p => ({ id: p.id, icon: <span onPointerDown={e => e.stopPropagation()}><EmojiPicker emoji={p.emoji} label={`Emoji of ${p.title}`} fallback={<PageIcon page={p} />} onChange={emoji => saveViews(setViewIcon(views, p.id, emoji))} className="size-control-md" /></span>, title: <PageTitle page={p} />, label: p.title, view: p }))}
+            items={pages.filter(p => p.view).map(p => ({ id: p.id, icon: <span onPointerDown={e => e.stopPropagation()}><EmojiPicker emoji={p.emoji} label={`Emoji of ${p.title}`} fallback={<PageIcon page={p} />} onChange={emoji => viewActions.onIcon(p, emoji)} className="size-control-md" /></span>, title: <PageTitle page={p} />, label: p.title, view: p }))}
             onMove={(from, to) => saveViews(moveView(views, from, to))}
             onRemove={item => setViewDialog({ kind: 'delete', view: item.view })}
             empty={{ emoji: EMPTY.list, text: 'No views' }}

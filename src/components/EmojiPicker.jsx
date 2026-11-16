@@ -74,15 +74,17 @@ export default function EmojiPicker({ emoji, onChange, label = 'Emoji', classNam
   )
 }
 
-// Emoji in a file's or folder's ⋯ (ItemMenu, a card's CardMenu, a Pinned widget's card): a sub menu with the picker for the
-// icon of `path` (lib/icons.js, `IconsContext`), disabled while the icons can't be saved. `onDone` closes the menu
-export function EmojiSubmenu({ path, onDone }) {
+// Emoji in a ⋯: a sub menu with the picker. A file's or folder's (ItemMenu, a card's CardMenu, a Pinned widget's card):
+// `path`, its icon (lib/icons.js, `IconsContext`), disabled while the icons can't be saved; a view's (ViewMenu): its
+// `value` and `onPick(emoji)` (null while the views can't be changed). `onDone` closes the menu
+export function EmojiSubmenu({ path, value, onPick, onDone }) {
   const icons = useIconsContext()
+  const pick = path === undefined ? onPick : icons.onSet && (emoji => icons.onSet(path, emoji))
   return (
     <DropdownMenuSub>
-      <DropdownMenuSubTrigger disabled={!icons.onSet}><Smiley /> Emoji</DropdownMenuSubTrigger>
+      <DropdownMenuSubTrigger disabled={!pick}><Smiley /> Emoji</DropdownMenuSubTrigger>
       <DropdownMenuSubContent className="p-space-sm">
-        <EmojiGrid value={icons.iconOf(path)} onPick={emoji => icons.onSet(path, emoji)} onDone={onDone} />
+        <EmojiGrid value={path === undefined ? value : icons.iconOf(path)} onPick={pick} onDone={onDone} />
       </DropdownMenuSubContent>
     </DropdownMenuSub>
   )
