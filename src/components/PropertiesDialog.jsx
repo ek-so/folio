@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import CheckListModal from './CheckListModal.jsx'
+import { EMPTY } from './EmptyState.jsx'
 import ConfirmModal from './ConfirmModal.jsx'
 import { plural } from '../lib/plural.js'
 
@@ -29,7 +30,7 @@ export default function PropertiesDialog({ open, noun, description, shown, locke
         }}
         onRename={(from, to) => lockedError(to) ?? act.renameProperty(from, to)}
         onDelete={key => { onClose(); setDropping(key) }}
-        empty="Its notes have no other properties yet."
+        empty={{ emoji: EMPTY.list, text: 'Its notes have no other properties yet.' }}
         onClose={onClose}
       />
     )}

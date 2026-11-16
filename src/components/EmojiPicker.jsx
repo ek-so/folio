@@ -10,7 +10,7 @@ import { ToggleGroup, ToggleGroupItem } from './ui/toggle-group.jsx'
 import { emojiGroups, searchEmojis } from '../lib/emojis.js'
 import { useEmojis } from '../hooks/useEmojis.js'
 import { leadingEmoji } from '../lib/icons.js'
-import { EmptyMessage } from './EmptyState.jsx'
+import { EmptyMessage, EMPTY } from './EmptyState.jsx'
 
 // Custom: neither shadcn nor Phosphor has an emoji picker, and a library's would bring its own look. Every emoji the
 // device draws (lib/emojis.js, hooks/useEmojis.js; Suggested alone until the list loads, or when it can't), in a scrolling
@@ -38,7 +38,7 @@ export function EmojiGrid({ value, onPick, onDone }) {
         </Button>
       </div>
       <div className="-mx-space-xs flex max-h-72 flex-col gap-space-sm overflow-y-auto overscroll-y-contain px-space-xs">
-        {!found[0].emojis.length && <EmptyMessage size="sm">No emoji found</EmptyMessage>}
+        {!found[0].emojis.length && <EmptyMessage size="sm" emoji={EMPTY.found}>No emoji found</EmptyMessage>}
         {found.map(group => group.emojis.length > 0 && (
           <section key={group.name ?? 'found'} className="flex flex-col gap-space-xs">
             {group.name && <h3 className="px-space-xs text-xs font-medium text-muted-foreground">{group.name}</h3>}

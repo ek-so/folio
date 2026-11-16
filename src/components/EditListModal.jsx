@@ -12,7 +12,7 @@ import { EmptyMessage } from './EmptyState.jsx'
 // A sheet to edit a list of `items` ([{ id, icon, title, label? (its name when `title` isn't text) }]; a view's widgets, the views, a Pinned widget's notes and folders): drag them into
 // order (with a mouse right away, on touch after holding 0.25s, like a board's cards; each drop
 // calls `onMove(from, to)`, indexes, at once), remove one with its ✕ (`onRemove(item)`, confirmed
-// by the caller). `empty`: the text when there's nothing.
+// by the caller). `empty`: { emoji, text } when there's nothing (EmptyMessage).
 export default function EditListModal({ title, description, items, onMove, onRemove, empty, onClose }) {
   const sensors = useDragSensors()
   const ids = items.map(i => i.id)
@@ -26,7 +26,7 @@ export default function EditListModal({ title, description, items, onMove, onRem
           <SortableContext items={ids} strategy={verticalListSortingStrategy}>
             <ListBox>
               {items.map(item => <Row key={item.id} item={item} onRemove={onRemove} />)}
-              {!items.length && <EmptyMessage size="sm">{empty}</EmptyMessage>}
+              {!items.length && <EmptyMessage size="sm" emoji={empty.emoji}>{empty.text}</EmptyMessage>}
             </ListBox>
           </SortableContext>
         </DndContext>

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { CaretDown, Check, PencilSimple, EyeSlash } from '@phosphor-icons/react'
+import { EmptyMessage, EMPTY } from './EmptyState.jsx'
 import { cn, own } from '@/lib/utils'
 import { PLACEHOLDER } from './ui/placeholder.jsx'
 import { Badge } from './ui/badge.jsx'
@@ -221,7 +222,7 @@ function ValueChooser({ prop, options, hidden = [], onChange, onManage, close })
             trailing={hidden.includes(v) && <EyeSlash className="text-muted-foreground" />}
           />
         ))}
-        {!isNew && !shown.length && <p className="px-3 py-space-sm text-sm text-muted-foreground">No values yet. Type one to add it.</p>}
+        {!isNew && !shown.length && <EmptyMessage size="sm" emoji={EMPTY.values}>No values yet. Type one to add it.</EmptyMessage>}
       </div>
       {onManage && <>
         <Separator className="-mx-space-sm my-space-xs data-[orientation=horizontal]:w-auto" />

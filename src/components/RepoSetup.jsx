@@ -10,7 +10,7 @@ import AppLogo from './AppLogo.jsx'
 import BrandName from './BrandName.jsx'
 import SignInSteps from './SignInSteps.jsx'
 import Spinner from './Spinner.jsx'
-import { EmptyMessage } from './EmptyState.jsx'
+import { EmptyMessage, EMPTY } from './EmptyState.jsx'
 import { listRepos, canWriteRepo, createRepo } from '../lib/github.js'
 import { isRepoName } from '../lib/files.js'
 
@@ -130,7 +130,7 @@ export default function RepoSetup({ repoList, onRepoList, onRepo, onBack, onLogo
             <ListBox role="radiogroup" aria-label="Repos" className={cn('mx-0', searching && 'h-64')}>
               {done && found.length === 0 && (
                 <li className="flex h-full flex-col items-center justify-center gap-space-xs px-space text-center">
-                  <EmptyMessage size="sm" className="py-0">No repos found.</EmptyMessage>
+                  <EmptyMessage size="sm" emoji={EMPTY.found} className="py-0">No repos found.</EmptyMessage>
                   <EmptyMessage size="sm" className="py-0">
                     {name ? <>Create a new one named <code className="code-chunk text-foreground">{name}</code></> : 'Type a name in the search to create a new one.'}
                   </EmptyMessage>

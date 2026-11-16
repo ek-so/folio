@@ -7,7 +7,7 @@ import InlineRename from './InlineRename.jsx'
 import BottomSheet from './BottomSheet.jsx'
 import ColorPicker from './ColorPicker.jsx'
 import { plural } from '../lib/plural.js'
-import { EmptyMessage } from './EmptyState.jsx'
+import { EmptyMessage, EMPTY } from './EmptyState.jsx'
 
 // The dialog behind a property popover's Edit values: every value of the property `name`
 // (`values`, each with its color in `colors`, a Map) in one list, a field to add a new one
@@ -87,7 +87,7 @@ export default function ValuesModal({ name, values, colors, count, scopeName, re
               />
             </li>
           ))}
-          {!values.length && <EmptyMessage size="sm">No values yet. Type one to add it.</EmptyMessage>}
+          {!values.length && <EmptyMessage size="sm" emoji={EMPTY.values}>No values yet. Type one to add it.</EmptyMessage>}
         </ListBox>
         <div className="flex justify-end"><Button variant="secondary" onClick={onClose}>Done</Button></div>
       </div>

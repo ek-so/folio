@@ -7,7 +7,7 @@ import FileIcon from './FileIcon.jsx'
 import PropertyBadges from './PropertyBadges.jsx'
 import { Button } from './ui/button.jsx'
 import { Popover, PopoverAnchor, PopoverContent } from './ui/popover.jsx'
-import { EmptyMessage } from './EmptyState.jsx'
+import { EmptyMessage, EMPTY } from './EmptyState.jsx'
 import { useSingleOpen } from '../hooks/useSingleOpen.jsx'
 import { graphData } from '../lib/graph.js'
 import { itemsIn } from '../lib/files.js'
@@ -51,7 +51,7 @@ export default function GraphPage({ page, files, backlinks, notes, repoName, onO
               </li>
             ))}
           </ul>
-          {data.nodes.length <= 1 && <EmptyMessage size="lg" className="absolute inset-x-0 top-0">No files yet.</EmptyMessage>}
+          {data.nodes.length <= 1 && <EmptyMessage size="lg" emoji={EMPTY.graph} className="absolute inset-x-0 top-0">No files yet.</EmptyMessage>}
           {picked && (
             <Popover open={open} onOpenChange={setOpen}>
               <PopoverAnchor className="pointer-events-none absolute size-0" style={{ left: picked.at.x, top: picked.at.y }} />

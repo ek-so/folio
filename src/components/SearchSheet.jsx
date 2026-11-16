@@ -5,7 +5,7 @@ import { splitName } from '../lib/changes.js'
 import { withoutEmoji } from '../lib/icons.js'
 import FileIcon from './FileIcon.jsx'
 import { ListRow } from './ui/list-row.jsx'
-import { EmptyMessage } from './EmptyState.jsx'
+import { EmptyMessage, EMPTY } from './EmptyState.jsx'
 import { searchNotes } from '../lib/search.js'
 
 // Command-palette style search. Shows recently opened files when no query is typed (without `recent`:
@@ -53,9 +53,9 @@ export default function SearchSheet({ onClose, onSelect, virtual, changes, recen
         <div className="overflow-y-auto max-h-64 -mx-space-xs" data-no-pull>
           {top && <div className="mb-0.5">{top}</div>}
           {!q && recentFiles.length === 0 ? (
-            <EmptyMessage size="sm">No recent files</EmptyMessage>
+            <EmptyMessage size="sm" emoji={EMPTY.recent}>No recent files</EmptyMessage>
           ) : results.length === 0 ? (
-            <EmptyMessage size="sm">No files found</EmptyMessage>
+            <EmptyMessage size="sm" emoji={EMPTY.found}>No files found</EmptyMessage>
           ) : (
             <ul className="flex flex-col gap-0.5">
               {results.map(result => {

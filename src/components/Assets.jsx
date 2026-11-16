@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Images, ArrowSquareOut, Funnel, Check } from '@phosphor-icons/react'
+import { EmptyMessage, EMPTY } from './EmptyState.jsx'
+import { ArrowSquareOut, Funnel, Check } from '@phosphor-icons/react'
 import Surface from './Surface.jsx'
 import TitleBar from './TitleBar.jsx'
 import PageLayout from './PageLayout.jsx'
@@ -30,10 +31,7 @@ export default function Assets({ files, added, backlinks, onOpen }) {
       <Surface title={<TitleBar page={PAGE.ASSETS}>{types.length > 1 && <TypeFilter types={types} total={all.length} type={type} onPick={setType} />}</TitleBar>}>
         <div className="flex-1 min-h-0 overflow-y-auto" data-no-pull>
           {paths.length === 0 ? (
-            <div className="flex flex-col items-center gap-space-sm py-12 text-muted-foreground">
-              <Images className="size-8" />
-              <p className="text-sm">No files yet. Images, PDFs and other uploads show here.</p>
-            </div>
+            <EmptyMessage size="lg" emoji={EMPTY.files}>No files yet. Images, PDFs and other uploads show here.</EmptyMessage>
           ) : (
             <div className="flex flex-col gap-space-sm p-space">
               <p className="px-3 text-sm text-muted-foreground">{type === null ? plural(all.length, 'file') : `${paths.length} of ${plural(all.length, 'file')}`}</p>

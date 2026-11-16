@@ -30,7 +30,7 @@ import { BADGES } from './RecurrenceField.jsx'
 import { WEEKDAYS, parseRecurrence, repeatLabel } from './recurrence.js'
 import { plural } from '@/lib/plural.js'
 import LockMark from '@/components/LockMark.jsx'
-import { EmptyBox } from '@/components/EmptyState.jsx'
+import { EmptyBox, EMPTY } from '@/components/EmptyState.jsx'
 import { storage } from '@/lib/storage.js'
 
 // The ribbon: each day takes DAY_WIDTH (its box and the gap around it), and a line between months MONTH_GAP (a box that
@@ -38,7 +38,7 @@ import { storage } from '@/lib/storage.js'
 // with a window of days around a day (today, or one picked far away) and grows by MORE_DAYS on either side as it's
 // scrolled near an end (EDGE), so it never ends
 // A day with nothing to do (no cards, no overdue ones), in its tray
-const SORTED = { emoji: '🌱', text: 'All sorted' }
+const SORTED = { emoji: EMPTY.sorted, text: 'All sorted' }
 const DAY_WIDTH = 80
 const MONTH_GAP = 9
 const MORE_DAYS = 60

@@ -77,7 +77,7 @@ export default function CheckListModal({ title, description, header, items, lock
               />
             </li>
           ))}
-          {!items.length && <EmptyMessage size="sm">{empty}</EmptyMessage>}
+          {!items.length && <EmptyMessage size="sm" emoji={empty.emoji}>{empty.text}</EmptyMessage>}
         </ListBox>
         {onAdd && <AddNameField label={addLabel} onAdd={onAdd} />}
         <div className="flex justify-end">

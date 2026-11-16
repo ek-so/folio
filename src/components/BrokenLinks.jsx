@@ -1,4 +1,4 @@
-import { CheckCircle } from '@phosphor-icons/react'
+import { EmptyMessage, EMPTY } from './EmptyState.jsx'
 import Surface from './Surface.jsx'
 import TitleBar from './TitleBar.jsx'
 import { PAGE } from '../lib/pages.js'
@@ -17,10 +17,7 @@ export default function BrokenLinks({ broken, files, missing, actions }) {
           </p>
         )}
         {broken.length === 0 ? (
-          <div className="flex flex-col items-center gap-space-sm py-12 text-muted-foreground">
-            <CheckCircle className="size-8" />
-            <p className="text-sm">No broken links</p>
-          </div>
+          <EmptyMessage size="lg" emoji={EMPTY.links}>No broken links</EmptyMessage>
         ) : (
           <div className="flex flex-col gap-space p-space">
             <BrokenLinkList broken={broken} files={files} actions={actions} />

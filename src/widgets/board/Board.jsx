@@ -21,6 +21,7 @@ import { KEEP_DAYS } from '@/lib/archive.js'
 import { useBoard } from './useBoard.js'
 import { plural } from '@/lib/plural.js'
 import MoreMenu from '@/components/MoreMenu.jsx'
+import { EmptyMessage, EMPTY } from '@/components/EmptyState.jsx'
 
 // Drag ids: a column's and a card's
 const colId = key => 'col:' + key
@@ -145,7 +146,7 @@ export default function Board({ id, services, onRemove }) {
               </Column>
             ))}
           </SortableContext>
-          {!columns.length && <p className="py-space-lg text-sm text-muted-foreground">No columns yet: each {board.group} its notes have becomes a column.</p>}
+          {!columns.length && <EmptyMessage emoji={EMPTY.list}>No columns yet: each {board.group} its notes have becomes a column.</EmptyMessage>}
         </div>
         <DragOverlay>
           {dragged && drag.type === 'card' && byPath[dragged] && <NoteCard path={dragged} text={notes[dragged]} properties={board.properties} scopeName="this board" files={files} chosen={services.tagColors.colors} className="rotate-2 border-lift-edge shadow-lg" />}
@@ -189,7 +190,7 @@ export default function Board({ id, services, onRemove }) {
           onAdd={act.addColumn}
           selected={data.columns.map(c => c.name).filter(n => !board.hidden.includes(n))}
           onChange={act.showColumns}
-          empty={`No columns yet: each ${board.group} its notes have becomes a column.`}
+          empty={{ emoji: EMPTY.list, text: `No columns yet: each ${board.group} its notes have becomes a column.` }}
           onClose={() => setChoosing(null)}
         />
       )}

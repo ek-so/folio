@@ -17,7 +17,7 @@ import { parsePinned, settingsOf, settingsWrite, addedItem, removedItem, replace
 import { PinPicker } from './PinnedSetup.jsx'
 import WidgetFrame from '@/components/WidgetFrame.jsx'
 import ItemMenu from '@/components/ItemMenu.jsx'
-import { EmptyMessage } from '@/components/EmptyState.jsx'
+import { EmptyMessage, EMPTY } from '@/components/EmptyState.jsx'
 
 // The Pinned widget (pinned.js): "Pinned" and its ⋯ (Pin note or folder…, Edit pinned…: order them and take them out,
 // Remove widget) on top, then a card for each pinned note or folder, in a grid like a planner day's (as many columns as
@@ -48,7 +48,7 @@ export default function PinnedWidget({ id, services, onRemove }) {
   }
 
   // Only when its settings are read (WidgetFrame shows the other states)
-  const body = () => !settings.items.length ? <EmptyMessage>Nothing pinned yet. Pin a note or folder from ⋯.</EmptyMessage>
+  const body = () => !settings.items.length ? <EmptyMessage emoji={EMPTY.pinned}>Nothing pinned yet. Pin a note or folder from ⋯.</EmptyMessage>
     : (
       <DndContext sensors={canEdit ? sensors : []} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
         <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,16rem),1fr))] gap-space-sm">
@@ -94,7 +94,7 @@ export default function PinnedWidget({ id, services, onRemove }) {
         items={settings.items.map(n => ({ id: n.path, icon: <FileIcon path={n.path} dir={isPinnedFolder(n.path)} />, title: displayName(n.path) }))}
         onMove={(from, to) => save(reorderedItem(settings, from, to))}
         onRemove={item => setRemoving(settings.items.findIndex(n => n.path === item.id))}
-        empty="Nothing pinned"
+        empty={{ emoji: EMPTY.pinned, text: 'Nothing pinned' }}
         onClose={() => setListing(false)}
       />
     )}

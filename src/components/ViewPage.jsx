@@ -12,7 +12,7 @@ import ViewMenu from './ViewMenu.jsx'
 import RenameModal from './RenameModal.jsx'
 import { WidgetContext } from './WidgetFrame.jsx'
 import Loading from './Loading.jsx'
-import { EmptyMessage } from './EmptyState.jsx'
+import { EmptyMessage, EMPTY } from './EmptyState.jsx'
 
 // A view (Home…, `view`: its page): its title bar with + (Add widget: every kind in widgets/index.js) and ⋯
 // (`ViewMenu`, as in the navigation, with App's `viewActions`), over its widgets ({ id, type }), stacked full width (a dashboard),
@@ -51,8 +51,8 @@ export default function ViewPage({ page, view, viewActions, widgets = [], error,
           ) : waiting === 'offline' ? (
             <EmptyMessage size="lg">This view isn't saved on this device yet. Connect to the internet to see it.</EmptyMessage>
           ) : widgets.length === 0 ? (
-            <div className="flex flex-1 flex-col items-center justify-center gap-space py-12 text-center">
-              <p className="text-sm text-muted-foreground">Nothing on this view yet.</p>
+            <div className="flex flex-1 flex-col items-center justify-center gap-space py-12">
+              <EmptyMessage emoji={EMPTY.folder} className="py-0">Nothing on this view yet.</EmptyMessage>
               {addMenu(<Button variant="secondary" disabled={!canEdit}><Plus /> Add widget</Button>, 'center')}
             </div>
           ) : <>
@@ -82,7 +82,7 @@ export default function ViewPage({ page, view, viewActions, widgets = [], error,
           })}
           onMove={onMove}
           onRemove={setRemoving}
-          empty="No widgets on this view yet."
+          empty={{ emoji: EMPTY.folder, text: 'No widgets on this view yet.' }}
           onClose={() => setEditing(false)}
         />
       )}

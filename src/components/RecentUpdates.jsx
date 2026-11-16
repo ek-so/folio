@@ -6,7 +6,7 @@ import PageLayout from './PageLayout.jsx'
 import FileIcon from './FileIcon.jsx'
 import HeaderBox from './HeaderBox.jsx'
 import Loading from './Loading.jsx'
-import { EmptyMessage } from './EmptyState.jsx'
+import { EmptyMessage, EMPTY } from './EmptyState.jsx'
 import { Tip } from './ui/tooltip.jsx'
 import { ListRow } from './ui/list-row.jsx'
 import { Button } from './ui/button.jsx'
@@ -81,7 +81,7 @@ export default function RecentUpdates({ repo, remote, online, changes, files, on
 
             {history.commits === null || (history.status === 'loading' && !commits.length) ? <Loading rows={6} />
               : !commits.length ? (history.status === 'idle' && !unsynced.length && (
-                <EmptyMessage size="lg">{history.hasMore ? 'No files changed in the latest updates.' : 'No updates yet.'}</EmptyMessage>
+                <EmptyMessage size="lg" emoji={EMPTY.updates}>{history.hasMore ? 'No files changed in the latest updates.' : 'No updates yet.'}</EmptyMessage>
               )) : commits.map(c => (
                 <HeaderBox
                   key={c.sha}

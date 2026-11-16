@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { TextT, Hash, TagSimple, ListBullets, CalendarBlank, CheckSquare, LinkSimple, SortAscending, SortDescending, FunnelSimple, FunnelSimpleX, CaretRight, Check, MagicWand } from '@phosphor-icons/react'
+import { EmptyMessage, EMPTY } from './EmptyState.jsx'
 import { Button } from './ui/button.jsx'
 import { Checkbox } from './ui/checkbox.jsx'
 import { Input } from './ui/input.jsx'
@@ -97,7 +98,7 @@ function Filter({ type, filter, onFilter, values }) {
   if (type === 'select' || type === 'multi') {
     const ticked = filter?.values ?? []
     const toggle = v => onFilter({ values: ticked.includes(v) ? ticked.filter(x => x !== v) : [...ticked, v] })
-    if (!values.length) return <p className="px-space-xs text-sm text-muted-foreground">No values yet.</p>
+    if (!values.length) return <EmptyMessage size="sm" emoji={EMPTY.values}>No values yet.</EmptyMessage>
     return (
       <ListBox>
         {values.map(({ value, count }) => (

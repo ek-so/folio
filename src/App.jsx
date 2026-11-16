@@ -21,6 +21,7 @@ import UploadClashModal from './components/UploadClashModal.jsx'
 import UploadErrorsModal from './components/UploadErrorsModal.jsx'
 import { blobShaOf, toBase64, isNetworkError } from './lib/github.js'
 import SyncErrorModal from './components/SyncErrorModal.jsx'
+import { EMPTY } from './components/EmptyState.jsx'
 import BrokenLinks from './components/BrokenLinks.jsx'
 import Documentation from './components/Documentation.jsx'
 import SyncCheckModal from './components/SyncCheckModal.jsx'
@@ -955,7 +956,7 @@ export default function App() {
             items={pages.filter(p => p.view).map(p => ({ id: p.id, icon: <span onPointerDown={e => e.stopPropagation()}><EmojiPicker emoji={p.emoji} label={`Emoji of ${p.title}`} fallback={<PageIcon page={p} />} onChange={emoji => saveViews(setViewIcon(views, p.id, emoji))} className="size-control-md" /></span>, title: <PageTitle page={p} />, label: p.title, view: p }))}
             onMove={(from, to) => saveViews(moveView(views, from, to))}
             onRemove={item => setViewDialog({ kind: 'delete', view: item.view })}
-            empty="No views"
+            empty={{ emoji: EMPTY.list, text: 'No views' }}
             onClose={() => setEditingViews(false)}
           />
         )}

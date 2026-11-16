@@ -6,7 +6,7 @@ import { ListRow } from './ui/list-row.jsx'
 import { Button } from './ui/button.jsx'
 import { TreeRow } from './NavTree.jsx'
 import { folderRows } from '../lib/folderTree.js'
-import { EmptyMessage } from './EmptyState.jsx'
+import { EmptyMessage, EMPTY } from './EmptyState.jsx'
 
 // A sheet to pick one of `folders` ('' is the root) (Move to…, a board's folder): the folder tree,
 // a tap selecting a folder and its button (`pickLabel`) picking it, until something is typed in the
@@ -70,7 +70,7 @@ export default function FolderSheet({ title, folders, onPick, onClose, pickLabel
             </li>
           ))}
           {(q ? filtered : treeRows).length === 0 && (
-            <EmptyMessage size="sm">No folders found</EmptyMessage>
+            <EmptyMessage size="sm" emoji={EMPTY.found}>No folders found</EmptyMessage>
           )}
         </ul>
       </div>
