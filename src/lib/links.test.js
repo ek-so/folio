@@ -72,6 +72,7 @@ describe('links', () => {
     expect(at('[x](../Ideas/New%20one#top)')).toBe('Ideas/New one.md')
     expect(at('[x](Plan.md)')).toBe('Life/Plan.md')
     expect(at('[x](pic.png)')).toBe(null)
+    expect(at('[x](../.folio/views)')).toBe(null)
   })
 })
 

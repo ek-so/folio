@@ -20,12 +20,12 @@ describe('versionsIn', () => {
   it('goes on with the same path while there are more', () => {
     const r = versionsIn(page([['c2', [{ path: 'a.md', status: 'modified' }]], ['c1', [{ path: 'a.md', status: 'modified' }]]]), 'a.md', true)
     expect(r.versions.map(v => v.sha)).toEqual(['c2', 'c1'])
-    expect(r.next).toEqual({ path: 'a.md', from: 'c1', skip: 'c1' })
+    expect(r.next).toEqual({ path: 'a.md', from: 'c1' })
   })
   it('follows a rename to the old path and stops where the note was added', () => {
     const renamed = versionsIn(page([['c2', [{ path: 'a.md', status: 'renamed', from: 'b.md' }]], ['c1', [{ path: 'a.md', status: 'added' }]]]), 'a.md', true)
     expect(renamed.versions.map(v => v.sha)).toEqual(['c2'])
-    expect(renamed.next).toEqual({ path: 'b.md', from: 'c2', skip: 'c2' })
+    expect(renamed.next).toEqual({ path: 'b.md', from: 'c2' })
     expect(versionsIn(page([['c1', [{ path: 'b.md', status: 'added' }]]]), 'b.md', true).next).toBeNull()
   })
   it('stops at a commit that removed what was at the path before', () => {

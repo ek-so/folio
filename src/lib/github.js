@@ -123,6 +123,21 @@ export async function commitFiles(sha) {
   return files
 }
 
+const AT_ONCE = 5 // commits whose files are asked for together
+
+// A page of up to `count` commits of `branch` (with `path`, only those that changed it), newest first, from the latest
+// or the ones before `after` (a sha, itself left out), each with its files (`commitFiles`, a few at a time):
+// { page: [{ commit, files }], more (whether older ones are there) }. Recent updates and Version history page this way.
+export async function commitPage(branch, count, after, path) {
+  const fetched = (await listCommits(branch, count + (after ? 2 : 1), after, path)).filter(c => c.sha !== after)
+  const commits = fetched.slice(0, count)
+  const page = []
+  for (let i = 0; i < commits.length; i += AT_ONCE) {
+    page.push(...await Promise.all(commits.slice(i, i + AT_ONCE).map(async commit => ({ commit, files: await commitFiles(commit.sha) }))))
+  }
+  return { page, more: fetched.length > count }
+}
+
 // The commit `sha` came after (its first parent), or null for the first commit
 export async function commitParent(sha) {
   const { data } = await octokit.rest.git.getCommit({ owner, repo, commit_sha: sha })

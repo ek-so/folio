@@ -217,10 +217,11 @@ export function fixCandidates(l, from, files, limit = 12) {
 }
 
 // Where a note would make a broken link in `from` work: the path it points to (".md" added when it has no
-// extension). Null when it points to another kind of file (an image) or nowhere in the repo.
+// extension). Null when it points to another kind of file (an image), nowhere in the repo, or somewhere hidden (the
+// app's settings in .folio/ hold no notes)
 export function missingNotePath(from, l) {
   const path = resolveImage(from, l.target)
-  if (!path) return null
+  if (!path || hidden(path)) return null
   if (/\.md$/i.test(path)) return path
   return /\.[^./]+$/.test(baseOf(path)) ? null : path + '.md'
 }

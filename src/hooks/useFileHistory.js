@@ -1,18 +1,17 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
-import { listCommits, commitFiles, commitParent, fileOn, getBlob, isNetworkError } from '../lib/github.js'
+import { commitPage, commitParent, fileOn, getBlob, isNetworkError } from '../lib/github.js'
 import { cache } from '../lib/cache.js'
 import { storage } from '../lib/storage.js'
 import { mergedHistory } from '../lib/history.js'
 import { versionsIn } from '../lib/versions.js'
 
 const PAGE_SIZE = 20
-const AT_ONCE = 5 // commits whose files are asked for together
 
 // The versions on GitHub of the note at `path` there (null: it isn't there yet), newest first (lib/versions.js), each
 // with `mine` (this device pushed it), its renames followed back: what was loaded before shows at once (the offline
 // cache), then the latest are loaded, again when GitHub's latest commit (`head`) changes or the device comes back online.
-// `more()` loads older ones. `status`: 'loading' | 'more' | 'offline' | 'failed' | 'idle'; `retry()`. `textOf(version)`:
-// its text; `textBefore(i)`: the text of the version before `versions[i]` ('' for the first).
+// `more()` loads older ones (not while the latest load). `status`: 'loading' | 'more' | 'offline' | 'failed' | 'idle'; `retry()`. `textOf(version)`:
+// its text; `textBefore(sha)`: the text of the version before the one of commit `sha` ('' for the first).
 export function useFileHistory(repo, path, branch, head, online) {
   const [list, setList] = useState(null) // null until the cache is read
   const [status, setStatus] = useState('loading')
@@ -21,17 +20,12 @@ export function useFileHistory(repo, path, branch, head, online) {
 
   const keep = next => { saved.current = next; setList(next.list); cache.setVersions(repo, path, next) }
 
-  // Up to PAGE_SIZE versions from `at` ({ path, from, skip }, lib/versions.js `versionsIn`) on, and where the rest are
+  // Up to PAGE_SIZE versions from `at` ({ path, from }, lib/versions.js `versionsIn`) on, and where the rest are
   async function load(at) {
     const versions = []
     while (at && versions.length < PAGE_SIZE) {
-      const fetched = (await listCommits(branch, PAGE_SIZE + 1, at.from, at.path)).filter(c => c.sha !== at.skip)
-      const commits = fetched.slice(0, PAGE_SIZE)
-      const page = []
-      for (let i = 0; i < commits.length; i += AT_ONCE) {
-        page.push(...await Promise.all(commits.slice(i, i + AT_ONCE).map(async commit => ({ commit, files: await commitFiles(commit.sha) }))))
-      }
-      const found = versionsIn(page, at.path, fetched.length > PAGE_SIZE)
+      const { page, more: older } = await commitPage(branch, PAGE_SIZE, at.from, at.path)
+      const found = versionsIn(page, at.path, older)
       versions.push(...found.versions)
       at = found.next
     }
@@ -55,8 +49,8 @@ export function useFileHistory(repo, path, branch, head, online) {
   }
 
   async function more() {
+    if (!saved.current.next || status === 'loading' || status === 'more') return // a refresh going on would be dropped
     const id = ++run.current
-    if (!saved.current.next) return
     if (!online) return setStatus('offline')
     setStatus('more')
     try {
@@ -90,8 +84,10 @@ export function useFileHistory(repo, path, branch, head, online) {
     return blob ? getBlob(blob) : ''
   }
 
-  // The text before `versions[i]`: the version under it, or what was at its path (its old one, renamed) before its commit
-  async function textBefore(i) {
+  // The text before the version of commit `sha`: the version under it, or what was at its path (its old one, renamed)
+  // before its commit
+  async function textBefore(sha) {
+    const i = saved.current.list.findIndex(v => v.sha === sha)
     const v = saved.current.list[i]
     if (!v || v.status === 'added') return ''
     const older = saved.current.list[i + 1]
@@ -103,5 +99,5 @@ export function useFileHistory(repo, path, branch, head, online) {
 
   const pushed = useMemo(() => storage.getPushed(repo), [repo, head]) // a push here moves GitHub's latest commit
   const versions = useMemo(() => list && list.map(v => ({ ...v, mine: pushed.includes(v.sha) })), [list, pushed])
-  return { versions, status, hasMore: Boolean(saved.current.next), more, retry: refresh, textOf, textBefore }
+  return { versions, status, hasMore: Boolean(saved.current.next), busy: status === 'loading' || status === 'more', more, retry: refresh, textOf, textBefore }
 }

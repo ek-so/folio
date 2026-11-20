@@ -32,7 +32,9 @@ export default function VersionHistory({ repo, path, githubPath, remote, online,
     ...(local ? [{ local: true, path }] : []),
     ...(history.versions ?? []),
   ], [local, path, history.versions])
-  const [open, setOpen] = useState(null) // the entry shown
+  const keyOf = e => e.local ? 'local' : e.sha
+  const [openKey, setOpenKey] = useState(null) // the entry shown (`keyOf`): the list's entries are new after each load
+  const open = openKey && entries.find(e => keyOf(e) === openKey)
   const [shown, setShown] = useState(null) // { text, before } of the open entry, or { error }
   const [restoring, setRestoring] = useState(false)
   const [attempt, setAttempt] = useState(0) // Try again: the open entry loaded anew
@@ -41,14 +43,13 @@ export default function VersionHistory({ repo, path, githubPath, remote, online,
     if (!open) return
     let cancelled = false
     setShown(null)
-    const at = history.versions?.indexOf(open) ?? -1
     const load = open.local
       ? Promise.all([localText, history.versions?.[0] ? history.textOf(history.versions[0]) : ''])
-      : Promise.all([history.textOf(open), history.textBefore(at)])
+      : Promise.all([history.textOf(open), history.textBefore(open.sha)])
     load.then(([text, before]) => { if (!cancelled) setShown({ text, before }) })
       .catch(e => { if (!cancelled) setShown({ error: isNetworkError(e) ? 'offline' : 'failed' }) })
     return () => { cancelled = true }
-  }, [open, attempt])
+  }, [openKey, attempt])
 
   const diff = useMemo(() => shown?.text !== undefined ? diffNote(shown.before, shown.text) : null, [shown])
   const label = e => e.local ? 'Not synced yet' : whenLabel(e.date)
@@ -56,10 +57,10 @@ export default function VersionHistory({ repo, path, githubPath, remote, online,
     e.local ? 'Changed on this device' : e.status === 'added' ? 'Created' : e.status === 'renamed' ? `Renamed from ${displayName(e.from)}` : 'Changed',
     e.path !== path && `as ${displayName(e.path)}`,
   ].filter(Boolean).join(' · ')
-  const current = entries[0]
+  const current = entries[0] && keyOf(entries[0])
 
   if (open) return (
-    <BottomSheet title={label(open)} description={describe(open)} wide onBack={() => setOpen(null)} onClose={onClose} onOpenAutoFocus={e => e.preventDefault()}>
+    <BottomSheet title={label(open)} description={describe(open)} wide onBack={() => setOpenKey(null)} onClose={onClose} onOpenAutoFocus={e => e.preventDefault()}>
       {!shown ? <Loading kind="text" /> : shown.error ? (
         <Notice icon={shown.error === 'offline' ? WifiSlash : Warning} action={<Button variant="secondary" onClick={() => setAttempt(n => n + 1)}>Try again</Button>}>
           {shown.error === 'offline' ? "Offline: this version isn't on this device yet." : "Couldn't load this version from GitHub."}
@@ -71,7 +72,7 @@ export default function VersionHistory({ repo, path, githubPath, remote, online,
             {(frontMatter(diff.text)?.props.length ?? 0) > 0 && <PropertyBadges props={frontMatter(diff.text).props} path={open.path} files={files} title="Properties" className="px-space pt-space" />}
           </MarkdownPreview>
         </div>
-        {open !== current && (
+        {openKey !== current && (
           <div className="flex justify-end">
             <Button disabled={locked} tooltip={locked ? 'The note is locked' : undefined} onClick={() => setRestoring(true)}>
               <ArrowCounterClockwise /> Restore
@@ -101,19 +102,19 @@ export default function VersionHistory({ repo, path, githubPath, remote, online,
           : (
             <ul className="flex flex-col gap-0.5">
               {entries.map(e => (
-                <li key={e.local ? 'local' : e.sha}>
+                <li key={keyOf(e)}>
                   <ListRow
                     icon={e.local ? <Direction icon={ArrowUp} tip="Made on this device, waiting for Sync" quiet />
                       : <Direction icon={e.mine ? ArrowUp : ArrowDown} tip={e.mine ? 'Synced from this device' : 'From another device or GitHub'} />}
-                    title={label(e)} description={describe(e)} onClick={() => setOpen(e)}
-                    trailing={e === current && <Badge className="mr-space-sm">Current</Badge>}
+                    title={label(e)} description={describe(e)} onClick={() => setOpenKey(keyOf(e))}
+                    trailing={keyOf(e) === current && <Badge className="mr-space-sm">Current</Badge>}
                   />
                 </li>
               ))}
             </ul>
           )}
         {history.hasMore && online && (
-          <Button variant="secondary" className="self-center" disabled={history.status === 'more'} onClick={history.more}>
+          <Button variant="secondary" className="self-center" disabled={history.busy} onClick={history.more}>
             {history.status === 'more' ? 'Loading…' : 'Show more'}
           </Button>
         )}

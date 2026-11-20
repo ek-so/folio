@@ -1,11 +1,10 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
-import { listCommits, commitFiles, isNetworkError } from '../lib/github.js'
+import { commitPage, isNetworkError } from '../lib/github.js'
 import { cache } from '../lib/cache.js'
 import { storage } from '../lib/storage.js'
 import { commitEntry, mergedHistory } from '../lib/history.js'
 
 const PAGE_SIZE = 20
-const AT_ONCE = 5 // commits whose files are asked for together
 
 // Recent updates' commits (lib/history.js) of `repo`'s `branch`, newest first, each with its files: what was loaded
 // before shows at once (the offline cache), then the latest PAGE_SIZE are loaded, again whenever GitHub's latest commit
@@ -22,14 +21,10 @@ export function useHistory(repo, branch, head, online) {
 
   const keep = next => { listRef.current = next; setList(next); cache.setHistory(repo, next) }
 
-  async function withFiles(commits) {
-    const out = []
-    for (let i = 0; i < commits.length; i += AT_ONCE) {
-      out.push(...await Promise.all(commits.slice(i, i + AT_ONCE).map(async c => {
-        return commitEntry(c, await commitFiles(c.sha))
-      })))
-    }
-    return out
+  // A page of commits (github.js `commitPage`) as Recent updates lists them
+  async function load(after) {
+    const { page, more } = await commitPage(branch, PAGE_SIZE, after)
+    return { page: page.map(({ commit, files }) => commitEntry(commit, files)), more }
   }
 
   // The newest commits, on top of what's shown
@@ -39,11 +34,10 @@ export function useHistory(repo, branch, head, online) {
     if (!online) return setStatus('offline')
     setStatus('loading')
     try {
-      const fetched = await listCommits(branch, PAGE_SIZE)
-      const page = await withFiles(fetched)
+      const { page, more } = await load()
       if (id !== run.current) return
       keep(mergedHistory(page, listRef.current))
-      if (listRef.current.length <= page.length) setHasMore(fetched.length === PAGE_SIZE)
+      if (listRef.current.length <= page.length) setHasMore(more)
       setStatus('idle')
     } catch (e) {
       if (id === run.current) setStatus(isNetworkError(e) ? 'offline' : 'failed')
@@ -59,11 +53,10 @@ export function useHistory(repo, branch, head, online) {
     if (!online) return setStatus('offline')
     setStatus('more')
     try {
-      const fetched = (await listCommits(branch, PAGE_SIZE + 1, last.sha)).slice(1)
-      const page = await withFiles(fetched)
+      const { page, more } = await load(last.sha)
       if (id !== moreRun.current || of !== shown.current) return
       keep([...listRef.current, ...page])
-      setHasMore(fetched.length === PAGE_SIZE)
+      setHasMore(more)
       setStatus('idle')
     } catch (e) {
       if (id === moreRun.current && of === shown.current) setStatus(isNetworkError(e) ? 'offline' : 'failed')

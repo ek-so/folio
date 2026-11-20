@@ -39,8 +39,8 @@ App flow: **Auth → RepoSetup → FileBrowser / Editor / FileViewer**. `App.jsx
 - `useConfigFile` — one `.folio` settings file read and written through parse and serialize (never saved over when unreadable): `useLocks`, `useIcons`, `useAssets`, `useTables` are built on it.
 - `useAssets` — `added`, and `record`, `moved`, `removed` as changes.
 - `useUndo` — the editor's undo and redo over a note's text: `onChange`, `undo()`, `redo()` (each giving where the cursor goes), `canUndo`, `canRedo`.
-- `useHistory` — Recent updates' commits with their files: the cached list at once, the latest 20 from GitHub (`listCommits`, `commitFiles`), `more()`, `status` (loading, more, offline, failed, idle), `retry()`.
-- `useFileHistory` — Version history's versions of a note on GitHub: the cached list at once, the latest 20 (`listCommits` with its path, `commitFiles`), `more()`, `status`, `retry()`, `textOf(version)`, `textBefore(i)`.
+- `useHistory` — Recent updates' commits with their files: the cached list at once, the latest 20 from GitHub (`commitPage`), `more()`, `status` (loading, more, offline, failed, idle), `retry()`.
+- `useFileHistory` — Version history's versions of a note on GitHub: the cached list at once, the latest 20 (`commitPage` with its path), `more()`, `status`, `busy`, `retry()`, `textOf(version)`, `textBefore(sha)`.
 - `useRevert` — Recent updates' Undo: `revert(sha)` reads each file before and after the commit from GitHub (`commitParent`, `fileOn`), then records `reverted` through `update`.
 - `useEmojis` — the emoji picker's whole list (`unicode-emoji-json`, its own chunk, loaded once), without what the device can't draw.
 - `useAddressBar` — the browser's address follows the main page and its view (a history entry each); Back / Forward show what it names (`replaceNext()` after a rename or delete). `useExpandedFolders` — the title bar tree's open folders, kept for the session.

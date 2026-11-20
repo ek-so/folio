@@ -19,8 +19,8 @@ export function versionOf(commit, files, path) {
 }
 
 // The versions in a page of a path's commits (newest first, each with its files), up to where the note started there:
-// { versions, next }. `next`: where the older ones are, { path, from, skip } (the commits of `path` from the commit
-// `from` on, without `skip`), or null when there are none: the note was added, or what was at `path` before was another
+// { versions, next }. `next`: where the older ones are, { path, from } (the commits of `path` before the commit
+// `from`), or null when there are none: the note was added, or what was at `path` before was another
 // note. A rename goes on with the old path; `more`: whether `path` has older commits than these.
 export function versionsIn(page, path, more) {
   const versions = []
@@ -29,10 +29,10 @@ export function versionsIn(page, path, more) {
     if (!v) return { versions, next: null }
     versions.push(v)
     if (v.status === 'added') return { versions, next: null }
-    if (v.status === 'renamed') return { versions, next: v.from ? { path: v.from, from: v.sha, skip: v.sha } : null }
+    if (v.status === 'renamed') return { versions, next: v.from ? { path: v.from, from: v.sha } : null }
   }
   const last = page.at(-1)
-  return { versions, next: more && last ? { path, from: last.commit.sha, skip: last.commit.sha } : null }
+  return { versions, next: more && last ? { path, from: last.commit.sha } : null }
 }
 
 // A version as it shows with what changed since the one before (`before`, '' when it's the first): its note with the
