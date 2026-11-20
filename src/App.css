@@ -25,6 +25,11 @@
 .editor-preview :is(li, [data-src]).list-dragging { opacity: 0.4; }
 .editor-preview.drag-ghost { padding: 0; opacity: 0.5; pointer-events: none; }
 .editor-preview.drag-ghost :is(ul, ol) { margin: 0; }
+/* A version's changes (Version history, `marks`): an added block on a green tint, a removed one on a red tint and struck
+   through, both colored like a badge's value (--tag-tint, --ink); the tint reaches 8px beyond the text on each side */
+.editor-preview > [data-diff] { display: flow-root; margin: 0 calc(-1 * var(--space-sm)) 4px; padding: var(--space-sm) var(--space-sm) 0; border-radius: var(--radius-sm); }
+.editor-preview > [data-diff=added] { background: color-mix(in oklab, var(--success) var(--tag-tint), var(--card)); }
+.editor-preview > [data-diff=removed] { background: color-mix(in oklab, var(--destructive) var(--tag-tint), var(--card)); color: var(--color-destructive-ink); text-decoration: line-through; }
 /* Blocks' grips: in a left gutter as wide as a grip, at the block's first line; with a mouse only while it's hovered, on touch faint */
 .editor-preview:has(> [data-src] > .block-grip) { padding-left: calc(var(--space) + var(--grip-w)); }
 .editor-preview > [data-src]:has(> .block-grip) { position: relative; }

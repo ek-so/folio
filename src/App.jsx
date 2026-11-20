@@ -17,6 +17,7 @@ import EmojiPicker from './components/EmojiPicker.jsx'
 import SyncButton from './components/SyncButton.jsx'
 import SearchSheet from './components/SearchSheet.jsx'
 import ConfirmModal from './components/ConfirmModal.jsx'
+import VersionHistory from './components/VersionHistory.jsx'
 import UploadClashModal from './components/UploadClashModal.jsx'
 import UploadErrorsModal from './components/UploadErrorsModal.jsx'
 import { blobShaOf, toBase64, isNetworkError } from './lib/github.js'
@@ -153,6 +154,7 @@ export default function App() {
   const [newView, setNewView] = useState(false) // New view (the navigation's Views ⋯) asks for its name
   const [adding, setAdding] = useState(null) // { viewId, type } while a new widget's Setup is open
   const [confirmSignOut, setConfirmSignOut] = useState(false)
+  const [historyOf, setHistoryOf] = useState(null) // the note whose Version history is open
   const [confirmDiscard, setConfirmDiscard] = useState(false)
   const [discards, setDiscards] = useState(0) // remounts the open note after a discard
   const [searchOpen, setSearchOpen] = useState(false)
@@ -616,6 +618,20 @@ export default function App() {
     }
   }
 
+  // Version history's Restore: the note at `path` back to a version's `text`, and to its name when it had another then
+  // (a taken one gets a number), as local changes like any rename and edit
+  function restoreVersion(path, version, text) {
+    const item = fileItem(path)
+    const to = version.path === path ? path : freeTarget(changes, item, version.path)
+    const write = ch => editNote(ch, repo.remote?.files ?? {}, to, () => text, links.remoteText)
+    if (to === path) {
+      window.dispatchEvent(new Event('folio:flush')) // typing in an open note first
+      update(write)
+    } else relocate(item, to, write)
+    setHistoryOf(null)
+    toast.success('Version restored. It goes to GitHub with the next sync.')
+  }
+
   // Drop all local changes (a note or folder that only existed locally leaves the trails)
   function discardChanges() {
     setConfirmDiscard(false)
@@ -732,6 +748,7 @@ export default function App() {
     onReveal: item => revealFolder(parentOf(item.path)),
     githubUrl: item => githubUrl(item),
     onExport: exportNote,
+    onHistory: item => setHistoryOf(item.path),
   }
   const menu = {
     brokenCount: links.index.broken.length,
@@ -912,6 +929,17 @@ export default function App() {
 
         {uploadErrors.length > 0 && (
           <UploadErrorsModal errors={uploadErrors} onClose={() => setUploadErrors([])} />
+        )}
+
+        {historyOf && virtual[historyOf] && (
+          <VersionHistory
+            repo={auth.repo} path={historyOf} githubPath={virtual[historyOf].orig in (repo.remote?.files ?? {}) ? virtual[historyOf].orig : null}
+            remote={repo.remote} online={repo.online} files={virtual}
+            localText={virtual[historyOf].orig in changes.base ? changes.edits[virtual[historyOf].orig] ?? links.remoteText(virtual[historyOf].sha) : undefined}
+            locked={locks.isLocked(historyOf)}
+            onRestore={(version, text) => restoreVersion(historyOf, version, text)}
+            onClose={() => setHistoryOf(null)}
+          />
         )}
 
         {confirmDiscard && (

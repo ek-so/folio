@@ -1,4 +1,7 @@
 import { useEffect } from 'react'
+import { ArrowLeft } from '@phosphor-icons/react'
+import { Button } from './ui/button.jsx'
+import { cn } from '@/lib/utils.js'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from './ui/sheet.jsx'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog.jsx'
 import { useKeyboardInset } from '../hooks/useKeyboardInset.js'
@@ -14,20 +17,29 @@ function releaseStalePageLock() {
   }, 0)
 }
 
-export default function BottomSheet({ title, description, onClose, onOpenAutoFocus, children }) {
+// `onBack`: a ← before the title, back to where the sheet came from (a step inside it); `wide`: a wider dialog from 768px,
+// for content to read (a note)
+export default function BottomSheet({ title, description, onBack, wide, onClose, onOpenAutoFocus, children }) {
   const isDesktop = useIsDesktop()
   const keyboard = useKeyboardInset()
   useEffect(() => releaseStalePageLock, [])
+  const back = onBack && (
+    <Button variant="ghost" size="icon" aria-label="Back" tooltip="Back" className="-my-space-xs -ml-space-sm shrink-0" onClick={onBack}>
+      <ArrowLeft />
+    </Button>
+  )
+  const heading = text => back ? <span className="flex min-w-0 items-center gap-space-xs">{back}<span className="min-w-0 truncate">{text}</span></span> : text
 
   if (isDesktop) {
     return (
       <Dialog open onOpenChange={open => !open && onClose()}>
         <DialogContent
+          className={cn(wide && 'max-w-3xl')}
           onOpenAutoFocus={onOpenAutoFocus}
           {...(description ? {} : { 'aria-describedby': undefined })}
         >
           <DialogHeader className="pr-8">
-            <DialogTitle>{title}</DialogTitle>
+            <DialogTitle>{heading(title)}</DialogTitle>
             {description && <DialogDescription>{description}</DialogDescription>}
           </DialogHeader>
           {children}
@@ -49,7 +61,7 @@ export default function BottomSheet({ title, description, onClose, onOpenAutoFoc
         onOpenAutoFocus={onOpenAutoFocus}
       >
         <SheetHeader className="p-0 pr-8">
-          <SheetTitle className="text-lg font-bold truncate">{title}</SheetTitle>
+          <SheetTitle className="text-lg font-bold truncate">{heading(title)}</SheetTitle>
           {description && <SheetDescription>{description}</SheetDescription>}
         </SheetHeader>
         {children}

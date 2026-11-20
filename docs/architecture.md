@@ -14,6 +14,7 @@ App flow: **Auth → RepoSetup → FileBrowser / Editor / FileViewer**. `App.jsx
 - `tagColors.js` — picked value colors in `.folio/colors.json`. Tested.
 - `undo.js` — the note editor's undo history: `startHistory`, `recorded` (a burst of typing is one step), `undone`, `redone`, `changedAt` (where the cursor goes). Tested.
 - `history.js` — Recent updates: a commit's files as listed (`shownFiles`, `commitEntry`), the unsynced changes (`unsyncedFiles`), pages of commits merged (`mergedHistory`), those with files to show (`shownCommits`), when each was made (`whenLabel`). Tested.
+- `versions.js` — Version history: a note's version from a commit's files (`versionOf`), a page of them following renames back (`versionsIn`), what changed from the one before as blocks to color (`diffNote`). Tested.
 - `revert.js` — Recent updates' Undo: an update's files back to how they were before it, as local changes, keeping what changed since (`reverted`, `sides`). Tested.
 - `tables.js` — notes' table columns: types (`detectType`, `cellValue`), sorting and filtering (`sortedRows`, `cellPasses`), writing cells back into the table's markdown (`tableRows`, `withCells`), and the picked types and colors in `.folio/tables.json`. Tested.
 - `locks.js` — files locked against editing, `.folio/locks.json` (`toggledLock`, `movedLocks`, `removedLocks`). Tested.
@@ -34,11 +35,12 @@ App flow: **Auth → RepoSetup → FileBrowser / Editor / FileViewer**. `App.jsx
 - `useConfig` — reads every `.folio/` file (`read(path)` → `{ ready, text }`, `readIn(ch, path)`); `write` and `erase` are changes (`ch => ch`) for `update`, so a config change can go in one step with others. Nothing can be changed until it's read, so an unreadable config is never overwritten; a failed fetch is retried on coming online or returning.
 - `useTagColors` — `colors`, `canEdit`, `set(key, value, color)` as a change.
 - `useLocks` — `isLocked(path)`, `canEdit`, and `toggle`, `moved`, `removed` as changes.
-- `useIcons` — `iconOf(path)`, `canEdit`, and `set`, `moved`, `removed` as changes; `IconsContext` (App) gives every `FileIcon` and `ItemMenu` the icons and `onSet`. `ItemActionsContext` (App, `components/ItemMenu.jsx`) gives every file's and folder's ⋯ what it does (rename, move, duplicate, remove, lock, show in folder, its GitHub address).
+- `useIcons` — `iconOf(path)`, `canEdit`, and `set`, `moved`, `removed` as changes; `IconsContext` (App) gives every `FileIcon` and `ItemMenu` the icons and `onSet`. `ItemActionsContext` (App, `components/ItemMenu.jsx`) gives every file's and folder's ⋯ what it does (rename, move, duplicate, remove, lock, show in folder, its GitHub address, Version history).
 - `useConfigFile` — one `.folio` settings file read and written through parse and serialize (never saved over when unreadable): `useLocks`, `useIcons`, `useAssets`, `useTables` are built on it.
 - `useAssets` — `added`, and `record`, `moved`, `removed` as changes.
 - `useUndo` — the editor's undo and redo over a note's text: `onChange`, `undo()`, `redo()` (each giving where the cursor goes), `canUndo`, `canRedo`.
 - `useHistory` — Recent updates' commits with their files: the cached list at once, the latest 20 from GitHub (`listCommits`, `commitFiles`), `more()`, `status` (loading, more, offline, failed, idle), `retry()`.
+- `useFileHistory` — Version history's versions of a note on GitHub: the cached list at once, the latest 20 (`listCommits` with its path, `commitFiles`), `more()`, `status`, `retry()`, `textOf(version)`, `textBefore(i)`.
 - `useRevert` — Recent updates' Undo: `revert(sha)` reads each file before and after the commit from GitHub (`commitParent`, `fileOn`), then records `reverted` through `update`.
 - `useEmojis` — the emoji picker's whole list (`unicode-emoji-json`, its own chunk, loaded once), without what the device can't draw.
 - `useAddressBar` — the browser's address follows the main page and its view (a history entry each); Back / Forward show what it names (`replaceNext()` after a rename or delete). `useExpandedFolders` — the title bar tree's open folders, kept for the session.

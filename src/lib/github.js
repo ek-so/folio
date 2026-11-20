@@ -105,19 +105,20 @@ export async function changedFileCount(base, head) {
 }
 
 // Up to `count` commits of `branch`, newest first, from `from` (a sha: that one first) or the branch's latest:
-// [{ sha, date }]
-export async function listCommits(branch, count, from) {
-  const { data } = await octokit.rest.repos.listCommits({ owner, repo, sha: from ?? branch, per_page: count, request: { fetch: fetchFresh } })
+// [{ sha, date }]. With `path`, only the commits that changed that path (a file's versions)
+export async function listCommits(branch, count, from, path) {
+  const { data } = await octokit.rest.repos.listCommits({ owner, repo, sha: from ?? branch, per_page: count, ...(path ? { path } : {}), request: { fetch: fetchFresh } })
   return data.map(c => ({ sha: c.sha, date: c.commit.committer?.date ?? c.commit.author?.date }))
 }
 
-// The files a commit changed: [{ path, status ('added' | 'modified' | 'removed' | 'renamed' | …), from (a rename's old path) }],
-// kept in the offline cache once asked for (a commit never changes)
+// The files a commit changed: [{ path, status ('added' | 'modified' | 'removed' | 'renamed' | …), from (a rename's old path),
+// sha (the file's blob after the commit; none when removed) }], kept in the offline cache once asked for (a commit never
+// changes; lists cached before `sha` was kept have none)
 export async function commitFiles(sha) {
   const cached = await cache.getCommitFiles(sha)
   if (cached) return cached
   const { data } = await octokit.rest.repos.getCommit({ owner, repo, ref: sha })
-  const files = (data.files ?? []).map(f => ({ path: f.filename, status: f.status, ...(f.previous_filename ? { from: f.previous_filename } : {}) }))
+  const files = (data.files ?? []).map(f => ({ path: f.filename, status: f.status, ...(f.previous_filename ? { from: f.previous_filename } : {}), ...(f.status !== 'removed' && f.sha ? { sha: f.sha } : {}) }))
   cache.setCommitFiles(sha, files)
   return files
 }

@@ -1,5 +1,5 @@
 import { createContext, useContext, useState } from 'react'
-import { PencilSimple, Trash, Folder, Rows, SquaresFour, Columns, Copy, Lock, LockOpen, FolderOpen, GithubLogo, Export, FilePdf, FileTxt } from '@phosphor-icons/react'
+import { PencilSimple, Trash, Folder, Rows, SquaresFour, Columns, Copy, Lock, LockOpen, FolderOpen, GithubLogo, Export, FilePdf, FileTxt, ClockCounterClockwise } from '@phosphor-icons/react'
 import { DropdownMenuItem, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent } from './ui/dropdown-menu.jsx'
 import { Segmented } from './ui/segmented.jsx'
 import RenameModal from './RenameModal.jsx'
@@ -14,13 +14,14 @@ import { useIsDesktop } from '../hooks/useIsDesktop.js'
 // What every item's ⋯ does, given once by App: `onRename(item, name, title)` and `onMove(item, folder)` (an error
 // message or null), `onDuplicate(item)`, `onDelete(item)` (to the archive), `folders` (Move's choices), `isLocked(path)`
 // and `onToggleLock(path)` (null while locks can't be saved), `onReveal(item)` (its folder in File manager) and
-// `githubUrl(item)` (where it is on GitHub; undefined when GitHub doesn't have it yet), `onExport(item, 'pdf' | 'txt')` (a note)
+// `githubUrl(item)` (where it is on GitHub; undefined when GitHub doesn't have it yet), `onExport(item, 'pdf' | 'txt')` and
+// `onHistory(item)` (a note: its Version history)
 export const ItemActionsContext = createContext(null)
 
 // The ⋯ of a file or folder ({ name, path, type }) everywhere it shows: file manager, tree, title bar, Assets, a board's
 // or planner's card, a pinned note or folder. Its sections (MoreMenu):
 //   - what only this place offers (`extra`: Mark as done, Edit description, Move to column…), and Show in folder (`reveal`);
-//   - the core, the same everywhere: Rename · Emoji · Move to… · Duplicate (files) · Copy link · Open on GitHub · Export (notes) · Lock (files);
+//   - the core, the same everywhere: Rename · Emoji · Move to… · Duplicate (files) · Copy link · Open on GitHub · Version history and Export (notes) · Lock (files);
 //   - Remove (to the archive, confirmed; none for a locked file), or `remove` ({ label, onSelect }, confirmed by the caller:
 //     a pinned item's Remove from widget).
 // With no `item` (the root folder; a pinned item that's gone) only `extra` and `remove` show. `view` / `onView` (File
@@ -50,6 +51,7 @@ export default function ItemMenu({ item, extra, reveal, remove, view, onView, in
         <a href={github} target="_blank" rel="noreferrer"><GithubLogo /> Open on GitHub</a>
       </DropdownMenuItem>
     )}
+    {file && item.path.endsWith('.md') && <DropdownMenuItem onSelect={() => actions.onHistory(item)}><ClockCounterClockwise /> Version history</DropdownMenuItem>}
     {file && item.path.endsWith('.md') && (
       <DropdownMenuSub>
         <DropdownMenuSubTrigger><Export /> Export</DropdownMenuSubTrigger>

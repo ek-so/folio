@@ -15,7 +15,7 @@ const lines = text => text === '' ? [] : text.replace(/\n$/, '').split('\n')
 
 // Pairs [i, j] of equal lines a[i] === b[j], a longest such sequence in order (the same lines at both ends are matched
 // first, so a long note with a small change is quick)
-function matches(a, b) {
+export function matches(a, b) {
   let start = 0
   while (start < a.length && start < b.length && a[start] === b[start]) start++
   let endA = a.length, endB = b.length

@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { ArrowUp, ArrowDown, WifiSlash, Warning, ArrowCounterClockwise, Trash } from '@phosphor-icons/react'
+import { Direction, Notice } from './UpdateParts.jsx'
 import Surface from './Surface.jsx'
 import TitleBar from './TitleBar.jsx'
 import PageLayout from './PageLayout.jsx'
@@ -7,7 +8,6 @@ import FileIcon from './FileIcon.jsx'
 import HeaderBox from './HeaderBox.jsx'
 import Loading from './Loading.jsx'
 import { EmptyMessage, EMPTY } from './EmptyState.jsx'
-import { Tip } from './ui/tooltip.jsx'
 import { ListRow } from './ui/list-row.jsx'
 import { Button } from './ui/button.jsx'
 import ConfirmModal from './ConfirmModal.jsx'
@@ -111,22 +111,5 @@ export default function RecentUpdates({ repo, remote, online, changes, files, on
         />
       )}
     </PageLayout>
-  )
-}
-
-// An update's ↑ (this device's, accent; `quiet`: not synced yet, muted) or ↓ (muted), its meaning in a tooltip
-function Direction({ icon: Icon, tip, quiet }) {
-  return (
-    <Tip content={tip}>
-      <span className={cn('flex shrink-0', Icon === ArrowUp && !quiet ? 'text-primary' : 'text-muted-foreground')} aria-label={tip} role="img"><Icon className="size-4" /></span>
-    </Tip>
-  )
-}
-
-function Notice({ icon: Icon, children, action }) {
-  return (
-    <div className="flex items-center gap-space-sm rounded-sm bg-secondary/60 px-3 py-space-sm text-sm text-muted-foreground">
-      <Icon className="size-4 shrink-0" /> <span className="flex-1">{children}</span> {action}
-    </div>
   )
 }

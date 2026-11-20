@@ -192,6 +192,12 @@ export function renderBlocks(source) {
   return html
 }
 
+// A note's body (the front matter left out) as its top-level blocks' markdown, each without the line breaks after it
+export function blocksOf(text) {
+  const fm = frontMatter(text)
+  return marked.lexer(fm ? text.slice(fm.end) : text).filter(t => t.type !== 'space').map(t => t.raw.replace(/\n+$/, ''))
+}
+
 // Every markdown link in `source` (not images), in the order the preview shows them:
 // [{ start, end, label, href, bare }]. `label`: the link text's markdown; `bare`: a URL
 // written as is (https://… or <https://…>), not [label](url)

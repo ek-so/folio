@@ -13,6 +13,9 @@ export const cache = {
   // Recent updates: the commits last listed for each repo, and each commit's files (a commit never changes)
   getHistory: (repo) => get(`history:${repo}`).catch(() => undefined),
   setHistory: (repo, list) => set(`history:${repo}`, list).catch(() => {}),
+  // Version history: a note's versions last listed ({ list, next }), by repo and the note's path on GitHub
+  getVersions: (repo, path) => get(`versions:${repo}:${path}`).catch(() => undefined),
+  setVersions: (repo, path, versions) => set(`versions:${repo}:${path}`, versions).catch(() => {}),
   getCommitFiles: (sha) => get(`commit:${sha}`).catch(() => undefined),
   setCommitFiles: (sha, files) => set(`commit:${sha}`, files).catch(() => {}),
   clearAll: async () => {
