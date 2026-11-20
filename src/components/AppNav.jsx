@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { List, SidebarSimple, MagnifyingGlass, Images, LinkBreak, BookOpen, Gear, SignOut, ClockCounterClockwise } from '@phosphor-icons/react'
+import { SidebarSimple, MagnifyingGlass, Images, LinkBreak, BookOpen, Gear, SignOut, ClockCounterClockwise } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils.js'
 import { Button } from './ui/button.jsx'
 import { Separator } from './ui/separator.jsx'
@@ -135,14 +135,7 @@ export function TopBar({ host, resetKey, page, pages, viewActions, onPage, onSea
     {/* The bar's row folds while its content slides up and fades with it, rather than being cut off */}
     <div className={cn('transition-[translate,opacity] duration-300 ease-[cubic-bezier(0.2,0,0,1)]', hidden && '-translate-y-full opacity-0')}>
     <div className="flex items-center gap-space-sm px-space py-space">
-      <AccountMenu
-        {...menu} current={page} pages={pages} viewActions={viewActions} onNavigate={onPage}
-        trigger={
-          <Button variant="ghost-outline" size="icon" aria-label="Menu">
-            <List />
-          </Button>
-        }
-      />
+      <AccountMenu {...menu} current={page} pages={pages} viewActions={viewActions} onNavigate={onPage} />
       <Button variant="ghost-outline" size="icon" aria-label="Search" onClick={onSearch}>
         <MagnifyingGlass />
       </Button>
