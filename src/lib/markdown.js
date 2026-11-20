@@ -46,6 +46,44 @@ marked.use({ useNewRenderer: true, renderer: {
   },
 } })
 
+// Markdown inside HTML reads as everywhere else: in an HTML block, the text between its tags becomes the block's
+// `tokens`, its tags staying raw HTML. Text starting on a line of its own reads as blocks (a list, a heading, a
+// paragraph); text right after a tag as one line: a heading when it starts with #…, else its inline markdown (bold,
+// links, dates). So <summary>### Title</summary> is a heading title. Code, preformatted text, scripts, styles and
+// comments stay as written.
+const TAG = /<\/?[a-zA-Z][^>]*>/g
+const RAW_HTML = /<(pre|code|script|style|textarea)[\s>]|<!--/i
+const HEADING = /^(#{1,6})[ \t]+(.*?)(?:[ \t]+#+)?[ \t]*$/
+marked.use({ tokenizer: {
+  html(src) {
+    const token = marked.Tokenizer.prototype.html.call(this, src)
+    if (!token || RAW_HTML.test(token.raw)) return token
+    const parts = []
+    const tag = raw => parts.push({ type: 'html', block: false, pre: false, raw, text: raw })
+    const text = raw => {
+      const body = raw.trim()
+      if (!body) return tag(raw) // the line breaks and spaces between tags, as written
+      const lines = /^\s*\n/.test(raw) // starting on a line of its own
+      const heading = !lines && body.match(HEADING)
+      if (heading) parts.push({ type: 'heading', raw, depth: heading[1].length, text: heading[2], tokens: this.lexer.inline(heading[2]) })
+      else if (lines) parts.push({ type: 'html', block: false, pre: false, raw, text: '', tokens: this.lexer.blockTokens(body, []) })
+      else parts.push({ type: 'text', raw, text: body, tokens: this.lexer.inline(body) })
+    }
+    let last = 0
+    for (const m of token.raw.matchAll(TAG)) {
+      if (m.index > last) text(token.raw.slice(last, m.index))
+      tag(m[0])
+      last = m.index + m[0].length
+    }
+    if (last < token.raw.length) text(token.raw.slice(last))
+    if (parts.some(p => p.type !== 'html' || p.tokens)) token.tokens = parts
+    return token
+  },
+} })
+marked.use({ useNewRenderer: true, renderer: {
+  html(token) { return token.tokens ? this.parser.parse(token.tokens, false) : token.text },
+} })
+
 // Dates in the text (lib/dates.js; not in code or links) become date spots: an empty
 // <time> the preview fills with a DateBadge, its label in `data-label`, what's typed in `data-raw`.
 function splitDates(token) {
@@ -78,7 +116,7 @@ marked.use({
 const escapeAttr = s => s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 
 // Where the preview shows plain text (where it shows dates as badges): [start, end] of each piece of `markdown`'s
-// text, not in the front matter, code, links, images or HTML
+// text, not in the front matter, code, links, images or HTML tags
 function textRanges(markdown) {
   const ranges = []
   const KEEP = new Set(['code', 'codespan', 'html', 'link', 'image', 'def'])
@@ -88,7 +126,7 @@ function textRanges(markdown) {
       const at = src.indexOf(t.raw, offset)
       if (at === -1) continue
       offset = at + t.raw.length
-      if (KEEP.has(t.type)) continue
+      if (KEEP.has(t.type) && !(t.type === 'html' && t.tokens)) continue // HTML's text between its tags is text
       if (t.type === 'text' && !t.tokens) ranges.push([base + at, base + offset])
       else if (t.type === 'table') [...t.header, ...t.rows.flat()].reduce((o, cell) => walk(cell.tokens, t.raw, base + at, o), 0)
       else walk(t.items ?? t.tokens, t.raw, base + at)

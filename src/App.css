@@ -35,9 +35,10 @@
 .editor-preview > [data-src]:has(> .block-grip) { position: relative; }
 .editor-preview .block-grip { position: absolute; top: 0; right: 100%; width: var(--grip-w); height: 1lh; opacity: 0.8; }
 /* Beside a heading, its line is the heading's: the grip's font size is the heading's (h1–h3 above), so 1lh matches it and the grip is centred on its text */
-.editor-preview > [data-src]:has(> h1) > .block-grip { font-size: 24px; }
-.editor-preview > [data-src]:has(> h2) > .block-grip { font-size: 20px; }
-.editor-preview > [data-src]:has(> h3) > .block-grip { font-size: 17px; }
+/* An accordion titled by a heading (<summary>### Title</summary>) the same, on its title's first line */
+.editor-preview > [data-src]:is(:has(> h1), :has(> details > summary > .summary-title > h1:first-child)) > .block-grip { font-size: 24px; }
+.editor-preview > [data-src]:is(:has(> h2), :has(> details > summary > .summary-title > h2:first-child)) > .block-grip { font-size: 20px; }
+.editor-preview > [data-src]:is(:has(> h3), :has(> details > summary > .summary-title > h3:first-child)) > .block-grip { font-size: 17px; }
 /* Beside a table, as tall as its header row (a column's menu button, the cell's padding above and below, a border), so it's centred on it */
 .editor-preview > [data-src]:has(> table) > .block-grip { height: calc(var(--spacing-control-sm) + 2 * var(--cell-pad) + 1px); }
 /* A list has no grip of its own: its items are dragged one by one (it still takes drops, the grip's block is its drop target) */
@@ -60,11 +61,17 @@
 .editor-preview input[type="checkbox"]:hover { border-color: var(--primary); }
 .editor-preview input[type="checkbox"]:checked { background-color: var(--primary); border-color: var(--primary); background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='white' d='M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-size: 100%; }
 /* <details> accordions, as on GitHub: closed by default, the Phosphor caret ▸ turning ▾ when open */
-/* Content indented to line up with the title text (caret 16px + gap 8px) */
+/* Content indented to line up with the title text (caret 16px + gap 8px). The caret is centred on the title's first
+   line: as tall as a line in the title's size (a heading's when it starts with one, h1–h3 above) */
 .editor-preview details { margin: 0 0 14px; padding-left: 24px; }
-.editor-preview summary { margin-left: -24px; display: flex; align-items: center; gap: 8px; cursor: pointer; list-style: none; font-weight: 500; }
+.editor-preview summary { margin-left: -24px; display: flex; align-items: flex-start; gap: 8px; cursor: pointer; list-style: none; font-weight: 500; }
 .editor-preview summary::-webkit-details-marker { display: none; }
-.editor-preview .summary-caret { display: flex; flex-shrink: 0; transition: transform 0.15s; }
+.editor-preview .summary-title { flex: 1; min-width: 0; }
+.editor-preview .summary-title > :is(h1, h2, h3, h4, h5, h6, p) { margin: 0; }
+.editor-preview summary:has(> .summary-title > h1:first-child) { font-size: 24px; }
+.editor-preview summary:has(> .summary-title > h2:first-child) { font-size: 20px; }
+.editor-preview summary:has(> .summary-title > h3:first-child) { font-size: 17px; }
+.editor-preview .summary-caret { display: flex; flex-shrink: 0; align-items: center; height: 1lh; transition: transform 0.15s; }
 .editor-preview .summary-caret svg { width: 16px; height: 16px; }
 .editor-preview details[open] > summary { margin-bottom: 8px; }
 .editor-preview details[open] > summary > .summary-caret { transform: rotate(90deg); }

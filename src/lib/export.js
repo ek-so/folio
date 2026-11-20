@@ -46,7 +46,8 @@ function blocks(tokens) {
         return `${mark} ${indent(content, ' '.repeat(mark.length + 1)).trimStart()}`
       }).join('\n')
       case 'table': return [t.header, ...t.rows].map(row => row.map(c => inline(c.tokens)).join('\t')).join('\n')
-      default: return '' // html, space
+      case 'html': return t.tokens ? blocks(t.tokens) : '' // its text between tags (lib/markdown.js), not the tags
+      default: return '' // space
     }
   }).filter(Boolean).join('\n\n')
 }

@@ -257,8 +257,13 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
       if (at !== undefined) cb.dataset.offset = String(blockStart + at)
     }
     // Accordion titles start with a spot for Phosphor's caret, rendered into
-    // it below (▸, turned ▾ when open in App.css)
+    // it below (▸, turned ▾ when open in App.css), the title itself in one
+    // piece beside it (bold, links and a heading flow as text)
     for (const summary of tpl.content.querySelectorAll('summary')) {
+      const title = document.createElement('div')
+      title.className = 'summary-title'
+      title.append(...summary.childNodes)
+      summary.append(title)
       summary.insertAdjacentHTML('afterbegin', '<span class="summary-caret" aria-hidden="true"></span>')
     }
     const tables = tableColumns(tpl.content, content, picked)

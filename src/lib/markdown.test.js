@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest'
 // Date badges leave out this year (dateLabel): the tests' dates are read as of another year, so they keep theirs
 beforeAll(() => { vi.useFakeTimers({ now: new Date(2030, 0, 1), toFake: ['Date'] }) })
 afterAll(() => { vi.useRealTimers() })
-import { renderBlocks, tapOffset, taskOffsets, taskProgress, linkSpans, linkMarkdown, replaceLink, repoLink, listsIn, moveListItem, moveBlock, continueList, highlightMarkdown, keyLines, renderInline, splitImageAlt, imageSpans, withImageWidth } from './markdown.js'
+import { renderBlocks, tapOffset, taskOffsets, taskProgress, linkSpans, linkMarkdown, replaceLink, repoLink, listsIn, moveListItem, moveBlock, continueList, highlightMarkdown, keyLines, renderInline, splitImageAlt, imageSpans, withImageWidth, dateSpans } from './markdown.js'
 
 describe('markdown', () => {
   it('tags each block with its source range', () => {
@@ -21,6 +21,17 @@ describe('markdown', () => {
     const blocks = [...html.matchAll(/data-src="(\d+)" data-len="(\d+)"/g)].map(m => md.slice(+m[1], +m[1] + +m[2]))
     expect(blocks).toEqual(['a\nb\n', '---\n', '- [ ] one\n'])
     expect(renderBlocks('Title\n===\n')).toContain('<h1>Title</h1>')
+  })
+
+  it('reads markdown inside HTML as everywhere else, its links and dates where the source has them', () => {
+    const md = '<details><summary>### **Plan** 12 Dec 2026</summary>\n- one [x](a.md)\n</details>\n\n<div>*hi*</div>\n\n<pre>**raw**</pre>\n'
+    const html = renderBlocks(md)
+    expect(html).toContain('<summary><h3><strong>Plan</strong> <time')
+    expect(html).toMatch(/<ul>\s*<li>one <a href="a.md">x<\/a><\/li>\s*<\/ul>\s*<\/details>/)
+    expect(html).toContain('<div><em>hi</em></div>')
+    expect(html).toContain('<pre>**raw**</pre>')
+    expect(linkSpans(md).map(s => md.slice(s.start, s.end))).toEqual(['[x](a.md)'])
+    expect(dateSpans(md).map(s => md.slice(s.start, s.end))).toEqual(['12 Dec 2026'])
   })
 
   it('keeps a <details> accordion in one block', () => {
