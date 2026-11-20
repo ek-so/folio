@@ -93,7 +93,7 @@ export default function VersionHistory({ repo, path, githubPath, remote, online,
 
   return (
     <BottomSheet title="Version history" description={displayName(path)} onClose={onClose} onOpenAutoFocus={e => e.preventDefault()}>
-      <div className="-mx-space-xs flex max-h-[60dvh] flex-col gap-space-sm overflow-y-auto" data-no-pull>
+      <div className="-mx-space-xs flex max-h-[60dvh] flex-col gap-space-sm overflow-y-auto [&>*]:shrink-0" data-no-pull>
         {history.status === 'offline' && <Notice icon={WifiSlash}>Offline. {history.versions?.length ? 'Showing what was loaded before.' : 'Connect to the internet to see the versions.'}</Notice>}
         {history.status === 'failed' && <Notice icon={Warning} action={<Button variant="secondary" onClick={history.retry}>Try again</Button>}>Couldn't load the versions from GitHub.</Notice>}
         {history.versions === null || (history.status === 'loading' && !entries.length) ? <Loading rows={4} />
