@@ -124,7 +124,7 @@ export function NavRail({ page, pages, hrefOf, viewActions, onPage, onSearch, re
   )
 }
 
-// Phones: a bar at the top with ☰ (every page, then the rest) and Search on the left, Recent updates and Sync on the right. It slides away while
+// Phones: a bar at the top with ☰ (every page, then the rest) and Search on the left, Sync on the right. It slides away while
 // the content scrolls down and returns on scrolling up (`useHideOnScroll`): its row folds in 300ms with a gentle ease while
 // what's in it slides up and fades, so the page under it moves softly.
 export function TopBar({ host, resetKey, page, pages, viewActions, onPage, onSearch, renderSync, menu }) {
@@ -147,9 +147,6 @@ export function TopBar({ host, resetKey, page, pages, viewActions, onPage, onSea
         <MagnifyingGlass />
       </Button>
       <div className="flex-1" />
-      <Button variant="ghost-outline" size="icon" aria-label="Recent updates" aria-current={page === PAGE.HISTORY ? 'page' : undefined} className={cn(page === PAGE.HISTORY && SELECTED)} onClick={() => onPage(PAGE.HISTORY)}>
-        <ClockCounterClockwise />
-      </Button>
       {renderSync(false, true)}
     </div>
     </div>

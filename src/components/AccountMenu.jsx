@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Gear, SignOut, LinkBreak, BookOpen, Images } from '@phosphor-icons/react'
+import { Gear, SignOut, LinkBreak, BookOpen, Images, ClockCounterClockwise } from '@phosphor-icons/react'
 import { PAGE } from '../lib/pages.js'
 import ViewMenu, { ViewsTitle } from './ViewMenu.jsx'
 import PageTitle from './PageTitle.jsx'
@@ -12,8 +12,8 @@ import { Sheet, SheetTrigger, SheetContent, SheetTitle, SheetDescription } from 
 
 // The phone navigation, opened by `trigger` (a Button): a left sheet that floats 8px from the screen's edges,
 // titled with the app's name (its ✕ is the sheet's own). First the views under their title (`ViewsTitle`: "Views" and
-// its ⋯), each with its ⋯ (`ViewMenu`, `viewActions`), then the other main pages (`pages`): File manager, Assets and Graph (Recent updates is on the top bar); then, pinned to the bottom of the sheet,
-// Broken links (count), Documentation, Settings and Sign out. `current` is the open page, highlighted. Choosing a page closes it.
+// its ⋯), each with its ⋯ (`ViewMenu`, `viewActions`), then the other main pages (`pages`): File manager, Assets and Graph then, pinned to the bottom of the sheet,
+// Recent updates, Broken links (count), Documentation, Settings and Sign out. `current` is the open page, highlighted. Choosing a page closes it.
 export default function AccountMenu({ trigger, current, pages, viewActions, onNavigate, brokenCount, onSignOut }) {
   const [open, setOpen] = useState(false)
   const go = fn => () => { setOpen(false); fn() }
@@ -56,6 +56,7 @@ export default function AccountMenu({ trigger, current, pages, viewActions, onNa
           <div className="mt-auto">
           {separator}
           <ul>
+            {fixed(PAGE.HISTORY, ClockCounterClockwise, 'Recent updates')}
             {fixed(PAGE.LINKS, LinkBreak, 'Broken links', brokenCount > 0 && <span className="px-space-sm text-sm text-muted-foreground">{brokenCount}</span>)}
             {fixed(PAGE.DOCS, BookOpen, 'Documentation')}
             {fixed(PAGE.SETTINGS, Gear, 'Settings')}
