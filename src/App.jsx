@@ -166,6 +166,7 @@ export default function App() {
   const [editAt, setEditAt] = useState(null) // { path, start, end }: a note to open in the editor with that text selected (Open at link)
   const [uploadClash, setUploadClash] = useState(null) // { name, folder, resolve } while asking
   const [uploadErrors, setUploadErrors] = useState([]) // [name, reason] after adding files
+  const mainRef = useRef(null) // the page's column: the phone top bar hides while it scrolls
   const viewport = useVisualViewport() // the part of the screen seen with the keyboard open
 
   // Saved for the repo they belong to (none while signed out)
@@ -835,8 +836,8 @@ export default function App() {
         <PullToRefresh onRefresh={() => window.location.reload()}>
           <div className="flex flex-1 min-h-0">
           <NavRail page={page} pages={pages} hrefOf={id => urlForPage(BASE, id, currentView(id, trailOf(id)))} viewActions={viewActions} onPage={choosePage} onSearch={() => setSearchOpen(true)} renderSync={renderSync} menu={menu} />
-          <main className="flex flex-col flex-1 min-w-0 min-h-0">
-          <TopBar page={page} pages={pages} viewActions={viewActions} onPage={choosePage} onSearch={() => setSearchOpen(true)} renderSync={renderSync} menu={menu} />
+          <main ref={mainRef} className="flex flex-col flex-1 min-w-0 min-h-0">
+          <TopBar host={mainRef} resetKey={`${page}|${selectedFile}|${folder}`} page={page} pages={pages} viewActions={viewActions} onPage={choosePage} onSearch={() => setSearchOpen(true)} renderSync={renderSync} menu={menu} />
           {/* A page or widget whose code hasn't loaded yet (lib/later.js) shows Loading meanwhile, or why it can't (Later) */}
           <Later fallback={<Loading />}>
           {page === PAGE.SETTINGS ? (
