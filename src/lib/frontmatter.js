@@ -303,7 +303,13 @@ function titleHeading(text) {
 // under its title when the title is already shown above it (a Note widget's card). Unchanged when its title is a
 // `title` property or it has none
 export function withoutTitleHeading(text) {
+  const heading = titleHeadingSpan(text)
+  return heading ? text.slice(0, heading.start) + ' '.repeat(heading.end - heading.start) + text.slice(heading.end) : text
+}
+
+// Where the "# heading" `withoutTitleHeading` blanks out is: { start, end } of its line, or null
+export function titleHeadingSpan(text) {
   const title = frontMatter(text)?.props.find(p => p.key === 'title')?.value
   const heading = !(typeof title === 'string' && title.trim()) && titleHeading(text)
-  return heading ? text.slice(0, heading.start) + ' '.repeat(heading.end - heading.start) + text.slice(heading.end) : text
+  return heading ? { start: heading.start, end: heading.end } : null
 }

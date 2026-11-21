@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { detectType, parseNumber, sortedRows, cellPasses, tableRows, withCells, checkboxText, parseTables, serializeTables, withColumnType, withValueColor, columnValues, movedInOrder, reorderTableRows, undoneOrder, withTableSort, sortOf, headerKey } from './tables.js'
+import { detectType, parseNumber, sortedRows, cellPasses, tableRows, withCells, checkboxText, parseTables, serializeTables, withColumnType, withValueColor, columnValues, movedInOrder, reorderTableRows, undoneOrder, withTableSort, sortOf, headerKey, tableKeys } from './tables.js'
 
 const cells = texts => texts.map(text => ({ text, link: false }))
 
@@ -99,5 +99,12 @@ describe('reordering rows', () => {
     expect(reorderTableRows(moved, undoneOrder([2, 0, 1]))).toBe(raw)
     expect(reorderTableRows(raw, [0, 1])).toBe(raw)
     expect(reorderTableRows('not a table', [0])).toBe('not a table')
+  })
+})
+
+describe('tableKeys', () => {
+  it('tells tables with the same header apart, and names never run together', () => {
+    expect(tableKeys([['Title', 'Author'], null, ['Title', 'Author'], ['A']])).toEqual(['Title | Author', null, 'Title | Author #2', 'A'])
+    expect(tableKeys([['a | b'], ['a', 'b']])).toEqual(['a \\| b', 'a | b'])
   })
 })

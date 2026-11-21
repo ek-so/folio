@@ -116,7 +116,7 @@
   .editor-preview .row-grip { opacity: 0; transition: opacity 0.15s; }
   .editor-preview .row-grip:is([data-hover], :hover, :focus-within) { opacity: 1; }
 }
-.editor-preview th { background: var(--secondary); font-weight: 600; }
+.editor-preview th { background: var(--secondary); font-weight: 600; white-space: nowrap; } /* a column's name and its menu button stay on one line: the column widens for them */
 /* A column's menu (TableColumn) after the header's text; a number's cells aligned right; a table its filters leave empty says so, muted */
 .editor-preview .table-column { display: inline-flex; vertical-align: middle; margin-inline-start: var(--space-xs); font-weight: normal; }
 .editor-preview td.table-number { text-align: right; font-variant-numeric: tabular-nums; }

@@ -1,4 +1,5 @@
-import { useState, Suspense } from 'react'
+import { useState } from 'react'
+import Later from './Later.jsx'
 import { Plus, Trash } from '@phosphor-icons/react'
 import PageLayout from './PageLayout.jsx'
 import Surface from './Surface.jsx'
@@ -63,9 +64,9 @@ export default function ViewPage({ page, view, viewActions, widgets = [], error,
                 ? (
                   <WidgetContext.Provider key={w.id} value={{ name: w.name, onRename: canEdit ? () => setRenaming(w) : null, views: views.filter(v => v.id !== page), onMoveTo: canEdit ? viewId => onMoveWidget(w.id, viewId) : null }}>
                     {/* Its code loads after the first screen (lib/later.js): shapes like cards meanwhile */}
-                    <Suspense fallback={<Loading kind="cards" rows={3} />}>
+                    <Later fallback={<Loading kind="cards" rows={3} />}>
                       <type.Widget id={w.id} services={services} onRemove={() => setRemoving(w)} />
-                    </Suspense>
+                    </Later>
                   </WidgetContext.Provider>
                 )
                 : <UnknownWidget key={w.id} type={w.type} canEdit={canEdit} onRemove={() => setRemoving(w)} />

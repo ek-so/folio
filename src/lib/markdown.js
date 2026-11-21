@@ -209,8 +209,9 @@ const detailsDepth = raw => (raw.match(/<details[\s>]/gi) || []).length - (raw.m
 // A <details> accordion (as on GitHub: <summary>, then markdown after a blank
 // line, then </details>) is one block from its opening to its closing tag, so
 // the browser doesn't close it early. The front matter (properties) isn't
-// rendered: the preview shows it as badges.
-export function renderBlocks(source) {
+// rendered: the preview shows it as badges. `hidden`: { start, end } of a line blanked out (a title heading the card
+// shows above it): it doesn't count among the blank lines after a block.
+export function renderBlocks(source, hidden = null) {
   const markdown = blankFrontMatter(source)
   const tokens = marked.lexer(markdown)
   marked.walkTokens(tokens, addDates)
@@ -241,7 +242,15 @@ export function renderBlocks(source) {
   // More than one blank line written after a block shows as more room under it (`--gap-lines`, App.css)
   return emitted.map(({ start, end, part }, i) => {
     const next = emitted[i + 1]
-    const blank = next ? blankLines(markdown.slice(start, next.start)) : 0
+    let between = next ? markdown.slice(start, next.start) : ''
+    // A line left out (`hidden`: { start, end }, a title heading blanked out) isn't a blank line of the note's
+    // (with the blank line that set it apart: the lines around it read as one gap)
+    if (hidden && hidden.start >= start && hidden.end <= next?.start) {
+      const before = between.slice(0, hidden.start - start)
+      const after = between.slice(hidden.end - start + 1)
+      between = before + (/\n[ \t]*\n$/.test(before) ? after.replace(/^[ \t]*\n/, '') : after)
+    }
+    const blank = next ? blankLines(between) : 0
     return `<div data-src="${start}" data-len="${end - start}"${blank > 1 ? ` style="--gap-lines: ${Math.min(blank, 20)}"` : ''}>${part}</div>`
   }).join('')
 }
@@ -251,10 +260,12 @@ const blankLines = text => (/\n((?:[ \t]*\n)+)[ \t]*$/.exec(text)?.[1].split('\n
 
 // Spaces as written: in rendered text a run of two or more spaces, or spaces opening a line (after a line break), would
 // collapse into one or none; they become non-breaking spaces, so chords over lyrics and indents stay where they were
-// typed. `lineStart`: the text starts a line
+// typed. A run's last space stays a plain one, so a long line can still wrap there (a line's opening spaces, before any
+// text, all become non-breaking). `lineStart`: the text starts a line. MarkdownPreview turns them back into spaces when
+// copied
 export function keptSpaces(text, lineStart) {
-  const kept = text.replace(/ {2,}/g, run => '\u00a0'.repeat(run.length))
-  return lineStart ? kept.replace(/^ +/, run => '\u00a0'.repeat(run.length)) : kept
+  const kept = text.replace(/ {2,}/g, run => '\u00a0'.repeat(run.length - 1) + ' ')
+  return lineStart ? kept.replace(/^[ \u00a0]+/, run => '\u00a0'.repeat(run.length)) : kept
 }
 
 // A note's body (the front matter left out) as its top-level blocks' markdown, each without the line breaks after it

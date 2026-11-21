@@ -83,8 +83,21 @@ export const withColumnType = (settings, path, name, type) => withColumn(setting
 export const withValueColor = (settings, path, name, value, color) =>
   withColumn(settings, path, name, c => ({ ...c, colors: { ...c.colors, [value]: color } }))
 
-// A table of a note is told apart from the note's others by its header row: its column names
-export const headerKey = names => names.join(' | ')
+// A table of a note is told apart from the note's others by its header row: its column names (a `|` in one escaped, so
+// names never run together)
+export const headerKey = names => names.map(n => n.replace(/\|/g, '\\|')).join(' | ')
+
+// Each of a note's tables' keys (`headers`: each table's column names, null for one left out): its headerKey, and for a
+// second or later table with the same header ' #2', ' #3'…, so tables alike keep sorts of their own
+export function tableKeys(headers) {
+  const seen = {}
+  return headers.map(names => {
+    if (!names) return null
+    const key = headerKey(names)
+    seen[key] = (seen[key] ?? 0) + 1
+    return seen[key] > 1 ? `${key} #${seen[key]}` : key
+  })
+}
 
 // How a table (`header`: headerKey) is sorted: { col: a column's name, dir } (Sort in its column's menu), or null for
 // Manual, its rows in the note's order. A table whose header no longer has that column shows Manual

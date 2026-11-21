@@ -1,6 +1,6 @@
 import { useMemo, useEffect, useLayoutEffect, useRef, useState, forwardRef, useImperativeHandle } from 'react'
 import { safeHtml } from '../lib/sanitize.js'
-import { withoutTitleHeading } from '../lib/frontmatter.js'
+import { withoutTitleHeading, titleHeadingSpan } from '../lib/frontmatter.js'
 import { renderBlocks, keptSpaces, tapOffset, taskOffsets, resolveImage, linkSpans, splitImageAlt, imageSpans, withImageWidth, listsIn, moveListItem, moveBlock, firstWord } from '../lib/markdown.js'
 import { useRepoImages } from '../hooks/useRepoImages.js'
 import { linkSpots, openLink } from '../lib/previewLinks.js'
@@ -15,7 +15,7 @@ import ListGrip from './ListGrip.jsx'
 import ImageHandle from './ImageHandle.jsx'
 import TableColumn from './TableColumn.jsx'
 import TableCell from './TableCell.jsx'
-import { detectType, tableRows, withCells, sortedRows, cellPasses, columnValues, cellValues, checkboxText, movedInOrder, reorderTableRows, undoneOrder, headerKey, isFiltering } from '../lib/tables.js'
+import { detectType, tableRows, withCells, sortedRows, cellPasses, columnValues, cellValues, checkboxText, movedInOrder, reorderTableRows, undoneOrder, tableKeys, isFiltering } from '../lib/tables.js'
 import { toast } from 'sonner'
 import { useTablesContext } from '../hooks/useTables.js'
 import { DndContext, DragOverlay, closestCenter } from '@dnd-kit/core'
@@ -291,7 +291,7 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
   const linkEdits = useLinkEdits(content, onChange)
   const dateProps = useDateEdits(content, onChange)
   const [html, imagePaths, lists, blocks, tables] = useMemo(() => {
-    const sanitized = safeHtml(renderBlocks(hideTitle ? withoutTitleHeading(content) : content))
+    const sanitized = safeHtml(hideTitle ? renderBlocks(withoutTitleHeading(content), titleHeadingSpan(content)) : renderBlocks(content))
     const tpl = document.createElement('template')
     tpl.innerHTML = sanitized
     linkSpots(tpl.content, path, files, spans)
@@ -300,7 +300,6 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
       if (kind) block.dataset.diff = kind
     }
     breakLongWords(tpl.content)
-    keepSpaces(tpl.content)
     // Task list items: remove bullet, enable checkbox, record markdown offset
     for (const cb of tpl.content.querySelectorAll('input[type="checkbox"]')) {
       cb.closest('li')?.classList.add('task-item')
@@ -325,6 +324,7 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
     }
     const tables = tableColumns(tpl.content, content, picked)
     if (onChange) rowGrips(tpl.content, tables)
+    keepSpaces(tpl.content) // after the tables have read their cells' text: what's written back keeps plain spaces
     const lists = onChange ? listGrips(tpl.content, content) : []
     const blocks = onChange ? blockGrips(tpl.content) : []
     // Images: the width in their alt text ("photo|300") is applied and taken out of the alt; with `onChange`, each in
@@ -394,18 +394,20 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
   useEffect(() => setTableViews({}), [path]) // another note: no filters
 
   // Each table's sort, { col (its index), dir } or null for Manual (the note's order): saved per note and header row
+// (`tableKeys`: a second table with the same header has its own)
   // (`.folio/tables.json`), or, while that can't be saved, kept while the note is open
+  const keys = tableKeys(tables.map(data => data ? data.columns.map(c => c.name) : null))
   const sortsNow = tables.map((data, t) => {
     if (!data) return null
     if (!tableSettings.onSort) return tableViews[t]?.sort ?? null
-    const saved = tableSettings.sortOf(path, headerKey(data.columns.map(c => c.name)))
+    const saved = tableSettings.sortOf(path, keys[t])
     const col = saved ? data.columns.findIndex(c => c.name === saved.col) : -1
     return col < 0 ? null : { col, dir: saved.dir }
   })
   const sortsKey = JSON.stringify(sortsNow)
   const sorts = useMemo(() => sortsNow, [sortsKey, tables])
   const setSort = (t, sort) => tableSettings.onSort
-    ? tableSettings.onSort(path, headerKey(tables[t].columns.map(c => c.name)), sort && { col: tables[t].columns[sort.col].name, dir: sort.dir })
+    ? tableSettings.onSort(path, keys[t], sort && { col: tables[t].columns[sort.col].name, dir: sort.dir })
     : setView(t, v => ({ ...v, sort }))
   // A table's rows as shown: indexes in the note's order, sorted by its column
   const orderOf = t => {
@@ -440,6 +442,17 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
     resizes.observe(ref.current)
     return () => resizes.disconnect()
   }, [])
+  // What's copied from the preview has the spaces kept as written (`keepSpaces`: non-breaking) as plain spaces again
+  function copyPlainSpaces(e) {
+    const selection = window.getSelection()
+    if (!selection?.rangeCount || selection.isCollapsed) return
+    const box = document.createElement('div')
+    for (let i = 0; i < selection.rangeCount; i++) box.append(selection.getRangeAt(i).cloneContents())
+    const plain = s => s.replace(/\u00a0/g, ' ')
+    e.preventDefault()
+    e.clipboardData.setData('text/plain', plain(selection.toString()))
+    e.clipboardData.setData('text/html', plain(box.innerHTML.replace(/&nbsp;/g, ' ')))
+  }
   // With a mouse a row's grip shows while the row (or the grip) is hovered (`data-hover`, App.css)
   const hovered = useRef(null)
   function hoverRow(e) {
@@ -467,6 +480,7 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
   function dropRow(active, over, after) {
     const [, t, from] = String(active.id).split(':').map(Number)
     const to = Number(String(over.id).split(':')[2])
+    if (!tables[t]?.edit) return // the table changed meanwhile (a sync): its rows no longer line up with the note
     const order = movedInOrder(orderOf(t), from, to, after)
     if (order.every((r, i) => r === i)) return
     const { start, raw } = tables[t].edit
@@ -590,6 +604,7 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
         className={cn('editor-preview min-w-0 break-words leading-relaxed touch-manipulation [&_img]:max-w-full [&_img]:h-auto [&_img]:rounded-md', 'p-space text-base')}
         onClick={handleClick}
         onPointerOver={hoverRow}
+        onCopy={copyPlainSpaces}
         onPointerLeave={() => { hovered.current?.removeAttribute('data-hover'); hovered.current = null }}
         dangerouslySetInnerHTML={{ __html: withImages || '<p class="text-muted-foreground italic">Nothing to preview yet.</p>' }}
       />

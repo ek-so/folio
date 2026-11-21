@@ -203,7 +203,7 @@ describe('continueList', () => {
 
 describe('spaces as written', () => {
   it('keeps runs of spaces and a line\'s opening spaces', () => {
-    expect(keptSpaces('F          G', false)).toBe('F' + '\u00a0'.repeat(10) + 'G')
+    expect(keptSpaces('F          G', false)).toBe('F' + '\u00a0'.repeat(9) + ' G')
     expect(keptSpaces('  Am', true)).toBe('\u00a0\u00a0Am')
     expect(keptSpaces(' a b', false)).toBe(' a b')
   })
@@ -211,6 +211,10 @@ describe('spaces as written', () => {
     const html = renderBlocks('D5 C5\n\n\n\n**Verse 1**\n\nNext\n')
     expect(html).toContain('data-len="5" style="--gap-lines: 3"')
     expect(html.match(/--gap-lines/g)).toHaveLength(1)
+    // A blanked-out title line isn't a blank line of the note's
+    const text = 'Intro\n\n      \n\nBody\n' // '# Plan' blanked at 7..13
+    expect(renderBlocks(text, { start: 7, end: 13 })).not.toContain('--gap-lines')
+    expect(renderBlocks(text)).toContain('--gap-lines: 3')
   })
 })
 

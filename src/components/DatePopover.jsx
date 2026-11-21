@@ -1,4 +1,5 @@
-import { useState, useRef, Suspense } from 'react'
+import { useState, useRef } from 'react'
+import Later from './Later.jsx'
 import { flushSync } from 'react-dom'
 import { Plus, Trash } from '@phosphor-icons/react'
 import { Popover, PopoverTrigger, PopoverContent } from './ui/popover.jsx'
@@ -64,7 +65,7 @@ export default function DatePopover({ date, onPick, required, dayOnly, children 
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>{children}</PopoverTrigger>
       <PopoverContent {...own} data-badge-popover className="flex w-auto flex-col p-0" onCloseAutoFocus={e => e.preventDefault()}>
-        <Suspense fallback={null}>
+        <Later compact>
         <Calendar
           mode="single"
           selected={selected}
@@ -75,7 +76,7 @@ export default function DatePopover({ date, onPick, required, dayOnly, children 
             setOpen(false)
           }}
         />
-        </Suspense>
+        </Later>
         {hasDay && (time || keeps) && (
           <div className="px-space-sm pb-space-sm">
             <Button variant="ghost-destructive" className="w-full justify-start gap-space-sm px-3" onClick={removeDay}><Trash /> Remove date</Button>

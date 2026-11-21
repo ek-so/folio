@@ -46,6 +46,7 @@ const MarkdownEditor = forwardRef(function MarkdownEditor({ content, onChange, o
   const [band, setBand] = useState(null) // { top, height } of the cursor's line, in the text's own coordinates
   const [synced, setSynced] = useState(content) // the text `cursor` belongs to
   const follow = (at, text) => { setCursor(at); setSynced(text) }
+  const typing = useRef(null) // { from, to }: the text before and after the latest typing, until the note has caught up
   const boxRef = useRef() // the editor's box: its width decides how lines wrap
   const [scrollTop, setScrollTop] = useState(0)
   const [dismissed, setDismissed] = useState(null) // the `[[` whose suggestions Escape (or a tap outside) closed
@@ -80,6 +81,7 @@ const MarkdownEditor = forwardRef(function MarkdownEditor({ content, onChange, o
   // selection has been put back (the frame after)
   useEffect(() => {
     if (synced === content || cursor === null) return
+    if (typing.current && synced === typing.current.to && content === typing.current.from) return // typed: the note catches up
     let id = requestAnimationFrame(() => { id = requestAnimationFrame(() => follow(own.current?.selectionEnd ?? 0, content)) })
     return () => cancelAnimationFrame(id)
   }, [synced, content])
@@ -111,6 +113,7 @@ const MarkdownEditor = forwardRef(function MarkdownEditor({ content, onChange, o
   function handleChange(e) {
     const next = e.target.value
     if (!locked.length || lockedProps(next, locked) === lockedProps(content, locked)) {
+      typing.current = { from: content, to: next }
       follow(e.target.selectionEnd, next) // with the text, so the band never shows the old cursor's offset in the new text
       return onChange(next)
     }

@@ -1,4 +1,5 @@
-import { useState, useEffect, useMemo, useRef, Suspense } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
+import Later from './components/Later.jsx'
 import Auth from './components/Auth.jsx'
 import RepoSetup from './components/RepoSetup.jsx'
 import FileBrowser from './components/FileBrowser.jsx'
@@ -837,8 +838,8 @@ export default function App() {
           <NavRail page={page} pages={pages} hrefOf={id => urlForPage(BASE, id, currentView(id, trailOf(id)))} viewActions={viewActions} onPage={choosePage} onSearch={() => setSearchOpen(true)} renderSync={renderSync} menu={menu} />
           <main ref={mainRef} className="flex flex-col flex-1 min-w-0 min-h-0">
           <TopBar host={mainRef} resetKey={`${page}|${selectedFile}|${folder}`} page={page} pages={pages} viewActions={viewActions} onPage={choosePage} onSearch={() => setSearchOpen(true)} renderSync={renderSync} menu={menu} />
-          {/* A page or widget whose code hasn't loaded yet (lib/later.js) shows Loading meanwhile */}
-          <Suspense fallback={<Loading />}>
+          {/* A page or widget whose code hasn't loaded yet (lib/later.js) shows Loading meanwhile, or why it can't (Later) */}
+          <Later fallback={<Loading />}>
           {page === PAGE.SETTINGS ? (
             <Settings login={auth.user.login} repo={auth.repo} theme={theme} onTheme={setTheme} emojiNames={icons.canEdit ? { count: emojiNames.length, onMove: moveEmojisToIcons } : null} />
           ) : page === PAGE.DOCS ? (
@@ -932,7 +933,7 @@ export default function App() {
           )}
             </div>
           </>)}
-          </Suspense>
+          </Later>
           </main>
           </div>
         </PullToRefresh>
@@ -1050,13 +1051,13 @@ export default function App() {
         {adding && (() => {
           const { Setup } = widgetType(adding.type)
           return (
-            <Suspense fallback={null}>
+            <Later compact>
               <Setup
                 services={widgetServices}
                 onCreate={change => { addWidgetTo(adding.viewId, adding.type, change); setAdding(null) }}
                 onClose={() => setAdding(null)}
               />
-            </Suspense>
+            </Later>
           )
         })()}
 

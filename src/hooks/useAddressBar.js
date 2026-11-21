@@ -11,14 +11,14 @@ const writeDepth = n => { try { sessionStorage.setItem(DEPTH_KEY, String(n)) } c
 // what's left of it (`known()`: { files, folders } as they are now), through `setPage` and `setTrails`. `base`: the
 // app's base path. Each entry the app makes carries its step (`history.state.step`, 0 for the first), and the tab
 // remembers how many steps there are, so the title bar's Back and Forward know when there's one to go to (`canBack`,
-// `canForward`) and never leave the app. Returns { replaceNext() (the next change of address replaces the history entry
+// `canForward`) and never leave the app (on an older entry without a step both stay on). Returns { replaceNext() (the next change of address replaces the history entry
 // instead: a rename or delete followed), back(), forward(), canBack, canForward }.
 export function useAddressBar(base, url, known, setPage, setTrails) {
   const started = useRef(false) // false until the first address is set (replaced, not pushed)
   const replacing = useRef(false)
   const knownRef = useRef(known)
   knownRef.current = known
-  const [step, setStep] = useState(() => history.state?.step ?? 0)
+  const [step, setStep] = useState(() => history.state?.step ?? 0) // null: an entry made before steps were kept (not known)
   const [depth, setDepth] = useState(() => Math.max(readDepth(), history.state?.step ?? 0))
 
   useEffect(() => {
@@ -26,7 +26,7 @@ export function useAddressBar(base, url, known, setPage, setTrails) {
     const here = window.location.pathname + window.location.search
     if (here !== url) {
       if (started.current && !replacing.current) {
-        const next = (history.state?.step ?? 0) + 1
+        const next = (history.state?.step ?? step ?? 0) + 1
         history.pushState({ step: next }, '', url)
         setStep(next)
         setDepth(next) // what was ahead is gone
@@ -39,7 +39,7 @@ export function useAddressBar(base, url, known, setPage, setTrails) {
 
   useEffect(() => {
     const onPop = () => {
-      setStep(history.state?.step ?? 0)
+      setStep(history.state?.step ?? null)
       const found = pageForUrl(base, window.location.pathname, window.location.search)
       if (!found) return
       window.dispatchEvent(new Event('folio:flush')) // typing in an open note first
@@ -56,9 +56,9 @@ export function useAddressBar(base, url, known, setPage, setTrails) {
 
   return {
     replaceNext: () => { replacing.current = true },
-    back: () => { if (step > 0) history.back() },
-    forward: () => { if (step < depth) history.forward() },
-    canBack: step > 0,
-    canForward: step < depth,
+    back: () => { if (step === null || step > 0) history.back() },
+    forward: () => { if (step === null || step < depth) history.forward() },
+    canBack: step === null || step > 0, // not known (an older entry): left on
+    canForward: step === null || step < depth,
   }
 }
