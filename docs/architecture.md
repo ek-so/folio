@@ -43,7 +43,7 @@ App flow: **Auth → RepoSetup → FileBrowser / Editor / FileViewer**. `App.jsx
 - `useFileHistory` — Version history's versions of a note on GitHub: the cached list at once, the latest 20 (`commitPage` with its path), `more()`, `status`, `busy`, `retry()`, `textOf(version)`, `textBefore(sha)`.
 - `useRevert` — Recent updates' Undo: `revert(sha)` reads each file before and after the commit from GitHub (`commitParent`, `fileOn`), then records `reverted` through `update`.
 - `useEmojis` — the emoji picker's whole list (`unicode-emoji-json`, its own chunk, loaded once), without what the device can't draw.
-- `useAddressBar` — the browser's address follows the main page and its view (a history entry each); Back / Forward show what it names (`replaceNext()` after a rename or delete). `useExpandedFolders` — the title bar tree's open folders, kept for the session.
+- `useAddressBar` — the browser's address follows the main page and its view (a history entry each); Back / Forward show what it names (`replaceNext()` after a rename or delete).
 - `useSearchShortcut` — ⌘K / Ctrl+K anywhere opens Search (App, once signed in to a repo), never over an open dialog or sheet.
 - `useGraphCanvas` — the Graph page's canvas: d3-force layout, drawing with the theme's tokens, drag, pan, zoom, tap to open.
 - `useDragSensors` — how every drag starts (mouse after 5px, touch after holding 0.25s): board, planner, a note's lists, Edit list.
