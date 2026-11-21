@@ -282,10 +282,10 @@ export default function Planner({ id, services, onRemove }) {
         {/* The selected day's cards in a tray like a board's column, its title with + (New task on that day): its first cards and Show N more; a day without any is empty */}
         <Tray>
           {sectionTitle(shortTitle(selected, today), selected)}
-          {/* All its cards are one height (the tallest's: a row each, 1fr); Show more on a row of its own, as tall as it needs, one column wide (all of it on phones) */}
+          {/* With more than one column all its cards are one height (the tallest's: a row each, 1fr), in one (a phone) each its own; Show more on a row of its own, as tall as it needs, one column wide (all of it on phones) */}
           {list.length === 0 && <EmptyBox emoji={SORTED.emoji}>{SORTED.text}</EmptyBox>}
           {list.length > 0 && (
-            <div ref={setGrid} style={{ gridTemplateRows: `repeat(${Math.ceil(visible.size / columns)}, 1fr)` }} className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,18rem),1fr))] gap-space-sm">
+            <div ref={setGrid} style={columns > 1 ? { gridTemplateRows: `repeat(${Math.ceil(visible.size / columns)}, 1fr)` } : undefined} className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,18rem),1fr))] gap-space-sm">
               <SortableContext items={paths.filter(p => visible.has(p)).map(dayCardId)} strategy={rectSortingStrategy}>
                 {list.filter(c => visible.has(c.path)).map(({ path, overdue, undated }) => (
                   <PlannerCard key={path} {...cardProps(path)} menu={cardMenu(path)} overdue={overdue} dashed={overdue || undated} locked={services.locked(path)} onOpen={openFile} onOpenFolder={openFolder} />
