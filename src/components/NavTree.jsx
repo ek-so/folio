@@ -104,11 +104,21 @@ const holding = (nodes, path) => nodes.flatMap(n => {
   return inner.length || n.children?.some(c => c.path === path) ? [n.key, ...inner] : []
 })
 
-// The popover's scroll box, on opening: scrolls the open item (`data-current`, see TreeRow) to its middle.
-// Positions come from offsetTop, so the popover's opening animation doesn't skew them
+// The popover's scroll box, on opening: scrolls the open item (`data-current`, see TreeRow) to its middle. The box only
+// gets its height once the popover is placed (its max height is the room Radix measures), so it scrolls again as the box
+// settles, for the first moments only (a folder expanded later must not pull the view back). Positions come from
+// offsetTop, so the popover's opening animation doesn't skew them
+const SETTLE_MS = 400
 const showCurrent = box => {
-  const row = box?.querySelector('[data-current]')
-  if (row) box.scrollTop = row.offsetTop - (box.clientHeight - row.offsetHeight) / 2
+  if (!box) return
+  const scroll = () => {
+    const row = box.querySelector('[data-current]')
+    if (row) box.scrollTop = row.offsetTop - (box.clientHeight - row.offsetHeight) / 2
+  }
+  scroll()
+  const resizes = new ResizeObserver(scroll)
+  resizes.observe(box)
+  setTimeout(() => resizes.disconnect(), SETTLE_MS)
 }
 
 // A view's tree in the popover, the nodes holding the open note expanded
