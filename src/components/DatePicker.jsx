@@ -72,9 +72,10 @@ export default function DatePicker({ date, onPick, required, dayOnly, reminder, 
     {open && (
       <BottomSheet title={title} onClose={() => { saveTime(); setOpen(false) }} onOpenAutoFocus={e => e.preventDefault()}>
         <div {...own} data-badge-popover className="-mx-space-xs flex flex-col">
-          <div className="flex justify-center">
+          <div className="px-space-xs">
             <Later compact>
               <Calendar
+                fill
                 mode="single"
                 selected={selected}
                 defaultMonth={selected}

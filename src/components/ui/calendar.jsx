@@ -1,6 +1,7 @@
 // shadcn's Calendar (`npx shadcn add calendar`), its icons Phosphor's (the project's icon library) and `cn` the project's,
 // and its look the app's: no fill of its own (it sits on the popover's), rounded-sm, the secondary fill for today and
 // ranges (the theme's accent is its primary green), a 1px focus ring, the 8px popover padding. Weeks start on Monday.
+// `fill`: as wide as its place (a sheet), the days' cells sharing the width, each as tall as a cell (40px), not square.
 import * as React from "react"
 import { cn } from "@/lib/utils"
 import { CaretDown as ChevronDownIcon, CaretLeft as ChevronLeftIcon, CaretRight as ChevronRightIcon } from "@phosphor-icons/react"
@@ -16,6 +17,7 @@ function Calendar({
   buttonVariant = "ghost",
   formatters,
   components,
+  fill,
   ...props
 }) {
   const defaultClassNames = getDefaultClassNames()
@@ -26,6 +28,7 @@ function Calendar({
       showOutsideDays={showOutsideDays}
       className={cn(
         "group/calendar p-space-sm [--cell-size:--spacing(8)]",
+        fill && "calendar-fill w-full p-0 [--cell-size:var(--spacing-control)]",
         String.raw`rtl:**:[.rdp-button\_next>svg]:rotate-180`,
         String.raw`rtl:**:[.rdp-button\_previous>svg]:rotate-180`,
         className
@@ -37,7 +40,7 @@ function Calendar({
         ...formatters,
       }}
       classNames={{
-        root: cn("w-fit", defaultClassNames.root),
+        root: cn(fill ? "w-full" : "w-fit", defaultClassNames.root),
         months: cn(
           "relative flex flex-col gap-4 md:flex-row",
           defaultClassNames.months
@@ -96,7 +99,7 @@ function Calendar({
           defaultClassNames.week_number
         ),
         day: cn(
-          "group/day relative aspect-square h-full w-full p-0 text-center select-none [&:last-child[data-selected=true]_button]:rounded-r-sm",
+          "group/day relative aspect-square h-full w-full p-0 text-center select-none [&:last-child[data-selected=true]_button]:rounded-r-sm group-[.calendar-fill]/calendar:aspect-auto group-[.calendar-fill]/calendar:h-(--cell-size)",
           props.showWeekNumber
             ? "[&:nth-child(2)[data-selected=true]_button]:rounded-l-sm"
             : "[&:first-child[data-selected=true]_button]:rounded-l-sm",
@@ -200,7 +203,7 @@ function CalendarDayButton({
       data-range-end={modifiers.range_end}
       data-range-middle={modifiers.range_middle}
       className={cn(
-        "flex aspect-square size-auto w-full min-w-(--cell-size) flex-col gap-1 leading-none font-normal group-data-[focused=true]/day:relative group-data-[focused=true]/day:z-10 group-data-[focused=true]/day:ring-1 group-data-[focused=true]/day:ring-ring data-[range-end=true]:rounded-sm data-[range-end=true]:rounded-r-sm data-[range-end=true]:bg-primary data-[range-end=true]:text-primary-foreground data-[range-middle=true]:rounded-none data-[range-middle=true]:bg-secondary data-[range-middle=true]:text-foreground data-[range-start=true]:rounded-sm data-[range-start=true]:rounded-l-sm data-[range-start=true]:bg-primary data-[range-start=true]:text-primary-foreground data-[selected-single=true]:bg-primary data-[selected-single=true]:text-primary-foreground [&>span]:text-xs [&>span]:opacity-70",
+        "flex aspect-square size-auto w-full min-w-(--cell-size) group-[.calendar-fill]/calendar:aspect-auto group-[.calendar-fill]/calendar:h-(--cell-size) flex-col gap-1 leading-none font-normal group-data-[focused=true]/day:relative group-data-[focused=true]/day:z-10 group-data-[focused=true]/day:ring-1 group-data-[focused=true]/day:ring-ring data-[range-end=true]:rounded-sm data-[range-end=true]:rounded-r-sm data-[range-end=true]:bg-primary data-[range-end=true]:text-primary-foreground data-[range-middle=true]:rounded-none data-[range-middle=true]:bg-secondary data-[range-middle=true]:text-foreground data-[range-start=true]:rounded-sm data-[range-start=true]:rounded-l-sm data-[range-start=true]:bg-primary data-[range-start=true]:text-primary-foreground data-[selected-single=true]:bg-primary data-[selected-single=true]:text-primary-foreground [&>span]:text-xs [&>span]:opacity-70",
         defaultClassNames.day,
         className
       )}
