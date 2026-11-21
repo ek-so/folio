@@ -69,6 +69,9 @@ import { plural } from './lib/plural.js'
 import { useNoteExport } from './hooks/useNoteExport.js'
 import { useRevert } from './hooks/useRevert.js'
 import { useTables, TablesContext } from './hooks/useTables.js'
+import { useProfile, ProfileContext } from './hooks/useProfile.js'
+import { useReminderAlerts } from './hooks/useReminderAlerts.js'
+import ProfileSheet from './components/ProfileSheet.jsx'
 import { useVisualViewport } from './hooks/useKeyboardInset.js'
 import { later } from './lib/later.js'
 
@@ -99,6 +102,9 @@ export default function App() {
   const locks = useLocks(config) // files locked against editing (lib/locks.js)
   const icons = useIcons(config) // the emoji icons of files and folders (lib/icons.js)
   const tables = useTables(config) // the types picked for notes' table columns (lib/tables.js)
+  const profile = useProfile(config) // the reminder email (lib/profile.js)
+  const [profileAt, setProfileAt] = useState(null) // the Profile sheet: 'main', or 'email' (opened at its email, from a date's reminder)
+  const profileInfo = useMemo(() => ({ email: profile.email, onEditEmail: profile.canEdit ? () => setProfileAt('email') : null }), [profile.email, profile.canEdit])
   const tablesInfo = useMemo(() => ({
     of: tables.of,
     sortOf: tables.sortOf,
@@ -735,6 +741,9 @@ export default function App() {
     setTrails(startTrails(pages.map(p => p.id)))
   }
 
+  // Reminders set on dates, shown while Folio is open (a notification, else a toast); a tap opens the note
+  useReminderAlerts(links.notes, path => setSelectedFile(path))
+
   if (!auth.ready) {
     return (
       <div className="flex items-center justify-center h-full bg-background">
@@ -775,7 +784,7 @@ export default function App() {
   }
   const menu = {
     brokenCount: links.index.broken.length,
-    onSignOut: () => setConfirmSignOut(true),
+    onProfile: () => setProfileAt('main'),
   }
   const renderSync = (compact, bar) => (
     <SyncButton
@@ -806,6 +815,7 @@ export default function App() {
     <LinksContext.Provider value={linkInfo}>
       <IconsContext.Provider value={iconsInfo}>
       <TablesContext.Provider value={tablesInfo}>
+      <ProfileContext.Provider value={profileInfo}>
       <ItemActionsContext.Provider value={itemActions}>
       <NavContext.Provider value={{
         listDir: dir => listDir(shown, dir, repo.changed),
@@ -982,6 +992,16 @@ export default function App() {
           />
         )}
 
+        {profileAt && (
+          <ProfileSheet
+            key={profileAt}
+            login={auth.user.login} email={profile.email} start={profileAt}
+            onSaveEmail={profile.canEdit ? text => update(profile.setEmail(text)) : null}
+            onSignOut={() => { setProfileAt(null); setConfirmSignOut(true) }}
+            onClose={() => setProfileAt(null)}
+          />
+        )}
+
         {confirmSignOut && (
           <ConfirmModal
             title="Sign out?"
@@ -1089,6 +1109,7 @@ export default function App() {
       </TooltipProvider>
       </NavContext.Provider>
       </ItemActionsContext.Provider>
+      </ProfileContext.Provider>
       </TablesContext.Provider>
       </IconsContext.Provider>
     </LinksContext.Provider>

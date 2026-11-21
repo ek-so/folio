@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { CaretDown, Check, PencilSimple, EyeSlash } from '@phosphor-icons/react'
 import { EmptyMessage, EMPTY } from './EmptyState.jsx'
 import { cn, own } from '@/lib/utils'
-import { reminderKey, isReminderKey, reminderValue } from '@/lib/reminders.js'
+import { reminderKey, isReminderKey, parseReminder, reminderText } from '@/lib/reminders.js'
 import { PLACEHOLDER } from './ui/placeholder.jsx'
 import { Badge } from './ui/badge.jsx'
 import { Input } from './ui/input.jsx'
@@ -145,11 +145,11 @@ function isDateProp(prop, options, dateKeys) {
 function DateValue({ prop, reminder, withReminder, onChange, emptyLabel, late }) {
   const date = valueDate(prop.value)
   const pick = picked => onChange(prop.key, picked ? formatDate(picked) : '')
-  const reminded = { value: reminderValue(reminder), onChange: value => onChange(reminderKey(prop.key), value || null) } // None takes it out
+  const reminded = { value: parseReminder(reminder), onChange: next => onChange(reminderKey(prop.key), reminderText(next)) } // None takes it out
   return (
     <DateField
       label={date ? (late && daysAgo(date)) || dateLabel(date) : emptyLabel} date={date} onPick={onChange && pick}
-      reminder={!withReminder ? undefined : onChange ? reminded : reminded.value ? reminded : undefined} title={prop.key}
+      reminder={!withReminder ? undefined : onChange ? reminded : reminded.value.offset ? reminded : undefined} title={prop.key}
       tone={late ? 'var(--destructive)' : undefined}
       className={cn(!date && PLACEHOLDER)} {...(onChange ? own : {})}
     />

@@ -25,13 +25,13 @@ export default DateBadge
 
 // A date badge (`inline`: in a line of text) that, with `onPick(date)` (DatePicker's), opens the date picker to change
 // its day and time, add either or take either out; one in a line of text can't be emptied (`required`: its last part
-// stays). `dayOnly`: DatePicker's (a day and nothing else). `reminder` ({ value, onChange }): a date property's, chosen in
+// stays). `dayOnly`: DatePicker's (a day and nothing else). `reminder` ({ value: { offset, email }, onChange(next) }): a date property's, chosen in
 // the picker and shown as a bell. `title`: the picker's (the property's name). Without `onPick`, plain
 export function DateField({ label, date, onPick, dayOnly, reminder, title, className, ...props }) {
-  if (!onPick) return <DateBadge label={label} reminded={Boolean(reminder?.value)} className={className} {...props} />
+  if (!onPick) return <DateBadge label={label} reminded={Boolean(reminder?.value?.offset)} className={className} {...props} />
   return (
     <DatePicker date={date} onPick={onPick} required={props.inline} dayOnly={dayOnly} reminder={reminder} title={title}>
-      <DateBadge as="button" type="button" label={label} reminded={Boolean(reminder?.value)} hoverable className={cn('cursor-pointer outline-none focus-visible:ring-1 focus-visible:ring-ring', className)} {...props} />
+      <DateBadge as="button" type="button" label={label} reminded={Boolean(reminder?.value?.offset)} hoverable className={cn('cursor-pointer outline-none focus-visible:ring-1 focus-visible:ring-ring', className)} {...props} />
     </DatePicker>
   )
 }

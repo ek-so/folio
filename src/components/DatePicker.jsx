@@ -7,6 +7,10 @@ import { ListRow } from './ui/list-row.jsx'
 import { Radio } from './ui/checkbox.jsx'
 import { later } from '@/lib/later.js'
 import { REMINDERS } from '@/lib/reminders.js'
+import { askToNotify } from '../hooks/useReminderAlerts.js'
+import { useProfileContext } from '../hooks/useProfile.js'
+import { Switch } from './ui/switch.jsx'
+import { Placeholder } from './ui/placeholder.jsx'
 import { own } from '../lib/utils.js'
 import { Input } from './ui/input.jsx'
 import { Label } from './ui/label.jsx'
@@ -20,8 +24,10 @@ const pad = n => String(n).padStart(2, '0')
 // The one date picker, in a sheet (a centered dialog on a computer) opened by `children` (its trigger: a date badge, a
 // button), titled `title` ('Date'): whatever is written (a day, a time, both, or nothing), the Calendar, then Remove
 // date when there's a day, then the time: + Add time when there's none, else its field with a trash (Remove time),
-// then, with `reminder` ({ value, onChange(value) }: a date property's, lib/reminders.js), its Reminder: None, At the
-// time, 10 minutes, 1 hour or 1 day before, one of them chosen. `date`: { year, month, day, hour?, minute? }, { hour,
+// then, with `reminder` ({ value: { offset, email }, onChange(next) }: a date property's, lib/reminders.js), its
+// Reminder: None, At the time, 10 minutes, 1 hour or 1 day before, one of them chosen (choosing one asks the browser to
+// let Folio notify), and, once there's one, Also by email (a switch) with the profile's address under it and Edit (Add email
+// while there's none: it opens the Profile at its email; changing it there changes it for every reminder). `date`: { year, month, day, hour?, minute? }, { hour,
 // minute } (a time alone) or null (an empty date property); `onPick(date)` gets the new one: a picked day keeps the time;
 // a time, saved on Enter or when the field is left, keeps the day; taking out the day (Remove date, or the selected day
 // tapped again) keeps the time, and taking out the last of the two gives null. Each change is saved at once and the
@@ -31,6 +37,7 @@ const pad = n => String(n).padStart(2, '0')
 // anew, so a time isn't saved on every keystroke.)
 export default function DatePicker({ date, onPick, required, dayOnly, reminder, title = 'Date', children }) {
   const [open, setOpenState] = useState(false)
+  const profile = useProfileContext() // the reminder email
   const hasDay = date?.year !== undefined
   const selected = hasDay ? new Date(date.year, date.month - 1, date.day) : undefined
   const saved = date?.hour === undefined ? '' : `${pad(date.hour)}:${pad(date.minute)}`
@@ -116,10 +123,22 @@ export default function DatePicker({ date, onPick, required, dayOnly, reminder, 
             <ul role="radiogroup" aria-label="Reminder">
               {REMINDERS.map(([value, label]) => (
                 <li key={value || 'none'}>
-                  <ListRow icon={<Radio checked={reminder.value === value} />} title={label} onClick={() => reminder.onChange(value)} />
+                  <ListRow icon={<Radio checked={reminder.value.offset === value} />} title={label} onClick={() => { if (value) askToNotify(); reminder.onChange({ ...reminder.value, offset: value }) }} />
                 </li>
               ))}
             </ul>
+            {reminder.value.offset && (
+              <div className="flex flex-col gap-space-xs px-3 pt-space-sm">
+                <div className="flex items-center gap-space-sm">
+                  <Label htmlFor="date-picker-email" className="flex-1 font-normal">Also by email</Label>
+                  <Switch id="date-picker-email" checked={reminder.value.email} onCheckedChange={email => reminder.onChange({ ...reminder.value, email })} />
+                </div>
+                <div className="flex items-center gap-space-sm">
+                  <span className="min-w-0 flex-1 truncate text-sm text-muted-foreground">{profile.email || <Placeholder>No reminder email yet</Placeholder>}</span>
+                  <Button variant="secondary" size="md" disabled={!profile.onEditEmail} onClick={profile.onEditEmail}>{profile.email ? 'Edit' : 'Add email'}</Button>
+                </div>
+              </div>
+            )}
           </>}
         </div>
       </BottomSheet>
