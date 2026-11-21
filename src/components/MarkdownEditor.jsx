@@ -204,7 +204,7 @@ const MarkdownEditor = forwardRef(function MarkdownEditor({ content, onChange, o
       <Popover open={suggesting && !!at} onOpenChange={open => { if (!open) setDismissed(typed?.from ?? null) }}>
         {at && <PopoverAnchor className="absolute h-0 w-0" style={{ top: at.top, left: at.left }} />}
         <PopoverContent
-          className="w-72 rounded-md p-1" // as a menu: what it lists are choices
+          className="w-72 p-1" // as a menu: what it lists are choices
           updatePositionStrategy="always" // follows the caret as it moves
           onOpenAutoFocus={e => e.preventDefault()}
           onEscapeKeyDown={e => e.preventDefault()} // the textarea's Escape closes the list, keeping the editor

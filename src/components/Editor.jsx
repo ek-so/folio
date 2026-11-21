@@ -24,7 +24,7 @@ import { EmptyMessage } from './EmptyState.jsx'
 // `locked` (lib/locks.js): nothing in it can be changed (no ✏️, double tap, ticks, list dragging, badges' values or
 // links' edits); a lock icon takes ✏️'s place and unlocks it (`onToggleLock`, also Lock / Unlock in ⋯; none when the
 // locks can't be saved). Renaming, moving and duplicating stay. A double tap on a locked note says so in a popover where it
-// was tapped, with Unlock right there (the next double tap then edits). `editAt` ({ start, end }, a broken link's Open at
+// was tapped ("This note is locked", Unlock under it), with Unlock right there (the next double tap then edits). `editAt` ({ start, end }, a broken link's Open at
 // link): once the note is read, it opens in the editor with that text selected (a locked note: the preview at that
 // spot), then `onEditAtDone()`.
 export default function Editor({ linkedBy, onOpenLink, path, entry, files, notes, onEditNotes, tagColors, edited, onEdit, onNavigate, onOpenFile, columns, valueScope, backlinks, locked, onToggleLock, editAt, onEditAtDone }) {
@@ -146,10 +146,9 @@ export default function Editor({ linkedBy, onOpenLink, path, entry, files, notes
       )}
       <Popover open={Boolean(lockedTap && locked)} onOpenChange={open => { if (!open) setLockedTap(null) }}>
         {lockedTap && <PopoverAnchor className="fixed size-0" style={{ left: lockedTap.x, top: lockedTap.y }} />}
-        <PopoverContent side="top" className="flex w-auto items-center gap-space-sm">
-          <LockSimple className="size-4 shrink-0 text-muted-foreground" />
-          <span className="text-sm">This note is locked.</span>
-          <Button variant="secondary" disabled={!onToggleLock} onClick={() => { setLockedTap(null); onToggleLock() }}>
+        <PopoverContent side="top" className="flex w-auto flex-col items-start gap-space-sm" onOpenAutoFocus={e => e.preventDefault()}>
+          <span className="px-space-xs text-sm">This note is locked</span>
+          <Button size="md" variant="secondary" disabled={!onToggleLock} onClick={() => { setLockedTap(null); onToggleLock() }}>
             <LockOpen /> Unlock
           </Button>
         </PopoverContent>

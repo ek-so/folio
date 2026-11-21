@@ -11,7 +11,7 @@ shadcn/ui (new-york) · Tailwind CSS v4 · Radix UI · Phosphor icons (`@phospho
 - Add components with `npx shadcn@latest add <component>`. Build controls from `Button` and `Input`, not raw elements; don't override heights.
 - Merge classes with `cn()` from `@/lib/utils`. It knows the spacing tokens (`control*`, `space*`), so a later `h-auto` replaces an earlier `h-control`. Add any new spacing token to its list.
 - No custom CSS for what Tailwind covers. `src/App.css` only styles the generated markdown preview, with the same tokens.
-- All controls share one radius, `rounded-sm` (8px). Badges (`ui/badge.jsx`: properties, links, the symlink badge in a title bar) are pills (`rounded-full`).
+- All controls share one radius, `rounded-sm` (8px). Popovers and menus (`PopoverContent`, `DropdownMenuContent`, sub menus) are rounded a bit more, `rounded-lg` (12px), as cards are; never set their own. Badges (`ui/badge.jsx`: properties, links, the symlink badge in a title bar) are pills (`rounded-full`).
 
 ## Spacing tokens (`src/index.css`)
 `--space-lg` 24px, `--space` 16px, `--space-sm` 8px, `--space-xs` 4px. Classes: `p-space`, `gap-space-sm`, `px-space-xs`, `inset-x-space`… A spacing of 4, 8, 16 or 24px is always the token, never `p-1`, `gap-2`, `px-4` or `mt-6`; the in-between ones (6, 10, 12px) and the half steps have none and stay as they are.

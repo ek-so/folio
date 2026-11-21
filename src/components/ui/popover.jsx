@@ -25,7 +25,7 @@ const PopoverContent = React.forwardRef(function PopoverContent({ className, ali
         sideOffset={sideOffset}
         collisionPadding={collisionPadding}
         className={cn(
-          'z-50 w-64 min-w-44 max-w-[calc(100vw-2rem)] max-h-[var(--radix-popover-content-available-height)] overflow-y-auto overscroll-y-contain rounded-sm border border-border bg-popover p-space-sm text-popover-foreground shadow-md outline-none',
+          'z-50 w-64 min-w-44 max-w-[calc(100vw-2rem)] max-h-[var(--radix-popover-content-available-height)] overflow-y-auto overscroll-y-contain rounded-lg border border-border bg-popover p-space-sm text-popover-foreground shadow-md outline-none',
           'data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95',
           className,
         )}
