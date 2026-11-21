@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Gear, SignOut, LinkBreak, BookOpen, Images, ClockCounterClockwise } from '@phosphor-icons/react'
+import { List, Gear, SignOut, LinkBreak, BookOpen, Images, ClockCounterClockwise } from '@phosphor-icons/react'
 import { PAGE } from '../lib/pages.js'
 import ViewMenu, { ViewsTitle } from './ViewMenu.jsx'
 import PageTitle from './PageTitle.jsx'
@@ -11,7 +11,7 @@ import { Button } from './ui/button.jsx'
 import { ListRow } from './ui/list-row.jsx'
 import { Separator } from './ui/separator.jsx'
 
-// The phone navigation: the app's logo and name in an outlined button (on the top bar) opens a `BottomSheet` like every
+// The phone navigation: the app's logo and name, then ☰, in an outlined button (on the top bar) opens a `BottomSheet` like every
 // other prompt, titled with the same logo and name. First the views under their title (`ViewsTitle`: "Views" and its ⋯), each with its ⋯ (`ViewMenu`,
 // `viewActions`), then the other main pages (`pages`): File manager, Assets and Graph; then Recent updates, Broken
 // links (count), Documentation, Settings and Sign out. `current` is the open page, highlighted. Choosing a page closes it.
@@ -32,8 +32,8 @@ export default function AccountMenu({ current, pages, viewActions, onNavigate, b
   const separator = <Separator className="my-space-sm" />
   return (
     <>
-      <Button variant="outline" aria-label="Menu" aria-haspopup="dialog" className="px-3" onClick={() => setOpen(true)}>
-        <span className="flex items-center gap-space-sm"><AppLogo className="size-5 shrink-0" /><BrandName small /></span>
+      <Button variant="outline" aria-label="Menu" aria-haspopup="dialog" onClick={() => setOpen(true)}>
+        <AppLogo className="size-5 shrink-0" /><BrandName small /><List />
       </Button>
       {open && (
         <BottomSheet
