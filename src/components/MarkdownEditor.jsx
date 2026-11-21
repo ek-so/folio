@@ -21,6 +21,8 @@ const TEXT_LAYOUT = 'w-full h-full p-space font-mono text-base leading-relaxed w
 // what's typed after it (`typedLink`, `linkTargets`); ↑ ↓ choose, Enter (once something's typed or chosen; right after
 // `[[` it's a new line) or Tab or a tap puts in the link to it, from the
 // repo's root as Copy link makes it (`repoLink`), and Escape closes the list (not the editor).
+// The line the cursor is on (the whole line, over every row it wraps to) has a light accent band behind it (`bg-primary/10`),
+// found with an invisible copy laid out as the textarea, so where a double tap put the cursor, and where it is now, shows.
 // `locked`: property keys that can't be changed here (a planner's date and repeat: their badges change them): their lines
 // (`keyLines`) are greyed out, and typing that would change, add or remove one is refused, with a message.
 const NONE = []
@@ -36,6 +38,9 @@ const MarkdownEditor = forwardRef(function MarkdownEditor({ content, onChange, o
   const own = useRef() // the textarea, also given to `textareaRef`
   const markRef = useRef() // the typed `[[` in the measuring copy, where the suggestions open
   const [caret, setCaret] = useState(null) // null: not focused
+  const [cursor, setCursor] = useState(null) // where the cursor is (a selection's end), null while not focused
+  const lineRef = useRef() // the cursor's line in the measuring copy
+  const [band, setBand] = useState(null) // { top, height } of the cursor's line, in the text's own coordinates
   const [scrollTop, setScrollTop] = useState(0)
   const [dismissed, setDismissed] = useState(null) // the `[[` whose suggestions Escape (or a tap outside) closed
   const [active, setActive] = useState(0)
@@ -54,6 +59,19 @@ const MarkdownEditor = forwardRef(function MarkdownEditor({ content, onChange, o
     const mark = markRef.current
     setAt({ top: mark.offsetTop + mark.offsetHeight - scrollTop, left: mark.offsetLeft })
   }, [suggesting, typed?.from, content, scrollTop])
+
+  // The cursor's line: where it starts, and its text
+  const lineStart = cursor === null ? -1 : content.lastIndexOf('\n', cursor - 1) + 1
+  const lineEnd = cursor === null ? -1 : (i => i === -1 ? content.length : i)(content.indexOf('\n', cursor))
+  useLayoutEffect(() => {
+    const line = lineRef.current
+    if (!line) return setBand(null)
+    const measure = () => setBand({ top: line.offsetTop, height: line.offsetHeight }) // a block as wide as the text: whole rows
+    measure()
+    const resizes = new ResizeObserver(measure) // the width changes how the line wraps
+    resizes.observe(line.parentElement)
+    return () => resizes.disconnect()
+  }, [lineStart, lineEnd, content])
 
   function setRef(el) {
     own.current = el
@@ -119,6 +137,13 @@ const MarkdownEditor = forwardRef(function MarkdownEditor({ content, onChange, o
   return (
     // data-no-pull: drags here scroll, never refresh
     <div className="relative flex-1 min-h-0 bg-card" data-no-pull>
+      {band && <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bg-primary/10" style={{ top: band.top - scrollTop, height: band.height }} />}
+      {cursor !== null && (
+        // A copy of the text up to the cursor's line and that line, laid out as the textarea's, to find where it is
+        <div aria-hidden="true" className={cn(TEXT_LAYOUT, 'invisible absolute inset-0 overflow-hidden m-0')}>
+          {content.slice(0, lineStart)}<span ref={lineRef} className="inline-block w-full align-top">{content.slice(lineStart, lineEnd) || '\u200b'}</span>
+        </div>
+      )}
       <pre
         ref={highlightRef}
         aria-hidden="true"
@@ -140,9 +165,11 @@ const MarkdownEditor = forwardRef(function MarkdownEditor({ content, onChange, o
           const { selectionStart, selectionEnd } = e.currentTarget
           selection.current = [selectionStart, selectionEnd]
           setCaret(selectionStart === selectionEnd ? selectionStart : null)
+          setCursor(selectionEnd)
         }}
         onScroll={e => { highlightRef.current.scrollTop = e.currentTarget.scrollTop; setScrollTop(e.currentTarget.scrollTop) }}
-        onBlur={() => { setCaret(null); onDone() }}
+        onFocus={e => setCursor(e.currentTarget.selectionEnd)}
+        onBlur={() => { setCaret(null); setCursor(null); onDone() }}
         onKeyDown={handleKeyDown}
         spellCheck="true"
         autoCorrect="on"
