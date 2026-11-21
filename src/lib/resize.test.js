@@ -10,8 +10,8 @@ describe('clampSize', () => {
   it('falls back to the default when nothing valid is saved', () => {
     expect(clampSize(null, RAIL_WIDTH)).toBe(240)
     expect(clampSize('abc', RAIL_WIDTH)).toBe(240)
-    expect(clampSize(449, NOTE_HEIGHT)).toBe(440)
-    expect(clampSize(451, NOTE_HEIGHT)).toBe(460)
-    expect(clampSize(5, NOTE_HEIGHT)).toBe(120)
+    expect(clampSize(424, NOTE_HEIGHT)).toBe(400)
+    expect(clampSize(426, NOTE_HEIGHT)).toBe(450)
+    expect(clampSize(5, NOTE_HEIGHT)).toBe(100)
   })
 })
