@@ -104,6 +104,8 @@ export default function App() {
   const tables = useTables(config) // the types picked for notes' table columns (lib/tables.js)
   const profile = useProfile(config) // the reminder email (lib/profile.js)
   const [profileAt, setProfileAt] = useState(null) // the Profile sheet: 'main', or 'email' (opened at its email, from a date's reminder)
+  const [profileFrom, setProfileFrom] = useState(null) // 'menu': opened from the phone's menu, its ← back to it
+  const [menuOpen, setMenuOpen] = useState(false) // the phone's menu sheet (AccountMenu)
   const profileInfo = useMemo(() => ({ email: profile.email, onEditEmail: profile.canEdit ? () => setProfileAt('email') : null }), [profile.email, profile.canEdit])
   const tablesInfo = useMemo(() => ({
     of: tables.of,
@@ -784,7 +786,9 @@ export default function App() {
   }
   const menu = {
     brokenCount: links.index.broken.length,
-    onProfile: () => setProfileAt('main'),
+    onProfile: from => { setProfileFrom(from ?? null); setProfileAt('main') },
+    open: menuOpen,
+    onOpenChange: setMenuOpen,
   }
   const renderSync = (compact, bar) => (
     <SyncButton
@@ -999,6 +1003,7 @@ export default function App() {
             repo={auth.repo} repos={auth.repos} syncing={repo.syncing} onSwitchRepo={switchRepo}
             onSaveEmail={profile.canEdit ? text => update(profile.setEmail(text)) : null}
             onSignOut={() => { setProfileAt(null); setConfirmSignOut(true) }}
+            onBack={profileFrom === 'menu' ? () => { setProfileAt(null); setMenuOpen(true) } : undefined}
             onClose={() => setProfileAt(null)}
           />
         )}

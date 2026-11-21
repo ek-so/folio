@@ -116,7 +116,7 @@ export function NavRail({ page, pages, hrefOf, viewActions, onPage, onSearch, re
       <Button variant="ghost" tooltip={hint('Settings')} tooltipSide="right" aria-current={page === PAGE.SETTINGS ? 'page' : undefined} className={item(PAGE.SETTINGS)} onClick={() => onPage(PAGE.SETTINGS)}>
         <Gear /> {label('Settings')}
       </Button>
-      <Button variant="ghost" tooltip={hint('Profile')} tooltipSide="right" className={cn('justify-start gap-3 font-normal', collapsed && 'size-control justify-center px-0')} onClick={menu.onProfile}>
+      <Button variant="ghost" tooltip={hint('Profile')} tooltipSide="right" className={cn('justify-start gap-3 font-normal', collapsed && 'size-control justify-center px-0')} onClick={() => menu.onProfile()}>
         <UserCircle /> {label('Profile')}
       </Button>
       {!collapsed && <ResizeHandle label="Resize menu" size={width} limits={RAIL_WIDTH} onResize={resize} className="inset-y-space" />}

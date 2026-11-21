@@ -17,8 +17,9 @@ import { cleanEmail } from '../lib/profile.js'
 // `onSaveEmail(text)` (null while the profile can't be saved): '' takes the address out. The repository (`repo`) it's
 // signed in to, as a row that steps (←) to the repos used on this device (`repos`, the open one chosen; another one opens
 // the app there, `onSwitchRepo(full)`), Switch to another repository… (its owner/repo field, a step of its own) and Open
-// on GitHub, as File manager's root menu (RepoMenu) has them; switching waits while a sync runs (`syncing`).
-export default function ProfileSheet({ login, email, repo, repos = [], syncing, onSwitchRepo, onSaveEmail, onSignOut, start = 'main', onClose }) {
+// on GitHub, as File manager's root menu (RepoMenu) has them; switching waits while a sync runs (`syncing`). `onBack`: its
+// ← back to the sheet it was opened from (the phone's menu); none from the rail.
+export default function ProfileSheet({ login, email, repo, repos = [], syncing, onSwitchRepo, onSaveEmail, onSignOut, start = 'main', onBack, onClose }) {
   const inputRef = useRef()
   const [step, setStep] = useState(start)
   const [typed, setTyped] = useState(email)
@@ -88,7 +89,7 @@ export default function ProfileSheet({ login, email, repo, repos = [], syncing, 
   }
 
   return (
-    <BottomSheet title="Profile" onClose={onClose} onOpenAutoFocus={e => e.preventDefault()}>
+    <BottomSheet title="Profile" onBack={onBack} onClose={onClose} onOpenAutoFocus={e => e.preventDefault()}>
       <ul className="-mx-space-xs">
         <li><ListRow icon={<GithubLogo />} title={login} description="Signed in with GitHub" disabled /></li>
         <li><ListRow icon={<BookBookmark />} title={<span className="font-mono text-sm">{repo}</span>} description="Repository" onClick={() => setStep('repo')} trailing={<CaretRight className="mr-space-xs size-4 text-muted-foreground" />} /></li>
