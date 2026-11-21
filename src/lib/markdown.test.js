@@ -204,8 +204,9 @@ describe('continueList', () => {
 describe('list gaps', () => {
   it('marks only the items a blank line follows', () => {
     const html = renderBlocks('- a\n- b\n\n\n- c\n- d\n')
-    expect(html.match(/<li class="gap-after">/g)).toHaveLength(1)
-    expect(html).toContain('<li class="gap-after"><p>b</p>')
+    expect(html.match(/<li class="gap-after"/g)).toHaveLength(1)
+    expect(html).toContain('<li class="gap-after" style="--gap-lines: 2"><p>b</p>')
+    expect(renderBlocks('- a\n\n- b\n')).toContain('--gap-lines: 1"')
     expect(renderBlocks('- a\n- b\n')).not.toContain('gap-after')
   })
 })

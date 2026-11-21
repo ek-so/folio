@@ -84,12 +84,14 @@ marked.use({ useNewRenderer: true, renderer: {
   html(token) { return token.tokens ? this.parser.parse(token.tokens, false) : token.text },
 } })
 
-// A blank line written between two list items shows as a gap there (`gap-after`, App.css), and only there: the rest of
-// the list keeps its items close, however loose the list is
+// Blank lines written between two list items show as a gap there (`gap-after`, App.css), and only there, as tall as how
+// many there are (`--gap-lines`: the first a paragraph's gap, each more a line): the rest of the list keeps its items
+// close, however loose the list is
 marked.use({ useNewRenderer: true, renderer: {
   listitem(item) {
     const html = marked.Renderer.prototype.listitem.call(this, item)
-    return /\n[ \t]*\n\s*$/.test(item.raw) ? html.replace(/^<li/, '<li class="gap-after"') : html
+    const blank = /\n((?:[ \t]*\n)+)\s*$/.exec(item.raw)?.[1].split('\n').length - 1
+    return blank ? html.replace(/^<li/, `<li class="gap-after" style="--gap-lines: ${Math.min(blank, 20)}"`) : html
   },
 } })
 
