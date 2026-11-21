@@ -115,13 +115,31 @@ function blockGrips(root) {
 const BLOCKS = 'blocks' // the blocks' ids ("blocks:3"), beside the lists' ("2:1": list, item) and table rows' ("row:0:2": table, row)
 const ROW = 'row'
 
-// Every body row of a table whose rows line up with its markdown (`edit`) gets a `.row-grip` spot in its first cell, to
-// drag it by among the table's rows (never above the header): `data-table`, `data-row`
+// Every body row of a table whose rows line up with its markdown (`edit`) gets a `.row-grip` spot to drag it by among the
+// table's rows (never above the header), in the note's left gutter beside the table, as other blocks' grips: not in the
+// table, which scrolls sideways inside itself and would cut it off. `data-table`, `data-row`; placed level with its row
+// by `placeRowGrips`
 function rowGrips(root, tables) {
   root.querySelectorAll('table').forEach((table, t) => {
     if (!tables[t]?.edit) return
-    for (const tr of table.tBodies[0].rows) tr.cells[0]?.insertAdjacentHTML('afterbegin', `<span class="row-grip" data-table="${t}" data-row="${tr.dataset.row}"></span>`)
+    const block = table.closest('[data-src]')
+    for (const tr of table.tBodies[0].rows) block.insertAdjacentHTML('beforeend', `<span class="row-grip" data-table="${t}" data-row="${tr.dataset.row}"></span>`)
   })
+}
+
+// The row a `.row-grip` spot drags
+const rowOf = spot => spot.parentElement.querySelector(`tbody > tr[data-row="${spot.dataset.row}"]`)
+
+// Each row grip level with its row, as tall as it; none for a row a filter hides or while the table is shown sorted
+function placeRowGrips(root) {
+  for (const spot of root.querySelectorAll('.row-grip')) {
+    const tr = rowOf(spot)
+    spot.hidden = !tr || tr.hidden || Boolean(tr.closest('table.table-sorted'))
+    if (spot.hidden) continue
+    const row = tr.getBoundingClientRect()
+    spot.style.top = `${row.top - spot.parentElement.getBoundingClientRect().top}px`
+    spot.style.height = `${row.height}px`
+  }
 }
 
 // What a drag moves: a block, a table's row (rows of that table only) or a list item
@@ -397,7 +415,25 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
         body.insertAdjacentHTML('beforeend', `<tr class="table-filter-empty"><td colspan="${data.columns.length}">No rows match the filters.</td></tr>`)
       }
     })
+    placeRowGrips(ref.current)
   }, [withImages, tables, tableViews])
+  // Rows grow and shrink with the preview's width: their grips follow
+  useLayoutEffect(() => {
+    const resizes = new ResizeObserver(() => placeRowGrips(ref.current))
+    resizes.observe(ref.current)
+    return () => resizes.disconnect()
+  }, [])
+  // With a mouse a row's grip shows while the row (or the grip) is hovered (`data-hover`, App.css)
+  const hovered = useRef(null)
+  function hoverRow(e) {
+    if (e.target.closest?.('.row-grip')) return
+    const tr = e.target.closest?.('tbody > tr[data-row]')
+    const spot = tr && [...tr.closest('[data-src]').querySelectorAll('.row-grip')].find(g => g.dataset.row === tr.dataset.row)
+    if (spot === hovered.current) return
+    hovered.current?.removeAttribute('data-hover')
+    spot?.setAttribute('data-hover', '')
+    hovered.current = spot ?? null
+  }
 
   // `content` with a table's cells written (`edits`: [{ row, col, text }])
   const writeCells = (t, edits) => {
@@ -512,6 +548,8 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
         ref={ref}
         className={cn('editor-preview min-w-0 break-words leading-relaxed touch-manipulation [&_img]:max-w-full [&_img]:h-auto [&_img]:rounded-md', 'p-space text-base')}
         onClick={handleClick}
+        onPointerOver={hoverRow}
+        onPointerLeave={() => { hovered.current?.removeAttribute('data-hover'); hovered.current = null }}
         dangerouslySetInnerHTML={{ __html: withImages || '<p class="text-muted-foreground italic">Nothing to preview yet.</p>' }}
       />
       {carets.map((spot, i) => createPortal(<CaretRight />, spot, i))}
@@ -542,7 +580,7 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
         })}
         {rowSpots.map(spot => {
           const id = `${ROW}:${spot.dataset.table}:${spot.dataset.row}`
-          return createPortal(<ListGrip spot={spot} item={spot.closest('tr')} id={id} drop={drop?.id === id ? drop.side : null} />, spot, `row-${id}`)
+          return createPortal(<ListGrip spot={spot} item={rowOf(spot)} id={id} drop={drop?.id === id ? drop.side : null} />, spot, `row-${id}`)
         })}
         {grips.map(spot => {
           const id = `${spot.dataset.list}:${spot.dataset.item}`
