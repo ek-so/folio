@@ -201,6 +201,15 @@ describe('continueList', () => {
   })
 })
 
+describe('list gaps', () => {
+  it('marks only the items a blank line follows', () => {
+    const html = renderBlocks('- a\n- b\n\n\n- c\n- d\n')
+    expect(html.match(/<li class="gap-after">/g)).toHaveLength(1)
+    expect(html).toContain('<li class="gap-after"><p>b</p>')
+    expect(renderBlocks('- a\n- b\n')).not.toContain('gap-after')
+  })
+})
+
 describe('moveBlock', () => {
   const blocksOf = md => [...renderBlocks(md).matchAll(/data-src="(\d+)" data-len="(\d+)"/g)].map(m => ({ start: +m[1], end: +m[1] + +m[2] }))
   it('moves a block, keeping what lies between blocks in place', () => {

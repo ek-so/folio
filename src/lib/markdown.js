@@ -84,6 +84,15 @@ marked.use({ useNewRenderer: true, renderer: {
   html(token) { return token.tokens ? this.parser.parse(token.tokens, false) : token.text },
 } })
 
+// A blank line written between two list items shows as a gap there (`gap-after`, App.css), and only there: the rest of
+// the list keeps its items close, however loose the list is
+marked.use({ useNewRenderer: true, renderer: {
+  listitem(item) {
+    const html = marked.Renderer.prototype.listitem.call(this, item)
+    return /\n[ \t]*\n\s*$/.test(item.raw) ? html.replace(/^<li/, '<li class="gap-after"') : html
+  },
+} })
+
 // Dates in the text (lib/dates.js; not in code or links) become date spots: an empty
 // <time> the preview fills with a DateBadge, its label in `data-label`, what's typed in `data-raw`.
 function splitDates(token) {
