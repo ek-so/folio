@@ -15,7 +15,8 @@ import ListGrip from './ListGrip.jsx'
 import ImageHandle from './ImageHandle.jsx'
 import TableColumn from './TableColumn.jsx'
 import TableCell from './TableCell.jsx'
-import { detectType, tableRows, withCells, sortedRows, cellPasses, columnValues, cellValues, checkboxText, moveTableRow } from '../lib/tables.js'
+import { detectType, tableRows, withCells, sortedRows, cellPasses, columnValues, cellValues, checkboxText, movedInOrder, reorderTableRows, undoneOrder, headerKey, isFiltering } from '../lib/tables.js'
+import { toast } from 'sonner'
 import { useTablesContext } from '../hooks/useTables.js'
 import { DndContext, DragOverlay, closestCenter } from '@dnd-kit/core'
 import { useDragSensors } from '../hooks/useDragSensors.js'
@@ -134,7 +135,7 @@ const rowOf = spot => spot.parentElement.querySelector(`tbody > tr[data-row="${s
 function placeRowGrips(root) {
   for (const spot of root.querySelectorAll('.row-grip')) {
     const tr = rowOf(spot)
-    spot.hidden = !tr || tr.hidden || Boolean(tr.closest('table.table-sorted'))
+    spot.hidden = !tr || tr.hidden || Boolean(tr.closest('table.table-filtered'))
     if (spot.hidden) continue
     const row = tr.getBoundingClientRect()
     spot.style.top = `${row.top - spot.parentElement.getBoundingClientRect().top}px`
@@ -178,14 +179,11 @@ function ghostHtml(item) {
   return `<${list.tagName.toLowerCase()}${start} class="${list.className}">${copy.outerHTML}</${list.tagName.toLowerCase()}>`
 }
 
-// `content` with what was dragged (`active`, a block, a table's row or a list item) moved next to what it was dropped on (`over`)
-function dropped(content, lists, blocks, tables, active, over, after) {
-  const [kind, from, row] = String(active.id).split(':')
-  const [, to, toRow] = String(over.id).split(':')
-  if (kind === ROW) {
-    const { start, raw } = tables[from].edit
-    return content.slice(0, start) + moveTableRow(raw, Number(row), Number(toRow) + (after ? 1 : 0)) + content.slice(start + raw.length)
-  }
+// `content` with what was dragged (`active`, a block or a list item; a table's row is MarkdownPreview's `dropRow`) moved
+// next to what it was dropped on (`over`)
+function dropped(content, lists, blocks, active, over, after) {
+  const [kind, from] = String(active.id).split(':')
+  const [, to] = String(over.id).split(':')
   if (kind === BLOCKS) {
     return moveBlock(content, blocks, Number(from), Number(to) + (after ? 1 : 0))
   }
@@ -271,7 +269,7 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
   const [handles, setHandles] = useState([]) // image spots for ImageHandle
   const [columnSpots, setColumnSpots] = useState([]) // table header spots for TableColumn
   const [cellSpots, setCellSpots] = useState([]) // table cell spots for TableCell
-  const [tableViews, setTableViews] = useState({}) // { table: { sort: { col, dir }, filters: { col: filter } } }, while the note is open
+  const [tableViews, setTableViews] = useState({}) // { table: { filters: { col: filter }, sort } }, while the note is open (`sort` only while sorts can't be saved)
   const tableSettings = useTablesContext()
   const pickedNow = tableSettings.of(path)
   const pickedKey = JSON.stringify(pickedNow)
@@ -393,7 +391,28 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
     setCellSpots([...ref.current.querySelectorAll('.table-cell')])
   }, [withImages])
 
-  useEffect(() => setTableViews({}), [path]) // another note: no sorting or filters
+  useEffect(() => setTableViews({}), [path]) // another note: no filters
+
+  // Each table's sort, { col (its index), dir } or null for Manual (the note's order): saved per note and header row
+  // (`.folio/tables.json`), or, while that can't be saved, kept while the note is open
+  const sortsNow = tables.map((data, t) => {
+    if (!data) return null
+    if (!tableSettings.onSort) return tableViews[t]?.sort ?? null
+    const saved = tableSettings.sortOf(path, headerKey(data.columns.map(c => c.name)))
+    const col = saved ? data.columns.findIndex(c => c.name === saved.col) : -1
+    return col < 0 ? null : { col, dir: saved.dir }
+  })
+  const sortsKey = JSON.stringify(sortsNow)
+  const sorts = useMemo(() => sortsNow, [sortsKey, tables])
+  const setSort = (t, sort) => tableSettings.onSort
+    ? tableSettings.onSort(path, headerKey(tables[t].columns.map(c => c.name)), sort && { col: tables[t].columns[sort.col].name, dir: sort.dir })
+    : setView(t, v => ({ ...v, sort }))
+  // A table's rows as shown: indexes in the note's order, sorted by its column
+  const orderOf = t => {
+    const data = tables[t]
+    const sort = sorts[t]
+    return sort && data.columns[sort.col] ? sortedRows(data.columns[sort.col].type, data.texts.map(r => r[sort.col] ?? ''), sort.dir) : data.texts.map((_, r) => r)
+  }
 
   // Rows sorted by a column, those a filter leaves out hidden; a table with none left says so in a row of its own
   useLayoutEffect(() => {
@@ -404,10 +423,8 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
       body.querySelector('.table-filter-empty')?.remove()
       const rows = [...body.rows].sort((a, b) => a.dataset.row - b.dataset.row) // in the note's order, whatever a sort did
       const view = tableViews[t] ?? {}
-      table.classList.toggle('table-sorted', Boolean(view.sort)) // shown sorted: its rows can't be dragged (App.css)
-      const column = c => data.texts.map(r => r[c] ?? '')
-      const order = view.sort && data.columns[view.sort.col] ? sortedRows(data.columns[view.sort.col].type, column(view.sort.col), view.sort.dir) : rows.map((_, r) => r)
-      order.forEach(r => body.append(rows[r]))
+      table.classList.toggle('table-filtered', Object.values(view.filters ?? {}).some(isFiltering)) // its rows can't be dragged (placeRowGrips)
+      orderOf(t).forEach(r => body.append(rows[r]))
       rows.forEach((tr, r) => {
         tr.hidden = !Object.entries(view.filters ?? {}).every(([c, f]) => !data.columns[c] || cellPasses(data.columns[c].type, data.texts[r][c] ?? '', f))
       })
@@ -416,7 +433,7 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
       }
     })
     placeRowGrips(ref.current)
-  }, [withImages, tables, tableViews])
+  }, [withImages, tables, tableViews, sorts])
   // Rows grow and shrink with the preview's width: their grips follow
   useLayoutEffect(() => {
     const resizes = new ResizeObserver(() => placeRowGrips(ref.current))
@@ -441,6 +458,30 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
     onChange(content.slice(0, start) + withCells(raw, edits) + content.slice(start + raw.length))
   }
   const setView = (t, edit) => setTableViews(v => ({ ...v, [t]: edit(v[t] ?? {}) }))
+
+  // A table's row (`active`) dropped next to another (`over`): the rows are written in the order shown with it in its
+  // new place. In a sorted table that order becomes the note's, and the sort Manual, with Undo: it puts back the
+  // sort and the rows' order, keeping any edit made since (as long as the table still has as many rows)
+  const latest = useRef()
+  latest.current = { content, tables, onChange }
+  function dropRow(active, over, after) {
+    const [, t, from] = String(active.id).split(':').map(Number)
+    const to = Number(String(over.id).split(':')[2])
+    const order = movedInOrder(orderOf(t), from, to, after)
+    if (order.every((r, i) => r === i)) return
+    const { start, raw } = tables[t].edit
+    onChange(content.slice(0, start) + reorderTableRows(raw, order) + content.slice(start + raw.length))
+    const sort = sorts[t]
+    if (!sort) return
+    setSort(t, null)
+    toast.success('Sorting changed to Manual', { action: { label: 'Undo', onClick: () => {
+      setSort(t, sort)
+      const now = latest.current
+      const edit = now.tables[t]?.edit
+      if (!edit || now.tables[t].texts.length !== order.length) return
+      now.onChange(now.content.slice(0, edit.start) + reorderTableRows(edit.raw, undoneOrder(order)) + now.content.slice(edit.start + edit.raw.length))
+    } } })
+  }
 
   // What a typed column's cells need (TableCell): its values, colors and counts, and, with `onChange`, its values'
   // removal and renaming in every row (and their colors, saved for the note's column)
@@ -570,7 +611,8 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
           setDrop(null)
           setGhost(null)
           if (!e.over) return
-          const moved = dropped(content, lists, blocks, tables, e.active, e.over, dropAfter(e))
+          if (String(e.active.id).startsWith(`${ROW}:`)) return dropRow(e.active, e.over, dropAfter(e))
+          const moved = dropped(content, lists, blocks, e.active, e.over, dropAfter(e))
           if (moved !== content) onChange(moved)
         }}
       >
@@ -600,8 +642,8 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
           <TableColumn
             name={col.name} type={col.type} detected={col.detected} picked={col.picked}
             onType={tableSettings.onType && (type => { tableSettings.onType(path, col.name, type); setView(t, v => ({ ...v, filters: { ...v.filters, [c]: null } })) })}
-            sort={view.sort?.col === Number(c) ? view.sort.dir : null}
-            onSort={dir => setView(t, v => ({ ...v, sort: dir ? { col: Number(c), dir } : null }))}
+            sort={sorts[t]?.col === Number(c) ? sorts[t].dir : null}
+            onSort={dir => setSort(t, dir ? { col: Number(c), dir } : null)}
             filter={view.filters?.[c]} onFilter={f => setView(t, v => ({ ...v, filters: { ...v.filters, [c]: f } }))}
             values={['select', 'multi'].includes(col.type) ? columnValues(col.type, cells).map(value => ({ value, count: cells.filter(x => col.type === 'multi' ? cellValues(x).includes(value) : x.trim() === value).length })) : []}
           />, spot, `column-${t}-${c}`)

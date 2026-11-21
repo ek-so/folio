@@ -18,7 +18,7 @@ export const TYPE_ICONS = { text: TextT, number: Hash, select: TagSimple, multi:
 // A table column's menu in the note preview, in its header (MarkdownPreview): a small button (as a link badge's ⋯, to
 // fit the line) showing the column's type icon, or, accent-colored, its sort arrow or a filled funnel while it sorts or
 // filters. It opens: Type (a sub popover: Automatic, what the cells look like, then every type; `onType(type | null)`,
-// none while the types can't be saved), Sort (`sort` 'asc' | 'desc' | null, `onSort`), and the type's filter (`filter`,
+// none while the types can't be saved), Sort (`sort` 'asc' | 'desc' | null for Manual, the note's order; `onSort`), and the type's filter (`filter`,
 // `onFilter(filter | null)`, lib/tables.js `cellPasses`): a select's or multi-select's values to tick (`values`:
 // [{ value, count }]), a number's Min and Max, a date's From and To, a checkbox's All / Not done / Done; text and links
 // only sort. Clear filter shows every row again.
@@ -43,7 +43,7 @@ export default function TableColumn({ name, type, detected, picked, onType, sort
         <Separator />
         <Label>Sort</Label>
         <Segmented stretch label="Sort" value={sort ?? 'none'} onChange={v => onSort(v === 'none' ? null : v)}
-          options={[['none', 'None'], ['asc', asc, SortAscending], ['desc', desc, SortDescending]]} />
+          options={[['none', 'Manual'], ['asc', asc, SortAscending], ['desc', desc, SortDescending]]} />
         {type !== 'text' && type !== 'link' && <>
           <Separator />
           <Label>Filter</Label>

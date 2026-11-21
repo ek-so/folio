@@ -16,7 +16,7 @@ App flow: **Auth → RepoSetup → FileBrowser / Editor / FileViewer**. `App.jsx
 - `history.js` — Recent updates: a commit's files as listed (`shownFiles`, `commitEntry`), the unsynced changes (`unsyncedFiles`), pages of commits merged (`mergedHistory`), those with files to show (`shownCommits`), when each was made (`whenLabel`). Tested.
 - `versions.js` — Version history: a note's version from a commit's files (`versionOf`), a page of them following renames back (`versionsIn`), what changed from the one before as blocks to color (`diffNote`). Tested.
 - `revert.js` — Recent updates' Undo: an update's files back to how they were before it, as local changes, keeping what changed since (`reverted`, `sides`). Tested.
-- `tables.js` — notes' table columns: types (`detectType`, `cellValue`), sorting and filtering (`sortedRows`, `cellPasses`), writing cells back into the table's markdown (`tableRows`, `withCells`), and the picked types and colors in `.folio/tables.json`. Tested.
+- `tables.js` — notes' table columns: types (`detectType`, `cellValue`), sorting and filtering (`sortedRows`, `cellPasses`), writing cells and the rows' order back into the table's markdown (`tableRows`, `withCells`, `reorderTableRows`), and the picked types and colors and the tables' sorts in `.folio/tables.json`. Tested.
 - `locks.js` — files locked against editing, `.folio/locks.json` (`toggledLock`, `movedLocks`, `removedLocks`). Tested.
 - `icons.js` — the emoji that replaces a file's or folder's icon, `.folio/icons.json` (`iconOf`, `withIcon`, `movedIcons`, `removedIcons`), and `leadingEmoji` / `withoutEmoji` for names that start with one. Tested.
 - `search.js` — notes found by what they say, with a snippet (`searchNotes`). Tested.

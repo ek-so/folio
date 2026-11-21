@@ -1,9 +1,11 @@
 // A note's markdown tables in the preview: each column has a type, which says how its cells show, sort and filter, and
 // how a cell changed from the preview is written back into the note. The cells' text stays the content (in the note);
 // a type picked for a column is only how Folio shows it, kept in `.folio/tables.json`:
-//   { "tables": { "Notes/Tasks.md": { "Status": { "type": "select", "colors": { "Done": 3 } } } } }
-// per note, per column name (every table of the note with a column of that name). Without a picked type, a column
-// gets the one its cells look like (`detectType`); deleting .folio only brings those back.
+//   { "tables": { "Notes/Tasks.md": { "Status": { "type": "select", "colors": { "Done": 3 } } } },
+//     "sorts": { "Notes/Tasks.md": { "Task | Status": { "col": "Status", "dir": "asc" } } } }
+// per note, per column name (every table of the note with a column of that name); a table's sort per note and header row.
+// Without a picked type, a column gets the one its cells look like (`detectType`); deleting .folio only brings those
+// back, and every table's rows in the note's order (Manual).
 
 import { valueDate } from './markdown.js'
 import { PROPERTY_COLORS } from './frontmatter.js'
@@ -21,17 +23,19 @@ export const typeLabel = type => COLUMN_TYPES.find(([t]) => t === type)?.[1] ?? 
 
 // --- Settings ---
 
-// The settings a file's text holds: {} for no file (undefined), null for text that can't be read (never saved over)
+// The settings a file's text holds, { columns, sorts }: empty for no file (undefined), null for text that can't be read
+// (never saved over)
 export function parseTables(text) {
-  if (text === undefined) return {}
+  if (text === undefined) return { columns: {}, sorts: {} }
   try {
-    const data = JSON.parse(text)?.tables
-    if (!data || typeof data !== 'object' || Array.isArray(data)) return null
-    const out = {}
-    for (const [path, columns] of Object.entries(data)) {
-      if (!columns || typeof columns !== 'object' || Array.isArray(columns)) continue
+    const data = JSON.parse(text)
+    const tables = data?.tables ?? {}
+    if (!isMap(tables)) return null
+    const columns = {}
+    for (const [path, cols] of Object.entries(tables)) {
+      if (!isMap(cols)) continue
       const kept = {}
-      for (const [name, col] of Object.entries(columns)) {
+      for (const [name, col] of Object.entries(cols)) {
         if (!col || typeof col !== 'object') continue
         const c = {}
         if (TYPES.has(col.type)) c.type = col.type
@@ -39,19 +43,29 @@ export function parseTables(text) {
         if (colors.length) c.colors = Object.fromEntries(colors)
         if (Object.keys(c).length) kept[name] = c
       }
-      if (Object.keys(kept).length) out[path] = kept
+      if (Object.keys(kept).length) columns[path] = kept
     }
-    return out
+    const sorts = {}
+    for (const [path, byHeader] of Object.entries(isMap(data?.sorts) ? data.sorts : {})) {
+      if (!isMap(byHeader)) continue
+      const kept = Object.fromEntries(Object.entries(byHeader).filter(([, v]) => typeof v?.col === 'string' && DIRS.has(v.dir)).map(([h, v]) => [h, { col: v.col, dir: v.dir }]))
+      if (Object.keys(kept).length) sorts[path] = kept
+    }
+    return { columns, sorts }
   } catch {
     return null
   }
 }
 
+const isMap = v => Boolean(v) && typeof v === 'object' && !Array.isArray(v)
+const DIRS = new Set(['asc', 'desc'])
 const sorted = obj => Object.fromEntries(Object.entries(obj).sort(([a], [b]) => a.localeCompare(b)))
-export const serializeTables = tables => JSON.stringify({ tables: sorted(tables) }, null, 2) + '\n'
+export const serializeTables = ({ columns, sorts }) =>
+  JSON.stringify(Object.keys(sorts).length ? { tables: sorted(columns), sorts: sorted(sorts) } : { tables: sorted(columns) }, null, 2) + '\n'
 
-// `tables` with `edit(column settings) => settings` applied to `path`'s column `name`; empty ones are dropped
-function withColumn(tables, path, name, edit) {
+// `settings` with `edit(column settings) => settings` applied to `path`'s column `name`; empty ones are dropped
+function withColumn(settings, path, name, edit) {
+  const { columns: tables } = settings
   const col = edit({ ...tables[path]?.[name] })
   const columns = { ...tables[path], [name]: col }
   if (!col.type) delete col.type
@@ -59,19 +73,33 @@ function withColumn(tables, path, name, edit) {
   if (!Object.keys(col).length) delete columns[name]
   const out = { ...tables, [path]: columns }
   if (!Object.keys(columns).length) delete out[path]
-  return out
+  return { ...settings, columns: out }
 }
 
 // `type` picked for the column (null: back to the one its cells look like)
-export const withColumnType = (tables, path, name, type) => withColumn(tables, path, name, c => ({ ...c, type: type ?? undefined }))
+export const withColumnType = (settings, path, name, type) => withColumn(settings, path, name, c => ({ ...c, type: type ?? undefined }))
 
 // `color` picked for one of the column's values
-export const withValueColor = (tables, path, name, value, color) =>
-  withColumn(tables, path, name, c => ({ ...c, colors: { ...c.colors, [value]: color } }))
+export const withValueColor = (settings, path, name, value, color) =>
+  withColumn(settings, path, name, c => ({ ...c, colors: { ...c.colors, [value]: color } }))
+
+// A table of a note is told apart from the note's others by its header row: its column names
+export const headerKey = names => names.join(' | ')
+
+// How a table (`header`: headerKey) is sorted: { col: a column's name, dir } (Sort in its column's menu), or null for
+// Manual, its rows in the note's order. A table whose header no longer has that column shows Manual
+export const sortOf = (settings, path, header) => settings?.sorts[path]?.[header] ?? null
+export function withTableSort(settings, path, header, sort) {
+  const byHeader = { ...settings.sorts[path], [header]: sort ?? undefined }
+  if (!sort) delete byHeader[header]
+  const sorts = { ...settings.sorts, [path]: byHeader }
+  if (!Object.keys(byHeader).length) delete sorts[path]
+  return { ...settings, sorts }
+}
 
 // The settings follow their note when it moves, and go with it when it's deleted
-export const movedTables = movedMap
-export const removedTables = removedMap
+export const movedTables = (s, from, to, isDir) => ({ columns: movedMap(s.columns, from, to, isDir), sorts: movedMap(s.sorts, from, to, isDir) })
+export const removedTables = (s, path, isDir) => ({ columns: removedMap(s.columns, path, isDir), sorts: removedMap(s.sorts, path, isDir) })
 
 // --- Values ---
 
@@ -231,19 +259,27 @@ export function tableRows(raw) {
 
 // `raw` (one table) with body row `from` moved before body row `at` (rows.length: after the last); the header and its
 // divider never move, and nothing changes when `raw` isn't a plain table
-export function moveTableRow(raw, from, at) {
-  const rows = tableRows(raw)
-  if (!rows || !rows[from] || at === from || at === from + 1 || at < 0 || at > rows.length) return raw
-  const lines = rows.map(r => raw.slice(r.start, r.end))
-  const order = rows.map((_, i) => i)
-  order.splice(from, 1)
-  order.splice(at > from ? at - 1 : at, 0, from)
-  const first = rows[0].start
-  const last = rows.at(-1).end
-  // The rows' lines in the new order, with the line breaks that were between them
-  const breaks = rows.slice(0, -1).map((r, i) => raw.slice(r.end, rows[i + 1].start))
-  return raw.slice(0, first) + order.map((r, i) => lines[r] + (breaks[i] ?? '')).join('') + raw.slice(last)
+// `order` (a table's body rows as shown: indexes in the note's order) with row `from` moved next to row `to`, after it
+// with `after`
+export function movedInOrder(order, from, to, after) {
+  if (from === to) return order
+  const out = order.filter(r => r !== from)
+  out.splice(out.indexOf(to) + (after ? 1 : 0), 0, from)
+  return out
 }
+
+// `raw` with its body rows in `order` (order[i]: the row that goes at i), never above the header, keeping the line
+// breaks between them
+export function reorderTableRows(raw, order) {
+  const rows = tableRows(raw)
+  if (!rows || order.length !== rows.length) return raw
+  const lines = rows.map(r => raw.slice(r.start, r.end))
+  const breaks = rows.slice(0, -1).map((r, i) => raw.slice(r.end, rows[i + 1].start))
+  return raw.slice(0, rows[0].start) + order.map((r, i) => lines[r] + (breaks[i] ?? '')).join('') + raw.slice(rows.at(-1).end)
+}
+
+// The order that puts back rows reordered by `order` (reorderTableRows)
+export const undoneOrder = order => order.reduce((back, r, i) => { back[r] = i; return back }, [])
 
 const escapeCell = text => text.replace(/\r?\n/g, ' ').replace(/\|/g, '\\|')
 

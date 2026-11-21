@@ -97,6 +97,8 @@ export default function App() {
   const tables = useTables(config) // the types picked for notes' table columns (lib/tables.js)
   const tablesInfo = useMemo(() => ({
     of: tables.of,
+    sortOf: tables.sortOf,
+    onSort: tables.canEdit ? (path, header, sort) => update(tables.setSort(path, header, sort)) : undefined,
     onType: tables.canEdit ? (path, column, type) => update(tables.setType(path, column, type)) : undefined,
     onColor: tables.canEdit ? (path, column, value, color) => update(tables.setColor(path, column, value, color)) : undefined,
   }), [tables.canEdit, tables.key])
@@ -240,7 +242,7 @@ export default function App() {
       const type = widgetType(w.type)
       if (type?.moved) next = type.moved(next, w.id, item.path, to, item.type === 'dir', widgetServices)
     }
-    return tables.moved(item.path, to, item.type === 'dir')(assets.moved(item.path, to, item.type === 'dir')(icons.moved(item.path, to, item.type === 'dir')(locks.moved(item.path, to, item.type === 'dir')(next)))) // a lock, an emoji, table columns' types and when it was added go where their file goes (the archive too)
+    return tables.moved(item.path, to, item.type === 'dir')(assets.moved(item.path, to, item.type === 'dir')(icons.moved(item.path, to, item.type === 'dir')(locks.moved(item.path, to, item.type === 'dir')(next)))) // a lock, an emoji, table columns' types, tables' sorts and when it was added go where their file goes (the archive too)
   }
 
   // `fn` (ch => ch) as a change that never edits a locked note's text: what it changed there is put back (keptEdits).

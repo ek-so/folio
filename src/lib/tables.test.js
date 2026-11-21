@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { detectType, parseNumber, sortedRows, cellPasses, tableRows, withCells, checkboxText, parseTables, serializeTables, withColumnType, withValueColor, columnValues, moveTableRow } from './tables.js'
+import { detectType, parseNumber, sortedRows, cellPasses, tableRows, withCells, checkboxText, parseTables, serializeTables, withColumnType, withValueColor, columnValues, movedInOrder, reorderTableRows, undoneOrder, withTableSort, sortOf, headerKey } from './tables.js'
 
 const cells = texts => texts.map(text => ({ text, link: false }))
 
@@ -65,23 +65,39 @@ describe('tables', () => {
   })
 
   it('keeps picked types and colors per note and column', () => {
-    let t = withColumnType({}, 'a.md', 'Status', 'select')
+    const empty = parseTables(undefined)
+    let t = withColumnType(empty, 'a.md', 'Status', 'select')
     t = withValueColor(t, 'a.md', 'Status', 'Done', 3)
     t = withValueColor(t, 'a.md', 'Status', 'Finished', 3)
-    expect(parseTables(serializeTables(t))).toEqual({ 'a.md': { Status: { type: 'select', colors: { Done: 3, Finished: 3 } } } })
-    expect(withColumnType(withColumnType({}, 'a.md', 'S', 'date'), 'a.md', 'S', null)).toEqual({})
+    expect(parseTables(serializeTables(t)).columns).toEqual({ 'a.md': { Status: { type: 'select', colors: { Done: 3, Finished: 3 } } } })
+    expect(withColumnType(withColumnType(empty, 'a.md', 'S', 'date'), 'a.md', 'S', null)).toEqual(empty)
     expect(parseTables('nope')).toBe(null)
-    expect(parseTables(undefined)).toEqual({})
+    expect(empty).toEqual({ columns: {}, sorts: {} })
+  })
+
+  it('keeps a table\'s sort per note and header row, Manual left out', () => {
+    const header = headerKey(['Task', 'Due'])
+    const t = withTableSort(parseTables(undefined), 'a.md', header, { col: 'Due', dir: 'desc' })
+    const read = parseTables(serializeTables(t))
+    expect(sortOf(read, 'a.md', header)).toEqual({ col: 'Due', dir: 'desc' })
+    expect(sortOf(read, 'a.md', headerKey(['Task']))).toBe(null)
+    expect(withTableSort(read, 'a.md', header, null)).toEqual(parseTables(undefined))
+    expect(parseTables('{"tables":{},"sorts":{"a.md":{"X":{"col":"X","dir":"up"}}}}').sorts).toEqual({})
   })
 })
 
-describe('moveTableRow', () => {
+describe('reordering rows', () => {
   const raw = '| A | B |\n|---|---|\n| 1 | x |\n| 2 | y |\n| 3 | z |\n'
-  it('moves a body row before another, or after the last, never above the header', () => {
-    expect(moveTableRow(raw, 2, 0)).toBe('| A | B |\n|---|---|\n| 3 | z |\n| 1 | x |\n| 2 | y |\n')
-    expect(moveTableRow(raw, 0, 3)).toBe('| A | B |\n|---|---|\n| 2 | y |\n| 3 | z |\n| 1 | x |\n')
-    expect(moveTableRow(raw, 1, 1)).toBe(raw)
-    expect(moveTableRow(raw, 1, 2)).toBe(raw)
-    expect(moveTableRow('not a table', 0, 1)).toBe('not a table')
+  it('moves a row next to another in the order shown', () => {
+    expect(movedInOrder([0, 1, 2], 2, 0, false)).toEqual([2, 0, 1])
+    expect(movedInOrder([2, 1, 0], 2, 0, true)).toEqual([1, 0, 2])
+    expect(movedInOrder([0, 1, 2], 1, 1, true)).toEqual([0, 1, 2])
+  })
+  it('writes the rows in an order, never above the header, and puts them back', () => {
+    const moved = reorderTableRows(raw, [2, 0, 1])
+    expect(moved).toBe('| A | B |\n|---|---|\n| 3 | z |\n| 1 | x |\n| 2 | y |\n')
+    expect(reorderTableRows(moved, undoneOrder([2, 0, 1]))).toBe(raw)
+    expect(reorderTableRows(raw, [0, 1])).toBe(raw)
+    expect(reorderTableRows('not a table', [0])).toBe('not a table')
   })
 })

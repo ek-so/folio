@@ -104,7 +104,7 @@
 .editor-preview th, .editor-preview td { padding: var(--cell-pad) 8px; min-width: 10rem; border: 1px solid var(--border); text-align: left; vertical-align: middle; }
 /* A row's drag handle (ListGrip, `.row-grip`) in the note's left gutter, as a block's, level with its row and centred on
    it (MarkdownPreview places it): with a mouse shown while the row or the grip is hovered (`data-hover`), on touch always,
-   faint; none while the table is shown sorted or for a row a filter hides. Its drop line: the accent along the top or
+   faint; none while a filter is on in its table. Its drop line: the accent along the top or
    bottom edge of the row it lands next to; the dragged row stays in place, faded */
 .editor-preview .row-grip { position: absolute; right: 100%; width: var(--grip-w); display: flex; align-items: center; opacity: 0.8; }
 .editor-preview .row-grip[hidden] { display: none; }
