@@ -4,7 +4,7 @@ import { pageInfo } from '../lib/pages.js'
 import { cn } from '@/lib/utils.js'
 import { NavContext, FolderTreeMenu } from './NavTree.jsx'
 import { Button } from './ui/button.jsx'
-import { ButtonGroup, ButtonGroupSeparator } from './ui/button-group.jsx'
+import { ButtonGroup } from './ui/button-group.jsx'
 import PageTitle from './PageTitle.jsx'
 
 // Top of the content box, on every page: Back | Forward as one split button (ButtonGroup; the browser's history, only the app's own steps: `history`
@@ -20,9 +20,8 @@ export default function TitleBar({ page, name, nameMenu, changed, badge, childre
       <div className="flex min-h-control items-center gap-space-sm">
         {history && (
           <ButtonGroup aria-label="History">
-            <Button variant="ghost-outline" size="icon" aria-label="Back" tooltip="Back" disabled={!history.canBack} onClick={history.back}><ArrowLeft /></Button>
-            <ButtonGroupSeparator />
-            <Button variant="ghost-outline" size="icon" aria-label="Forward" tooltip="Forward" disabled={!history.canForward} onClick={history.forward}><ArrowRight /></Button>
+            <Button variant="outline" size="icon" aria-label="Back" tooltip="Back" disabled={!history.canBack} onClick={history.back}><ArrowLeft /></Button>
+            <Button variant="outline" size="icon" aria-label="Forward" tooltip="Forward" disabled={!history.canForward} onClick={history.forward}><ArrowRight /></Button>
           </ButtonGroup>
         )}
         <div className="flex min-w-0 flex-1 items-center gap-space-sm">
