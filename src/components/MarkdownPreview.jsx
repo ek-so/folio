@@ -30,7 +30,9 @@ function caretAt(x, y) {
 }
 
 // Two taps within this time and distance count as a double tap
-const DOUBLE_TAP_MS = 350
+export const DOUBLE_TAP_MS = 350
+// What in the preview handles its own taps (a link, an accordion's summary, a grip, a table's menus): never a double tap
+export const OWN_CLICKS = 'a, img, summary, .link-spot, .list-grip, .block-grip, .image-handle, .table-column, .table-cell, .table-filter-empty'
 const DOUBLE_TAP_PX = 30
 
 const LONG_WORD = /(\S{16,})/
@@ -441,7 +443,7 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
       }
       return
     }
-    if (e.target.closest('a, img, summary, .link-spot, .list-grip, .block-grip, .image-handle, .table-column, .table-cell, .table-filter-empty')) return // summary opens/closes its accordion
+    if (e.target.closest(OWN_CLICKS)) return // summary opens/closes its accordion
     if (isDoubleTap(e)) onDoubleTap?.(offsetAt(e.clientX, e.clientY, e.target))
   }
 

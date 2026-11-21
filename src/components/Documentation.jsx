@@ -71,6 +71,15 @@ const WIDGET_DOCS = {
       'Removing a card from the widget, or the widget itself, keeps the note or folder.',
     ],
   },
+  'single-note': {
+    summary: 'One note shown on the view, named after it.',
+    points: [
+      'Shows the note\'s text in a card; a long note fades out at the bottom.',
+      'Links and checkboxes work right in the card.',
+      'A tap opens the note; a double tap opens it for editing.',
+      'Change note… in ⋯ shows another one. Removing the widget keeps the note.',
+    ],
+  },
 }
 
 // A page of documentation in two tabs: the markdown a note can hold, and how views and each kind of widget work.

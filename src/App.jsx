@@ -342,6 +342,7 @@ export default function App() {
     // Locked files (lib/locks.js): `locked(path)` (Lock / Unlock is in every file's ⋯, ItemMenu)
     locked: path => locks.isLocked(path),
     files: Object.keys(shown),
+    entries: shown, // path → entry, as a note's preview wants them (its images and links)
     folders: allFolders,
     notes: links.notes,
     remoteFiles: repo.remote?.files ?? {},
@@ -351,6 +352,8 @@ export default function App() {
     tagColors,
     update: fn => update(guarded(fn)), // a widget never edits a locked note
     openFile: path => setSelectedFile(path),
+    // A note opened in the editor, the cursor at `offset` (a double tap on a Note widget's card)
+    editFile: (path, offset = 0) => { setEditAt({ path, start: offset, end: offset }); setSelectedFile(path) },
     openFolder: path => openFolder(path),
     // A widget's folder shown in File manager (its Show folder)
     revealFolder: path => revealFolder(path),

@@ -8,8 +8,8 @@ import { settingsWrite, isNote } from './pinned.js'
 
 // Picks a note or a folder to pin: found by searching the repo's notes and folders (folders first), or New note…, which
 // asks for its folder and name. `onPick(path, first)`: `first` (ch => ch) makes a new note, to apply in the same step.
-// `title`: the search sheet's.
-export function PinPicker({ services, onPick, onClose, title = 'Pin note or folder' }) {
+// `title`: the search sheet's. `withFolders={false}`: notes only (a Note widget's).
+export function PinPicker({ services, onPick, onClose, title = 'Pin note or folder', withFolders = true }) {
   const { folders, files } = services
   const [step, setStep] = useState('search') // 'search', then for a new note 'folder' and 'name'
   const [folder, setFolder] = useState('') // the new note's folder ('' is the root)
@@ -19,11 +19,11 @@ export function PinPicker({ services, onPick, onClose, title = 'Pin note or fold
   if (step === 'search') return (
     <SearchSheet
       title={title}
-      placeholder="Search notes and folders…"
+      placeholder={withFolders ? 'Search notes and folders…' : 'Search notes…'}
       virtual={all}
       only={isNote}
       folders={folders}
-      onSelectFolder={path => onPick(path)}
+      onSelectFolder={withFolders ? path => onPick(path) : undefined}
       top={<ListRow icon={<Plus />} title="New note…" onClick={() => setStep('folder')} />}
       onSelect={path => onPick(path)}
       onClose={() => { if (!picked.current) onClose() }}
