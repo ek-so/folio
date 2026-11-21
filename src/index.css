@@ -81,6 +81,8 @@
     --file-image: oklch(0.62 0.15 150);
     /* Folder icons: yellowish (files are the primary green) */
     --folder: oklch(0.75 0.14 85);
+    /* A highlighter marker's yellow-green: light but bright (the editor's line with the cursor) */
+    --marker: oklch(0.94 0.13 112);
 
     --radius: 0.75rem;
 
@@ -138,6 +140,7 @@
       --callout-tint: 24%;
       --tag-tint: 30%;
       --lift-edge: rgb(255 255 255 / 0.12);
+      --marker: oklch(0.36 0.08 112);
     }
   }
 
@@ -182,6 +185,7 @@
     --callout-tint: 24%;
     --tag-tint: 30%;
     --lift-edge: rgb(255 255 255 / 0.12);
+    --marker: oklch(0.36 0.08 112);
   }
 }
 
@@ -226,6 +230,7 @@
   --color-success-foreground: var(--success-foreground);
   --color-file-image: var(--file-image);
   --color-folder: var(--folder);
+  --color-marker: var(--marker);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);

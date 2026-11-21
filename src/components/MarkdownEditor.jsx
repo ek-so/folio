@@ -21,7 +21,7 @@ const TEXT_LAYOUT = 'w-full h-full p-space font-mono text-base leading-relaxed w
 // what's typed after it (`typedLink`, `linkTargets`); ↑ ↓ choose, Enter (once something's typed or chosen; right after
 // `[[` it's a new line) or Tab or a tap puts in the link to it, from the
 // repo's root as Copy link makes it (`repoLink`), and Escape closes the list (not the editor).
-// The line the cursor is on (the whole line, over every row it wraps to) has a light accent band behind it (`bg-primary/10`),
+// The line the cursor is on (the whole line, over every row it wraps to) has a highlighter band behind it (`bg-marker`: a light, bright yellow-green),
 // found with an invisible copy laid out as the textarea, so where a double tap put the cursor, and where it is now, shows.
 // `locked`: property keys that can't be changed here (a planner's date and repeat: their badges change them): their lines
 // (`keyLines`) are greyed out, and typing that would change, add or remove one is refused, with a message.
@@ -137,7 +137,7 @@ const MarkdownEditor = forwardRef(function MarkdownEditor({ content, onChange, o
   return (
     // data-no-pull: drags here scroll, never refresh
     <div className="relative flex-1 min-h-0 bg-card" data-no-pull>
-      {band && <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bg-primary/10" style={{ top: band.top - scrollTop, height: band.height }} />}
+      {band && <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bg-marker" style={{ top: band.top - scrollTop, height: band.height }} />}
       {cursor !== null && (
         // A copy of the text up to the cursor's line and that line, laid out as the textarea's, to find where it is
         <div aria-hidden="true" className={cn(TEXT_LAYOUT, 'invisible absolute inset-0 overflow-hidden m-0')}>
