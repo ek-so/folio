@@ -11,21 +11,21 @@ import { cleanEmail } from '../lib/profile.js'
 
 // Profile (the rail's and the phone menu's last item, in Sign out's old place): a sheet (a dialog on a computer) with who's
 // signed in (GitHub), the reminder email (lib/profile.js; Edit steps to its field, ← back) and Sign out (red; App
-// confirms it). `start`: 'email' opens it at the email's field (Change in a date's reminder), with no ← to step back to.
+// confirms it). `start`: 'email' opens it at the email's field (Edit in a date's reminder), its ← going back to the date's sheet.
 // `onSaveEmail(text)` (null while the profile can't be saved): '' takes the address out.
 export default function ProfileSheet({ login, email, onSaveEmail, onSignOut, start = 'main', onClose }) {
   const [step, setStep] = useState(start)
   const [typed, setTyped] = useState(email)
   const [error, setError] = useState('')
-  const back = start === 'main' ? () => { setStep('main'); setError('') } : undefined
+  // ← in the title: from its email back to the profile, or, opened at its email from a date's reminder, back to the date's sheet (still open under it)
+  const back = start === 'main' ? () => { setStep('main'); setError('') } : onClose
 
   if (step === 'email') {
     const save = e => {
       e.preventDefault()
       if (typed.trim() && !cleanEmail(typed)) return setError('Enter an email address, like me@example.com.')
       onSaveEmail(typed)
-      if (back) back()
-      else onClose()
+      back()
     }
     return (
       <BottomSheet title="Reminder email" description="Reminders set to email go here." onBack={back} onClose={onClose}>
@@ -36,7 +36,7 @@ export default function ProfileSheet({ login, email, onSaveEmail, onSignOut, sta
             {error && <p className="text-destructive-ink text-xs">{error}</p>}
           </div>
           <div className="flex justify-end gap-space-sm">
-            <Button type="button" variant="secondary" onClick={back ?? onClose}>Cancel</Button>
+            <Button type="button" variant="secondary" onClick={back}>Cancel</Button>
             <Button type="submit" disabled={!onSaveEmail || typed.trim() === email}>Save</Button>
           </div>
         </form>
