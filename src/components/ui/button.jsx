@@ -21,11 +21,10 @@ const buttonVariants = cva(
         success: 'bg-success text-success-foreground hover:bg-success/90',
         'success-light': 'bg-success/15 text-success-ink hover:bg-success/25',
         'destructive-light': 'bg-destructive/15 text-destructive-ink hover:bg-destructive/25',
-        // Amber, for what needs attention before going on: a locked note's lock (`warning-light`), its Unlock (`ghost-warning`)
+        // Amber, for what needs attention before going on: a locked note's lock and its Unlock
         'warning-light': 'bg-warning/15 text-warning-ink hover:bg-warning/25',
         // Trash and other destructive icon buttons: red, a light red fill on hover
         'ghost-destructive': 'text-destructive-ink hover:bg-destructive/10',
-        'ghost-warning': 'text-warning-ink hover:bg-warning/10',
         'ghost-outline': 'bg-secondary text-muted-foreground hover:bg-secondary/80 hover:text-foreground',
         link: 'text-primary-ink underline-offset-4 hover:underline',
       },
