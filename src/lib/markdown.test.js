@@ -206,13 +206,22 @@ describe('moveBlock', () => {
   it('moves a block, keeping what lies between blocks in place', () => {
     const md = '# Title\n\nOne.\n\n- a\n- b\n\nTwo.\n'
     expect(moveBlock(md, blocksOf(md), 3, 1)).toBe('# Title\n\nTwo.\n\nOne.\n\n- a\n- b\n')
-    expect(moveBlock(md, blocksOf(md), 0, 3)).toBe('One.\n\n- a\n- b\n\nTwo.\n\n# Title\n')
+    expect(moveBlock(md, blocksOf(md), 1, 4)).toBe('# Title\n\n- a\n- b\n\nTwo.\n\nOne.\n')
   })
   it('keeps a blank line next to a moved block, so paragraphs never merge', () => {
     const md = '# Title\nOne.\n\nTwo.'
     expect(moveBlock(md, blocksOf(md), 2, 0)).toBe('Two.\n\n# Title\n\nOne.')
     const out = moveBlock(md, blocksOf(md), 2, 0)
     expect(blocksOf(out)).toHaveLength(3)
+  })
+  it('moves a heading with its section, and never merges two lists into a loose one', () => {
+    const md = '# Title\n\n## A\n- a1\n- a2\n\n## B\n- b1\n- b2\n\n### B sub\ntext\n\n## C\nc\n'
+    const out = moveBlock(md, blocksOf(md), 3, 1) // ## B above ## A
+    expect(out).toBe('# Title\n\n## B\n- b1\n- b2\n\n### B sub\ntext\n\n## A\n- a1\n- a2\n\n## C\nc\n')
+    expect(renderBlocks(out)).not.toContain('<li><p>')
+    expect(moveBlock(md, blocksOf(md), 3, 4)).toBe(md) // inside its own section
+    const lists = '- a\n- b\n\nText.\n\n- c\n'
+    expect(moveBlock(lists, blocksOf(lists), 2, 1)).toBe('- a\n- b\n- c\n\nText.\n')
   })
   it('leaves the front matter and link definitions alone', () => {
     const md = '---\ntags: [a]\n---\nOne [x].\n\n[x]: https://a.b\n\nTwo.\n'

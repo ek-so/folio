@@ -426,22 +426,44 @@ export function moveListItem(text, lists, from, to, after = false) {
   return result
 }
 
+// A block's heading level (1-6), or 0 when it isn't a heading; whether it's a list
+const headingLevel = body => /^ {0,3}(#{1,6})(?:[ \t]|$)/.exec(body)?.[1].length ?? 0
+const isList = body => /^ {0,3}(?:[-*+]|\d+[.)])[ \t]/.test(body)
+
+// The blocks a move of block `from` takes along: a heading takes its section, everything under it down to the next heading
+// of its level or higher; any other block goes alone. [from, end)
+export function blockSection(bodies, from) {
+  const level = headingLevel(bodies[from])
+  if (!level) return [from, from + 1]
+  let end = from + 1
+  while (end < bodies.length && !(headingLevel(bodies[end]) && headingLevel(bodies[end]) <= level)) end++
+  return [from, end]
+}
+
 // `text` with the block at `from` of `blocks` ([{ start, end }] in order: the preview's top-level blocks, renderBlocks'
-// data-src / data-len) moved to `to`. A block's text is its markdown without the line breaks after it; what lies between
-// blocks (blank lines, link definitions) stays where it was, at least a blank line next to a block that moved, so it
-// never runs into its new neighbour
-export function moveBlock(text, blocks, from, to) {
-  if (from === to) return text
+// data-src / data-len) moved to the place before block `at` (blocks.length: the end); a heading takes its section along
+// (`blockSection`), and a place inside what moves changes nothing. A block's text is its markdown without the line breaks
+// after it; what lies between blocks (blank lines, link definitions) stays where it was, at least a blank line next to a
+// block that moved, so it never runs into its new neighbour, except between two lists, which are joined by a line break
+// alone: one tight list (a blank line would merge them into a loose one, spaced apart)
+export function moveBlock(text, blocks, from, at) {
   const bodies = blocks.map(b => text.slice(b.start, b.end).replace(/\s+$/, ''))
+  const [first, end] = blockSection(bodies, from)
+  if (at >= first && at <= end) return text
   const gaps = blocks.map((b, k) => text.slice(b.start + bodies[k].length, k + 1 < blocks.length ? blocks[k + 1].start : b.start + bodies[k].length))
-  const order = blocks.map((_, k) => k)
-  const [moved] = order.splice(from, 1)
-  order.splice(to, 0, moved)
+  const moving = blocks.map((_, k) => k).slice(first, end)
+  const order = blocks.map((_, k) => k).filter(k => k < first || k >= end)
+  order.splice(at > first ? at - moving.length : at, 0, ...moving)
   const joined = order.map((k, i) => {
     if (i === order.length - 1) return bodies[k]
+    const next = order[i + 1]
     const gap = gaps[i]
-    const touched = k !== i || order[i + 1] !== i + 1
-    return bodies[k] + (touched && (gap.match(/\n/g) ?? []).length < 2 ? gap.replace(/^[ \t]*\n?/, '\n\n') : gap)
+    const breaks = g => (g.match(/\n/g) ?? []).length
+    // Neighbours that were already next to each other (a heading and what's under it) keep as many line breaks as they had
+    const together = next === k + 1
+    if (!together && isList(bodies[k]) && isList(bodies[next])) return bodies[k] + '\n'
+    const least = together ? Math.min(2, breaks(gaps[k])) : 2
+    return bodies[k] + (breaks(gap) >= least ? gap : gap.replace(/^[ \t]*\n?/, least === 2 ? '\n\n' : '\n'))
   }).join('')
   return text.slice(0, blocks[0].start) + joined + text.slice(blocks.at(-1).start + bodies.at(-1).length)
 }

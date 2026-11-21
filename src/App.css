@@ -7,6 +7,9 @@
 .editor-preview ul { list-style-type: disc; padding-left: 20px; margin: 0 0 14px; }
 .editor-preview ol { list-style-type: decimal; padding-left: 20px; margin: 0 0 14px; }
 .editor-preview li { margin: 4px 0; }
+/* A loose list (a blank line anywhere between its items wraps each in <p>) is spaced as a tight one; paragraphs within an item keep theirs */
+.editor-preview li > p { margin: 0; }
+.editor-preview li > p + p { margin-top: 14px; }
 /* A list item's drag handle (ListGrip), shown like a block's (below): in the same left gutter, so the list sits on the
    text's own level. Its list item isn't positioned, so it is placed against its block (the gutter edge) and, with no
    `top`, stays on the item's first line */

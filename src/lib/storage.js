@@ -6,8 +6,8 @@ const REPO_KEY = 'brain_gh_repo'
 const REPOS_KEY = 'folio_repos'
 const USER_KEY = 'folio_user'
 const THEME_KEY = 'folio_theme'
-const TRAILS_KEY = 'folio_trails_'
-const PAGE_KEY = 'folio_page_'
+const TRAILS_KEY = 'folio_trails' // this tab's (sessionStorage); with `_<repo>`, where each repo was last left (localStorage)
+const PAGE_KEY = 'folio_page'
 const EXPANDED_KEY = 'folio_expanded'
 const RAIL_WIDTH_KEY = 'folio_rail_width'
 const RAIL_KEY = 'folio_rail_collapsed'
@@ -54,15 +54,26 @@ export const storage = {
   setPlannerView: (id, view) => write(localStorage, PLANNER_VIEW_KEY + id, view),
   getTheme: () => read(localStorage, THEME_KEY),
   setTheme: (theme) => write(localStorage, THEME_KEY, theme),
-  // Kept on this device per repo, so the app opens where it was left (the page and what's open in it), a new session too
+  // Where `repo` was left: each tab keeps its own (sessionStorage, so a reload stays where that tab was), and the
+  // device keeps the last one per repo (localStorage), for a new tab or app start. Read: the tab's, else the device's.
+  // Nothing is kept without a repo (signed out)
   // What each main page has opened: { home, files, graph } -> trail of views (lib/views.js)
-  getTrails: () => {
-    try { return JSON.parse(read(localStorage, TRAILS_KEY + storage.getRepo())) || {} } catch { return {} }
+  getTrails: (repo) => {
+    if (!repo) return {}
+    try { return JSON.parse(read(sessionStorage, TRAILS_KEY) ?? read(localStorage, `${TRAILS_KEY}_${repo}`)) || {} } catch { return {} }
   },
-  setTrails: (trails) => write(localStorage, TRAILS_KEY + storage.getRepo(), JSON.stringify(trails)),
+  setTrails: (repo, trails) => {
+    if (!repo) return
+    write(sessionStorage, TRAILS_KEY, JSON.stringify(trails))
+    write(localStorage, `${TRAILS_KEY}_${repo}`, JSON.stringify(trails))
+  },
   // Open page (a view's id, 'files', 'graph', 'settings', 'links', 'docs'…), null when unset
-  getPage: () => read(localStorage, PAGE_KEY + storage.getRepo()),
-  setPage: (page) => write(localStorage, PAGE_KEY + storage.getRepo(), page),
+  getPage: (repo) => repo ? read(sessionStorage, PAGE_KEY) ?? read(localStorage, `${PAGE_KEY}_${repo}`) : null,
+  setPage: (repo, page) => {
+    if (!repo) return
+    write(sessionStorage, PAGE_KEY, page)
+    write(localStorage, `${PAGE_KEY}_${repo}`, page)
+  },
   // Folders open in the title bar's folder tree
   getExpanded: () => {
     try { return JSON.parse(read(sessionStorage, EXPANDED_KEY)) || [] } catch { return [] }
@@ -95,9 +106,10 @@ export const storage = {
     const next = [repo, ...storage.getRepos().filter(r => r !== repo)].slice(0, 8)
     write(localStorage, REPOS_KEY, JSON.stringify(next))
   },
-  // What's open in the session, on switching repos: open folders and planners' picked days go (the page, its trails and recent files are kept per repo)
+  // What's open in this tab, on switching repos: its page, trails, open folders and planners' picked days go (where each
+  // repo was left, and recent files, are kept per repo on the device)
   clearRepoSession: () => {
-    for (const key of [EXPANDED_KEY, PLANNER_DAYS_KEY]) write(sessionStorage, key, null)
+    for (const key of [TRAILS_KEY, PAGE_KEY, EXPANDED_KEY, PLANNER_DAYS_KEY]) write(sessionStorage, key, null)
   },
   // Everything tied to the signed-in account; theme stays
   // The commits this device pushed to `repo` (their shas, latest first, the last PUSHED_MAX): Recent updates marks them ↑
@@ -111,10 +123,10 @@ export const storage = {
   },
   clearSession: () => {
     let recents = []
-    try { recents = Object.keys(localStorage).filter(key => [RECENT_KEY, PUSHED_KEY, TRAILS_KEY, PAGE_KEY].some(prefix => key.startsWith(prefix))) } catch {}
+    try { recents = Object.keys(localStorage).filter(key => [RECENT_KEY, PUSHED_KEY, `${TRAILS_KEY}_`, `${PAGE_KEY}_`].some(prefix => key.startsWith(prefix))) } catch {}
     for (const key of recents) write(localStorage, key, null)
     for (const key of [TOKEN_KEY, REPO_KEY, REPOS_KEY, USER_KEY]) write(localStorage, key, null)
-    for (const key of [EXPANDED_KEY, PLANNER_DAYS_KEY]) write(sessionStorage, key, null)
+    for (const key of [TRAILS_KEY, PAGE_KEY, EXPANDED_KEY, PLANNER_DAYS_KEY]) write(sessionStorage, key, null)
   },
 }
 

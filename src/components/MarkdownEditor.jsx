@@ -23,7 +23,9 @@ const TEXT_LAYOUT = 'w-full h-full p-space font-mono text-base leading-relaxed w
 // repo's root as Copy link makes it (`repoLink`), and Escape closes the list (not the editor).
 // The line the cursor is on (the whole line, over every row it wraps to) has a highlighter band behind it (`bg-marker`: a light, bright yellow-green),
 // found with an invisible copy laid out as the textarea, so where a double tap put the cursor, and where it is now, shows.
-// It glides to its new place (150ms) and never blinks: the cursor's offset is taken with the text on every change.
+// It glides to a new line (150ms) but moves with the text as it scrolls, clipped to the editor, and never blinks: the
+// cursor's offset is taken with the text it belongs to (`synced`), so a change the cursor hasn't followed yet (an undo, a
+// redo) leaves the band where it was until it has. Measured again only when the line or its wrapping changes.
 // `locked`: property keys that can't be changed here (a planner's date and repeat: their badges change them): their lines
 // (`keyLines`) are greyed out, and typing that would change, add or remove one is refused, with a message.
 const NONE = []
@@ -42,6 +44,9 @@ const MarkdownEditor = forwardRef(function MarkdownEditor({ content, onChange, o
   const [cursor, setCursor] = useState(null) // where the cursor is (a selection's end), null while not focused
   const lineRef = useRef() // the cursor's line in the measuring copy
   const [band, setBand] = useState(null) // { top, height } of the cursor's line, in the text's own coordinates
+  const [synced, setSynced] = useState(content) // the text `cursor` belongs to
+  const follow = (at, text) => { setCursor(at); setSynced(text) }
+  const boxRef = useRef() // the editor's box: its width decides how lines wrap
   const [scrollTop, setScrollTop] = useState(0)
   const [dismissed, setDismissed] = useState(null) // the `[[` whose suggestions Escape (or a tap outside) closed
   const [active, setActive] = useState(0)
@@ -64,15 +69,25 @@ const MarkdownEditor = forwardRef(function MarkdownEditor({ content, onChange, o
   // The cursor's line: where it starts, and its text
   const lineStart = cursor === null ? -1 : content.lastIndexOf('\n', cursor - 1) + 1
   const lineEnd = cursor === null ? -1 : (i => i === -1 ? content.length : i)(content.indexOf('\n', cursor))
-  useLayoutEffect(() => {
+  const measure = useRef()
+  measure.current = () => {
     const line = lineRef.current
     if (!line) return setBand(null)
-    const measure = () => setBand({ top: line.offsetTop, height: line.offsetHeight }) // a block as wide as the text: whole rows
-    measure()
-    const resizes = new ResizeObserver(measure) // the width changes how the line wraps
-    resizes.observe(line.parentElement)
+    setBand({ top: line.offsetTop, height: line.offsetHeight }) // a block as wide as the text: whole rows
+  }
+  useLayoutEffect(() => { if (synced === content) measure.current() }, [lineStart, lineEnd, content, synced])
+  // A change made from outside (undo, redo) that no selection followed: the cursor taken from the textarea, once its own
+  // selection has been put back (the frame after)
+  useEffect(() => {
+    if (synced === content || cursor === null) return
+    let id = requestAnimationFrame(() => { id = requestAnimationFrame(() => follow(own.current?.selectionEnd ?? 0, content)) })
+    return () => cancelAnimationFrame(id)
+  }, [synced, content])
+  useLayoutEffect(() => {
+    const resizes = new ResizeObserver(() => measure.current()) // the width changes how lines wrap
+    resizes.observe(boxRef.current)
     return () => resizes.disconnect()
-  }, [lineStart, lineEnd, content])
+  }, [])
 
   function setRef(el) {
     own.current = el
@@ -95,8 +110,10 @@ const MarkdownEditor = forwardRef(function MarkdownEditor({ content, onChange, o
 
   function handleChange(e) {
     const next = e.target.value
-    setCursor(e.target.selectionEnd) // with the text, so the band never shows the old cursor's offset in the new text
-    if (!locked.length || lockedProps(next, locked) === lockedProps(content, locked)) return onChange(next)
+    if (!locked.length || lockedProps(next, locked) === lockedProps(content, locked)) {
+      follow(e.target.selectionEnd, next) // with the text, so the band never shows the old cursor's offset in the new text
+      return onChange(next)
+    }
     // Refused: the text stays as it was (React puts it back), and so does the selection
     const textarea = e.currentTarget
     const [start, end] = selection.current
@@ -138,8 +155,15 @@ const MarkdownEditor = forwardRef(function MarkdownEditor({ content, onChange, o
 
   return (
     // data-no-pull: drags here scroll, never refresh
-    <div className="relative flex-1 min-h-0 bg-card" data-no-pull>
-      {band && <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bg-marker transition-[top,height] duration-150 ease-out" style={{ top: band.top - scrollTop, height: band.height }} />}
+    <div ref={boxRef} className="relative flex-1 min-h-0 bg-card" data-no-pull>
+      {band && (
+        // Clipped to the editor; the scroll moves it at once, only a move to another line glides
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="absolute inset-x-0 top-0" style={{ transform: `translateY(${-scrollTop}px)` }}>
+            <div className="absolute inset-x-0 bg-marker transition-[top,height] duration-150 ease-out" style={{ top: band.top, height: band.height }} />
+          </div>
+        </div>
+      )}
       {cursor !== null && (
         // A copy of the text up to the cursor's line and that line, laid out as the textarea's, to find where it is
         <div aria-hidden="true" className={cn(TEXT_LAYOUT, 'invisible absolute inset-0 overflow-hidden m-0')}>
@@ -167,10 +191,10 @@ const MarkdownEditor = forwardRef(function MarkdownEditor({ content, onChange, o
           const { selectionStart, selectionEnd } = e.currentTarget
           selection.current = [selectionStart, selectionEnd]
           setCaret(selectionStart === selectionEnd ? selectionStart : null)
-          setCursor(selectionEnd)
+          follow(selectionEnd, content)
         }}
         onScroll={e => { highlightRef.current.scrollTop = e.currentTarget.scrollTop; setScrollTop(e.currentTarget.scrollTop) }}
-        onFocus={e => setCursor(e.currentTarget.selectionEnd)}
+        onFocus={e => follow(e.currentTarget.selectionEnd, content)}
         onBlur={() => { setCaret(null); setCursor(null); onDone() }}
         onKeyDown={handleKeyDown}
         spellCheck="true"

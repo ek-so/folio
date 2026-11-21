@@ -133,8 +133,7 @@ function dropped(content, lists, blocks, active, over, after) {
   const [kind, from] = String(active.id).split(':')
   const [, to] = String(over.id).split(':')
   if (kind === BLOCKS) {
-    const at = Number(to) + (after ? 1 : 0)
-    return moveBlock(content, blocks, Number(from), Number(from) < at ? at - 1 : at)
+    return moveBlock(content, blocks, Number(from), Number(to) + (after ? 1 : 0))
   }
   return moveListItem(content, lists, [Number(kind), Number(from)], String(over.id).split(':').map(Number), after)
 }

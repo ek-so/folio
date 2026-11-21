@@ -112,7 +112,8 @@ export default function App() {
   const pages = mainPages(views)
   const widgets = views.flatMap(v => v.widgets ?? []) // on every view
   const { theme, setTheme } = useTheme()
-  const [openPage, setPage] = useState(() => (reloaded && storage.getPage()) || (deepLink ? deepLink.page : storage.getPage() || PAGE.HOME))
+  // Read for the repo the app opens (stored: `auth.repo` is set a moment later)
+  const [openPage, setPage] = useState(() => (reloaded && storage.getPage(storage.getRepo())) || (deepLink ? deepLink.page : storage.getPage(storage.getRepo()) || PAGE.HOME))
   // A view that's gone (deleted here or on another device) falls back to the first page; until the config is read, the remembered page stays
   const fixedPage = openPage === PAGE.SETTINGS || openPage === PAGE.LINKS || openPage === PAGE.DOCS || openPage === PAGE.ASSETS
   const page = fixedPage || !viewsFile.ready || pages.some(p => p.id === openPage) ? openPage : pages[0].id
@@ -120,7 +121,7 @@ export default function App() {
   const mainPage = fixedPage ? PAGE.FILES : page
   // Each main page has its own trail of views (lib/views.js); files and folders open in the page you're on
   const [trails, setTrails] = useState(() => {
-    const stored = { ...startTrails(pages.map(p => p.id)), ...storage.getTrails() }
+    const stored = { ...startTrails(pages.map(p => p.id)), ...storage.getTrails(storage.getRepo()) }
     return deepLink ? { ...stored, [deepLink.page]: trailTo(deepLink.page, stored[deepLink.page], deepLink.view) } : stored
   })
   const trailOf = id => trails[id] ?? []
@@ -167,8 +168,18 @@ export default function App() {
   const mainRef = useRef(null) // the page's column: the phone top bar hides while it scrolls
   const viewport = useVisualViewport() // the part of the screen seen with the keyboard open
 
-  useEffect(() => { storage.setTrails(trails) }, [trails])
-  useEffect(() => { storage.setPage(page) }, [page])
+  // Saved for the repo they belong to (none while signed out)
+  useEffect(() => { storage.setTrails(auth.repo, trails) }, [trails])
+  useEffect(() => { storage.setPage(auth.repo, page) }, [page])
+  // Another repo chosen without a reload (signing in again after the token expired): where that repo was left, not this one's
+  const shownRepo = useRef(storage.getRepo())
+  useEffect(() => {
+    if (!auth.repo || auth.repo === shownRepo.current) return
+    shownRepo.current = auth.repo
+    storage.clearRepoSession() // this tab's place was the other repo's
+    setTrails({ ...startTrails(pages.map(p => p.id)), ...storage.getTrails(auth.repo) })
+    setPage(storage.getPage(auth.repo) || PAGE.HOME)
+  }, [auth.repo])
 
   // The title bar's folder tree: the folders open in it
   const [expanded, toggleFolder] = useExpandedFolders()
