@@ -32,7 +32,7 @@ export default function AccountMenu({ current, pages, viewActions, onNavigate, b
   const separator = <Separator className="my-space-sm" />
   return (
     <>
-      <Button variant="outline" aria-label="Menu" aria-haspopup="dialog" onClick={() => setOpen(true)}>
+      <Button variant="outline" aria-label="Menu" aria-haspopup="dialog" className="pl-3" onClick={() => setOpen(true)}>
         <List /><AppLogo className="size-5 shrink-0" /><BrandName small />
       </Button>
       {open && (
