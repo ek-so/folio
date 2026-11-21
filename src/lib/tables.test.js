@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { detectType, parseNumber, sortedRows, cellPasses, tableRows, withCells, checkboxText, parseTables, serializeTables, withColumnType, withValueColor, columnValues } from './tables.js'
+import { detectType, parseNumber, sortedRows, cellPasses, tableRows, withCells, checkboxText, parseTables, serializeTables, withColumnType, withValueColor, columnValues, moveTableRow } from './tables.js'
 
 const cells = texts => texts.map(text => ({ text, link: false }))
 
@@ -72,5 +72,16 @@ describe('tables', () => {
     expect(withColumnType(withColumnType({}, 'a.md', 'S', 'date'), 'a.md', 'S', null)).toEqual({})
     expect(parseTables('nope')).toBe(null)
     expect(parseTables(undefined)).toEqual({})
+  })
+})
+
+describe('moveTableRow', () => {
+  const raw = '| A | B |\n|---|---|\n| 1 | x |\n| 2 | y |\n| 3 | z |\n'
+  it('moves a body row before another, or after the last, never above the header', () => {
+    expect(moveTableRow(raw, 2, 0)).toBe('| A | B |\n|---|---|\n| 3 | z |\n| 1 | x |\n| 2 | y |\n')
+    expect(moveTableRow(raw, 0, 3)).toBe('| A | B |\n|---|---|\n| 2 | y |\n| 3 | z |\n| 1 | x |\n')
+    expect(moveTableRow(raw, 1, 1)).toBe(raw)
+    expect(moveTableRow(raw, 1, 2)).toBe(raw)
+    expect(moveTableRow('not a table', 0, 1)).toBe('not a table')
   })
 })

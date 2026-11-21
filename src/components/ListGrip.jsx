@@ -8,8 +8,8 @@ import { DotsSixVertical } from '@phosphor-icons/react'
 // HTML the preview rendered) stays in place, faded, while a copy of it follows the pointer up and down (MarkdownPreview's
 // DragOverlay), and is what an item or block of the same kind can be dropped on: `drop` ('before' | 'after') marks it as
 // the one being dropped next to, with a line in the gap on that side. Dragging it never pulls to refresh (`data-no-pull`).
-export default function ListGrip({ spot, id, drop }) {
-  const item = spot.parentElement
+// `item`: what it drags when that isn't the spot's parent (a table row's grip sits in its first cell: the row, <tr>).
+export default function ListGrip({ spot, id, drop, item = spot.parentElement }) {
   const { setNodeRef: setDragRef, setActivatorNodeRef, attributes, listeners, isDragging } = useDraggable({ id, data: { item } })
   const { setNodeRef: setDropRef } = useDroppable({ id })
   useEffect(() => { setDragRef(item); setDropRef(item) }, [item, setDragRef, setDropRef])

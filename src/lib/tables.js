@@ -229,6 +229,22 @@ export function tableRows(raw) {
   })
 }
 
+// `raw` (one table) with body row `from` moved before body row `at` (rows.length: after the last); the header and its
+// divider never move, and nothing changes when `raw` isn't a plain table
+export function moveTableRow(raw, from, at) {
+  const rows = tableRows(raw)
+  if (!rows || !rows[from] || at === from || at === from + 1 || at < 0 || at > rows.length) return raw
+  const lines = rows.map(r => raw.slice(r.start, r.end))
+  const order = rows.map((_, i) => i)
+  order.splice(from, 1)
+  order.splice(at > from ? at - 1 : at, 0, from)
+  const first = rows[0].start
+  const last = rows.at(-1).end
+  // The rows' lines in the new order, with the line breaks that were between them
+  const breaks = rows.slice(0, -1).map((r, i) => raw.slice(r.end, rows[i + 1].start))
+  return raw.slice(0, first) + order.map((r, i) => lines[r] + (breaks[i] ?? '')).join('') + raw.slice(last)
+}
+
 const escapeCell = text => text.replace(/\r?\n/g, ' ').replace(/\|/g, '\\|')
 
 // `raw` with cells written: `edits` [{ row, col, text }] (body rows); a row too short gets the cells it lacks

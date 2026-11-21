@@ -15,7 +15,7 @@ import ListGrip from './ListGrip.jsx'
 import ImageHandle from './ImageHandle.jsx'
 import TableColumn from './TableColumn.jsx'
 import TableCell from './TableCell.jsx'
-import { detectType, tableRows, withCells, sortedRows, cellPasses, columnValues, cellValues, checkboxText } from '../lib/tables.js'
+import { detectType, tableRows, withCells, sortedRows, cellPasses, columnValues, cellValues, checkboxText, moveTableRow } from '../lib/tables.js'
 import { useTablesContext } from '../hooks/useTables.js'
 import { DndContext, DragOverlay, closestCenter } from '@dnd-kit/core'
 import { useDragSensors } from '../hooks/useDragSensors.js'
@@ -33,7 +33,7 @@ function caretAt(x, y) {
 // Two taps within this time and distance count as a double tap
 export const DOUBLE_TAP_MS = 350
 // What in the preview handles its own taps (a link, an accordion's summary, a grip, a table's menus): never a double tap
-export const OWN_CLICKS = 'a, img, summary, .link-spot, .list-grip, .block-grip, .image-handle, .table-column, .table-cell, .table-filter-empty'
+export const OWN_CLICKS = 'a, img, summary, .link-spot, .list-grip, .block-grip, .row-grip, .image-handle, .table-column, .table-cell, .table-filter-empty'
 const DOUBLE_TAP_PX = 30
 
 const LONG_WORD = /(\S{16,})/
@@ -98,13 +98,30 @@ function blockGrips(root) {
   })
 }
 
-const BLOCKS = 'blocks' // the blocks' ids ("blocks:3"), beside the lists' ("2:1": list, item)
+const BLOCKS = 'blocks' // the blocks' ids ("blocks:3"), beside the lists' ("2:1": list, item) and table rows' ("row:0:2": table, row)
+const ROW = 'row'
 
-// A dragged list item lands next to any item of the note but its own sub-items, a block next to another block
+// Every body row of a table whose rows line up with its markdown (`edit`) gets a `.row-grip` spot in its first cell, to
+// drag it by among the table's rows (never above the header): `data-table`, `data-row`
+function rowGrips(root, tables) {
+  root.querySelectorAll('table').forEach((table, t) => {
+    if (!tables[t]?.edit) return
+    for (const tr of table.tBodies[0].rows) tr.cells[0]?.insertAdjacentHTML('afterbegin', `<span class="row-grip" data-table="${t}" data-row="${tr.dataset.row}"></span>`)
+  })
+}
+
+// What a drag moves: a block, a table's row (rows of that table only) or a list item
+const kindOf = id => {
+  const [kind, t] = String(id).split(':')
+  return kind === BLOCKS ? BLOCKS : kind === ROW ? `${ROW}:${t}` : 'list'
+}
+
+// A dragged list item lands next to any item of the note but its own sub-items, a block next to another block, a table's
+// row next to another row of its table
 const otherOfKind = args => {
   const { active } = args
-  const block = String(active.id).startsWith(BLOCKS)
-  return closestCenter({ ...args, droppableContainers: args.droppableContainers.filter(c => String(c.id).startsWith(BLOCKS) === block && (block || !active.data.current.item.contains(c.node.current) || c.node.current === active.data.current.item)) })
+  const kind = kindOf(active.id)
+  return closestCenter({ ...args, droppableContainers: args.droppableContainers.filter(c => kindOf(c.id) === kind && (kind !== 'list' || !active.data.current.item.contains(c.node.current) || c.node.current === active.data.current.item)) })
 }
 
 // Below the middle of the item or block it is over, a dragged one lands after it, else before
@@ -121,17 +138,22 @@ const upAndDown = ({ transform }) => ({ ...transform, x: 0 })
 function ghostHtml(item) {
   const copy = item.cloneNode(true)
   copy.classList.remove('list-drop-before', 'list-drop-after')
-  copy.querySelectorAll('.block-grip, .list-grip').forEach(g => g.remove()) // its handles stay behind
+  copy.querySelectorAll('.block-grip, .list-grip, .row-grip').forEach(g => g.remove()) // its handles stay behind
+  if (item.tagName === 'TR') return `<table><tbody>${copy.outerHTML}</tbody></table>`
   if (item.tagName !== 'LI') return copy.outerHTML
   const list = item.parentElement
   const start = list.tagName === 'OL' ? ` start="${(Number(list.getAttribute('start')) || 1) + [...list.children].indexOf(item)}"` : ''
   return `<${list.tagName.toLowerCase()}${start} class="${list.className}">${copy.outerHTML}</${list.tagName.toLowerCase()}>`
 }
 
-// `content` with what was dragged (`active`, a block or list item) moved next to what it was dropped on (`over`)
-function dropped(content, lists, blocks, active, over, after) {
-  const [kind, from] = String(active.id).split(':')
-  const [, to] = String(over.id).split(':')
+// `content` with what was dragged (`active`, a block, a table's row or a list item) moved next to what it was dropped on (`over`)
+function dropped(content, lists, blocks, tables, active, over, after) {
+  const [kind, from, row] = String(active.id).split(':')
+  const [, to, toRow] = String(over.id).split(':')
+  if (kind === ROW) {
+    const { start, raw } = tables[from].edit
+    return content.slice(0, start) + moveTableRow(raw, Number(row), Number(toRow) + (after ? 1 : 0)) + content.slice(start + raw.length)
+  }
   if (kind === BLOCKS) {
     return moveBlock(content, blocks, Number(from), Number(to) + (after ? 1 : 0))
   }
@@ -213,6 +235,7 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
   const [drop, setDrop] = useState(null) // { id, side } of the item a list item is being dragged over
   const [ghost, setGhost] = useState(null) // the dragged item's HTML, for its copy under the pointer
   const [blockSpots, setBlockSpots] = useState([]) // block spots for ListGrip
+  const [rowSpots, setRowSpots] = useState([]) // table rows' spots for ListGrip
   const [handles, setHandles] = useState([]) // image spots for ImageHandle
   const [columnSpots, setColumnSpots] = useState([]) // table header spots for TableColumn
   const [cellSpots, setCellSpots] = useState([]) // table cell spots for TableCell
@@ -270,6 +293,7 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
       summary.insertAdjacentHTML('afterbegin', '<span class="summary-caret" aria-hidden="true"></span>')
     }
     const tables = tableColumns(tpl.content, content, picked)
+    if (onChange) rowGrips(tpl.content, tables)
     const lists = onChange ? listGrips(tpl.content, content) : []
     const blocks = onChange ? blockGrips(tpl.content) : []
     // Images: the width in their alt text ("photo|300") is applied and taken out of the alt; with `onChange`, each in
@@ -330,6 +354,7 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
     setDates([...ref.current.querySelectorAll('.date-spot')])
     setGrips([...ref.current.querySelectorAll('.list-grip')])
     setBlockSpots([...ref.current.querySelectorAll('.block-grip')])
+    setRowSpots([...ref.current.querySelectorAll('.row-grip')])
     setHandles([...ref.current.querySelectorAll('.image-handle')])
     setColumnSpots([...ref.current.querySelectorAll('.table-column')])
     setCellSpots([...ref.current.querySelectorAll('.table-cell')])
@@ -346,6 +371,7 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
       body.querySelector('.table-filter-empty')?.remove()
       const rows = [...body.rows].sort((a, b) => a.dataset.row - b.dataset.row) // in the note's order, whatever a sort did
       const view = tableViews[t] ?? {}
+      table.classList.toggle('table-sorted', Boolean(view.sort)) // shown sorted: its rows can't be dragged (App.css)
       const column = c => data.texts.map(r => r[c] ?? '')
       const order = view.sort && data.columns[view.sort.col] ? sortedRows(data.columns[view.sort.col].type, column(view.sort.col), view.sort.dir) : rows.map((_, r) => r)
       order.forEach(r => body.append(rows[r]))
@@ -491,13 +517,17 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
           setDrop(null)
           setGhost(null)
           if (!e.over) return
-          const moved = dropped(content, lists, blocks, e.active, e.over, dropAfter(e))
+          const moved = dropped(content, lists, blocks, tables, e.active, e.over, dropAfter(e))
           if (moved !== content) onChange(moved)
         }}
       >
         {blockSpots.map(spot => {
           const id = `${BLOCKS}:${spot.dataset.item}`
           return createPortal(<ListGrip spot={spot} id={id} drop={drop?.id === id ? drop.side : null} />, spot, `block-${spot.dataset.item}`)
+        })}
+        {rowSpots.map(spot => {
+          const id = `${ROW}:${spot.dataset.table}:${spot.dataset.row}`
+          return createPortal(<ListGrip spot={spot} item={spot.closest('tr')} id={id} drop={drop?.id === id ? drop.side : null} />, spot, `row-${id}`)
         })}
         {grips.map(spot => {
           const id = `${spot.dataset.list}:${spot.dataset.item}`
