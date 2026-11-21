@@ -146,9 +146,10 @@ export default function Editor({ linkedBy, onOpenLink, path, entry, files, notes
       )}
       <Popover open={Boolean(lockedTap && locked)} onOpenChange={open => { if (!open) setLockedTap(null) }}>
         {lockedTap && <PopoverAnchor className="fixed size-0" style={{ left: lockedTap.x, top: lockedTap.y }} />}
-        <PopoverContent side="top" className="flex w-auto flex-col items-start gap-space-sm" onOpenAutoFocus={e => e.preventDefault()}>
-          <span className="px-space-xs text-sm">This note is locked</span>
-          <Button size="md" variant="secondary" disabled={!onToggleLock} onClick={() => { setLockedTap(null); onToggleLock() }}>
+        <PopoverContent side="top" className="flex w-56 flex-col gap-space-xs" onOpenAutoFocus={e => e.preventDefault()}>
+          {/* As the date picker's actions: a muted line, then the action as a full-width row */}
+          <span className="px-3 pt-space-xs text-sm text-muted-foreground">This note is locked</span>
+          <Button variant="ghost" className="w-full justify-start gap-space-sm px-3" disabled={!onToggleLock} onClick={() => { setLockedTap(null); onToggleLock() }}>
             <LockOpen /> Unlock
           </Button>
         </PopoverContent>
