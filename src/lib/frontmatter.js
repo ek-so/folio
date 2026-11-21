@@ -152,6 +152,7 @@ const quoted = s => /^[["'#]/.test(s) ? `"${s}"` : s
 // lines, and a value with "," or brackets goes on lines), added when the note
 // lacks it. Empty strings are dropped; no value leaves `key:`. The rest is untouched.
 export function withValue(text, key, value) {
+  if (value === null) return withoutKeys(text, [key]) // null: the property taken out (a date's reminder set to None)
   const base = withKeys(text, [key])
   const fm = frontMatter(base)
   const open = base.match(OPEN)[0].length

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { CaretDown, Check, PencilSimple, EyeSlash } from '@phosphor-icons/react'
 import { EmptyMessage, EMPTY } from './EmptyState.jsx'
 import { cn, own } from '@/lib/utils'
+import { reminderKey, isReminderKey, reminderValue } from '@/lib/reminders.js'
 import { PLACEHOLDER } from './ui/placeholder.jsx'
 import { Badge } from './ui/badge.jsx'
 import { Input } from './ui/input.jsx'
@@ -28,7 +29,9 @@ const toneOf = color => color === undefined ? undefined : `var(--tag-${color})`
 // `openLink`) (`clamp`: cut after three lines), the others as
 // badges, one per value, without the property's name (its tooltip has it), so
 // badges listed before the description show above it and the rest below.
-// `props`: [{ key, value }]. `title`: in a box with
+// `props`: [{ key, value }] (`all`: every property of the note, where a date's reminder is looked up when `props` is
+// only some of them: lib/reminders.js; a reminder isn't a badge of its own but a bell on its date; `withReminders`: a
+// date property's picker offers its reminder: a note's properties, a card's, not a table's cell). `title`: in a box with
 // that small title on top, on a light grey fill with badges in the card's color (the note's preview); without it, bare (board cards).
 // With `onChange(key, value)` the badges open a popover to change the property
 // (`options(key)`: the values to choose from) and an empty property shows its
@@ -44,11 +47,12 @@ const toneOf = color => color === undefined ? undefined : `var(--tag-${color})`
 // `badges` ({ key: Component }): properties a widget shows its own way (a planner's type: widgets/planner/RecurrenceField.jsx),
 // one badge for the property, given `prop`, all `props` and `onChange`. `unit`: what has the values in the dialogs' words
 // ('note'; a table's cell: 'row').
-export default function PropertyBadges({ props, path, files, clamp, title, className, onChange, options, onRemoveValue, valueCount, scopeName, onEditValue, chosen, dateKeys, badges, overdue, hiddenValues, unit = 'note' }) {
+export default function PropertyBadges({ props, all = props, withReminders, path, files, clamp, title, className, onChange, options, onRemoveValue, valueCount, scopeName, onEditValue, chosen, dateKeys, badges, overdue, hiddenValues, unit = 'note' }) {
   const [removing, setRemoving] = useState(null) // { key, value } being confirmed
   const [managing, setManaging] = useState(null) // the key whose values are in the dialog
   const parts = [] // [{ text }] or [{ badges: [{ id, prop, label }] }], in order
   for (const prop of props) {
+    if (isReminderKey(prop.key)) continue // shown on its date (a bell), set in its date picker
     const values = valueList(prop.value)
     if (prop.key === DESCRIPTION) { if (values.length) parts.push({ text: values.join(', ') }); continue }
     if (!values.length && !onChange) continue
@@ -67,7 +71,7 @@ export default function PropertyBadges({ props, path, files, clamp, title, class
         {part.badges.map(({ id, prop, label }) => badges?.[prop.key]
           ? <Custom key={id} as={badges[prop.key]} prop={prop} props={props} onChange={onChange} />
           : isDateProp(prop, options, dateKeys)
-          ? <DateValue key={id} prop={prop} onChange={onChange} emptyLabel={dateKeys?.includes(prop.key) ? 'No date' : prop.key} late={overdue && dateKeys?.includes(prop.key)} />
+          ? <DateValue key={id} prop={prop} reminder={all.find(p => p.key === reminderKey(prop.key))?.value} withReminder={withReminders} onChange={onChange} emptyLabel={dateKeys?.includes(prop.key) ? 'No date' : prop.key} late={overdue && dateKeys?.includes(prop.key)} />
           : onChange
           ? <EditableBadge key={id} prop={prop} label={label} color={colors[prop.key].get(label)} options={options} hidden={hiddenValues?.[prop.key]} onChange={onChange} onManage={(onEditValue || onRemoveValue) && (() => setManaging(prop.key))} />
           : (
@@ -138,12 +142,14 @@ function isDateProp(prop, options, dateKeys) {
 // A date property's badge, like a date in the text (DateField: a calendar icon on the left, no ▾): with `onChange`
 // it opens a calendar and a time field to change it (the same day again empties it). While empty, `emptyLabel` (its name, or "No date" for a planner's).
 // `late`: a past date, the whole badge red (Badge's red tone: its tint, text and icon), saying "N days ago" in place of the date
-function DateValue({ prop, onChange, emptyLabel, late }) {
+function DateValue({ prop, reminder, withReminder, onChange, emptyLabel, late }) {
   const date = valueDate(prop.value)
   const pick = picked => onChange(prop.key, picked ? formatDate(picked) : '')
+  const reminded = { value: reminderValue(reminder), onChange: value => onChange(reminderKey(prop.key), value || null) } // None takes it out
   return (
     <DateField
       label={date ? (late && daysAgo(date)) || dateLabel(date) : emptyLabel} date={date} onPick={onChange && pick}
+      reminder={!withReminder ? undefined : onChange ? reminded : reminded.value ? reminded : undefined} title={prop.key}
       tone={late ? 'var(--destructive)' : undefined}
       className={cn(!date && PLACEHOLDER)} {...(onChange ? own : {})}
     />

@@ -17,7 +17,7 @@ import FileIcon from '@/components/FileIcon.jsx'
 import WidgetFrame from '@/components/WidgetFrame.jsx'
 import CardMenu, { cardActions } from '@/components/CardMenu.jsx'
 import PropertiesDialog from '@/components/PropertiesDialog.jsx'
-import DatePopover from '@/components/DatePopover.jsx'
+import DatePicker from '@/components/DatePicker.jsx'
 import { shownCards, hiddenCards, shownLimit } from '@/lib/trayCards.js'
 import { useGridColumns } from '@/hooks/useGridColumns.js'
 import { cardTitle } from '@/lib/folderNotes.js'
@@ -271,9 +271,9 @@ export default function Planner({ id, services, onRemove }) {
           <div className="flex items-center gap-space-sm">
             <div className="min-w-0 flex-1"><TrayTitle>{month}</TrayTitle></div>
             <Button variant="ghost-quiet" size="md" className={cn(TRAY_ROW, 'shrink-0 gap-1.5 px-space-sm', selected !== today && 'text-primary-ink hover:text-primary-ink')} onClick={goToday}><CrosshairSimple /> Today</Button>
-            <DatePopover dayOnly date={keyDay(selected)} onPick={d => d && goToDay(dayKey(d))}>
+            <DatePicker dayOnly date={keyDay(selected)} onPick={d => d && goToDay(dayKey(d))}>
               <Button variant="ghost-quiet" size="icon-md" aria-label="Go to a day"><CalendarBlank /></Button>
-            </DatePopover>
+            </DatePicker>
           </div>
           <div ref={setScroller} onScroll={onScroll} data-no-pull className="-mx-space-sm -mt-space-sm overflow-x-auto p-space-sm [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [mask-image:linear-gradient(to_right,transparent,black_2rem,black_calc(100%-2rem),transparent)]">
             <Ribbon days={days} today={today} selected={selected} count={arranged.count} onSelect={setPicked} />

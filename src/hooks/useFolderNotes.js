@@ -1,3 +1,4 @@
+import { isReminderKey } from '../lib/reminders.js'
 import { useMemo } from 'react'
 import { isTechnical, editNotes, withNoteKeys } from '@/lib/folderNotes.js'
 import { editNote } from '@/lib/changes.js'
@@ -31,7 +32,7 @@ export function useFolderNotes(services, folder) {
   return {
     entries,
     // The keys its notes have, besides the description, by name
-    propertyKeys: () => [...new Set(noteKeys.flat())].filter(k => k !== DESCRIPTION).sort(),
+    propertyKeys: () => [...new Set(noteKeys.flat())].filter(k => k !== DESCRIPTION && !isReminderKey(k)).sort(), // a date's reminder goes with its date
     // How many of its notes have the property `key`
     notesWith: key => noteKeys.filter(keys => keys.includes(key)).length,
     keyError,

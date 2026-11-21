@@ -57,7 +57,7 @@ const NoteCard = forwardRef(function NoteCard({ path, text, dir, properties = []
         {menu}
       </div>
       {detail && <p className="break-words pt-space-xs text-sm text-muted-foreground">{detail}</p>}
-      <PropertyBadges props={shown} path={path} files={files} clamp className="flex-1 pt-space-xs [&>[data-badges]:last-child]:mt-auto" onChange={onChange} options={options} onRemoveValue={onRemoveValue} valueCount={valueCount} scopeName={scopeName} chosen={chosen} onEditValue={onEditValue} dateKeys={dateKeys} badges={badges} overdue={overdue} />
+      <PropertyBadges props={shown} all={fm} withReminders path={path} files={files} clamp className="flex-1 pt-space-xs [&>[data-badges]:last-child]:mt-auto" onChange={onChange} options={options} onRemoveValue={onRemoveValue} valueCount={valueCount} scopeName={scopeName} chosen={chosen} onEditValue={onEditValue} dateKeys={dateKeys} badges={badges} overdue={overdue} />
       {location && <p className={cn('flex items-start gap-space-xs break-words text-sm', PLACEHOLDER)}><TreeView aria-hidden className="size-4 shrink-0 translate-y-0.5" /><span className="min-w-0">{location}</span></p>}
       {progress && text !== undefined && <TaskProgress {...taskProgress(text)} />}
     </div>
