@@ -3,13 +3,15 @@ import { PROFILE_PATH, parseProfile, serializeProfile, cleanEmail } from '../lib
 import { useConfigFile } from './useConfigFile.js'
 
 // The profile (lib/profile.js), from the config (hooks/useConfig.js): `email` ('' for none), `canEdit` (read and
-// readable, so it's never overwritten), and `setEmail(text)`, a change (ch => ch) for `update`
+// readable, so it's never overwritten), and `setEmail(text)`, a change (ch => ch) for `update`; it also notes this
+// browser's time zone and Folio's address, for the email job
 export function useProfile(config) {
   const { value, change } = useConfigFile(config, PROFILE_PATH, parseProfile, serializeProfile)
   return {
     email: value?.email ?? '',
+    timeZone: value?.timeZone ?? '',
     canEdit: !!value,
-    setEmail: text => change(p => ({ ...p, email: cleanEmail(text) })),
+    setEmail: text => change(p => ({ ...p, email: cleanEmail(text), timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone, appUrl: window.location.origin + import.meta.env.BASE_URL })),
   }
 }
 

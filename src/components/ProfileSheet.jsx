@@ -1,6 +1,8 @@
 import { useState, useRef } from 'react'
 import { EnvelopeSimple, PencilSimple, SignOut, GithubLogo, BookBookmark, CaretRight, GitBranch, ArrowSquareOut, Gear, Sun, Moon, Monitor } from '@phosphor-icons/react'
 import { Segmented } from './ui/segmented.jsx'
+import { useNotifyPermission } from '../hooks/useReminderAlerts.js'
+import { SECRET, secretUrl, runsUrl } from '../lib/emailJob.js'
 import { plural } from '../lib/plural.js'
 import { Radio } from './ui/checkbox.jsx'
 import RepoForm from './RepoForm.jsx'
@@ -23,10 +25,13 @@ import { cleanEmail } from '../lib/profile.js'
 // ← back to the sheet it was opened from (the phone's menu); none from the rail. Settings (a step, ←): the theme
 // (`theme`, `onTheme`) and the emoji in names (`emojiNames`, { count, onMove }, null while icons can't be saved: how many
 // files and folders start their name with an emoji; Move to icons, confirmed in a step of its own, takes it out of their
-// names and makes it their icon, lib/icons.js).
+// names and makes it their icon, lib/icons.js), Notifications (whether this browser lets Folio notify, with Turn on) and
+// Email reminders (`emailJob`: { ready: the job is in the repo, onSetUp() (null while it can't be written) }: Set up
+// writes it, lib/emailJob.js; then the RESEND_API_KEY secret is added on GitHub).
 const THEMES = [['light', 'Light', Sun], ['dark', 'Dark', Moon], ['system', 'System', Monitor]]
 
-export default function ProfileSheet({ login, email, repo, repos = [], syncing, onSwitchRepo, onSaveEmail, theme, onTheme, emojiNames, onSignOut, start = 'main', onBack, onClose }) {
+export default function ProfileSheet({ login, email, repo, repos = [], syncing, onSwitchRepo, onSaveEmail, theme, onTheme, emojiNames, emailJob, onSignOut, start = 'main', onBack, onClose }) {
+  const notify = useNotifyPermission()
   const inputRef = useRef()
   const [step, setStep] = useState(start)
   const [typed, setTyped] = useState(email)
@@ -78,6 +83,36 @@ export default function ProfileSheet({ login, email, repo, repos = [], syncing, 
           <Label>Theme</Label>
           <Segmented stretch value={theme} onChange={onTheme} options={THEMES} label="Theme" />
         </div>
+        <Separator />
+        <div className="flex flex-col items-start gap-space-sm">
+          <Label>Notifications</Label>
+          <p className="text-sm text-muted-foreground">
+            {{
+              granted: 'Allowed: reminders show as notifications while Folio is open.',
+              denied: 'Blocked in this browser. Allow them in its site settings for this page.',
+              default: 'Not on yet: reminders show inside Folio only.',
+              install: 'On iPhone and iPad, add Folio to the Home Screen first (Share → Add to Home Screen), then turn them on there.',
+              unsupported: 'This browser can\'t show notifications: reminders show inside Folio.',
+            }[notify.state]}
+          </p>
+          {notify.state === 'default' && <Button variant="secondary" onClick={notify.ask}>Turn on</Button>}
+        </div>
+        {emailJob && <>
+          <Separator />
+          <div className="flex flex-col items-start gap-space-sm">
+            <Label>Email reminders</Label>
+            <p className="text-sm text-muted-foreground">
+              {emailJob.ready
+                ? <>A job in this repo sends the reminders set to email, every 15 minutes (often a few minutes late). It needs the <code className="code-chunk">{SECRET}</code> secret: a free key from resend.com, added on GitHub.</>
+                : 'Reminders set to email need a small job in this repo that sends them every 15 minutes, through Resend (free). Setting it up adds it to the repo; Sync, then add your Resend key on GitHub. Your GitHub token needs Workflows: Read and write.'}
+            </p>
+            <div className="flex flex-wrap gap-space-sm">
+              <Button variant="secondary" disabled={!emailJob.onSetUp} onClick={emailJob.onSetUp}>{emailJob.ready ? 'Update the job' : 'Set up'}</Button>
+              {emailJob.ready && <Button variant="secondary" onClick={() => window.open(secretUrl(repo), '_blank', 'noopener,noreferrer')}><ArrowSquareOut /> Add the key</Button>}
+              {emailJob.ready && <Button variant="secondary" onClick={() => window.open(runsUrl(repo), '_blank', 'noopener,noreferrer')}><ArrowSquareOut /> Its runs</Button>}
+            </div>
+          </div>
+        </>}
         {emojiNames && <>
           <Separator />
           <div className="flex flex-col items-start gap-space-sm">

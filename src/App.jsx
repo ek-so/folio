@@ -72,6 +72,7 @@ import { useTables, TablesContext } from './hooks/useTables.js'
 import { useProfile, ProfileContext } from './hooks/useProfile.js'
 import { useReminderAlerts } from './hooks/useReminderAlerts.js'
 import ProfileSheet from './components/ProfileSheet.jsx'
+import { WORKFLOW_PATH, SCRIPT_PATH, WORKFLOW } from './lib/emailJob.js'
 import { useVisualViewport } from './hooks/useKeyboardInset.js'
 import { later } from './lib/later.js'
 
@@ -733,6 +734,21 @@ export default function App() {
     auth.switchRepo(full)
   }
 
+  // Email reminders (lib/emailJob.js): the job, built beside the app, and its workflow written into the repo, sent on the
+  // next Sync like any change
+  async function setUpEmailJob() {
+    let script
+    try {
+      const res = await fetch(`${BASE}folio-reminders.mjs`, { cache: 'no-cache' })
+      if (!res.ok) throw new Error(String(res.status))
+      script = await res.text()
+    } catch {
+      return toast.error(navigator.onLine === false ? 'Connect to the internet to set up email reminders.' : "Couldn't get the email job from Folio's site.")
+    }
+    update(ch => config.write(WORKFLOW_PATH, WORKFLOW)(config.write(SCRIPT_PATH, script)(ch)))
+    toast.success('Email reminders added. Sync, then add your Resend key on GitHub.')
+  }
+
   async function signOut() {
     setConfirmSignOut(false)
     setPage(PAGE.HOME)
@@ -999,6 +1015,7 @@ export default function App() {
             login={auth.user.login} email={profile.email} start={profileAt}
             repo={auth.repo} repos={auth.repos} syncing={repo.syncing} onSwitchRepo={switchRepo}
             theme={theme} onTheme={setTheme} emojiNames={icons.canEdit ? { count: emojiNames.length, onMove: moveEmojisToIcons } : null}
+            emailJob={{ ready: WORKFLOW_PATH in virtual, onSetUp: repo.remote ? setUpEmailJob : null }}
             onSaveEmail={profile.canEdit ? text => update(profile.setEmail(text)) : null}
             onSignOut={() => { setProfileAt(null); setConfirmSignOut(true) }}
             onBack={profileFrom === 'menu' ? () => { setProfileAt(null); setMenuOpen(true) } : undefined}

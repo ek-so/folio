@@ -5,11 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && vite build --config vite.job.config.js",
     "preview": "vite preview",
     "test": "vitest run",
     "lint": "eslint src",
-    "local": "vite build --base / && vite preview --base / --port 7070 --strictPort --open"
+    "local": "vite build --base / && vite build --config vite.job.config.js && vite preview --base / --port 7070 --strictPort --open"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

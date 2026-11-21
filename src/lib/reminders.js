@@ -64,3 +64,12 @@ export function remindersIn(notes) {
   }
   return found.sort((a, b) => a.at - b.at)
 }
+
+// The email job (src/job/reminders-job.js, a GitHub Action in the notes repo): of `reminders` (remindersIn), those set to
+// email that came due within `windowMs` before `now` and aren't in `sent` ({ id: when it was sent, ms }): what a run
+// sends. The window spans more than the job's schedule, so a late run still sends what's due; `sent` keeps it once
+export const emailsDue = (reminders, sent, now, windowMs) =>
+  reminders.filter(r => r.email && r.at <= now && r.at > now - windowMs && !(r.id in sent))
+
+// `sent` without what was sent more than `keepMs` before `now` (it can't come due again)
+export const keptSent = (sent, now, keepMs) => Object.fromEntries(Object.entries(sent).filter(([, at]) => at > now - keepMs))

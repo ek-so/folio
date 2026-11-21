@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { remindersIn } from '../lib/reminders.js'
 import { dateLabel } from '../lib/dates.js'
@@ -30,7 +30,18 @@ const writeFired = ids => { try { localStorage.setItem(FIRED_KEY, JSON.stringify
 
 // Asks the browser once to let Folio notify (in the tap that sets a reminder: browsers only ask then)
 export function askToNotify() {
-  if (typeof Notification !== 'undefined' && Notification.permission === 'default') Notification.requestPermission().catch(() => {})
+  if (typeof Notification !== 'undefined' && Notification.permission === 'default') return Notification.requestPermission().catch(() => 'default')
+  return Promise.resolve(typeof Notification === 'undefined' ? 'unsupported' : Notification.permission)
+}
+
+// Whether this browser lets Folio notify (Profile → Settings → Notifications): `state` 'granted', 'denied', 'default'
+// (not asked yet), 'install' (an iPhone or iPad in Safari: only Folio added to the Home Screen can notify) or
+// 'unsupported'; `ask()` asks (in a tap)
+export function useNotifyPermission() {
+  const read = () => typeof Notification !== 'undefined' ? Notification.permission
+    : /iPhone|iPad|iPod/.test(navigator.userAgent) ? 'install' : 'unsupported'
+  const [state, setState] = useState(read)
+  return { state, ask: () => askToNotify().then(() => setState(read())) }
 }
 
 // Reminders (lib/reminders.js) shown while Folio is open: when one is due, a notification from the browser (allowed:
