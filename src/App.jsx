@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react'
+import { useState, useEffect, useMemo, useRef, Suspense } from 'react'
 import Auth from './components/Auth.jsx'
 import RepoSetup from './components/RepoSetup.jsx'
 import FileBrowser from './components/FileBrowser.jsx'
@@ -11,7 +11,6 @@ import NewFileModal from './components/NewFileModal.jsx'
 import EditListModal from './components/EditListModal.jsx'
 import PageTitle from './components/PageTitle.jsx'
 import PageIcon from './components/PageIcon.jsx'
-import Assets from './components/Assets.jsx'
 import { useAssets } from './hooks/useAssets.js'
 import EmojiPicker from './components/EmojiPicker.jsx'
 import SyncButton from './components/SyncButton.jsx'
@@ -23,16 +22,12 @@ import UploadErrorsModal from './components/UploadErrorsModal.jsx'
 import { blobShaOf, toBase64, isNetworkError } from './lib/github.js'
 import SyncErrorModal from './components/SyncErrorModal.jsx'
 import { EMPTY } from './components/EmptyState.jsx'
-import BrokenLinks from './components/BrokenLinks.jsx'
-import Documentation from './components/Documentation.jsx'
 import SyncCheckModal from './components/SyncCheckModal.jsx'
 import { useLinkIndex, LinksContext } from './hooks/useLinkIndex.js'
 import { useSymlinks } from './hooks/useSymlinks.js'
 import { rewriteLinks, retargetLink, unlinked, missingNotePath, extractLinks, SYMLINK_MODE } from './lib/links.js'
 import { NavContext } from './components/NavTree.jsx'
 import { NavRail, TopBar } from './components/AppNav.jsx'
-import GraphPage from './components/GraphPage.jsx'
-import Settings from './components/Settings.jsx'
 import Spinner from './components/Spinner.jsx'
 import Loading from './components/Loading.jsx'
 import { formatDate } from './lib/dates.js'
@@ -74,6 +69,14 @@ import { useNoteExport } from './hooks/useNoteExport.js'
 import { useRevert } from './hooks/useRevert.js'
 import { useTables, TablesContext } from './hooks/useTables.js'
 import { useVisualViewport } from './hooks/useKeyboardInset.js'
+import { later } from './lib/later.js'
+
+// Pages the first screen doesn't need: their code loads after it (lib/later.js)
+const Assets = later(() => import('./components/Assets.jsx'))
+const BrokenLinks = later(() => import('./components/BrokenLinks.jsx'))
+const Documentation = later(() => import('./components/Documentation.jsx'))
+const GraphPage = later(() => import('./components/GraphPage.jsx'))
+const Settings = later(() => import('./components/Settings.jsx'))
 
 const BASE = import.meta.env.BASE_URL
 // The page and view the address the app was opened at names (not the bare root)
@@ -834,6 +837,8 @@ export default function App() {
           <NavRail page={page} pages={pages} hrefOf={id => urlForPage(BASE, id, currentView(id, trailOf(id)))} viewActions={viewActions} onPage={choosePage} onSearch={() => setSearchOpen(true)} renderSync={renderSync} menu={menu} />
           <main ref={mainRef} className="flex flex-col flex-1 min-w-0 min-h-0">
           <TopBar host={mainRef} resetKey={`${page}|${selectedFile}|${folder}`} page={page} pages={pages} viewActions={viewActions} onPage={choosePage} onSearch={() => setSearchOpen(true)} renderSync={renderSync} menu={menu} />
+          {/* A page or widget whose code hasn't loaded yet (lib/later.js) shows Loading meanwhile */}
+          <Suspense fallback={<Loading />}>
           {page === PAGE.SETTINGS ? (
             <Settings login={auth.user.login} repo={auth.repo} theme={theme} onTheme={setTheme} emojiNames={icons.canEdit ? { count: emojiNames.length, onMove: moveEmojisToIcons } : null} />
           ) : page === PAGE.DOCS ? (
@@ -927,6 +932,7 @@ export default function App() {
           )}
             </div>
           </>)}
+          </Suspense>
           </main>
           </div>
         </PullToRefresh>
@@ -1044,11 +1050,13 @@ export default function App() {
         {adding && (() => {
           const { Setup } = widgetType(adding.type)
           return (
-            <Setup
-              services={widgetServices}
-              onCreate={change => { addWidgetTo(adding.viewId, adding.type, change); setAdding(null) }}
-              onClose={() => setAdding(null)}
-            />
+            <Suspense fallback={null}>
+              <Setup
+                services={widgetServices}
+                onCreate={change => { addWidgetTo(adding.viewId, adding.type, change); setAdding(null) }}
+                onClose={() => setAdding(null)}
+              />
+            </Suspense>
           )
         })()}
 

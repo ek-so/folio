@@ -1,14 +1,16 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, Suspense } from 'react'
 import { flushSync } from 'react-dom'
 import { Plus, Trash } from '@phosphor-icons/react'
 import { Popover, PopoverTrigger, PopoverContent } from './ui/popover.jsx'
-import { Calendar } from './ui/calendar.jsx'
+import { later } from '@/lib/later.js'
 import { Input } from './ui/input.jsx'
 import { Label } from './ui/label.jsx'
 import { Button } from './ui/button.jsx'
 import { Separator } from './ui/separator.jsx'
 import { useSingleOpen } from '../hooks/useSingleOpen.jsx'
 import { own } from '../lib/utils.js'
+
+const Calendar = later(() => import('./ui/calendar.jsx'), m => m.Calendar) // its date library stays out of the first screen
 
 const pad = n => String(n).padStart(2, '0')
 
@@ -62,6 +64,7 @@ export default function DatePopover({ date, onPick, required, dayOnly, children 
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>{children}</PopoverTrigger>
       <PopoverContent {...own} data-badge-popover className="flex w-auto flex-col p-0" onCloseAutoFocus={e => e.preventDefault()}>
+        <Suspense fallback={null}>
         <Calendar
           mode="single"
           selected={selected}
@@ -72,6 +75,7 @@ export default function DatePopover({ date, onPick, required, dayOnly, children 
             setOpen(false)
           }}
         />
+        </Suspense>
         {hasDay && (time || keeps) && (
           <div className="px-space-sm pb-space-sm">
             <Button variant="ghost-destructive" className="w-full justify-start gap-space-sm px-3" onClick={removeDay}><Trash /> Remove date</Button>

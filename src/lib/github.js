@@ -1,6 +1,10 @@
-import { Octokit } from '@octokit/rest'
+import { Octokit as Core } from '@octokit/core'
+import { paginateRest } from '@octokit/plugin-paginate-rest'
 import { cache } from './cache.js'
 
+// GitHub's REST API by route ('GET /repos/{owner}/{repo}'): Octokit's core with paging only, not @octokit/rest, whose
+// named method for every endpoint would put GitHub's whole API list in the app's main file
+const Octokit = Core.plugin(paginateRest)
 let octokit = null
 let owner = null
 let repo = null
@@ -28,21 +32,21 @@ export function isAuthError(e) {
 }
 
 export async function getUser() {
-  const { data } = await octokit.rest.users.getAuthenticated()
+  const { data } = await octokit.request('GET /user')
   return data
 }
 
 // Throws if the repo `owner`/`name` doesn't exist or the token can't see it
 // (the repo in use stays as it is).
 export async function checkRepo(owner, name) {
-  await octokit.rest.repos.get({ owner, repo: name })
+  await octokit.request('GET /repos/{owner}/{repo}', { owner, repo: name })
 }
 
 // The repos the token can reach, sorted by name, a page of 100 at a time (so a long
 // list shows while the rest loads), each `{ full, canWrite }`. `canWrite` is the
 // user's own access, which the token's can narrow: `canWriteRepo` checks the token.
 export async function* listRepos() {
-  for await (const { data } of octokit.paginate.iterator(octokit.rest.repos.listForAuthenticatedUser, { per_page: 100, sort: 'full_name' })) {
+  for await (const { data } of octokit.paginate.iterator('GET /user/repos', { per_page: 100, sort: 'full_name' })) {
     yield data.map(r => ({ full: r.full_name, canWrite: !!r.permissions?.push }))
   }
 }
@@ -50,7 +54,7 @@ export async function* listRepos() {
 // Creates a private repo `name` under the signed-in user's account, with a first commit (so it isn't
 // empty), and returns its full name. Throws an HttpError: 422 the name is taken, 403/404 the token can't create repos.
 export async function createRepo(name) {
-  const { data } = await octokit.rest.repos.createForAuthenticatedUser({ name, private: true, auto_init: true })
+  const { data } = await octokit.request('POST /user/repos', { name, private: true, auto_init: true })
   return data.full_name
 }
 
@@ -59,7 +63,7 @@ export async function createRepo(name) {
 // when GitHub can't be asked (offline). An empty repo can't take a blob yet; it passes.
 export async function canWriteRepo(owner, name) {
   try {
-    await octokit.rest.git.createBlob({ owner, repo: name, content: '', encoding: 'utf-8' })
+    await octokit.request('POST /repos/{owner}/{repo}/git/blobs', { owner, repo: name, content: '', encoding: 'utf-8' })
     return true
   } catch (e) {
     if (e.status === 403 || e.status === 404) return false
@@ -74,7 +78,7 @@ function decode(base64) {
 
 async function getDefaultBranch() {
   if (!branch) {
-    const { data } = await octokit.rest.repos.get({ owner, repo })
+    const { data } = await octokit.request('GET /repos/{owner}/{repo}', { owner, repo })
     branch = data.default_branch
   }
   return branch
@@ -88,7 +92,7 @@ const fetchFresh = (url, opts) => fetch(url, { ...opts, cache: 'no-cache' })
 // Latest commit SHA on the default branch — cheap single request, no tree.
 export async function getLatestCommitSha() {
   const branchName = await getDefaultBranch()
-  const { data } = await octokit.rest.repos.getBranch({ owner, repo, branch: branchName, request: { fetch: fetchFresh } })
+  const { data } = await octokit.request('GET /repos/{owner}/{repo}/branches/{branch}', { owner, repo, branch: branchName, request: { fetch: fetchFresh } })
   return data.commit.sha
 }
 
@@ -96,7 +100,7 @@ export async function getLatestCommitSha() {
 // can't compare them (e.g. history was rewritten). GitHub lists at most 300.
 export async function changedFileCount(base, head) {
   try {
-    const { data } = await octokit.rest.repos.compareCommitsWithBasehead({ owner, repo, basehead: `${base}...${head}` })
+    const { data } = await octokit.request('GET /repos/{owner}/{repo}/compare/{basehead}', { owner, repo, basehead: `${base}...${head}` })
     return data.files?.length ?? null
   } catch (e) {
     if (isNetworkError(e)) throw e
@@ -107,7 +111,7 @@ export async function changedFileCount(base, head) {
 // Up to `count` commits of `branch`, newest first, from `from` (a sha: that one first) or the branch's latest:
 // [{ sha, date }]. With `path`, only the commits that changed that path (a file's versions)
 export async function listCommits(branch, count, from, path) {
-  const { data } = await octokit.rest.repos.listCommits({ owner, repo, sha: from ?? branch, per_page: count, ...(path ? { path } : {}), request: { fetch: fetchFresh } })
+  const { data } = await octokit.request('GET /repos/{owner}/{repo}/commits', { owner, repo, sha: from ?? branch, per_page: count, ...(path ? { path } : {}), request: { fetch: fetchFresh } })
   return data.map(c => ({ sha: c.sha, date: c.commit.committer?.date ?? c.commit.author?.date }))
 }
 
@@ -117,7 +121,7 @@ export async function listCommits(branch, count, from, path) {
 export async function commitFiles(sha) {
   const cached = await cache.getCommitFiles(sha)
   if (cached) return cached
-  const { data } = await octokit.rest.repos.getCommit({ owner, repo, ref: sha })
+  const { data } = await octokit.request('GET /repos/{owner}/{repo}/commits/{ref}', { owner, repo, ref: sha })
   const files = (data.files ?? []).map(f => ({ path: f.filename, status: f.status, ...(f.previous_filename ? { from: f.previous_filename } : {}), ...(f.status !== 'removed' && f.sha ? { sha: f.sha } : {}) }))
   cache.setCommitFiles(sha, files)
   return files
@@ -140,7 +144,7 @@ export async function commitPage(branch, count, after, path) {
 
 // The commit `sha` came after (its first parent), or null for the first commit
 export async function commitParent(sha) {
-  const { data } = await octokit.rest.git.getCommit({ owner, repo, commit_sha: sha })
+  const { data } = await octokit.request('GET /repos/{owner}/{repo}/git/commits/{commit_sha}', { owner, repo, commit_sha: sha })
   return data.parents[0]?.sha ?? null
 }
 
@@ -154,9 +158,9 @@ const step = (name, promise) => promise.catch(e => {
 // `truncated` is set when GitHub couldn't list the whole tree.
 export async function getTree() {
   const branchName = await step('read', getDefaultBranch())
-  const { data } = await step('read', octokit.rest.repos.getBranch({ owner, repo, branch: branchName, request: { fetch: fetchFresh } }))
+  const { data } = await step('read', octokit.request('GET /repos/{owner}/{repo}/branches/{branch}', { owner, repo, branch: branchName, request: { fetch: fetchFresh } }))
   const treeSha = data.commit.commit.tree.sha
-  const { data: tree } = await step('read', octokit.rest.git.getTree({ owner, repo, tree_sha: treeSha, recursive: 'true' }))
+  const { data: tree } = await step('read', octokit.request('GET /repos/{owner}/{repo}/git/trees/{tree_sha}', { owner, repo, tree_sha: treeSha, recursive: 'true' }))
   const files = {}
   for (const item of tree.tree) {
     if (item.type === 'blob') files[item.path] = { sha: item.sha, mode: item.mode }
@@ -168,7 +172,7 @@ export async function getTree() {
 export async function getBlobBase64(sha) {
   const cached = await cache.getBlob(sha)
   if (cached !== undefined) return cached
-  const { data } = await octokit.rest.git.getBlob({ owner, repo, file_sha: sha })
+  const { data } = await octokit.request('GET /repos/{owner}/{repo}/git/blobs/{file_sha}', { owner, repo, file_sha: sha })
   const base64 = data.content.replace(/\n/g, '')
   await cache.setBlob(sha, base64)
   return base64
@@ -182,7 +186,7 @@ export async function getBlob(sha) {
 // out (GitHub cuts a very large repo's listing short)
 export async function fileOn(path, branch) {
   try {
-    const { data } = await step('read', octokit.rest.repos.getContent({ owner, repo, path, ref: branch, request: { fetch: fetchFresh } }))
+    const { data } = await step('read', octokit.request('GET /repos/{owner}/{repo}/contents/{path}', { owner, repo, path, ref: branch, request: { fetch: fetchFresh } }))
     return Array.isArray(data) || data.type !== 'file' ? null : { sha: data.sha, mode: '100644' }
   } catch (e) {
     if (e?.status === 404) return null
@@ -197,13 +201,13 @@ export const isOutOfDate = e => e?.step === 'save' && (e.status === 409 || e.sta
 // Creates one commit on top of `remote` with the given tree entries.
 // Returns the new commit's and tree's shas.
 export async function commitTree(remote, entries, message) {
-  const { data: tree } = await step('upload', octokit.rest.git.createTree({
+  const { data: tree } = await step('upload', octokit.request('POST /repos/{owner}/{repo}/git/trees', {
     owner, repo, base_tree: remote.treeSha, tree: entries,
   }))
-  const { data: commit } = await step('upload', octokit.rest.git.createCommit({
+  const { data: commit } = await step('upload', octokit.request('POST /repos/{owner}/{repo}/git/commits', {
     owner, repo, message, tree: tree.sha, parents: [remote.commitSha],
   }))
-  await step('save', octokit.rest.git.updateRef({ owner, repo, ref: `heads/${remote.branch}`, sha: commit.sha }))
+  await step('save', octokit.request('PATCH /repos/{owner}/{repo}/git/refs/{ref}', { owner, repo, ref: `heads/${remote.branch}`, sha: commit.sha }))
   return { commitSha: commit.sha, treeSha: tree.sha }
 }
 
@@ -237,5 +241,5 @@ export async function uploadBlob(sha) {
   if (base64 === undefined) {
     throw Object.assign(new Error('A file added on this device is no longer stored here. Discard it and add it again.'), { step: 'upload' })
   }
-  await step('upload', octokit.rest.git.createBlob({ owner, repo, content: base64, encoding: 'base64' }))
+  await step('upload', octokit.request('POST /repos/{owner}/{repo}/git/blobs', { owner, repo, content: base64, encoding: 'base64' }))
 }

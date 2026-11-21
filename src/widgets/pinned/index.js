@@ -1,6 +1,5 @@
 import { PushPin } from '@phosphor-icons/react'
-import PinnedWidget from './PinnedWidget.jsx'
-import PinnedSetup from './PinnedSetup.jsx'
+import { later } from '@/lib/later.js'
 import { parsePinned, settingsOf, settingsWrite, movedPinned } from './pinned.js'
 import { displayName } from '@/lib/files.js'
 
@@ -15,8 +14,8 @@ export default {
   type: 'pinned',
   label: 'Pinned',
   icon: PushPin,
-  Widget: PinnedWidget,
-  Setup: PinnedSetup,
+  Widget: later(() => import('./PinnedWidget.jsx')),
+  Setup: later(() => import('./PinnedSetup.jsx')),
   title: () => 'Pinned',
   // Its notes and folders, in their order
   tree(id, { config, folders }) {

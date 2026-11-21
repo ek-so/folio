@@ -1,6 +1,5 @@
 import { CalendarDots } from '@phosphor-icons/react'
-import Planner from './Planner.jsx'
-import PlannerSetup from './PlannerSetup.jsx'
+import { later } from '@/lib/later.js'
 import { BADGES } from './RecurrenceField.jsx'
 import { plannerPath, plannerTitle, parsePlanner, serializePlanner, movedPlanner, FIXED, ORDER } from './planner.js'
 import { isTechnical } from '@/lib/folderNotes.js'
@@ -11,8 +10,8 @@ export default {
   type: 'planner',
   label: 'Planner',
   icon: CalendarDots,
-  Widget: Planner,
-  Setup: PlannerSetup,
+  Widget: later(() => import('./Planner.jsx')),
+  Setup: later(() => import('./PlannerSetup.jsx')),
   title(id, { config, repoName }) {
     const file = config.read(plannerPath(id))
     const planner = file.ready && file.text !== undefined ? parsePlanner(file.text) : null

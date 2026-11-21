@@ -6,7 +6,8 @@ import note from './note/index.js'
 // Every kind of widget a view can hold, by its `type` in .folio/views.json.
 // A widget is self-contained in its own folder and is one object:
 //   type, label, icon         what Add widget lists
-//   Widget                    ({ id, services, onRemove }): the widget on its view
+//   Widget                    ({ id, services, onRemove }): the widget on its view (Widget and Setup are `later`: their
+//                             code loads after the first screen; shown inside a Suspense)
 //   title(id, services)        optional: its name in Edit widgets (else its label)
 //   named: false               optional: its name is always `title`'s, never its own (a Note widget: its note's)
 //   Setup                     ({ services, onCreate, onClose }): asks what's needed before it exists, then

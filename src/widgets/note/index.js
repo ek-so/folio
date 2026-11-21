@@ -1,6 +1,5 @@
 import { Note } from '@phosphor-icons/react'
-import NoteWidget from './NoteWidget.jsx'
-import NoteSetup from './NoteSetup.jsx'
+import { later } from '@/lib/later.js'
 import { noteSettings, noteWrite, movedNote, notePath, noteWidgetTitle } from './note.js'
 import { displayName } from '@/lib/files.js'
 
@@ -14,8 +13,8 @@ export default {
   type: 'single-note',
   label: 'Note',
   icon: Note,
-  Widget: NoteWidget,
-  Setup: NoteSetup,
+  Widget: later(() => import('./NoteWidget.jsx')),
+  Setup: later(() => import('./NoteSetup.jsx')),
   title: (id, { config, notes }) => noteWidgetTitle(noteSettings(config.read, id), notes),
   named: false, // its Rename renames its note
 

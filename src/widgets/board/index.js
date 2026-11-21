@@ -1,7 +1,6 @@
 import { Kanban, Columns } from '@phosphor-icons/react'
 import { displayName } from '@/lib/files.js'
-import Board from './Board.jsx'
-import BoardSetup from './BoardSetup.jsx'
+import { later } from '@/lib/later.js'
 import { boardPath, boardTitle, parseBoard, serializeBoard, movedBoard, boardColumns, isCard, looseName, LOOSE } from './board.js'
 import { placeCardVia } from './useBoard.js'
 
@@ -10,8 +9,8 @@ export default {
   type: 'board',
   label: 'Board',
   icon: Kanban,
-  Widget: Board,
-  Setup: BoardSetup,
+  Widget: later(() => import('./Board.jsx')),
+  Setup: later(() => import('./BoardSetup.jsx')),
   title(id, { config, repoName }) {
     const file = config.read(boardPath(id))
     const board = file.ready && file.text !== undefined ? parseBoard(file.text) : null
