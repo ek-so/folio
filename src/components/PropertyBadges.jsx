@@ -63,7 +63,7 @@ export default function PropertyBadges({ props, path, files, clamp, title, class
   const body = parts.map((part, i) => part.text
     ? <InlineMarkdown key={i} text={part.text} path={path} files={files} onChange={onChange && (text => onChange(DESCRIPTION, text))} className={cn('break-words text-sm text-muted-foreground', clamp && 'line-clamp-3')} />
     : (
-      <div key={i} className="flex flex-wrap gap-space-xs">
+      <div key={i} data-badges className="flex flex-wrap gap-space-xs">
         {part.badges.map(({ id, prop, label }) => badges?.[prop.key]
           ? <Custom key={id} as={badges[prop.key]} prop={prop} props={props} onChange={onChange} />
           : isDateProp(prop, options, dateKeys)

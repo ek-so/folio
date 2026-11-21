@@ -21,7 +21,7 @@ import { EmptyMessage, EMPTY } from '@/components/EmptyState.jsx'
 
 // The Pinned widget (pinned.js): "Pinned" and its ⋯ (Pin note or folder…, Edit pinned…: order them and take them out,
 // Remove widget) on top, then a card for each pinned note or folder, in a grid like a planner day's (as many columns as
-// fit, each at least 16rem; the cards of a row one height). Every card shows its icon (FileIcon: its emoji, else a note's or folder's
+// fit, each at least 16rem; all its cards one height, the tallest's). Every card shows its icon (FileIcon: its emoji, else a note's or folder's
 // icon); a note's is a board's card (NoteCard: title and description), a folder's has its name and how many items it holds
 // where a description sits. A tap opens the note or folder; a card is dragged
 // into another's place (when the widget can be saved). Its ⋯ is its file's or folder's (ItemMenu: Open in File manager, the core),
@@ -51,7 +51,7 @@ export default function PinnedWidget({ id, services, onRemove }) {
   const body = () => !settings.items.length ? <EmptyMessage emoji={EMPTY.pinned}>Nothing pinned yet. Pin a note or folder from ⋯.</EmptyMessage>
     : (
       <DndContext sensors={canEdit ? sensors : []} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,16rem),1fr))] gap-space-sm">
+        <div className="grid auto-rows-fr grid-cols-[repeat(auto-fill,minmax(min(100%,16rem),1fr))] gap-space-sm">
           <SortableContext items={settings.items.map(n => n.path)} strategy={rectSortingStrategy}>
             {settings.items.map((entry, i) => (
               <PinnedCard

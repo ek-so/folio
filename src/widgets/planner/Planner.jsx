@@ -80,7 +80,8 @@ export default function Planner({ id, services, onRemove }) {
   const [range, setRange] = useState({ before: MORE_DAYS, after: MORE_DAYS * 2 }) // days shown before and after today
   const [dragged, setDragged] = useState(null) // the path of the card being dragged
   const [grid, setGrid] = useState(null) // the selected day's grid of cards, whose columns are counted
-  const limit = shownLimit(useGridColumns(grid)) // its cards shown before Show more: whole rows on desktop
+  const columns = useGridColumns(grid)
+  const limit = shownLimit(columns) // its cards shown before Show more: whole rows on desktop
   const [choosing, setChoosing] = useState(false) // the Properties sheet
   const { view, setView: pickView } = act // calendar or list, this device's choice
   const [jumping, setJumping] = useState(null) // a day picked in the calendar, scrolled to once the ribbon has it
@@ -281,10 +282,10 @@ export default function Planner({ id, services, onRemove }) {
         {/* The selected day's cards in a tray like a board's column, its title with + (New task on that day): its first cards and Show N more; a day without any is empty */}
         <Tray>
           {sectionTitle(shortTitle(selected, today), selected)}
-          {/* The cards of a row are one height; Show more on a row of its own, one column wide (all of it on phones) */}
+          {/* All its cards are one height (the tallest's: a row each, 1fr); Show more on a row of its own, as tall as it needs, one column wide (all of it on phones) */}
           {list.length === 0 && <EmptyBox emoji={SORTED.emoji}>{SORTED.text}</EmptyBox>}
           {list.length > 0 && (
-            <div ref={setGrid} className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,18rem),1fr))] gap-space-sm">
+            <div ref={setGrid} style={{ gridTemplateRows: `repeat(${Math.ceil(visible.size / columns)}, 1fr)` }} className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,18rem),1fr))] gap-space-sm">
               <SortableContext items={paths.filter(p => visible.has(p)).map(dayCardId)} strategy={rectSortingStrategy}>
                 {list.filter(c => visible.has(c.path)).map(({ path, overdue, undated }) => (
                   <PlannerCard key={path} {...cardProps(path)} menu={cardMenu(path)} overdue={overdue} dashed={overdue || undated} locked={services.locked(path)} onOpen={openFile} onOpenFolder={openFolder} />
