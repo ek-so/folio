@@ -11,7 +11,7 @@ import { Button } from './ui/button.jsx'
 import { ListRow } from './ui/list-row.jsx'
 import { Separator } from './ui/separator.jsx'
 
-// The phone navigation: ☰, a short vertical line, then the app's logo and name, in an outlined button (on the top bar) opens a `BottomSheet` like every
+// The phone navigation: ☰, then the app's logo and name, in an outlined button (on the top bar) opens a `BottomSheet` like every
 // other prompt, titled with the same logo and name. First the views under their title (`ViewsTitle`: "Views" and its ⋯), each with its ⋯ (`ViewMenu`,
 // `viewActions`), then the other main pages (`pages`): File manager, Assets and Graph; then Recent updates, Broken
 // links (count), Documentation, Settings and Sign out. `current` is the open page, highlighted. Choosing a page closes it.
@@ -33,7 +33,7 @@ export default function AccountMenu({ current, pages, viewActions, onNavigate, b
   return (
     <>
       <Button variant="outline" aria-label="Menu" aria-haspopup="dialog" onClick={() => setOpen(true)}>
-        <List /><Separator orientation="vertical" className="data-[orientation=vertical]:h-4" /><AppLogo className="size-5 shrink-0" /><BrandName small />
+        <List /><AppLogo className="size-5 shrink-0" /><BrandName small />
       </Button>
       {open && (
         <BottomSheet
