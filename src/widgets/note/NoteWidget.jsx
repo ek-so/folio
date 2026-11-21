@@ -25,7 +25,7 @@ import { noteSettings, noteWrite, notePath, noteWidgetTitle } from './note.js'
 // The Note widget (note.js): the note's icon (FileIcon: its emoji, else a note's icon) and title, and its ⋯ (Change
 // note…, on a phone Change height…, Emoji and Rename: the note's own, as in its file's ⋯: Rename asks for its Title and
 // File name, RenameModal; Move to view, Remove widget) on top, then one card with the note's markdown as a preview (MarkdownPreview; without
-// the heading its title comes from, as that's the widget's title), at most its `height` tall: what doesn't fit fades out
+// the heading its title comes from, as that's the widget's title), its `height` tall even when the note is shorter: what doesn't fit fades out
 // at the bottom. On desktop its bottom edge is dragged to change that (ResizeHandle; double click: the default); on a
 // phone Change height… asks for it in pixels. Saved when let go, in its settings. Its links, checkboxes and badges work as in the note; any other tap opens
 // the note, a double tap opens it in the editor at the tapped word (`editFile`). A gone note's card is dashed: a tap
@@ -102,7 +102,7 @@ function NotePreviewCard({ path, height, services, onReplace }) {
     if (edited.current) { edited.current = false; return }
     if (!found) return onReplace?.()
     if (e.target.closest(`${OWN_CLICKS}, input, button`)) return
-    if (timer.current) return edit() // a second tap the preview didn't count (too far from the first)
+    if (timer.current) return edit(text?.length ?? 0) // a second tap the preview didn't count (under a short note, or too far from the first): from its end
     timer.current = setTimeout(() => { timer.current = null; services.openFile(path) }, DOUBLE_TAP_MS)
   }
 
@@ -113,7 +113,7 @@ function NotePreviewCard({ path, height, services, onReplace }) {
       tabIndex={0}
       onKeyDown={e => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); if (found) services.openFile(path); else onReplace?.() } }}
       onClick={onClick}
-      style={{ maxHeight: height }}
+      style={{ height }}
       className={cn('relative cursor-pointer overflow-hidden rounded-lg border border-border bg-card outline-none hover-lift focus-visible:ring-1 focus-visible:ring-ring', !found && 'border-dashed border-muted-foreground/50')}
     >
       {!found ? (
@@ -133,7 +133,7 @@ function NotePreviewCard({ path, height, services, onReplace }) {
   )
 }
 
-// Change height…: the card's most, in pixels (NOTE_HEIGHT's limits)
+// Change height…: the card's height, in pixels (NOTE_HEIGHT's limits)
 function HeightSheet({ height, onSave, onClose }) {
   const [value, setValue] = useState(String(height))
   const n = Number(value)

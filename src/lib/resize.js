@@ -1,6 +1,6 @@
 // Sizes of what can be resized on desktop (px): default and limits. The rail's width
 export const RAIL_WIDTH = { default: 240, min: 160, max: 320 }
-// A Note widget's card: the most it shows of its note
+// A Note widget's card's height
 export const NOTE_HEIGHT = { default: 448, min: 120, max: 2000 }
 
 // A saved or dragged size kept inside the limits (the default if it isn't a number)
