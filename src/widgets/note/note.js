@@ -1,18 +1,24 @@
 // The Note widget: one note shown on a view, its markdown as a preview in a card of limited height. Its settings live in
-// the repo, beside the views: `.folio/single-note/<id>.json`, { "path": "path/to/note.md" }. Its type is "single-note":
+// the repo, beside the views: `.folio/single-note/<id>.json`, { "path": "path/to/note.md", "height": 448 } (`height`, the
+// card's most in px, only once it's changed: NOTE_HEIGHT, lib/resize.js). Its type is "single-note":
 // "note" is an older Pinned widget's (parseViews).
 export const notePath = id => `.folio/single-note/${id}.json`
 
-// The settings a file's text holds ({ path }), or null when it can't be read as them
+// The settings a file's text holds ({ path, height }: the default height when it has none), or null when it can't be
+// read as them
 export function parseNote(text) {
   let data
   try { data = JSON.parse(text) } catch { return null }
-  return typeof data?.path === 'string' && data.path ? { path: data.path } : null
+  if (typeof data?.path !== 'string' || !data.path) return null
+  return { path: data.path, height: clampSize(data.height, NOTE_HEIGHT) }
 }
 
-export const serializeNote = settings => JSON.stringify({ path: settings.path }, null, 2) + '\n'
+// The default height isn't written
+export const serializeNote = ({ path, height = NOTE_HEIGHT.default }) =>
+  JSON.stringify({ path, ...(height !== NOTE_HEIGHT.default && { height }) }, null, 2) + '\n'
 
 import { fileName } from '../../lib/files.js'
+import { clampSize, NOTE_HEIGHT } from '../../lib/resize.js'
 import { noteTitle } from '../../lib/frontmatter.js'
 
 // Its title: its note's (the file name when it has none, or isn't read yet); "Note" while its settings can't be read.
@@ -33,5 +39,5 @@ export const noteWrite = (config, id, settings) => config.write(notePath(id), se
 export function movedNote(settings, from, to, isDir) {
   const { path } = settings
   const next = path === from ? to : isDir && path.startsWith(from + '/') ? to + path.slice(from.length) : path
-  return next === path ? settings : { path: next }
+  return next === path ? settings : { ...settings, path: next }
 }
