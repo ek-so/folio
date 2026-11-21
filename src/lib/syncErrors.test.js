@@ -16,5 +16,8 @@ describe('describeSyncError', () => {
     expect(d.title).toBe('Your token can\'t add the email job')
     expect(d.workflow).toBe(true)
     expect(describeSyncError({ status: 404 }).workflow).toBe(false)
+    // A fine-grained token: a bare 404 while the changes hold a workflow
+    expect(describeSyncError({ status: 404, step: 'save', message: 'Not Found' }, true).title).toBe('Your token can\'t add the email job')
+    expect(describeSyncError({ status: 404, step: 'read', message: 'Not Found' }, true).workflow).toBe(false)
   })
 })

@@ -6,13 +6,13 @@ const STEPS = {
   save: 'Saving your changes to the branch',
 }
 
-function explain(status, message) {
+function explain(status, message, workflow) {
   if (status === 401) return [
     'GitHub didn\'t accept your token',
     'The token has expired or was revoked.',
     'Create a new token on GitHub, then sign out and connect again. Your unsynced changes stay on this device until you sign out.',
   ]
-  if (/workflow/i.test(message)) return [
+  if (workflow) return [
     'Your token can\'t add the email job',
     'GitHub only lets a token change a repo\'s workflows (the email reminders job) when it\'s allowed to.',
     'Give the token Workflows: Read and write on GitHub, then try again. Or take the email job out of your changes, so the rest syncs.',
@@ -49,15 +49,22 @@ function explain(status, message) {
   ]
 }
 
-// { title, explanation, hint, details: [label, value][], workflow: refused for a workflow (the email job) }
-export function describeSyncError(error) {
+// GitHub refusing the push of a workflow (the email job) to a token that may not change them: its answer names
+// workflows (a classic token), or, to a fine-grained token, is a bare 403 or 404 when the changes hold one
+export const refusedWorkflow = (status, message, hasWorkflow) =>
+  /workflow/i.test(message) || (hasWorkflow && (status === 403 || status === 404))
+
+// { title, explanation, hint, details: [label, value][], workflow: refused for a workflow (the email job) }.
+// `hasWorkflow`: the changes being synced hold a workflow file
+export function describeSyncError(error, hasWorkflow = false) {
   const status = error?.status
   const message = error?.response?.data?.message || error?.message || 'No message'
-  const [title, explanation, hint] = explain(status, message)
+  const workflow = error?.step !== 'read' && refusedWorkflow(status, message, hasWorkflow)
+  const [title, explanation, hint] = explain(status, message, workflow)
   const details = [
     error?.step && ['Step', STEPS[error.step] || error.step],
     status && ['Status', String(status)],
     ['GitHub says', message],
   ].filter(Boolean)
-  return { title, explanation, hint, details, workflow: /workflow/i.test(message) }
+  return { title, explanation, hint, details, workflow }
 }
