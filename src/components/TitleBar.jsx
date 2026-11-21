@@ -10,7 +10,7 @@ import PageTitle from './PageTitle.jsx'
 // Top of the content box, on every page: Back | Forward as one split button (ButtonGroup; the browser's history, only the app's own steps: `history`
 // from App, useAddressBar; off when there's none that way), then for a file or folder its name as an outlined button with ▾ that opens the tree of the folder you're in
 // (FolderTreeMenu; `nameMenu` in its place: File manager's root has RepoMenu); `changed`: unsaved dot, inside the name button after the name. An app page
-// (`page`: Home, Settings…) shows its title in bold. `badge` (symlinks pointing here) inside the name button's outline, after ▾ (right after the title when there's no name button); `children`:
+// (`page`: Home, Graph…) shows its title in bold. `badge` (symlinks pointing here) inside the name button's outline, after ▾ (right after the title when there's no name button); `children`:
 // the item's actions on the right (⋯, then +, ✏️ or ✓). A border sets it
 // apart from the content below.
 export default function TitleBar({ page, name, nameMenu, changed, badge, children }) {

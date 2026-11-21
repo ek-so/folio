@@ -66,7 +66,7 @@ export const storage = {
     write(sessionStorage, TRAILS_KEY, JSON.stringify(trails))
     write(localStorage, `${TRAILS_KEY}_${repo}`, JSON.stringify(trails))
   },
-  // Open page (a view's id, 'files', 'graph', 'settings', 'links', 'docs'…), null when unset
+  // Open page (a view's id, 'files', 'graph', 'links', 'docs'…), null when unset
   getPage: (repo) => repo ? read(sessionStorage, PAGE_KEY) ?? read(localStorage, `${PAGE_KEY}_${repo}`) : null,
   setPage: (repo, page) => {
     if (!repo) return

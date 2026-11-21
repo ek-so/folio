@@ -31,7 +31,7 @@ export function existingView({ file, folder }, files, folders) {
 }
 
 // Address bar <-> a page and its view (lib/views.js). File manager's is
-// the plain view URL; every other page (a view such as Home, Graph, or Settings and the other fixed pages) adds
+// the plain view URL; every other page (a view such as Home, Graph, or Broken links and the other fixed pages) adds
 // `?page=<id>`, and a page's own content (view null) has no path. Their root folder adds `&root`.
 export function urlForPage(base, page, view) {
   const url = view ? urlForView(base, view) : base
@@ -39,7 +39,7 @@ export function urlForPage(base, page, view) {
   return `${url}?page=${page}${view && !view.file && !view.folder ? '&root' : ''}`
 }
 
-const FIXED = [PAGE.SETTINGS, PAGE.LINKS, PAGE.DOCS, PAGE.ASSETS]
+const FIXED = [PAGE.LINKS, PAGE.DOCS, PAGE.ASSETS]
 
 // { page, view } a location names, or null if it can't be read. The page may be
 // one that no longer exists (a deleted view): App falls back from it.
@@ -47,7 +47,7 @@ export function pageForUrl(base, pathname, search) {
   const params = new URLSearchParams(search)
   const page = params.get('page') ?? PAGE.FILES
   if (!/^[\w-]+$/.test(page)) return null
-  if (FIXED.includes(page)) return { page, view: null } // Settings, Broken links, Documentation, Assets: no view of their own
+  if (FIXED.includes(page)) return { page, view: null } // Broken links, Documentation, Assets: no view of their own
   const view = viewForUrl(base, pathname)
   if (!view) return null
   const own = page !== PAGE.FILES && !view.file && !view.folder && !params.has('root')

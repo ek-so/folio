@@ -13,7 +13,7 @@ export const VIEWS_PATH = '.folio/views.json'
 export const DEFAULT_VIEWS = [{ id: 'home', name: 'Home' }]
 
 // Ids that belong to other pages
-const RESERVED = ['files', 'graph', 'settings', 'links', 'docs']
+const RESERVED = ['files', 'graph', 'settings', 'links', 'docs'] // 'settings' was a page: kept out of view ids still
 
 export const isConfigPath = path => path === '.folio' || path.startsWith('.folio/')
 

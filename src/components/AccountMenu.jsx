@@ -1,4 +1,4 @@
-import { List, Gear, UserCircle, LinkBreak, BookOpen, Images, ClockCounterClockwise } from '@phosphor-icons/react'
+import { List, UserCircle, LinkBreak, BookOpen, Images, ClockCounterClockwise } from '@phosphor-icons/react'
 import { PAGE } from '../lib/pages.js'
 import ViewMenu, { ViewsTitle } from './ViewMenu.jsx'
 import PageTitle from './PageTitle.jsx'
@@ -13,7 +13,7 @@ import { Separator } from './ui/separator.jsx'
 // The phone navigation: ☰, then the app's logo and name, in an outlined button (on the top bar) opens a `BottomSheet` like every
 // other prompt, titled with the same logo and name. First the views under their title (`ViewsTitle`: "Views" and its ⋯), each with its ⋯ (`ViewMenu`,
 // `viewActions`), then the other main pages (`pages`): File manager, Assets and Graph; then Recent updates, Broken
-// links (count), Documentation, Settings and Profile (the reminder email and Sign out; its ← comes back here: `open` and
+// links (count), Documentation and Profile (the reminder email, settings and Sign out; its ← comes back here: `open` and
 // `onOpenChange` are App's, `onProfile('menu')`). `current` is the open page, highlighted. Choosing a page closes it.
 export default function AccountMenu({ current, pages, viewActions, onNavigate, brokenCount, onProfile, open, onOpenChange: setOpen }) {
   const go = fn => () => { setOpen(false); fn() }
@@ -56,7 +56,6 @@ export default function AccountMenu({ current, pages, viewActions, onNavigate, b
               {fixed(PAGE.HISTORY, ClockCounterClockwise, 'Recent updates')}
               {fixed(PAGE.LINKS, LinkBreak, 'Broken links', brokenCount > 0 && <span className="px-space-sm text-sm text-muted-foreground">{brokenCount}</span>)}
               {fixed(PAGE.DOCS, BookOpen, 'Documentation')}
-              {fixed(PAGE.SETTINGS, Gear, 'Settings')}
               <li><ListRow icon={<UserCircle />} title="Profile" onClick={go(() => onProfile('menu'))} /></li>
             </ul>
           </nav>

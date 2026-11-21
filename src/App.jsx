@@ -80,7 +80,6 @@ const Assets = later(() => import('./components/Assets.jsx'))
 const BrokenLinks = later(() => import('./components/BrokenLinks.jsx'))
 const Documentation = later(() => import('./components/Documentation.jsx'))
 const GraphPage = later(() => import('./components/GraphPage.jsx'))
-const Settings = later(() => import('./components/Settings.jsx'))
 
 const BASE = import.meta.env.BASE_URL
 // The page and view the address the app was opened at names (not the bare root)
@@ -128,9 +127,9 @@ export default function App() {
   // Read for the repo the app opens (stored: `auth.repo` is set a moment later)
   const [openPage, setPage] = useState(() => (reloaded && storage.getPage(storage.getRepo())) || (deepLink ? deepLink.page : storage.getPage(storage.getRepo()) || PAGE.HOME))
   // A view that's gone (deleted here or on another device) falls back to the first page; until the config is read, the remembered page stays
-  const fixedPage = openPage === PAGE.SETTINGS || openPage === PAGE.LINKS || openPage === PAGE.DOCS || openPage === PAGE.ASSETS
+  const fixedPage = openPage === PAGE.LINKS || openPage === PAGE.DOCS || openPage === PAGE.ASSETS
   const page = fixedPage || !viewsFile.ready || pages.some(p => p.id === openPage) ? openPage : pages[0].id
-  // The main page files and folders open in (File manager when Settings / Broken links / Documentation is open)
+  // The main page files and folders open in (File manager when Broken links / Documentation / Assets is open)
   const mainPage = fixedPage ? PAGE.FILES : page
   // Each main page has its own trail of views (lib/views.js); files and folders open in the page you're on
   const [trails, setTrails] = useState(() => {
@@ -192,7 +191,7 @@ export default function App() {
 
   // The title bar's folder tree: the folders open in it
 
-  // The browser's address follows the page you're on and its view (Settings and the other fixed pages: `?page=` alone);
+  // The browser's address follows the page you're on and its view (Broken links, Documentation and Assets: `?page=` alone);
   // Back / Forward, the browser's or the title bar's, move between them (useAddressBar)
   const url = urlForPage(BASE, page, fixedPage ? null : view)
   const addressBar = useAddressBar(BASE, url, () => ({ files, folders: allFolders }), setPage, setTrails)
@@ -420,7 +419,7 @@ export default function App() {
     ?.map(w => widgetType(w.type)?.fileMoves?.(w.id, selectedFile, widgetServices)).find(Boolean)
 
   // Every page's trail after a rename, delete or discard (`next`); the address
-  // is replaced, not added to history (only when it shows: not on Settings / Broken links / Documentation)
+  // is replaced, not added to history (only when it shows: not on Broken links / Documentation / Assets)
   function followTrails(next) {
     if (page === mainPage && urlForPage(BASE, page, currentView(page, next[page])) !== url) replaceNext()
     setTrails(next)
@@ -854,9 +853,7 @@ export default function App() {
           <TopBar host={mainRef} resetKey={`${page}|${selectedFile}|${folder}`} page={page} pages={pages} viewActions={viewActions} onPage={choosePage} onSearch={() => setSearchOpen(true)} renderSync={renderSync} menu={menu} />
           {/* A page or widget whose code hasn't loaded yet (lib/later.js) shows Loading meanwhile, or why it can't (Later) */}
           <Later fallback={<Loading />}>
-          {page === PAGE.SETTINGS ? (
-            <Settings login={auth.user.login} repo={auth.repo} theme={theme} onTheme={setTheme} emojiNames={icons.canEdit ? { count: emojiNames.length, onMove: moveEmojisToIcons } : null} />
-          ) : page === PAGE.DOCS ? (
+          {page === PAGE.DOCS ? (
             <Documentation />
           ) : (<>
             {/* Back on screen with new commits on GitHub: loading while they're pulled, not what was there before. The page
@@ -1001,6 +998,7 @@ export default function App() {
             key={profileAt}
             login={auth.user.login} email={profile.email} start={profileAt}
             repo={auth.repo} repos={auth.repos} syncing={repo.syncing} onSwitchRepo={switchRepo}
+            theme={theme} onTheme={setTheme} emojiNames={icons.canEdit ? { count: emojiNames.length, onMove: moveEmojisToIcons } : null}
             onSaveEmail={profile.canEdit ? text => update(profile.setEmail(text)) : null}
             onSignOut={() => { setProfileAt(null); setConfirmSignOut(true) }}
             onBack={profileFrom === 'menu' ? () => { setProfileAt(null); setMenuOpen(true) } : undefined}

@@ -1,5 +1,7 @@
 import { useState, useRef } from 'react'
-import { EnvelopeSimple, PencilSimple, SignOut, GithubLogo, BookBookmark, CaretRight, GitBranch, ArrowSquareOut } from '@phosphor-icons/react'
+import { EnvelopeSimple, PencilSimple, SignOut, GithubLogo, BookBookmark, CaretRight, GitBranch, ArrowSquareOut, Gear, Sun, Moon, Monitor } from '@phosphor-icons/react'
+import { Segmented } from './ui/segmented.jsx'
+import { plural } from '../lib/plural.js'
 import { Radio } from './ui/checkbox.jsx'
 import RepoForm from './RepoForm.jsx'
 import BottomSheet from './BottomSheet.jsx'
@@ -18,8 +20,13 @@ import { cleanEmail } from '../lib/profile.js'
 // signed in to, as a row that steps (←) to the repos used on this device (`repos`, the open one chosen; another one opens
 // the app there, `onSwitchRepo(full)`), Switch to another repository… (its owner/repo field, a step of its own) and Open
 // on GitHub, as File manager's root menu (RepoMenu) has them; switching waits while a sync runs (`syncing`). `onBack`: its
-// ← back to the sheet it was opened from (the phone's menu); none from the rail.
-export default function ProfileSheet({ login, email, repo, repos = [], syncing, onSwitchRepo, onSaveEmail, onSignOut, start = 'main', onBack, onClose }) {
+// ← back to the sheet it was opened from (the phone's menu); none from the rail. Settings (a step, ←): the theme
+// (`theme`, `onTheme`) and the emoji in names (`emojiNames`, { count, onMove }, null while icons can't be saved: how many
+// files and folders start their name with an emoji; Move to icons, confirmed in a step of its own, takes it out of their
+// names and makes it their icon, lib/icons.js).
+const THEMES = [['light', 'Light', Sun], ['dark', 'Dark', Moon], ['system', 'System', Monitor]]
+
+export default function ProfileSheet({ login, email, repo, repos = [], syncing, onSwitchRepo, onSaveEmail, theme, onTheme, emojiNames, onSignOut, start = 'main', onBack, onClose }) {
   const inputRef = useRef()
   const [step, setStep] = useState(start)
   const [typed, setTyped] = useState(email)
@@ -64,6 +71,42 @@ export default function ProfileSheet({ login, email, repo, repos = [], syncing, 
     </BottomSheet>
   )
 
+  if (step === 'settings') return (
+    <BottomSheet title="Settings" onBack={toMain} onClose={onClose} onOpenAutoFocus={e => e.preventDefault()}>
+      <div className="flex flex-col gap-space">
+        <div className="flex flex-col gap-space-sm">
+          <Label>Theme</Label>
+          <Segmented stretch value={theme} onChange={onTheme} options={THEMES} label="Theme" />
+        </div>
+        {emojiNames && <>
+          <Separator />
+          <div className="flex flex-col items-start gap-space-sm">
+            <Label>Emoji in names</Label>
+            <p className="text-sm text-muted-foreground">
+              {emojiNames.count
+                ? `${plural(emojiNames.count, 'file or folder name')} start${emojiNames.count === 1 ? 's' : ''} with an emoji. Move it out of the name and make it the icon.`
+                : 'No file or folder starts its name with an emoji.'}
+            </p>
+            <Button variant="secondary" disabled={!emojiNames.count} onClick={() => setStep('emoji')}>Move to icons</Button>
+          </div>
+        </>}
+      </div>
+    </BottomSheet>
+  )
+
+  if (step === 'emoji') return (
+    <BottomSheet
+      title="Move emojis to icons?"
+      description={`${plural(emojiNames.count, 'name')} lose${emojiNames.count === 1 ? 's' : ''} the emoji, which becomes the icon kept in .folio. Files are renamed and every link to them is updated; Sync to apply it on GitHub.`}
+      onBack={() => setStep('settings')} onClose={onClose}
+    >
+      <div className="flex flex-wrap justify-end gap-space-sm">
+        <Button variant="secondary" onClick={() => setStep('settings')}>Cancel</Button>
+        <Button onClick={() => { emojiNames.onMove(); setStep('settings') }}>Move to icons</Button>
+      </div>
+    </BottomSheet>
+  )
+
   if (step === 'email') {
     const save = e => {
       e.preventDefault()
@@ -100,6 +143,10 @@ export default function ProfileSheet({ login, email, repo, repos = [], syncing, 
             trailing={<Button variant="ghost-quiet" size="icon-md" aria-label="Edit reminder email" tooltip="Edit" disabled={!onSaveEmail} onClick={() => setStep('email')}><PencilSimple /></Button>}
           />
         </li>
+      </ul>
+      <Separator className="my-space-xs" />
+      <ul className="-mx-space-xs">
+        <li><ListRow icon={<Gear />} title="Settings" onClick={() => setStep('settings')} trailing={<CaretRight className="mr-space-xs size-4 text-muted-foreground" />} /></li>
       </ul>
       <Separator className="my-space-xs" />
       <ul className="-mx-space-xs">

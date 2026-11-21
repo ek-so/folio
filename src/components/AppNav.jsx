@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { SidebarSimple, MagnifyingGlass, Images, LinkBreak, BookOpen, Gear, UserCircle, ClockCounterClockwise } from '@phosphor-icons/react'
+import { SidebarSimple, MagnifyingGlass, Images, LinkBreak, BookOpen, UserCircle, ClockCounterClockwise } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils.js'
 import { Button } from './ui/button.jsx'
 import { Separator } from './ui/separator.jsx'
@@ -27,7 +27,7 @@ import PageIcon from './PageIcon.jsx'
 // bars' rows (8px and a 1px top edge like the boxes' outline above it): the app's name (Folio, bold) and a
 // button that collapses the rail to icons only (remembered on this device; expanded, its edge is a drag handle);
 // then a separator like every other; Search and Sync, a separator, the views under their title (`ViewsTitle`: "Views" and its ⋯), a separator, File manager, Assets and Graph (plain items, no separator between them),
-// and at the bottom Recent updates, Broken links (count), Documentation, Settings and Profile.
+// and at the bottom Recent updates, Broken links (count), Documentation and Profile.
 // `pages`: the main pages (lib/pages.js): the views, File manager and Graph. With a
 // mouse, a view shows its ⋯ (`ViewMenu`, `viewActions`) on hover; the collapsed rail has none of them, and the title only its ⋯.
 // A plain click (not one that opens a new tab or window): the app handles it in place
@@ -112,9 +112,6 @@ export function NavRail({ page, pages, hrefOf, viewActions, onPage, onSearch, re
       </Button>
       <Button variant="ghost" tooltip={hint('Documentation')} tooltipSide="right" aria-current={page === PAGE.DOCS ? 'page' : undefined} className={item(PAGE.DOCS)} onClick={() => onPage(PAGE.DOCS)}>
         <BookOpen /> {label('Documentation')}
-      </Button>
-      <Button variant="ghost" tooltip={hint('Settings')} tooltipSide="right" aria-current={page === PAGE.SETTINGS ? 'page' : undefined} className={item(PAGE.SETTINGS)} onClick={() => onPage(PAGE.SETTINGS)}>
-        <Gear /> {label('Settings')}
       </Button>
       <Button variant="ghost" tooltip={hint('Profile')} tooltipSide="right" className={cn('justify-start gap-3 font-normal', collapsed && 'size-control justify-center px-0')} onClick={() => menu.onProfile()}>
         <UserCircle /> {label('Profile')}
