@@ -110,7 +110,7 @@ export default function Editor({ linkedBy, onOpenLink, path, entry, files, notes
           </Button>
         </>}
         {locked ? (
-          <Button variant="ghost-outline" size="icon" aria-label="Unlock" tooltip="Locked: tap to unlock" disabled={!onToggleLock} onClick={onToggleLock}>
+          <Button variant="warning-light" size="icon" aria-label="Unlock" tooltip="Locked: tap to unlock" disabled={!onToggleLock} onClick={onToggleLock}>
             <LockSimple />
           </Button>
         ) : mode === 'edit' ? (
@@ -149,7 +149,7 @@ export default function Editor({ linkedBy, onOpenLink, path, entry, files, notes
         <PopoverContent side="top" className="flex w-56 flex-col gap-space-xs" onOpenAutoFocus={e => e.preventDefault()}>
           {/* As the date picker's actions: a muted line, then the action as a full-width row */}
           <span className="px-3 pt-space-xs text-sm text-muted-foreground">This note is locked</span>
-          <Button variant="ghost" className="w-full justify-start gap-space-sm px-3" disabled={!onToggleLock} onClick={() => { setLockedTap(null); onToggleLock() }}>
+          <Button variant="ghost-warning" className="w-full justify-start gap-space-sm px-3" disabled={!onToggleLock} onClick={() => { setLockedTap(null); onToggleLock() }}>
             <LockOpen /> Unlock
           </Button>
         </PopoverContent>
