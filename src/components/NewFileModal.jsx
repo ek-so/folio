@@ -41,7 +41,7 @@ export default function NewFileModal({ folder, kind, date: startDate, onCreate, 
         {isFolder
           ? (
             <div className="flex gap-space-xs">
-              {kind === 'view' && <EmojiPicker emoji={emoji} label="Emoji of the view" fallback={<File />} onChange={setEmoji} />}
+              {kind === 'view' && <EmojiPicker emoji={emoji} label="Emoji of the view" variant="outline" fallback={<File />} onChange={setEmoji} />}
               <Input type="text" placeholder={`${noun} name`} aria-label={`${noun} name`} value={folderName} onChange={e => { setFolderName(e.target.value); setError('') }} autoCorrect="off" autoCapitalize="words" className="min-w-0 flex-1 bg-background border-border font-normal" />
             </div>
           )

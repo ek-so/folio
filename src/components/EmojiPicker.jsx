@@ -57,13 +57,14 @@ export function EmojiGrid({ value, onPick, onDone }) {
 }
 
 // A button showing the emoji (or a smiley) that opens a sub popover on its side with the picker, like a color swatch
-// (`ColorPicker`): `onChange(emoji)`, then it closes. `className`: the button's (medium inside a row)
-export default function EmojiPicker({ emoji, onChange, label = 'Emoji', className, fallback = <Smiley /> }) {
+// (`ColorPicker`): `onChange(emoji)`, then it closes. `className`: the button's (medium inside a row); `variant`: its
+// Button variant (`outline` beside a field: New view's)
+export default function EmojiPicker({ emoji, onChange, label = 'Emoji', className, variant = 'ghost', fallback = <Smiley /> }) {
   const [open, setOpen] = useState(false)
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button type="button" variant="ghost" size="icon" aria-label={label} tooltip="Emoji" className={cn('shrink-0 text-base', className)}>
+        <Button type="button" variant={variant} size="icon" aria-label={label} tooltip="Emoji" className={cn('shrink-0 text-base', className)}>
           {emoji || fallback}
         </Button>
       </PopoverTrigger>
