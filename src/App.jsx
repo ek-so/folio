@@ -82,7 +82,8 @@ const deepLink = (() => {
   const found = pageForUrl(BASE, window.location.pathname, window.location.search)
   return found && (found.page !== PAGE.FILES || found.view.file || found.view.folder) ? found : null
 })()
-// A reload keeps the page you were on (Settings, Broken links and Documentation aren't in the address); otherwise the address picks it
+// A reload keeps the page you were on (Settings, Broken links and Documentation aren't in the address); otherwise the address
+// picks it, and the bare address opens where this repo was left on this device (storage's page and trails)
 const reloaded = performance.getEntriesByType('navigation')[0]?.type === 'reload'
 
 export default function App() {
