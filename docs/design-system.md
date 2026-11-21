@@ -61,7 +61,7 @@ Never hardcode colors; use the semantic tokens (light and dark values in `src/in
 
 ## Icons
 - Icons are 16px (`size-4`); `Button` and menu items size them, so don't pass size classes.
-- **File icons** (`FileIcon`, 20px): folder yellowish (`text-folder`), note and other files in the accent green (`text-primary`), PDF red (`text-destructive`), image green (`text-file-image`). A symlink shows its target's icon with a small ↗ in the corner.
+- **File icons** (`FileIcon`, 20px): folder yellowish (`text-folder`), note and other files in the accent green (`text-primary`), PDF red (`text-destructive`), image green (`text-file-image`), audio in the accent green (`FileAudio`). A symlink shows its target's icon with a small ↗ in the corner.
 
 ## List rows and cards
 - **`ListRow`** (`ui/list-row.jsx`) is every list's row: file manager, tree, search, move, backlinks, popover lists. Icon left, title (with the changed dot), optional muted description (a second line in a row narrower than 640px (phones, dialogs like Search); from 640px wide (a container query on the row) at the right, next to the trailing slot, in the title's size, at most half the row), `trailing` slot (⋯; a medium button with 8px around it, so a row with one is 48px tall; `compact`, the folder tree's rows: 4px around it, 40px), `leading` before the button (tree indent and chevron). Base height, rounded, highlighted on hover or while its ⋯ is open. States: `active` (the open or selected item: light accent fill and accent text, `SELECTED`, the same as the rail's open page; every selection looks like this), `dimmed` (hidden files, symlinks), `disabled`. Lists don't build their own rows.

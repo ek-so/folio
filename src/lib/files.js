@@ -6,6 +6,13 @@ const IMAGE_MIME = {
   svg: 'image/svg+xml', avif: 'image/avif', bmp: 'image/bmp', heic: 'image/heic',
 }
 
+// Audio the browser's player can play (which of them depends on the browser: MP3, M4A and WAV everywhere, Ogg and Opus
+// not on older iPhones)
+const AUDIO_MIME = {
+  mp3: 'audio/mpeg', m4a: 'audio/mp4', aac: 'audio/aac', wav: 'audio/wav', ogg: 'audio/ogg', oga: 'audio/ogg',
+  opus: 'audio/ogg', flac: 'audio/flac', weba: 'audio/webm',
+}
+
 const extension = path => path.includes('.') ? path.split('.').pop().toLowerCase() : ''
 
 // MIME type for an image path, or undefined if it isn't an image
@@ -13,13 +20,18 @@ export function imageMime(path) {
   return IMAGE_MIME[extension(path)]
 }
 
+// MIME type for an audio path, or undefined if it isn't audio
+export function audioMime(path) {
+  return AUDIO_MIME[extension(path)]
+}
+
 // What a file is, for its icon and how it opens: 'note' (markdown, edited),
-// 'image' and 'pdf' (viewed), or 'file' (can't be opened)
+// 'image' and 'pdf' (viewed), 'audio' (played), or 'file' (can't be opened)
 export function fileKind(path) {
   const ext = extension(path)
   if (ext === 'md') return 'note'
   if (ext === 'pdf') return 'pdf'
-  return IMAGE_MIME[ext] ? 'image' : 'file'
+  return IMAGE_MIME[ext] ? 'image' : AUDIO_MIME[ext] ? 'audio' : 'file'
 }
 
 // The folder a path is in ('' at the root)

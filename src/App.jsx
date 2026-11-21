@@ -881,7 +881,7 @@ export default function App() {
               missing={links.missing}
               actions={brokenLinkActions}
             />
-          ) : entry && ['image', 'pdf'].includes(fileKind(selectedFile)) ? (
+          ) : entry && ['image', 'pdf', 'audio'].includes(fileKind(selectedFile)) ? (
             <FileViewer
               key={selectedFile}
               linkedBy={linkedBy[selectedFile]}

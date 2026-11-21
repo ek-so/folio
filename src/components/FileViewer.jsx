@@ -2,7 +2,10 @@ import FilePage from './FilePage.jsx'
 import Loading from './Loading.jsx'
 import PdfView from './PdfView.jsx'
 import { useBlob } from '../hooks/useBlob.js'
-import { fileKind, imageMime } from '../lib/files.js'
+import { useState } from 'react'
+import { FileAudio } from '@phosphor-icons/react'
+import { fileKind, imageMime, audioMime } from '../lib/files.js'
+import { useObjectUrl } from '../hooks/useObjectUrl.js'
 import { EmptyMessage } from './EmptyState.jsx'
 
 const MESSAGES = {
@@ -10,7 +13,8 @@ const MESSAGES = {
   failed: "Couldn't load this file from GitHub.",
 }
 
-// An image or PDF, read-only. Rename it from ⋯.
+// An image, PDF or audio file, read-only. Rename it from ⋯. Audio plays in the browser's own player, under a large
+// audio icon and the file's name; a format this browser can't play says so.
 export default function FileViewer({ path, entry, ...page }) {
   const { base64, error } = useBlob(entry.sha)
   const kind = fileKind(path)
@@ -24,11 +28,27 @@ export default function FileViewer({ path, entry, ...page }) {
         <Loading kind="block" />
       ) : kind === 'pdf' ? (
         <PdfView base64={base64} />
+      ) : kind === 'audio' ? (
+        <AudioView base64={base64} path={path} name={name} />
       ) : (
         <div className="flex-1 min-h-0 overflow-y-auto p-space">
           <img src={`data:${imageMime(path)};base64,${base64}`} alt="" className="max-w-full h-auto mx-auto rounded-md" />
         </div>
       )}
     </FilePage>
+  )
+}
+
+function AudioView({ base64, path, name }) {
+  const url = useObjectUrl(base64, audioMime(path))
+  const [unplayable, setUnplayable] = useState(false)
+  return (
+    <div className="flex flex-1 min-h-0 flex-col items-center justify-center gap-space p-space">
+      <FileAudio className="size-12 text-primary" />
+      <p className="max-w-full break-words text-center text-sm text-muted-foreground">{name}</p>
+      {unplayable
+        ? <EmptyMessage>This browser can't play this file.</EmptyMessage>
+        : url && <audio controls src={url} onError={() => setUnplayable(true)} className="w-full max-w-md" />}
+    </div>
   )
 }
