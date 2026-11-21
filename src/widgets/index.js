@@ -8,6 +8,7 @@ import note from './note/index.js'
 //   type, label, icon         what Add widget lists
 //   Widget                    ({ id, services, onRemove }): the widget on its view
 //   title(id, services)        optional: its name in Edit widgets (else its label)
+//   named: false               optional: its name is always `title`'s, never its own (a Note widget: its note's)
 //   Setup                     ({ services, onCreate, onClose }): asks what's needed before it exists, then
 //                             onCreate(id => change) with the changes that set it up (ch => ch)
 //   moved(ch, id, from, to, isDir, services)  `ch` after a file or folder moved (renames and moves anywhere)
@@ -23,8 +24,8 @@ export const WIDGET_TYPES = [board, planner, pinned, note]
 
 export const widgetType = type => WIDGET_TYPES.find(w => w.type === type)
 
-// A view's widget's name ({ id, type, name? }): its own (Rename in its ⋯), else its kind's title or label
+// A view's widget's name ({ id, type, name? }): its own (Rename in its ⋯; not a kind that's `named: false`), else its kind's title or label
 export function widgetTitle(widget, services) {
   const type = widgetType(widget.type)
-  return widget.name ?? (type ? type.title?.(widget.id, services) ?? type.label : 'Unknown widget')
+  return (type?.named === false ? undefined : widget.name) ?? (type ? type.title?.(widget.id, services) ?? type.label : 'Unknown widget')
 }

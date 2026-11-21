@@ -17,6 +17,8 @@ export default {
   Widget: NoteWidget,
   Setup: NoteSetup,
   title: (id, { config, notes }) => noteWidgetTitle(noteSettings(config.read, id), notes),
+  named: false, // its Rename renames its note
+
   tree(id, { config }) {
     const settings = noteSettings(config.read, id)
     return settings ? [{ key: settings.path, name: displayName(settings.path), path: settings.path }] : []

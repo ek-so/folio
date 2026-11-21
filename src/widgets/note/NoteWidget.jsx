@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useContext, useEffect, useRef, useState } from 'react'
 import { ArrowsLeftRight, ArrowsVertical } from '@phosphor-icons/react'
 import { DropdownMenuItem } from '@/components/ui/dropdown-menu.jsx'
 import { Button } from '@/components/ui/button.jsx'
@@ -8,6 +8,9 @@ import BottomSheet from '@/components/BottomSheet.jsx'
 import FileIcon from '@/components/FileIcon.jsx'
 import { EmojiSubmenu } from '@/components/EmojiPicker.jsx'
 import ResizeHandle from '@/components/ResizeHandle.jsx'
+import RenameModal from '@/components/RenameModal.jsx'
+import { ItemActionsContext } from '@/components/ItemMenu.jsx'
+import { fileItem } from '@/lib/folderNotes.js'
 import MarkdownPreview, { DOUBLE_TAP_MS, OWN_CLICKS } from '@/components/MarkdownPreview.jsx'
 import WidgetFrame from '@/components/WidgetFrame.jsx'
 import { EmptyMessage } from '@/components/EmptyState.jsx'
@@ -19,9 +22,9 @@ import { cn, isPortaled } from '@/lib/utils.js'
 import { PinPicker } from '../pinned/PinnedSetup.jsx'
 import { noteSettings, noteWrite, notePath, noteWidgetTitle } from './note.js'
 
-// The Note widget (note.js): the note's icon (FileIcon: its emoji, else a note's icon) and title (its own Rename overrides
-// it) and its ⋯ (Change note…, on a phone Change height…, Emoji: the note's own, as in its file's ⋯, Rename, Remove
-// widget) on top, then one card with the note's markdown as a preview (MarkdownPreview; without
+// The Note widget (note.js): the note's icon (FileIcon: its emoji, else a note's icon) and title, and its ⋯ (Change
+// note…, on a phone Change height…, Emoji and Rename: the note's own, as in its file's ⋯: Rename asks for its Title and
+// File name, RenameModal; Move to view, Remove widget) on top, then one card with the note's markdown as a preview (MarkdownPreview; without
 // the heading its title comes from, as that's the widget's title), at most its `height` tall: what doesn't fit fades out
 // at the bottom. On desktop its bottom edge is dragged to change that (ResizeHandle; double click: the default); on a
 // phone Change height… asks for it in pixels. Saved when let go, in its settings. Its links, checkboxes and badges work as in the note; any other tap opens
@@ -33,6 +36,9 @@ export default function NoteWidget({ id, services, onRemove }) {
   const canEdit = services.canEdit && !!settings
   const [picking, setPicking] = useState(false)
   const [sizing, setSizing] = useState(false) // Change height… is open
+  const [renaming, setRenaming] = useState(false) // the note's Rename is open
+  const itemActions = useContext(ItemActionsContext)
+  const found = !!settings && services.files.includes(settings.path)
   const [dragged, setDragged] = useState(null) // the height while its edge is dragged
   const isDesktop = useIsDesktop()
   const save = next => services.update(noteWrite(services.config, id, next))
@@ -47,12 +53,13 @@ export default function NoteWidget({ id, services, onRemove }) {
   const menu = close => <>
     <DropdownMenuItem disabled={!canEdit} onSelect={() => setPicking(true)}><ArrowsLeftRight /> Change note…</DropdownMenuItem>
     {!isDesktop && <DropdownMenuItem disabled={!canEdit} onSelect={() => setSizing(true)}><ArrowsVertical /> Change height…</DropdownMenuItem>}
-    {settings && services.files.includes(settings.path) && <EmojiSubmenu path={settings.path} onDone={close} />}
+    {found && <EmojiSubmenu path={settings.path} onDone={close} />}
   </>
 
   return <>
     <WidgetFrame
       icon={settings && <FileIcon path={settings.path} />}
+      onRename={found ? () => setRenaming(true) : null}
       title={noteWidgetTitle(settings, services.notes)} noun="Note widget" menu={menu} onRemove={onRemove} canEdit={services.canEdit}
       ready={file.ready} readable={!!settings}
     >{() => (
@@ -62,6 +69,13 @@ export default function NoteWidget({ id, services, onRemove }) {
       </div>
     )}</WidgetFrame>
     {picking && <PinPicker services={services} withFolders={false} title="Select note" onPick={pick} onClose={() => setPicking(false)} />}
+    {renaming && found && (
+      <RenameModal
+        item={fileItem(settings.path)}
+        onRename={(name, title) => { const error = itemActions.onRename(fileItem(settings.path), name, title); if (!error) setRenaming(false); return error }}
+        onClose={() => setRenaming(false)}
+      />
+    )}
     {sizing && settings && <HeightSheet height={settings.height} onSave={height => { setSizing(false); resize(height) }} onClose={() => setSizing(false)} />}
   </>
 }

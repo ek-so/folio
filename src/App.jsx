@@ -278,9 +278,11 @@ export default function App() {
   // `title`: a note's new title (undefined: unchanged), written into the note in the same change as the rename
   function handleRename(item, name, title) {
     const to = renameTarget(item, name)
+    const retitle = title === undefined ? undefined : guarded(ch => editNote(ch, repo.remote?.files ?? {}, to, t => withNoteTitle(t, title), links.remoteText))
+    if (to === item.path && !nameError(name)) { if (retitle) update(retitle); return null } // only its title changed
     const error = nameError(name) || renameError(changes, virtual, item, to)
     if (error) return error
-    relocate(item, to, title === undefined ? undefined : guarded(ch => editNote(ch, repo.remote?.files ?? {}, to, t => withNoteTitle(t, title), links.remoteText)))
+    relocate(item, to, retitle)
     return null
   }
 

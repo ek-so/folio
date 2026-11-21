@@ -16,7 +16,8 @@ import { EmptyMessage } from './EmptyState.jsx'
 export const WidgetContext = createContext(null)
 
 // What every widget on a view is framed by (board, planner, pinned): its title row, then its body in one of its states.
-// Title row: `icon` (a Note widget's: its note's), its name (WidgetContext's, else `title`; bold) with `subtitle` under it (muted: a widget's folder), then
+// Title row: `icon` (a Note widget's: its note's), its name (WidgetContext's, else `title`; bold; with `onRename`, always
+// `title`: a Note widget's is its note's, and its Rename renames the note) with `subtitle` under it (muted: a widget's folder), then
 // `controls` (the widget's own, such as the planner's calendar / list) and ⋯ (MoreMenu): the widget's
 // own `menu` items (or `menu(close)`, for an item that closes the menu itself: an Emoji sub menu), then Rename (WidgetContext's `onRename`)
 // and Move to view (a sub menu of the other views: the widget goes, as it is, to the end of the one picked), then Remove widget (red, Trash; `onRemove`, disabled
@@ -24,7 +25,7 @@ export const WidgetContext = createContext(null)
 // when not `readable`; with `folder` ({ name, missing, folders, sheetTitle, sheetText, onPick }) gone, "Its folder … is gone."
 // and Select folder (FolderSheet: another folder for it); else `children()` (only called then: it may rely on the
 // settings). `className` goes on the frame.
-export default function WidgetFrame({ icon, title, subtitle, noun, controls, menu, onRemove, canEdit, ready, readable, folder, className, children }) {
+export default function WidgetFrame({ icon, onRename, title, subtitle, noun, controls, menu, onRemove, canEdit, ready, readable, folder, className, children }) {
   const [relocating, setRelocating] = useState(false) // picking another folder, its own being gone
   const [menuOpen, setMenuOpen] = useState(false)
   const own = useContext(WidgetContext)
@@ -37,7 +38,7 @@ export default function WidgetFrame({ icon, title, subtitle, noun, controls, men
       <div className="flex min-h-control items-center gap-space-sm">
         {icon && <span className="flex shrink-0 pl-space-xs">{icon}</span>}
         <h2 className="flex min-w-0 flex-1 flex-col px-space-xs">
-          <span className="truncate text-base font-bold">{own?.name ?? title}</span>
+          <span className="truncate text-base font-bold">{onRename !== undefined ? title : own?.name ?? title}</span>
           {subtitle !== undefined && <span className="truncate text-sm text-muted-foreground">{subtitle}</span>}
         </h2>
         {controls}
@@ -47,7 +48,7 @@ export default function WidgetFrame({ icon, title, subtitle, noun, controls, men
           sections={[
             typeof menu === 'function' ? menu(() => setMenuOpen(false)) : menu,
             own && <>
-              <DropdownMenuItem disabled={!own.onRename} onSelect={own.onRename}><PencilSimple /> Rename</DropdownMenuItem>
+              <DropdownMenuItem disabled={!(onRename !== undefined ? onRename : own.onRename)} onSelect={onRename !== undefined ? onRename : own.onRename}><PencilSimple /> Rename</DropdownMenuItem>
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger disabled={!own.onMoveTo || !own.views?.length}><ArrowSquareRight /> Move to view</DropdownMenuSubTrigger>
                 <DropdownMenuSubContent>
