@@ -82,7 +82,7 @@
     /* Folder icons: yellowish (files are the primary green) */
     --folder: oklch(0.75 0.14 85);
     /* A highlighter marker's yellow-green: light but bright (the editor's line with the cursor) */
-    --marker: oklch(0.94 0.13 112);
+    --marker: oklch(0.96 0.1 112);
 
     --radius: 0.75rem;
 
