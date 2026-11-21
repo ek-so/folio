@@ -1,3 +1,7 @@
+import { fileName } from '../../lib/files.js'
+import { clampSize, NOTE_HEIGHT } from '../../lib/resize.js'
+import { noteTitle } from '../../lib/frontmatter.js'
+
 // The Note widget: one note shown on a view, its markdown as a preview in a card of limited height. Its settings live in
 // the repo, beside the views: `.folio/single-note/<id>.json`, { "path": "path/to/note.md", "height": 448 } (`height`, the
 // card's height in px, only once it's changed: NOTE_HEIGHT, lib/resize.js). Its type is "single-note":
@@ -16,10 +20,6 @@ export function parseNote(text) {
 // The default height isn't written
 export const serializeNote = ({ path, height = NOTE_HEIGHT.default }) =>
   JSON.stringify({ path, ...(height !== NOTE_HEIGHT.default && { height }) }, null, 2) + '\n'
-
-import { fileName } from '../../lib/files.js'
-import { clampSize, NOTE_HEIGHT } from '../../lib/resize.js'
-import { noteTitle } from '../../lib/frontmatter.js'
 
 // Its title: its note's (the file name when it has none, or isn't read yet); "Note" while its settings can't be read.
 // `notes`: the repo's note texts by path

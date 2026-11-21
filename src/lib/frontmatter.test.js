@@ -56,6 +56,15 @@ describe('front matter', () => {
     expect(withoutTitleHeading('No title\n')).toBe('No title\n')
   })
 
+  it('takes no title from a "# line" in fenced code', () => {
+    const text = 'Setup:\n```bash\n# install deps\nnpm i\n```\n'
+    expect(noteTitle(text, 'file')).toBe('file')
+    expect(withoutTitleHeading(text)).toBe(text)
+    expect(noteTitle('~~~\n# not\n~~~\n\n# Real\r\n', 'file')).toBe('Real')
+    expect(withNoteTitle('```\n# code\n```\n# Old #\n', 'New')).toBe('```\n# code\n```\n# New #\n')
+    expect(copyTitled('# Plan\nx\n')).toBe('# Plan (copy)\nx\n')
+  })
+
   it('removes properties with their values', () => {
     expect(withoutKeys('---\na: 1\ntags:\n  - x\n  - y\nb: 2\n---\nbody', ['tags'])).toBe('---\na: 1\nb: 2\n---\nbody')
     expect(withoutKeys('---\ntags: x\n---\n# N\n', ['tags'])).toBe('# N\n')

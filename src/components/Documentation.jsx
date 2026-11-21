@@ -77,7 +77,7 @@ const WIDGET_DOCS = {
       'Shows the note\'s text in a card; a long note fades out at the bottom.',
       'Links and checkboxes work right in the card.',
       'A tap opens the note; a double tap opens it for editing.',
-      'Change note… in ⋯ shows another one. Removing the widget keeps the note.',
+      'Select note… in ⋯ shows another one. Removing the widget keeps the note.',
     ],
   },
 }

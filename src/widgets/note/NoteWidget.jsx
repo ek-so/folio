@@ -22,12 +22,12 @@ import { cn, isPortaled } from '@/lib/utils.js'
 import { PinPicker } from '../pinned/PinnedSetup.jsx'
 import { noteSettings, noteWrite, notePath, noteWidgetTitle } from './note.js'
 
-// The Note widget (note.js): the note's icon (FileIcon: its emoji, else a note's icon) and title, and its ⋯ (Change
-// note…, on a phone Change height…, Emoji and Rename: the note's own, as in its file's ⋯: Rename asks for its Title and
+// The Note widget (note.js): the note's icon (FileIcon: its emoji, else a note's icon) and title, and its ⋯ (Select
+// note…, on a phone Edit height…, Emoji and Rename: the note's own, as in its file's ⋯: Rename asks for its Title and
 // File name, RenameModal; Move to view, Remove widget) on top, then one card with the note's markdown as a preview (MarkdownPreview; without
 // the heading its title comes from, as that's the widget's title), its `height` tall even when the note is shorter: what doesn't fit fades out
 // at the bottom. On desktop its bottom edge is dragged to change that (ResizeHandle; double click: the default); on a
-// phone Change height… asks for it in pixels. Saved when let go, in its settings. Its links, checkboxes and badges work as in the note; any other tap opens
+// phone Edit height… asks for it in pixels. Saved when let go, in its settings. Its links, checkboxes and badges work as in the note; any other tap opens
 // the note, a double tap opens it in the editor at the tapped word (`editFile`). A gone note's card is dashed: a tap
 // picks another.
 export default function NoteWidget({ id, services, onRemove }) {
@@ -35,7 +35,7 @@ export default function NoteWidget({ id, services, onRemove }) {
   const settings = noteSettings(services.config.read, id)
   const canEdit = services.canEdit && !!settings
   const [picking, setPicking] = useState(false)
-  const [sizing, setSizing] = useState(false) // Change height… is open
+  const [sizing, setSizing] = useState(false) // Edit height… is open
   const [renaming, setRenaming] = useState(false) // the note's Rename is open
   const itemActions = useContext(ItemActionsContext)
   const found = !!settings && services.files.includes(settings.path)
@@ -51,8 +51,8 @@ export default function NoteWidget({ id, services, onRemove }) {
   }
 
   const menu = close => <>
-    <DropdownMenuItem disabled={!canEdit} onSelect={() => setPicking(true)}><ArrowsLeftRight /> Change note…</DropdownMenuItem>
-    {!isDesktop && <DropdownMenuItem disabled={!canEdit} onSelect={() => setSizing(true)}><ArrowsVertical /> Change height…</DropdownMenuItem>}
+    <DropdownMenuItem disabled={!canEdit} onSelect={() => setPicking(true)}><ArrowsLeftRight /> Select note…</DropdownMenuItem>
+    {!isDesktop && <DropdownMenuItem disabled={!canEdit} onSelect={() => setSizing(true)}><ArrowsVertical /> Edit height…</DropdownMenuItem>}
     {found && <EmojiSubmenu path={settings.path} onDone={close} />}
   </>
 
@@ -133,13 +133,13 @@ function NotePreviewCard({ path, height, services, onReplace }) {
   )
 }
 
-// Change height…: the card's height, in pixels (NOTE_HEIGHT's limits)
+// Edit height…: the card's height, in pixels (NOTE_HEIGHT's limits)
 function HeightSheet({ height, onSave, onClose }) {
   const [value, setValue] = useState(String(height))
   const n = Number(value)
   const valid = value.trim() !== '' && Number.isInteger(n) && n >= NOTE_HEIGHT.min && n <= NOTE_HEIGHT.max
   return (
-    <BottomSheet title="Change height" onClose={onClose}>
+    <BottomSheet title="Edit height" onClose={onClose}>
       <form onSubmit={e => { e.preventDefault(); if (valid) onSave(n) }} className="flex flex-col gap-3">
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="note-height">Height in pixels</Label>

@@ -279,7 +279,10 @@ export default function App() {
   function handleRename(item, name, title) {
     const to = renameTarget(item, name)
     const retitle = title === undefined ? undefined : guarded(ch => editNote(ch, repo.remote?.files ?? {}, to, t => withNoteTitle(t, title), links.remoteText))
-    if (to === item.path && !nameError(name)) { if (retitle) update(retitle); return null } // only its title changed
+    if (to === item.path && !nameError(name)) { // only its title changed
+      if (retitle) { window.dispatchEvent(new Event('folio:flush')); update(retitle) } // typing in an open note first
+      return null
+    }
     const error = nameError(name) || renameError(changes, virtual, item, to)
     if (error) return error
     relocate(item, to, retitle)

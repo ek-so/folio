@@ -203,11 +203,9 @@ export function withNoteTitle(text, title) {
   const clean = title.trim()
   const fm = frontMatter(text)
   if (fm?.props.some(p => p.key === 'title' && typeof p.value === 'string' && p.value.trim())) return withTitle(text, clean)
-  const rest = text.slice(fm?.end ?? 0)
-  const heading = /^( {0,3}#[ \t]+)(.+?)([ \t#]*)$/m.exec(rest)
+  const heading = titleHeading(text)
   if (!heading || !clean) return withTitle(text, clean)
-  const at = (fm?.end ?? 0) + heading.index
-  return text.slice(0, at) + heading[1] + clean + heading[3] + text.slice(at + heading[0].length)
+  return text.slice(0, heading.start) + heading.lead + clean + heading.trail + text.slice(heading.end)
 }
 
 // What a property's values can do in a set of notes (`texts`: the scope, a folder or a board), the
@@ -268,8 +266,8 @@ export function copyTitled(text) {
   const fm = frontMatter(text)
   const title = fm?.props.find(p => p.key === 'title')?.value
   if (typeof title === 'string' && title.trim()) return withValue(text, 'title', `${title.trim()} (copy)`)
-  const end = fm?.end ?? 0
-  return text.slice(0, end) + text.slice(end).replace(/^( {0,3}#[ \t]+)(.+?)([ \t#]*)$/m, '$1$2 (copy)$3')
+  const heading = titleHeading(text)
+  return heading ? text.slice(0, heading.start) + heading.lead + heading.title + ' (copy)' + heading.trail + text.slice(heading.end) : text
 }
 
 // A note's title: its `title` property, else its first "# heading" (outside
@@ -281,11 +279,24 @@ export function noteTitle(text, fallback) {
   return titleHeading(text)?.title ?? fallback
 }
 
-// The first "# heading" after the front matter: { title, start, end } (its line's offsets), or null
+// The first "# heading" after the front matter, outside fenced code (a "# comment" in a code block is no title):
+// { title, lead: the "# " before it, trail: what's after it, start, end: its line's offsets }, or null
 function titleHeading(text) {
-  const from = frontMatter(text)?.end ?? 0
-  const heading = text.slice(from).match(/^ {0,3}#[ \t]+(.+?)[ \t#]*$/m)
-  return heading && { title: heading[1], start: from + heading.index, end: from + heading.index + heading[0].length }
+  let at = frontMatter(text)?.end ?? 0
+  let fence = null // the open code fence's marker (``` or ~~~, or longer)
+  for (const raw of text.slice(at).split('\n')) {
+    const line = raw.replace(/\r$/, '')
+    const marker = /^ {0,3}(`{3,}|~{3,})/.exec(line)?.[1]
+    if (fence) {
+      if (marker && marker[0] === fence[0] && marker.length >= fence.length && !line.trim().slice(marker.length).trim()) fence = null
+    } else if (marker) fence = marker
+    else {
+      const heading = /^( {0,3}#[ \t]+)(.+?)([ \t#]*)$/.exec(line)
+      if (heading) return { title: heading[2], lead: heading[1], trail: heading[3], start: at, end: at + line.length }
+    }
+    at += raw.length + 1
+  }
+  return null
 }
 
 // `text` with the "# heading" its title comes from blanked out (spaces, so every offset stays where it is): what shows

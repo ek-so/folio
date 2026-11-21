@@ -98,7 +98,7 @@ export default function ViewPage({ page, view, viewActions, widgets = [], error,
       )}
       {removing && (
         <ConfirmModal
-          title={`Remove this ${(widgetType(removing.type)?.label ?? 'widget').toLowerCase()}?`}
+          title={`Remove this ${widgetType(removing.type) ? `${widgetType(removing.type).label.toLowerCase()} widget` : 'widget'}?`}
           description="Its settings are removed from this view. The files it shows stay as they are."
           confirm="Remove"
           onConfirm={() => { onRemove(removing.id); setRemoving(null) }}
