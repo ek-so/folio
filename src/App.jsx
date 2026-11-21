@@ -54,7 +54,7 @@ import { isConfigPath, addView, renameView, removeView, VIEWS_PATH, DEFAULT_VIEW
 import { withKeys, withValue, copyTitled, withNoteTitle, noteTitle } from './lib/frontmatter.js'
 import { widgetType, widgetTitle } from './widgets/index.js'
 import { urlForPage, pageForUrl } from './lib/url.js'
-import { fileView, folderView, startTrails, currentView, openView, trailTo, movedTrails, keptTrails, upView, START } from './lib/views.js'
+import { fileView, folderView, startTrails, currentView, openView, trailTo, movedTrails, keptTrails } from './lib/views.js'
 import { toast } from 'sonner'
 import { Toaster } from './components/ui/sonner.jsx'
 import { TooltipProvider } from './components/ui/tooltip.jsx'
@@ -82,7 +82,7 @@ const deepLink = (() => {
   const found = pageForUrl(BASE, window.location.pathname, window.location.search)
   return found && (found.page !== PAGE.FILES || found.view.file || found.view.folder) ? found : null
 })()
-// A reload keeps the page you were on (Settings, Broken links and Documentation aren't in the address); otherwise the address
+// A reload keeps the page you were on; otherwise the address
 // picks it, and the bare address opens where this repo was left on this device (storage's page and trails)
 const reloaded = performance.getEntriesByType('navigation')[0]?.type === 'reload'
 
@@ -146,10 +146,6 @@ export default function App() {
     if (id === page && trailOf(id).length) setTrails(o => ({ ...o, [id]: [] }))
     setPage(id)
   }
-  // ← in the title bar (lib/views.js `upView`): in File manager a level up, elsewhere back along the page's trail
-  const up = view && upView(mainPage, view, trailOf(mainPage))
-  const goUp = up && (() => up === START ? setTrails(o => ({ ...o, [mainPage]: [] }))
-    : mainPage === PAGE.FILES ? show(up) : setTrails(o => ({ ...o, [mainPage]: trailTo(mainPage, o[mainPage], up) })))
   const [newFile, setNewFile] = useState(null) // { folder, kind, keys?, values?, stay?, date? } while the sheet is open (keys: a new note's properties; stay: don't open it; date: { key, value } a date property the sheet asks for)
   const [viewDialog, setViewDialog] = useState(null) // { kind: 'rename' | 'delete', view } while a view's dialog is open
   const [editingViews, setEditingViews] = useState(false) // Edit views is open: add, order and remove views
@@ -184,10 +180,11 @@ export default function App() {
   // The title bar's folder tree: the folders open in it
   const [expanded, toggleFolder] = useExpandedFolders()
 
-  // The browser's address follows the main page you're on and its view; Back / Forward move between them
-  // (useAddressBar; Settings, Broken links, Documentation and Assets leave the address as it is)
-  const url = page === mainPage ? urlForPage(BASE, page, view) : null
-  const replaceNext = useAddressBar(BASE, url, () => ({ files, folders: allFolders }), setPage, setTrails)
+  // The browser's address follows the page you're on and its view (Settings and the other fixed pages: `?page=` alone);
+  // Back / Forward, the browser's or the title bar's, move between them (useAddressBar)
+  const url = urlForPage(BASE, page, fixedPage ? null : view)
+  const addressBar = useAddressBar(BASE, url, () => ({ files, folders: allFolders }), setPage, setTrails)
+  const replaceNext = addressBar.replaceNext
 
   // What File manager, the folder tree and Search show: the config folder stays out of them
   const shown = useMemo(() => Object.fromEntries(Object.entries(virtual).filter(([path]) => !isConfigPath(path))), [virtual])
@@ -822,7 +819,7 @@ export default function App() {
         onToggle: toggleFolder,
         onOpenFolder: openFolder,
         onOpenFile: setSelectedFile,
-        onBack: page === mainPage ? goUp : null,
+        history: addressBar, // the title bar's Back and Forward
         repo: auth.repo,
         repos: auth.repos,
         onSwitchRepo: switchRepo,

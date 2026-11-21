@@ -3,7 +3,7 @@ import { PAGE } from './pages.js'
 // What each main page shows. A view is { file, folder }: a file and the
 // folder holding it, or a folder alone ('' is the root). Each page keeps a
 // trail of the views opened in it, oldest first; the last one is what it
-// shows (← goes a level up: `upView`). An empty trail is the page's
+// shows. An empty trail is the page's
 // start: a view's own content (Home's dashboard), the graph, File manager's root folder.
 
 const MAX_TRAIL = 50
@@ -14,18 +14,6 @@ export const folderView = path => ({ file: null, folder: path })
 
 const same = (a, b) => a.file === b.file && a.folder === b.folder
 const isStart = (page, view) => !view || (page === PAGE.FILES && !view.file && !view.folder)
-
-// Marks the page's start as where ← leads
-export const START = 'start'
-
-// Where ← leads from `view` in `page`: in File manager a level up (a file's folder, a folder's parent; null from
-// the root, its start); in any other page (a view, Graph) back along its `trail`, the way you drilled down, to the
-// page's own start (START) from the first view
-export function upView(page, view, trail = []) {
-  if (page !== PAGE.FILES) return trail.at(-2) ?? START
-  if (view.file) return folderView(view.folder)
-  return view.folder ? folderView(parentOf(view.folder)) : null
-}
 
 // Every main page (their ids) at its start
 export const startTrails = ids => Object.fromEntries(ids.map(id => [id, []]))

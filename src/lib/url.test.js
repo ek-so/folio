@@ -40,6 +40,8 @@ describe('url', () => {
       expect(read(urlForPage('/folio/', page, view))).toEqual({ page, view })
     }
     expect(urlForPage('/folio/', 'files', { file: 'x.md', folder: '' })).toBe('/folio/x.md')
-    expect(read('/folio/?page=settings')).toBeNull()
+    expect(read('/folio/?page=settings')).toEqual({ page: 'settings', view: null })
+    expect(read(urlForPage('/folio/', 'docs', null))).toEqual({ page: 'docs', view: null })
+    expect(read('/folio/?page=a%20b')).toBeNull()
   })
 })

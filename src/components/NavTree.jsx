@@ -14,7 +14,7 @@ import { EmptyMessage, EMPTY } from './EmptyState.jsx'
 // What the title bar's folder tree needs from App: `listDir(dir)`, `symlinks`, the `current`
 // path (open file or folder), the open `file` (null for a folder), `dir` (the open folder, or the open file's), the open folders
 // (`expanded`, `onToggle`), `onOpenFolder` / `onOpenFile` (each row's ⋯ is ItemMenu, as in File manager), the title
-// bar's `onBack` (null without a step back), `viewTree()` (on a view's page: its widgets and what they show, as nodes; null elsewhere), and for the root's RepoMenu the open `repo`, the `repos` used on
+// bar's `history` (Back and Forward: useAddressBar), `viewTree()` (on a view's page: its widgets and what they show, as nodes; null elsewhere), and for the root's RepoMenu the open `repo`, the `repos` used on
 // this device and `onSwitchRepo(repo)`.
 export const NavContext = createContext(null)
 
