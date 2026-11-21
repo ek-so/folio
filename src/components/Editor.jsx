@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { flushSync } from 'react-dom'
-import { Check, PencilSimple, LockSimple, ArrowUUpLeft, ArrowUUpRight } from '@phosphor-icons/react'
+import { Check, PencilSimple, LockSimple, LockOpen, ArrowUUpLeft, ArrowUUpRight } from '@phosphor-icons/react'
+import { Popover, PopoverAnchor, PopoverContent } from './ui/popover.jsx'
 import { Button } from './ui/button.jsx'
 import Loading from './Loading.jsx'
 import FilePage from './FilePage.jsx'
@@ -22,13 +23,15 @@ import { EmptyMessage } from './EmptyState.jsx'
 // on them keeps the keyboard and the editor open. Edits save on their own; ✓ (same spot) switches back to preview, writing typed dates in one format.
 // `locked` (lib/locks.js): nothing in it can be changed (no ✏️, double tap, ticks, list dragging, badges' values or
 // links' edits); a lock icon takes ✏️'s place and unlocks it (`onToggleLock`, also Lock / Unlock in ⋯; none when the
-// locks can't be saved). Renaming, moving and duplicating stay. `editAt` ({ start, end }, a broken link's Open at
+// locks can't be saved). Renaming, moving and duplicating stay. A double tap on a locked note says so in a popover where it
+// was tapped, with Unlock right there (the next double tap then edits). `editAt` ({ start, end }, a broken link's Open at
 // link): once the note is read, it opens in the editor with that text selected (a locked note: the preview at that
 // spot), then `onEditAtDone()`.
 export default function Editor({ linkedBy, onOpenLink, path, entry, files, notes, onEditNotes, tagColors, edited, onEdit, onNavigate, onOpenFile, columns, valueScope, backlinks, locked, onToggleLock, editAt, onEditAtDone }) {
   const { content, change, loading, loadError, beginEdit, endEdit } = useNote(entry, edited, onEdit, valueScope?.required, valueScope?.order)
   const [mode, setMode] = useState('preview')
   const [editedAt, setEditedAt] = useState(null) // offset to show when back in preview
+  const [lockedTap, setLockedTap] = useState(null) // { x, y }: a double tap on the locked note, answered there
   const textareaRef = useRef()
   const previewRef = useRef()
   const history = useUndo(content, change)
@@ -135,12 +138,22 @@ export default function Editor({ linkedBy, onOpenLink, path, entry, files, notes
         <MarkdownPreview
           ref={previewRef}
           content={content} path={path} files={files} scrollTo={editedAt}
-          onDoubleTap={locked ? undefined : startEditing} onChange={changeUnlocked} onOpenFile={onOpenFile} onNavigate={onNavigate}
+          onDoubleTap={locked ? (_, at) => setLockedTap(at) : startEditing} onChange={changeUnlocked} onOpenFile={onOpenFile} onNavigate={onNavigate}
           footer={<Backlinks links={backlinks} onOpen={onOpenFile} />}
         >
           <PropertyBadges props={ordered(frontMatter(content)?.props ?? [], valueScope?.order)} path={path} files={files} title="Properties" onChange={locked ? undefined : (key, value) => change(withValue(content, key, value))} options={values.options} onRemoveValue={locked ? undefined : values.removeValue} valueCount={values.count} scopeName={valueScope?.name ?? "this folder"} chosen={tagColors.colors} onEditValue={tagColors.canEdit && !locked ? values.editValue : undefined} badges={valueScope?.badges} hiddenValues={valueScope?.hidden} className="px-space pt-space" />
         </MarkdownPreview>
       )}
+      <Popover open={Boolean(lockedTap && locked)} onOpenChange={open => { if (!open) setLockedTap(null) }}>
+        {lockedTap && <PopoverAnchor className="fixed size-0" style={{ left: lockedTap.x, top: lockedTap.y }} />}
+        <PopoverContent side="top" className="flex w-auto items-center gap-space-sm">
+          <LockSimple className="size-4 shrink-0 text-muted-foreground" />
+          <span className="text-sm">This note is locked.</span>
+          <Button variant="secondary" disabled={!onToggleLock} onClick={() => { setLockedTap(null); onToggleLock() }}>
+            <LockOpen /> Unlock
+          </Button>
+        </PopoverContent>
+      </Popover>
     </FilePage>
   )
 }

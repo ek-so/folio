@@ -246,7 +246,7 @@ const repoImages = (root, notePath) => [...root.querySelectorAll('img')]
 
 // Rendered note, read-only apart from task checkboxes, links' Edit link / Remove and dragging
 // list items, and the note's blocks, into another order (with `onChange`). Double-tapping (or
-// double-clicking) text calls onDoubleTap with the markdown offset of the
+// double-clicking) text calls onDoubleTap with the markdown offset of the (and, second, where on the screen: { x, y })
 // tapped word (empty space: the end of the note). `marks` ({ offset: 'added' | 'removed' }, lib/versions.js
 // `diffNote`): the blocks starting there are colored as added or removed (a version's changes). `hideTitle`: the
 // "# heading" the note's title comes from isn't shown (`withoutTitleHeading`: its title shows above it already).
@@ -522,7 +522,7 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
       return
     }
     if (e.target.closest(OWN_CLICKS)) return // summary opens/closes its accordion
-    if (isDoubleTap(e)) onDoubleTap?.(offsetAt(e.clientX, e.clientY, e.target))
+    if (isDoubleTap(e)) onDoubleTap?.(offsetAt(e.clientX, e.clientY, e.target), { x: e.clientX, y: e.clientY })
   }
 
   // Counted here rather than with dblclick, which iPhones don't send on a
@@ -540,10 +540,10 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
     <div
       ref={scrollRef} className={'flex-1 min-h-0 overflow-x-hidden overflow-y-auto'}
       // The empty space under a short note: a double tap edits from its end
-      onClick={e => { if (e.target === e.currentTarget && isDoubleTap(e)) onDoubleTap?.(content.length) }}
+      onClick={e => { if (e.target === e.currentTarget && isDoubleTap(e)) onDoubleTap?.(content.length, { x: e.clientX, y: e.clientY }) }}
     >
       {/* What's above the note (its properties, from the front matter at the top of the file): a double tap edits from the start */}
-      {children && <div onClick={e => { if (!isPortaled(e) && !e.target.closest('a') && isDoubleTap(e)) onDoubleTap?.(0) }}>{children}</div>}
+      {children && <div onClick={e => { if (!isPortaled(e) && !e.target.closest('a') && isDoubleTap(e)) onDoubleTap?.(0, { x: e.clientX, y: e.clientY }) }}>{children}</div>}
       <div
         ref={ref}
         className={cn('editor-preview min-w-0 break-words leading-relaxed touch-manipulation [&_img]:max-w-full [&_img]:h-auto [&_img]:rounded-md', 'p-space text-base')}
