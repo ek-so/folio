@@ -745,7 +745,8 @@ export default function App() {
     } catch {
       return toast.error(navigator.onLine === false ? 'Connect to the internet to set up email reminders.' : "Couldn't get the email job from Folio's site.")
     }
-    update(ch => config.write(WORKFLOW_PATH, WORKFLOW)(config.write(SCRIPT_PATH, script)(ch)))
+    // with the profile's time zone and Folio's address noted again (an address saved before had none)
+    update(ch => (profile.canEdit && profile.email ? profile.setEmail(profile.email) : c => c)(config.write(WORKFLOW_PATH, WORKFLOW)(config.write(SCRIPT_PATH, script)(ch))))
     toast.success('Email reminders added. Sync, then add your Resend key on GitHub.')
   }
 
