@@ -10,15 +10,15 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: 'bg-primary text-primary-foreground shadow hover:bg-primary/90',
-        destructive: 'bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90',
-        outline: 'border border-input bg-transparent shadow-sm hover:bg-secondary hover:text-secondary-foreground',
-        secondary: 'bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80',
+        default: 'bg-primary text-primary-foreground hover:bg-primary/90',
+        destructive: 'bg-destructive text-destructive-foreground hover:bg-destructive/90',
+        outline: 'border border-input bg-transparent hover:bg-secondary hover:text-secondary-foreground',
+        secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
         ghost: 'hover:bg-secondary hover:text-secondary-foreground',
         // A muted button inside something already tinted or hoverable (a list row, a card, a tray): a faint fill on hover and while its menu is open
         'ghost-quiet': 'text-muted-foreground hover:bg-muted-foreground/10 hover:text-secondary-foreground data-[state=open]:bg-muted-foreground/10',
         // ✓ and ✕ icon buttons: green (success) and red; `*-light` where a ✓ and a ✕ stand together
-        success: 'bg-success text-success-foreground shadow-sm hover:bg-success/90',
+        success: 'bg-success text-success-foreground hover:bg-success/90',
         'success-light': 'bg-success/15 text-success-ink hover:bg-success/25',
         'destructive-light': 'bg-destructive/15 text-destructive-ink hover:bg-destructive/25',
         // Trash and other destructive icon buttons: red, a light red fill on hover
