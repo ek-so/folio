@@ -153,7 +153,7 @@ export function FolderTreeMenu({ name, changed, badge }) {
   )
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      {badge ? <span className="flex h-control min-w-0 max-w-full items-center gap-space-xs rounded-sm border border-input pr-space-xs shadow-sm">{trigger}{badge}</span> : trigger}
+      {badge ? <span className="flex h-control min-w-0 max-w-full items-center gap-space-xs rounded-sm border border-input pr-space-xs">{trigger}{badge}</span> : trigger}
       <PopoverContent className="w-80 p-space-sm" onCloseAutoFocus={e => e.preventDefault()}>
         <div ref={showCurrent} className="relative max-h-[min(60vh,calc(var(--radix-popover-content-available-height)-1rem))] overflow-y-auto overscroll-y-contain" data-no-pull>
           {empty
