@@ -121,7 +121,6 @@ export default function RepoSetup({ repoList, onRepoList, onRepo, onBack, onLogo
             placeholder="Search repos…"
             value={query}
             onChange={e => setQuery(e.target.value)}
-            className="bg-card border-border"
           />
         )}
         {sorted && !error && (

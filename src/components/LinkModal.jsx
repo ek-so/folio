@@ -14,11 +14,11 @@ export default function LinkModal({ name: initialName, url: initialUrl, onSave, 
       <form onSubmit={e => { e.preventDefault(); onSave(name, url) }} className="flex flex-col gap-3">
         <Label className="flex-col items-start gap-1.5 leading-5">
           Name
-          <Input ref={nameRef} value={name} onChange={e => setName(e.target.value)} placeholder={url} className="bg-background border-border font-normal" />
+          <Input ref={nameRef} value={name} onChange={e => setName(e.target.value)} placeholder={url} />
         </Label>
         <Label className="flex-col items-start gap-1.5 leading-5">
           URL
-          <Input value={url} onChange={e => setUrl(e.target.value)} autoCorrect="off" autoCapitalize="off" spellCheck={false} className="bg-background border-border font-normal" />
+          <Input value={url} onChange={e => setUrl(e.target.value)} autoCorrect="off" autoCapitalize="off" spellCheck={false} />
         </Label>
         <div className="flex justify-end gap-space-sm">
           <Button type="button" variant="secondary" onClick={onClose}>Cancel</Button>

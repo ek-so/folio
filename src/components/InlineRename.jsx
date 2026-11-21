@@ -16,7 +16,6 @@ export default function InlineRename({ value, onChange, onSubmit, onCancel, labe
           autoCorrect="off"
           autoCapitalize={autoCapitalize}
           aria-label={label}
-          className="bg-background border-border"
         />
         <Button type="submit" variant="success-light" size="icon" aria-label="Save" tooltip="Save" disabled={!canSave}><Check /></Button>
         <Button type="button" variant="destructive-light" size="icon" aria-label="Cancel" tooltip="Cancel" onClick={onCancel}><X /></Button>

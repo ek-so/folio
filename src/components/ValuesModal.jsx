@@ -55,7 +55,6 @@ export default function ValuesModal({ name, values, colors, count, scopeName, re
             placeholder={`Add ${name}`}
             onChange={e => setTyped(e.target.value)}
             autoCorrect="off"
-            className="bg-background border-border"
           />
           <Button type="submit" variant="success" size="icon" aria-label="Add" tooltip="Add" disabled={!query} className="shrink-0"><Check /></Button>
         </form>

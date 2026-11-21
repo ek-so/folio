@@ -50,7 +50,6 @@ export default function RenameModal({ item, onRename, onClose, kind, placeholder
               onChange={e => { setName(e.target.value); setError('') }}
               placeholder={placeholder}
               autoCorrect="off"
-              className="bg-background border-border"
             />
             {ext && <span className="text-muted-foreground shrink-0">{ext}</span>}
           </div>

@@ -48,7 +48,6 @@ export default function SearchSheet({ onClose, onSelect, virtual, changes, recen
           value={query}
           onChange={e => setQuery(e.target.value)}
           placeholder={placeholder}
-          className="bg-background border-border"
         />
         <div className="overflow-y-auto max-h-64 -mx-space-xs" data-no-pull>
           {top && <div className="mb-0.5">{top}</div>}

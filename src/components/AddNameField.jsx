@@ -25,7 +25,6 @@ export default function AddNameField({ label, onAdd }) {
           onChange={e => { setName(e.target.value); setError('') }}
           autoCorrect="off"
           autoCapitalize="none"
-          className="bg-background border-border"
         />
         <Button type="submit" variant="success" size="icon" aria-label="Add" tooltip="Add" disabled={!name.trim()} className="shrink-0"><Check /></Button>
       </div>

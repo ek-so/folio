@@ -47,7 +47,7 @@ export default function RepoMenu() {
             initial={nav.repo}
             onConnect={nav.onSwitchRepo}
             inputRef={inputRef}
-            inputClassName="font-mono bg-background border-border"
+            inputClassName="font-mono"
             actions={({ busy, empty }) => (
               <div className="flex justify-end gap-space-sm">
                 <Button type="button" variant="secondary" onClick={() => setSwitching(false)}>Cancel</Button>

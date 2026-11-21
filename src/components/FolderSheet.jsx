@@ -44,7 +44,6 @@ export default function FolderSheet({ title, folders, onPick, onClose, pickLabel
           placeholder="Search folders…"
           value={query}
           onChange={e => { setQuery(e.target.value); setError('') }}
-          className="bg-background border-border"
         />
         {error && <p className="text-destructive-ink text-xs">{error}</p>}
         {children}

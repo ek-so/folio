@@ -44,7 +44,7 @@ export default function Auth({ onAuth, initialToken = '' }) {
             autoCorrect="off"
             autoCapitalize="none"
             spellCheck="false"
-            className="font-mono tracking-wide bg-card border-border"
+            className="font-mono tracking-wide"
           />
           {error && <p className="text-destructive-ink text-xs text-center">{error}</p>}
           <Button type="submit" disabled={loading || !token.trim()} className="w-full">

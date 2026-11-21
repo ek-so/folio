@@ -8,12 +8,12 @@ export default function TitleNameFields({ fields, ext, onEdit, autoFocus }) {
   return <>
     <Label className="flex-col items-start gap-1.5 leading-5">
       Title
-      <Input type="text" placeholder="Title" value={title} autoFocus={autoFocus} onChange={e => { setTitle(e.target.value); onEdit?.() }} autoCorrect="off" autoCapitalize="sentences" className="bg-background border-border font-normal" />
+      <Input type="text" placeholder="Title" value={title} autoFocus={autoFocus} onChange={e => { setTitle(e.target.value); onEdit?.() }} autoCorrect="off" autoCapitalize="sentences" />
     </Label>
     <Label className="flex-col items-start gap-1.5 leading-5">
       File name
       <div className="flex w-full items-center gap-space-sm">
-        <Input type="text" placeholder={suggestion || 'File name'} value={typedName} onChange={e => { setName(e.target.value); onEdit?.() }} autoCorrect="off" autoCapitalize="none" className="bg-background border-border font-normal" />
+        <Input type="text" placeholder={suggestion || 'File name'} value={typedName} onChange={e => { setName(e.target.value); onEdit?.() }} autoCorrect="off" autoCapitalize="none" />
         {ext && <span className="shrink-0 font-normal text-muted-foreground">{ext}</span>}
       </div>
     </Label>
