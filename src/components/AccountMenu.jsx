@@ -33,7 +33,7 @@ export default function AccountMenu({ current, pages, viewActions, onNavigate, b
   return (
     <>
       <Button variant="outline" aria-label="Menu" aria-haspopup="dialog" className="px-3" onClick={() => setOpen(true)}>
-        <span className="flex items-center gap-space-sm"><AppLogo className="size-5 shrink-0" /><BrandName /></span>
+        <span className="flex items-center gap-space-sm"><AppLogo className="size-5 shrink-0" /><BrandName small /></span>
       </Button>
       {open && (
         <BottomSheet
