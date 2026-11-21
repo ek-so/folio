@@ -1,6 +1,11 @@
 import { cn } from '@/lib/utils'
 import { Tip } from './tooltip.jsx'
 
+// The tinted square behind a card's icon (`tint`: { className, style }, FileIcon's iconTint); also on an audio file's page
+export function TileIcon({ tint, children }) {
+  return <span style={tint?.style} className={cn('flex size-12 shrink-0 items-center justify-center rounded-sm transition-colors', tint?.className)}>{children}</span>
+}
+
 // One tile of the cards layout (File manager): `icon` large on top, `title` under
 // it (`tall`: two lines tall even for a short name, so tiles are the same height; File manager
 // sets it when any name in the folder wraps), `trailing` (⋯) in the top right corner. Takes the same
@@ -26,7 +31,7 @@ export function CardTile({ icon, title, trailing, onClick, tint, tall, dimmed, c
           dimmed && 'opacity-50',
         )}
       >
-        <span style={tint?.style} className={cn('flex size-12 items-center justify-center rounded-sm transition-colors', tint?.className)}>{icon}</span>
+        <TileIcon tint={tint}>{icon}</TileIcon>
         <span className={cn('line-clamp-2 w-full break-words', tall && 'min-h-[2lh]')}>
           <span data-card-label>
             {title}
