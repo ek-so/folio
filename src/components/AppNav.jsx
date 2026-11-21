@@ -12,7 +12,6 @@ import { storage } from '../lib/storage.js'
 import { RAIL_WIDTH } from '../lib/resize.js'
 import { useResizableWidth } from '../hooks/useResizableWidth.js'
 import ResizeHandle from './ResizeHandle.jsx'
-import { useHideOnScroll } from '../hooks/useHideOnScroll.js'
 import AppLogo from './AppLogo.jsx'
 import BrandName from './BrandName.jsx'
 import ViewMenu, { ViewsTitle } from './ViewMenu.jsx'
@@ -125,16 +124,11 @@ export function NavRail({ page, pages, hrefOf, viewActions, onPage, onSearch, re
 }
 
 // Phones: a bar at the top with the menu (the app's logo and name, an outlined button: every page, then the rest) on the
-// left, Search and Sync on the right. It slides away while
-// the content scrolls down and returns on scrolling up (`useHideOnScroll`): its row folds in 300ms with a gentle ease while
-// what's in it slides up and fades, so the page under it moves softly.
-export function TopBar({ host, resetKey, page, pages, viewActions, onPage, onSearch, renderSync, menu }) {
-  const hidden = useHideOnScroll(host, resetKey)
+// left, Search and Sync on the right. It always stays: a bar that slid away with scrolling got in the way of scrolling
+// sideways (a wide table)
+export function TopBar({ page, pages, viewActions, onPage, onSearch, renderSync, menu }) {
   return (
-    <div className={cn('grid shrink-0 transition-[grid-template-rows,visibility] duration-300 ease-[cubic-bezier(0.2,0,0,1)] md:hidden', hidden ? 'grid-rows-[0fr] invisible' : 'grid-rows-[1fr]')}>
-    <nav aria-label="Main" className="min-h-0 overflow-hidden">
-    {/* The bar's row folds while its content slides up and fades with it, rather than being cut off */}
-    <div className={cn('transition-[translate,opacity] duration-300 ease-[cubic-bezier(0.2,0,0,1)]', hidden && '-translate-y-full opacity-0')}>
+    <nav aria-label="Main" className="shrink-0 md:hidden">
     <div className="flex items-center gap-space-sm px-space py-space">
       <AccountMenu {...menu} current={page} pages={pages} viewActions={viewActions} onNavigate={onPage} />
       <div className="flex-1" />
@@ -143,8 +137,6 @@ export function TopBar({ host, resetKey, page, pages, viewActions, onPage, onSea
       </Button>
       {renderSync(false, true)}
     </div>
-    </div>
     </nav>
-    </div>
   )
 }
