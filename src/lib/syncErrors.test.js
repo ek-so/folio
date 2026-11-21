@@ -11,4 +11,10 @@ describe('describeSyncError', () => {
     expect(describeSyncError({ status: 422, step: 'save', message: 'Update is not a fast forward' }).title).toMatch(/changed while syncing/)
     expect(describeSyncError(new Error('boom')).title).toBe('Sync failed')
   })
+  it('names a refusal to add a workflow (the email job)', () => {
+    const d = describeSyncError({ status: 404, step: 'save', response: { data: { message: 'refusing to allow a Personal Access Token to create or update workflow `.github/workflows/folio-reminders.yml` without `workflow` scope' } } })
+    expect(d.title).toBe('Your token can\'t add the email job')
+    expect(d.workflow).toBe(true)
+    expect(describeSyncError({ status: 404 }).workflow).toBe(false)
+  })
 })

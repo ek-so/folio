@@ -12,6 +12,11 @@ function explain(status, message) {
     'The token has expired or was revoked.',
     'Create a new token on GitHub, then sign out and connect again. Your unsynced changes stay on this device until you sign out.',
   ]
+  if (/workflow/i.test(message)) return [
+    'Your token can\'t add the email job',
+    'GitHub only lets a token change a repo\'s workflows (the email reminders job) when it\'s allowed to.',
+    'Give the token Workflows: Read and write on GitHub, then try again. Or take the email job out of your changes, so the rest syncs.',
+  ]
   if (status === 403 && /rate limit/i.test(message)) return [
     'Too many requests to GitHub',
     'GitHub limits how often an app can call it.',
@@ -44,7 +49,7 @@ function explain(status, message) {
   ]
 }
 
-// { title, explanation, hint, details: [label, value][] }
+// { title, explanation, hint, details: [label, value][], workflow: refused for a workflow (the email job) }
 export function describeSyncError(error) {
   const status = error?.status
   const message = error?.response?.data?.message || error?.message || 'No message'
@@ -54,5 +59,5 @@ export function describeSyncError(error) {
     status && ['Status', String(status)],
     ['GitHub says', message],
   ].filter(Boolean)
-  return { title, explanation, hint, details }
+  return { title, explanation, hint, details, workflow: /workflow/i.test(message) }
 }

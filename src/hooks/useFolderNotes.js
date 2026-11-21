@@ -1,4 +1,4 @@
-import { isReminderKey } from '../lib/reminders.js'
+import { isReminderOf } from '../lib/reminders.js'
 import { useMemo } from 'react'
 import { isTechnical, editNotes, withNoteKeys } from '@/lib/folderNotes.js'
 import { editNote } from '@/lib/changes.js'
@@ -25,6 +25,8 @@ export function useFolderNotes(services, folder) {
   const valuesCache = useMemo(() => new Map(), [texts])
   const values = valueActions(texts, editAll, services.tagColors.set, valuesCache)
   const noteKeys = useMemo(() => texts.map(text => frontMatter(text)?.props.map(p => p.key) ?? []), [texts])
+  // A note's properties to show or sort by: not a date's reminder, which goes with its date
+  const shownKeys = useMemo(() => texts.map(text => { const props = frontMatter(text)?.props ?? []; return props.filter(p => !isReminderOf(props, p.key)).map(p => p.key) }), [texts])
   // A name that can't be a property here: an error message, or null
   const keyError = key => keyNameError(key) ?? (key === DESCRIPTION ? 'The description is always shown.' : null)
   const editOne = (path, edit) => update(ch => editNote(ch, services.remoteFiles, path, edit, services.remoteText))
@@ -32,7 +34,7 @@ export function useFolderNotes(services, folder) {
   return {
     entries,
     // The keys its notes have, besides the description, by name
-    propertyKeys: () => [...new Set(noteKeys.flat())].filter(k => k !== DESCRIPTION && !isReminderKey(k)).sort(), // a date's reminder goes with its date
+    propertyKeys: () => [...new Set(shownKeys.flat())].filter(k => k !== DESCRIPTION).sort(),
     // How many of its notes have the property `key`
     notesWith: key => noteKeys.filter(keys => keys.includes(key)).length,
     keyError,

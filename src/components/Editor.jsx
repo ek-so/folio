@@ -30,6 +30,11 @@ import { EmptyMessage } from './EmptyState.jsx'
 // spot), then `onEditAtDone()`.
 export default function Editor({ linkedBy, onOpenLink, path, entry, files, notes, onEditNotes, tagColors, edited, onEdit, onNavigate, onOpenFile, columns, valueScope, backlinks, locked, onToggleLock, editAt, onEditAtDone }) {
   const { content, change, loading, loadError, beginEdit, endEdit } = useNote(entry, edited, onEdit, valueScope?.required, valueScope?.order)
+  // A property's change made on the text as it is after the one just before it, so two in one tap (a date and its
+  // reminder) both stay
+  const latest = useRef(content)
+  latest.current = content
+  const setProperty = (key, value) => { latest.current = withValue(latest.current, key, value); change(latest.current) }
   const [mode, setMode] = useState('preview')
   const [editedAt, setEditedAt] = useState(null) // offset to show when back in preview
   const [lockedTap, setLockedTap] = useState(null) // { x, y }: a double tap on the locked note, answered there
@@ -143,7 +148,7 @@ export default function Editor({ linkedBy, onOpenLink, path, entry, files, notes
           onDoubleTap={locked ? (_, at) => setLockedTap(at) : startEditing} onChange={changeUnlocked} onOpenFile={onOpenFile} onNavigate={onNavigate}
           footer={<Backlinks links={backlinks} onOpen={onOpenFile} />}
         >
-          <PropertyBadges props={ordered(frontMatter(content)?.props ?? [], valueScope?.order)} withReminders path={path} files={files} title="Properties" onChange={locked ? undefined : (key, value) => change(withValue(content, key, value))} options={values.options} onRemoveValue={locked ? undefined : values.removeValue} valueCount={values.count} scopeName={valueScope?.name ?? "this folder"} chosen={tagColors.colors} onEditValue={tagColors.canEdit && !locked ? values.editValue : undefined} badges={valueScope?.badges} hiddenValues={valueScope?.hidden} className="px-space pt-space" />
+          <PropertyBadges props={ordered(frontMatter(content)?.props ?? [], valueScope?.order)} withReminders path={path} files={files} title="Properties" onChange={locked ? undefined : setProperty} options={values.options} onRemoveValue={locked ? undefined : values.removeValue} valueCount={values.count} scopeName={valueScope?.name ?? "this folder"} chosen={tagColors.colors} onEditValue={tagColors.canEdit && !locked ? values.editValue : undefined} badges={valueScope?.badges} hiddenValues={valueScope?.hidden} className="px-space pt-space" />
         </MarkdownPreview>
       )}
       <Popover open={Boolean(lockedTap && locked)} onOpenChange={open => { if (!open) setLockedTap(null) }}>

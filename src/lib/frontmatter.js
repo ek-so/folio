@@ -125,9 +125,13 @@ export function withKeys(text, keys) {
   return before + (before.endsWith('\n') ? '' : '\n') + lines + text.slice(fm.close)
 }
 
-// `text` without the properties `keys` (each line, with its `- item` lines);
-// a block left empty goes too. The rest is untouched.
-export function withoutKeys(text, keys) {
+// A date property's reminder is a property named after it with this after its name (lib/reminders.js)
+export const REMINDER_SUFFIX = '-reminder'
+
+// `text` without the properties `keys` (each line, with its `- item` lines), and the reminders named after them (a
+// date's reminder goes with its date, never left behind unseen); a block left empty goes too. The rest is untouched.
+export function withoutKeys(text, given) {
+  const keys = [...given, ...given.map(k => k + REMINDER_SUFFIX)]
   const fm = frontMatter(text)
   if (!fm || !fm.props.some(p => keys.includes(p.key))) return text
   const open = text.match(OPEN)[0].length

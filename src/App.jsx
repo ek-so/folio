@@ -63,7 +63,7 @@ import { archiveDay, inArchive, staleArchiveDays, KEEP_DAYS } from './lib/archiv
 import { fileItem } from './lib/folderNotes.js'
 import {
   listDir, nameError, renameTarget, renameError, createError, add, setEdit, rename, remove, getAllFolders,
-  upload, replaceUpload, freePath, virtualFiles, splitName, editNote, duplicate, keptEdits, freeTarget as freeTargetIn, MAX_UPLOAD_BYTES,
+  upload, replaceUpload, freePath, virtualFiles, splitName, editNote, duplicate, keptEdits, freeTarget as freeTargetIn, MAX_UPLOAD_BYTES, discard,
 } from './lib/changes.js'
 import { plural } from './lib/plural.js'
 import { useNoteExport } from './hooks/useNoteExport.js'
@@ -978,7 +978,7 @@ export default function App() {
       )}
 
       {repo.syncError && (
-          <SyncErrorModal error={repo.syncError} onRetry={repo.syncError.retry} onClose={repo.dismissSyncError} />
+          <SyncErrorModal error={repo.syncError} onRetry={repo.syncError.retry} onDropJob={() => { update(ch => discard(ch, [WORKFLOW_PATH, SCRIPT_PATH])); toast.success('Email job taken out of your changes'); setTimeout(repo.syncError.retry) }} onClose={repo.dismissSyncError} />
         )}
 
         {uploadClash && (

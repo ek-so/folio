@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { reminderKey, isReminderKey, parseReminder, reminderText, reminderAt, remindersIn, DAY_HOUR, emailsDue, keptSent } from './reminders.js'
-import { withValue } from './frontmatter.js'
+import { reminderKey, isReminderKey, parseReminder, reminderText, reminderAt, remindersIn, DAY_HOUR, emailsDue, keptSent, isReminderOf, canRemind } from './reminders.js'
+import { withValue, withoutKeys } from './frontmatter.js'
 
 describe('reminders', () => {
   it('names a date\'s reminder after it and reads what\'s written', () => {
@@ -15,6 +15,17 @@ describe('reminders', () => {
     expect(reminderText({ offset: '10m', email: true })).toBe('10m, email')
     expect(reminderText({ offset: '1d', email: false })).toBe('1d')
     expect(reminderText({ offset: '', email: true })).toBeNull()
+  })
+
+  it('is a date\'s reminder only beside its date, with a reminder\'s value', () => {
+    const props = [{ key: 'due', value: '2026-11-28' }, { key: 'due-reminder', value: '1h' }, { key: 'follow-reminder', value: 'ask Bob' }, { key: 'x-reminder', value: '1h' }]
+    expect(props.map(p => isReminderOf(props, p.key))).toEqual([false, true, false, false])
+    expect(canRemind('Life/a.md')).toBe(true)
+    expect(canRemind('.archive/2026-11-21/a.md')).toBe(false)
+  })
+
+  it('takes a date\'s reminder out with the date', () => {
+    expect(withoutKeys('---\ndue: 2026-11-28\ndue-reminder: 1h\nx: 1\n---\n', ['due'])).toBe('---\nx: 1\n---\n')
   })
 
   it('takes a property out when its value is null', () => {
@@ -35,6 +46,7 @@ describe('reminders', () => {
       'a.md': '---\ndue: 2026-11-28 14:30\ndue-reminder: 1h, email\n---\n# Dentist\n',
       'b.md': '---\ndate: 2026-11-25\ndate-reminder: 0m\n---\n',
       'c.md': '---\ndate: 2026-11-25\n---\n',
+      '.archive/2026-11-21/d.md': '---\ndate: 2026-11-25\ndate-reminder: 0m\n---\n',
     }
     const found = remindersIn(notes)
     expect(found.map(r => [r.path, r.title, r.email])).toEqual([['b.md', 'b', false], ['a.md', 'Dentist', true]])

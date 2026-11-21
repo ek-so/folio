@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { CaretDown, Check, PencilSimple, EyeSlash } from '@phosphor-icons/react'
 import { EmptyMessage, EMPTY } from './EmptyState.jsx'
 import { cn, own } from '@/lib/utils'
-import { reminderKey, isReminderKey, parseReminder, reminderText } from '@/lib/reminders.js'
+import { reminderKey, isReminderOf, parseReminder, reminderText } from '@/lib/reminders.js'
 import { PLACEHOLDER } from './ui/placeholder.jsx'
 import { Badge } from './ui/badge.jsx'
 import { Input } from './ui/input.jsx'
@@ -52,7 +52,7 @@ export default function PropertyBadges({ props, all = props, withReminders, path
   const [managing, setManaging] = useState(null) // the key whose values are in the dialog
   const parts = [] // [{ text }] or [{ badges: [{ id, prop, label }] }], in order
   for (const prop of props) {
-    if (isReminderKey(prop.key)) continue // shown on its date (a bell), set in its date picker
+    if (isReminderOf(all, prop.key)) continue // a date's reminder: shown on its date (a bell), set in its date picker
     const values = valueList(prop.value)
     if (prop.key === DESCRIPTION) { if (values.length) parts.push({ text: values.join(', ') }); continue }
     if (!values.length && !onChange) continue
@@ -144,7 +144,10 @@ function isDateProp(prop, options, dateKeys) {
 // `late`: a past date, the whole badge red (Badge's red tone: its tint, text and icon), saying "N days ago" in place of the date
 function DateValue({ prop, reminder, withReminder, onChange, emptyLabel, late }) {
   const date = valueDate(prop.value)
-  const pick = picked => onChange(prop.key, picked ? formatDate(picked) : '')
+  const pick = picked => {
+    if (!picked && reminder !== undefined) onChange(reminderKey(prop.key), null) // emptied: its reminder goes too, never left unseen
+    onChange(prop.key, picked ? formatDate(picked) : '')
+  }
   const reminded = { value: parseReminder(reminder), onChange: next => onChange(reminderKey(prop.key), reminderText(next)) } // None takes it out
   return (
     <DateField

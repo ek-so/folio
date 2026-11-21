@@ -2,8 +2,9 @@ import { Button } from './ui/button.jsx'
 import BottomSheet from './BottomSheet.jsx'
 
 // Why a sync or pull failed: plain explanation, what to do, and GitHub's
-// raw answer underneath.
-export default function SyncErrorModal({ error, onRetry, onClose }) {
+// raw answer underneath. Refused for a workflow (the token can't add the email job): `onDropJob` takes the job's files
+// out of the changes and tries again, so the rest syncs.
+export default function SyncErrorModal({ error, onRetry, onDropJob, onClose }) {
   return (
     <BottomSheet title={error.title} description={error.explanation} onClose={onClose}>
       <p className="text-sm">{error.hint}</p>
@@ -19,6 +20,9 @@ export default function SyncErrorModal({ error, onRetry, onClose }) {
         <Button variant="secondary" className="flex-1" onClick={onClose}>Close</Button>
         <Button className="flex-1" onClick={() => { onClose(); onRetry() }}>Try again</Button>
       </div>
+      {error.workflow && onDropJob && (
+        <Button variant="secondary" onClick={() => { onClose(); onDropJob() }}>Take out the email job</Button>
+      )}
     </BottomSheet>
   )
 }

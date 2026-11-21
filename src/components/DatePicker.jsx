@@ -25,7 +25,8 @@ const pad = n => String(n).padStart(2, '0')
 // button), titled `title` ('Date'): whatever is written (a day, a time, both, or nothing), the Calendar, then Remove
 // date when there's a day, then the time: + Add time when there's none, else its field with a trash (Remove time),
 // then, with `reminder` ({ value: { offset, email }, onChange(next) }: a date property's, lib/reminders.js), its
-// Reminder: a switch, off while there's none; on (it asks the browser to let Folio notify) it starts At the time and
+// Reminder (only once there's a day: a time alone or nothing never reminds; "Pick a day to add a reminder" until then):
+// a switch, off while there's none; on (it asks the browser to let Folio notify) it starts At the time and
 // shows when: At the time, 10 minutes, 1 hour or 1 day before, one of them chosen, then Also by email (a switch) with the profile's address under it and Edit (Add email
 // while there's none: it opens the Profile at its email; changing it there changes it for every reminder). `date`: { year, month, day, hour?, minute? }, { hour,
 // minute } (a time alone) or null (an empty date property); `onPick(date)` gets the new one: a picked day keeps the time;
@@ -117,7 +118,11 @@ export default function DatePicker({ date, onPick, required, dayOnly, reminder, 
               <Button variant="ghost" className="w-full justify-start gap-space-sm px-3" onClick={addTime}><Plus /> Add time</Button>
             )}
           </>}
-          {!dayOnly && reminder && <>
+          {!dayOnly && reminder && !hasDay && <>
+            <Separator className="my-space-sm" />
+            <p className="px-3 text-sm text-muted-foreground">Pick a day to add a reminder.</p>
+          </>}
+          {!dayOnly && reminder && hasDay && <>
             <Separator className="my-space-sm" />
             <div className="flex min-h-control items-center gap-space-sm px-3">
               <Label htmlFor="date-picker-reminder" className="flex-1 font-normal">Reminder</Label>
