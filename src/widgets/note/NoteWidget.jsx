@@ -1,8 +1,7 @@
 import { useContext, useEffect, useRef, useState } from 'react'
-import { ArrowsLeftRight, ArrowsVertical } from '@phosphor-icons/react'
+import { ArrowsLeftRight, ArrowsVertical, CaretUp, CaretDown, ArrowCounterClockwise } from '@phosphor-icons/react'
 import { DropdownMenuItem } from '@/components/ui/dropdown-menu.jsx'
 import { Button } from '@/components/ui/button.jsx'
-import { Input } from '@/components/ui/input.jsx'
 import { Label } from '@/components/ui/label.jsx'
 import BottomSheet from '@/components/BottomSheet.jsx'
 import FileIcon from '@/components/FileIcon.jsx'
@@ -27,7 +26,7 @@ import { noteSettings, noteWrite, notePath, noteWidgetTitle } from './note.js'
 // File name, RenameModal; Move to view, Remove widget) on top, then one card with the note's markdown as a preview (MarkdownPreview; without
 // the heading its title comes from, as that's the widget's title), its `height` tall even when the note is shorter: what doesn't fit fades out
 // at the bottom. On desktop its bottom edge is dragged to change that (ResizeHandle; double click: the default); on a
-// phone Edit height… asks for it in pixels. Saved when let go, in its settings. Its links, checkboxes and badges work as in the note; any other tap opens
+// phone Edit height… steps it by its arrows. Saved when let go, in its settings. Its links, checkboxes and badges work as in the note; any other tap opens
 // the note, a double tap opens it in the editor at the tapped word (`editFile`). A gone note's card is dashed: a tap
 // picks another.
 export default function NoteWidget({ id, services, onRemove }) {
@@ -133,22 +132,27 @@ function NotePreviewCard({ path, height, services, onReplace }) {
   )
 }
 
-// Edit height…: the card's height, in pixels (NOTE_HEIGHT's limits, in its steps)
+// Edit height…: the card's height, in pixels, shown as a number (not a field) changed only by its arrows, a step
+// (NOTE_HEIGHT's) at a time: ↓ is off at the least, ↑ at the most. Use the default height puts back NOTE_HEIGHT's default
 function HeightSheet({ height, onSave, onClose }) {
-  const [value, setValue] = useState(String(height))
-  const n = Number(value)
-  const valid = value.trim() !== '' && Number.isInteger(n) && n >= NOTE_HEIGHT.min && n <= NOTE_HEIGHT.max && n % NOTE_HEIGHT.step === 0
+  const [value, setValue] = useState(height)
+  const { min, max, step } = NOTE_HEIGHT
   return (
     <BottomSheet title="Edit height" onClose={onClose}>
-      <form onSubmit={e => { e.preventDefault(); if (valid) onSave(n) }} className="flex flex-col gap-3">
+      <form onSubmit={e => { e.preventDefault(); onSave(value) }} className="flex flex-col gap-3">
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="note-height">Height in pixels</Label>
-          <Input id="note-height" type="number" inputMode="numeric" min={NOTE_HEIGHT.min} max={NOTE_HEIGHT.max} step={NOTE_HEIGHT.step} value={value} onChange={e => setValue(e.target.value)} className="bg-background border-border font-normal" />
-          <p className="text-muted-foreground text-xs">From {NOTE_HEIGHT.min} to {NOTE_HEIGHT.max}, in steps of {NOTE_HEIGHT.step}. The default is {NOTE_HEIGHT.default}.</p>
+          <Label id="note-height">Height</Label>
+          <div className="flex items-center gap-space-sm">
+            <output aria-labelledby="note-height" aria-live="polite" className="min-w-0 flex-1 text-base tabular-nums">{value} px</output>
+            <Button type="button" variant="ghost-outline" size="icon" aria-label="Lower" tooltip="Lower" disabled={value <= min} onClick={() => setValue(clampSize(value - step, NOTE_HEIGHT))}><CaretDown /></Button>
+            <Button type="button" variant="ghost-outline" size="icon" aria-label="Higher" tooltip="Higher" disabled={value >= max} onClick={() => setValue(clampSize(value + step, NOTE_HEIGHT))}><CaretUp /></Button>
+            <Button type="button" variant="ghost-outline" size="icon" aria-label="Use the default height" tooltip="Use the default height" disabled={value === NOTE_HEIGHT.default} onClick={() => setValue(NOTE_HEIGHT.default)}><ArrowCounterClockwise /></Button>
+          </div>
+          <p className="text-muted-foreground text-xs">From {min} to {max} px, {step} at a time. The default is {NOTE_HEIGHT.default}.</p>
         </div>
         <div className="flex justify-end gap-space-sm">
           <Button type="button" variant="secondary" onClick={onClose}>Cancel</Button>
-          <Button type="submit" disabled={!valid}>Save</Button>
+          <Button type="submit" disabled={value === height}>Save</Button>
         </div>
       </form>
     </BottomSheet>
