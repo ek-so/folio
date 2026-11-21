@@ -20,6 +20,7 @@ describe('viewsConfig', () => {
     expect(views).toHaveLength(2)
     expect(views[1]).toEqual({ id, name: '' })
     expect(addView(DEFAULT_VIEWS, '  Work ').views[1].name).toBe('Work')
+    expect(addView(DEFAULT_VIEWS, 'Work', '🌱').views[1].icon).toBe('🌱')
     expect(parseViews(serializeViews(views))).toEqual(views)
     expect(renameView(views, id, '  Work ')[1].name).toBe('Work')
     expect(removeView(views, 'home')).toEqual([views[1]])

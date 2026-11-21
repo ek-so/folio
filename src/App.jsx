@@ -967,8 +967,8 @@ export default function App() {
         {newView && (
           <NewFileModal
             kind="view"
-            onCreate={name => {
-              const added = addView(views, name)
+            onCreate={(name, title, date, emoji) => {
+              const added = addView(views, name, emoji)
               saveViews(added.views)
               setNewView(false)
               choosePage(added.id)

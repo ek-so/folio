@@ -50,11 +50,11 @@ const newId = (views, letter = 'v') => {
   return id
 }
 
-// `views` with one more at the end, and its id; it can have no name (shown as a light Untitled). Names have no
-// length limit: the interface cuts what doesn't fit.
-export function addView(views, name = '') {
+// `views` with one more at the end, and its id; it can have no name (shown as a light Untitled), and an emoji `icon`
+// picked when it's created (none: the default icon). Names have no length limit: the interface cuts what doesn't fit.
+export function addView(views, name = '', icon = '') {
   const id = newId(views)
-  return { views: [...views, { id, name: name.trim() }], id }
+  return { views: [...views, { id, name: name.trim(), ...(icon && { icon }) }], id }
 }
 
 // Renaming keeps the emoji the old name started with as its icon, so it doesn't vanish with the name
