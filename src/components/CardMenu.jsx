@@ -20,7 +20,7 @@ export const cardActions = (path, text, act, services) => ({
 })
 
 // A card's ⋯, a board's and a planner's (hidden until the card is hovered with a mouse, always shown on touch): its file's
-// ItemMenu (Show in folder, the core, Remove) with what only a card offers on top: Mark as done (only with `onDone`, a
+// ItemMenu (Open in File manager, the core, Remove) with what only a card offers on top: Mark as done (only with `onDone`, a
 // planner's), Add / Edit description (`description`, its text; only with `onDescription`, a note on this device) and Move
 // to column (only with `columns`, a board's: a submenu of its columns, `column` the card's key, then Edit columns… that
 // opens its Columns dialog; `onMove(key)`). `inRow`: in a list row (a planner's list view), which has its own padding:
@@ -30,7 +30,7 @@ export default function CardMenu({ path, description, columns, column, onDone, o
   return (
     <div className="contents" {...own}>
       <ItemMenu
-        item={fileItem(path)} reveal inList hoverReveal label="Card actions" className={cn(!inRow && '-my-1.5 -mr-1.5')}
+        item={fileItem(path)} inList hoverReveal label="Card actions" className={cn(!inRow && '-my-1.5 -mr-1.5')}
         extra={<>
           {onDone && <DropdownMenuItem onSelect={onDone}><CheckCircle /> Mark as done</DropdownMenuItem>}
           {onDescription && <DropdownMenuItem onSelect={() => setEditing(true)}><TextAlignLeft /> {description ? 'Edit' : 'Add'} description</DropdownMenuItem>}

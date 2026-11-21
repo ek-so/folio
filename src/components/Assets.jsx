@@ -18,7 +18,7 @@ import { fileItem } from '../lib/folderNotes.js'
 // Page listing every file in the repo that isn't a note (images, PDFs, uploads: lib/assets.js), newest added first, each
 // as a row (ListRow): its name and under it its path; a row opens the file. On the right, a button opens the note that
 // uses it (`backlinks`, the link index's: the notes that link to it): one opens at once, several list in a menu, none
-// shows no button, then the file's ⋯ (`ItemMenu`, with Show in folder).
+// shows no button, then the file's ⋯ (`ItemMenu`, with Open in File manager).
 // The title bar's filter (`TypeFilter`) narrows the list to one file type (its extension), kept while the page is open.
 export default function Assets({ files, added, backlinks, onOpen }) {
   const all = assetList(Object.keys(files), added)
@@ -40,7 +40,7 @@ export default function Assets({ files, added, backlinks, onOpen }) {
                   <li key={path}>
                     <ListRow icon={<FileIcon path={path} />} title={path.split('/').pop()} description={path} onClick={() => onOpen(path)} disabled={fileKind(path) === 'file'} trailing={<>
                       <UsedIn notes={[...new Set((backlinks[path] ?? []).map(l => l.from))]} onOpen={onOpen} />
-                      <ItemMenu item={fileItem(path)} reveal inList hoverReveal />
+                      <ItemMenu item={fileItem(path)} inList hoverReveal />
                     </>} />
                   </li>
                 ))}

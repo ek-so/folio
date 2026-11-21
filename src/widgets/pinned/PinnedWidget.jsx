@@ -24,7 +24,7 @@ import { EmptyMessage, EMPTY } from '@/components/EmptyState.jsx'
 // fit, each at least 16rem; the cards of a row one height). Every card shows its icon (FileIcon: its emoji, else a note's or folder's
 // icon); a note's is a board's card (NoteCard: title and description), a folder's has its name and how many items it holds
 // where a description sits. A tap opens the note or folder; a card is dragged
-// into another's place (when the widget can be saved). Its ⋯ is its file's or folder's (ItemMenu: Show in folder, the core),
+// into another's place (when the widget can be saved). Its ⋯ is its file's or folder's (ItemMenu: Open in File manager, the core),
 // with Remove from widget (confirmed; the note or folder stays) in place of Remove; one that's gone has only that. One that's gone is dashed: a tap picks another in its place.
 export default function PinnedWidget({ id, services, onRemove }) {
   const file = settingsOf(services.config.read, id)
@@ -123,7 +123,7 @@ function PinnedCard({ path, dir, found, services, files, canMove, onTakeOut, onR
   const menu = (
     <div className="contents" {...own}>
       <ItemMenu
-        item={found ? item : null} reveal inList hoverReveal label={`Actions for ${displayName(path)}`} className="-my-1.5 -mr-1.5"
+        item={found ? item : null} inList hoverReveal label={`Actions for ${displayName(path)}`} className="-my-1.5 -mr-1.5"
         remove={{ label: 'Remove from widget', onSelect: onTakeOut }}
       />
       {replacing && (

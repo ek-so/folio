@@ -13,14 +13,16 @@ import { useIsDesktop } from '../hooks/useIsDesktop.js'
 
 // What every item's ⋯ does, given once by App: `onRename(item, name, title)` and `onMove(item, folder)` (an error
 // message or null), `onDuplicate(item)`, `onDelete(item)` (to the archive), `folders` (Move's choices), `isLocked(path)`
-// and `onToggleLock(path)` (null while locks can't be saved), `onReveal(item)` (its folder in File manager) and
+// and `onToggleLock(path)` (null while locks can't be saved), `inFileManager` (File manager is the page) and
+// `onOpenInFiles(item)` (opens it there), and
 // `githubUrl(item)` (where it is on GitHub; undefined when GitHub doesn't have it yet), `onExport(item, 'pdf' | 'txt')` and
 // `onHistory(item)` (a note: its Version history)
 export const ItemActionsContext = createContext(null)
 
 // The ⋯ of a file or folder ({ name, path, type }) everywhere it shows: file manager, tree, title bar, Assets, a board's
 // or planner's card, a pinned note or folder. Its sections (MoreMenu):
-//   - what only this place offers (`extra`: Mark as done, Edit description, Move to column…), and Show in folder (`reveal`);
+//   - what only this place offers (`extra`: Mark as done, Edit description, Move to column…), and Open in File manager (the
+//     item itself, opened there; on every page but File manager: `inFileManager`);
 //   - the core, the same everywhere: Rename · Emoji · Move to… · Duplicate (files) · Copy link · Open on GitHub · Version history and Export (notes) · Lock (files);
 //   - Remove (to the archive, confirmed; none for a locked file), or `remove` ({ label, onSelect }, confirmed by the caller:
 //     a pinned item's Remove from widget).
@@ -29,7 +31,7 @@ export const ItemActionsContext = createContext(null)
 // medium quiet ⋯), `hoverReveal`: hidden until the row is hovered, with a mouse (MoreMenu). `label`: the ⋯'s aria-label.
 const VIEWS = [['list', 'List', Rows], ['cards', 'Cards', SquaresFour], ['columns', 'Columns', Columns]]
 
-export default function ItemMenu({ item, extra, reveal, remove, view, onView, inList, hoverReveal, label = 'More actions', className }) {
+export default function ItemMenu({ item, extra, remove, view, onView, inList, hoverReveal, label = 'More actions', className }) {
   const actions = useContext(ItemActionsContext)
   const [renaming, setRenaming] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -83,7 +85,7 @@ export default function ItemMenu({ item, extra, reveal, remove, view, onView, in
           ),
           <>
             {extra}
-            {item && reveal && <DropdownMenuItem onSelect={() => actions.onReveal(item)}><FolderOpen /> Show in folder</DropdownMenuItem>}
+            {item && !actions.inFileManager && <DropdownMenuItem onSelect={() => actions.onOpenInFiles(item)}><FolderOpen /> Open in File manager</DropdownMenuItem>}
           </>,
           core,
           removal,

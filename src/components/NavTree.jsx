@@ -23,6 +23,7 @@ export const NavContext = createContext(null)
 export function TreeRow({ depth, branch, open, onToggle, row }) {
   return (
     <ListRow
+      compact
       rowProps={row.active ? { 'data-current': '' } : undefined}
       leading={<>
         <span aria-hidden="true" className="shrink-0" style={{ width: `${depth}rem` }} />

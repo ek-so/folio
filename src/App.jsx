@@ -417,7 +417,7 @@ export default function App() {
     setTrails(next)
   }
 
-  // A folder (`path`, '' the root) shown in File manager: Show in folder, a widget's Show folder
+  // A folder (`path`, '' the root) shown in File manager: a widget's Show folder
   function revealFolder(path) {
     openFolder(path, PAGE.FILES)
   }
@@ -765,7 +765,9 @@ export default function App() {
     folders: allFolders,
     isLocked: locks.isLocked,
     onToggleLock: locks.canEdit ? path => update(locks.toggle(path)) : null,
-    onReveal: item => revealFolder(parentOf(item.path)),
+    // Open in File manager (every ⋯ but File manager's own): the file or folder itself, opened there
+    inFileManager: page === PAGE.FILES,
+    onOpenInFiles: item => item.type === 'dir' ? openFolder(item.path, PAGE.FILES) : setSelectedFile(item.path, PAGE.FILES),
     githubUrl: item => githubUrl(item),
     onExport: exportNote,
     onHistory: item => setHistoryOf(item.path),

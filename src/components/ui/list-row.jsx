@@ -11,12 +11,13 @@ import { Button } from './button.jsx'
 // chevron), `trailing` after it (⋯, a badge…). `active`: the open or selected item, accent-colored like every selection (`SELECTED`);
 // `dimmed`: a hidden file or symlink, its icon and text faded (not the row's
 // hover or ⋯); `changed`: the accent dot of local changes after the title;
-// `disabled`: can't be opened; `tooltip`: on the whole row (ui/tooltip.jsx).
+// `disabled`: can't be opened; `tooltip`: on the whole row (ui/tooltip.jsx). `compact`: 40px even with a ⋯ (4px around
+// it, not 8px: the folder tree's rows).
 // `className` and `rowProps` (drag and drop) go on the row itself.
 // A selected item (the open page in the rail, the open item in a list): light accent fill, accent text
 export const SELECTED = 'bg-primary/15 text-primary-ink hover:bg-primary/20 hover:text-primary-ink'
 
-export function ListRow({ icon, title, description, bigDescription, leading, trailing, onClick, active, dimmed, changed, disabled, tooltip, className, rowProps }) {
+export function ListRow({ icon, title, description, bigDescription, leading, trailing, onClick, active, dimmed, changed, disabled, tooltip, compact, className, rowProps }) {
   // The tooltip is on the whole row, so it also explains a row that can't be opened
   return (
     <Tip content={tooltip}>
@@ -49,7 +50,7 @@ export function ListRow({ icon, title, description, bigDescription, leading, tra
         </span>
         {description && <span className="hidden max-w-[50%] shrink-0 truncate text-muted-foreground @min-[40rem]:block">{description}</span>}
       </Button>
-      {trailing && <div className="flex shrink-0 items-center py-space-sm pr-space-sm">{trailing}</div>}
+      {trailing && <div className={cn('flex shrink-0 items-center', compact ? 'py-space-xs pr-space-xs' : 'py-space-sm pr-space-sm')}>{trailing}</div>}
     </div>
     </Tip>
   )
