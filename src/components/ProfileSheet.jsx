@@ -1,5 +1,7 @@
-import { useState } from 'react'
-import { EnvelopeSimple, PencilSimple, SignOut, GithubLogo } from '@phosphor-icons/react'
+import { useState, useRef } from 'react'
+import { EnvelopeSimple, PencilSimple, SignOut, GithubLogo, BookBookmark, CaretRight, GitBranch, ArrowSquareOut } from '@phosphor-icons/react'
+import { Radio } from './ui/checkbox.jsx'
+import RepoForm from './RepoForm.jsx'
 import BottomSheet from './BottomSheet.jsx'
 import { Button } from './ui/button.jsx'
 import { Input } from './ui/input.jsx'
@@ -12,13 +14,54 @@ import { cleanEmail } from '../lib/profile.js'
 // Profile (the rail's and the phone menu's last item, in Sign out's old place): a sheet (a dialog on a computer) with who's
 // signed in (GitHub), the reminder email (lib/profile.js; Edit steps to its field, ← back) and Sign out (red; App
 // confirms it). `start`: 'email' opens it at the email's field (Edit in a date's reminder), its ← going back to the date's sheet.
-// `onSaveEmail(text)` (null while the profile can't be saved): '' takes the address out.
-export default function ProfileSheet({ login, email, onSaveEmail, onSignOut, start = 'main', onClose }) {
+// `onSaveEmail(text)` (null while the profile can't be saved): '' takes the address out. The repository (`repo`) it's
+// signed in to, as a row that steps (←) to the repos used on this device (`repos`, the open one chosen; another one opens
+// the app there, `onSwitchRepo(full)`), Switch to another repository… (its owner/repo field, a step of its own) and Open
+// on GitHub, as File manager's root menu (RepoMenu) has them; switching waits while a sync runs (`syncing`).
+export default function ProfileSheet({ login, email, repo, repos = [], syncing, onSwitchRepo, onSaveEmail, onSignOut, start = 'main', onClose }) {
+  const inputRef = useRef()
   const [step, setStep] = useState(start)
   const [typed, setTyped] = useState(email)
   const [error, setError] = useState('')
   // ← in the title: from its email back to the profile, or, opened at its email from a date's reminder, back to the date's sheet (still open under it)
   const back = start === 'main' ? () => { setStep('main'); setError('') } : onClose
+
+  const toMain = () => setStep('main')
+
+  if (step === 'repo') return (
+    <BottomSheet title="Repository" description="The repo your notes are in." onBack={toMain} onClose={onClose} onOpenAutoFocus={e => e.preventDefault()}>
+      <ul className="-mx-space-xs" role="radiogroup" aria-label="Repositories used on this device">
+        {repos.map(r => (
+          <li key={r}>
+            <ListRow icon={<Radio checked={r === repo} />} title={<span className="font-mono text-sm">{r}</span>} disabled={syncing && r !== repo} onClick={() => r !== repo && onSwitchRepo(r)} />
+          </li>
+        ))}
+      </ul>
+      <Separator className="my-space-xs" />
+      <ul className="-mx-space-xs">
+        <li><ListRow icon={<GitBranch />} title="Switch to another repository…" disabled={syncing} onClick={() => setStep('switch')} /></li>
+        <li><ListRow icon={<ArrowSquareOut />} title="Open on GitHub" onClick={() => window.open(`https://github.com/${repo}`, '_blank', 'noopener,noreferrer')} /></li>
+      </ul>
+    </BottomSheet>
+  )
+
+  if (step === 'switch') return (
+    <BottomSheet
+      title="Switch repository" description="Unsynced changes stay on this device with their repo."
+      onBack={() => setStep('repo')} onClose={onClose}
+      onOpenAutoFocus={e => { e.preventDefault(); inputRef.current?.select() }}
+    >
+      <RepoForm
+        initial={repo} onConnect={onSwitchRepo} inputRef={inputRef} inputClassName="font-mono"
+        actions={({ busy, empty }) => (
+          <div className="flex justify-end gap-space-sm">
+            <Button type="button" variant="secondary" onClick={() => setStep('repo')}>Cancel</Button>
+            <Button type="submit" disabled={busy || empty || syncing}>{busy ? 'Checking…' : syncing ? 'Syncing…' : 'Switch'}</Button>
+          </div>
+        )}
+      />
+    </BottomSheet>
+  )
 
   if (step === 'email') {
     const save = e => {
@@ -48,6 +91,7 @@ export default function ProfileSheet({ login, email, onSaveEmail, onSignOut, sta
     <BottomSheet title="Profile" onClose={onClose} onOpenAutoFocus={e => e.preventDefault()}>
       <ul className="-mx-space-xs">
         <li><ListRow icon={<GithubLogo />} title={login} description="Signed in with GitHub" disabled /></li>
+        <li><ListRow icon={<BookBookmark />} title={<span className="font-mono text-sm">{repo}</span>} description="Repository" onClick={() => setStep('repo')} trailing={<CaretRight className="mr-space-xs size-4 text-muted-foreground" />} /></li>
         <li>
           <ListRow
             icon={<EnvelopeSimple />} title={email || <Placeholder>No reminder email</Placeholder>} description="Reminder email"

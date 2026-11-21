@@ -996,6 +996,7 @@ export default function App() {
           <ProfileSheet
             key={profileAt}
             login={auth.user.login} email={profile.email} start={profileAt}
+            repo={auth.repo} repos={auth.repos} syncing={repo.syncing} onSwitchRepo={switchRepo}
             onSaveEmail={profile.canEdit ? text => update(profile.setEmail(text)) : null}
             onSignOut={() => { setProfileAt(null); setConfirmSignOut(true) }}
             onClose={() => setProfileAt(null)}
