@@ -14,8 +14,8 @@
 - A view's row shows ⋯ (`ViewMenu` `inRow`: Rename, Emoji, Remove) on hover; File manager and Graph have none.
 
 ## Phones (`TopBar`, above the `Surface`)
-- 16px from the screen's sides. ☰ and beside it the leaf logo and Folio (`AppLogo`, `BrandName`; not a button) on the left; Search and Sync on the right.
-- ☰ (`AccountMenu`) opens a `BottomSheet` like every other prompt (Search's too), titled Menu: list rows (`ListRow`) for the Views title and the views first, then File manager, Assets and Graph, then Recent updates, Broken links (count), Documentation, Settings and Sign out (red), separated by `Separator`s; the open page highlighted. Choosing one closes it. A view's ⋯ (`ViewMenu`: Rename / Emoji / Remove) is always shown on touch.
+- 16px from the screen's sides. The menu on the left: the leaf logo and Folio (`AppLogo`, `BrandName`) in an outlined button; Search and Sync on the right.
+- The menu button (`AccountMenu`) opens a `BottomSheet` like every other prompt (Search's too), titled with the logo and Folio: list rows (`ListRow`) for the Views title and the views first, then File manager, Assets and Graph, then Recent updates, Broken links (count), Documentation, Settings and Sign out (red), separated by `Separator`s; the open page highlighted. Choosing one closes it. A view's ⋯ (`ViewMenu`: Rename / Emoji / Remove) is always shown on touch.
 - The bar slides away while the content scrolls down (at least 16px in one go) and returns on scrolling up (`useHideOnScroll`), leaving only the title bar fixed: its row folds in 300ms with a gentle ease while what's in it slides up and fades, so the page under it moves softly.
 - It does in a note's editor too (each scroll area is followed on its own: the editor's text and its highlighting scroll together). With the keyboard open, the app fills only the part of the screen still seen (`useVisualViewport`, App; Android shrinks the page itself, `interactive-widget=resizes-content` in index.html): iOS would otherwise scroll the whole page up to show the caret, taking the title bar and its ✓ off the screen; this way only the text scrolls, under the title bar.
 
