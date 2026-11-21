@@ -106,7 +106,7 @@
    the row is hovered, its text moving aside for it (no room kept), on touch always, faint, with room kept; none while the table is shown sorted. Its drop line: the accent along the
    top or bottom edge of the row it lands next to; the dragged row stays in place, faded */
 .editor-preview td:has(> .row-grip) { position: relative; padding-left: calc(var(--grip-w) + 4px); }
-.editor-preview .row-grip { position: absolute; left: 2px; top: 50%; translate: 0 -50%; width: var(--grip-w); height: 1lh; opacity: 0.8; }
+.editor-preview .row-grip { position: absolute; left: 2px; top: 50%; translate: 0 -50%; width: var(--grip-w); height: var(--grip-w); opacity: 0.8; } /* square: a table's line is short */
 .editor-preview table.table-sorted .row-grip { display: none; }
 .editor-preview table.table-sorted td:has(> .row-grip) { padding-left: 8px; }
 .editor-preview tr.list-drop-before > td { box-shadow: inset 0 2px 0 var(--primary); }
