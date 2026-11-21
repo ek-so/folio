@@ -3,7 +3,7 @@ import { clampSize, NOTE_HEIGHT } from '../../lib/resize.js'
 import { noteTitle } from '../../lib/frontmatter.js'
 
 // The Note widget: one note shown on a view, its markdown as a preview in a card of limited height. Its settings live in
-// the repo, beside the views: `.folio/single-note/<id>.json`, { "path": "path/to/note.md", "height": 448 } (`height`, the
+// the repo, beside the views: `.folio/single-note/<id>.json`, { "path": "path/to/note.md", "height": 480 } (`height`, the
 // card's height in px, only once it's changed: NOTE_HEIGHT, lib/resize.js). Its type is "single-note":
 // "note" is an older Pinned widget's (parseViews).
 export const notePath = id => `.folio/single-note/${id}.json`

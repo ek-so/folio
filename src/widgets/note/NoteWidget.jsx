@@ -133,18 +133,18 @@ function NotePreviewCard({ path, height, services, onReplace }) {
   )
 }
 
-// Edit height…: the card's height, in pixels (NOTE_HEIGHT's limits)
+// Edit height…: the card's height, in pixels (NOTE_HEIGHT's limits, in its steps)
 function HeightSheet({ height, onSave, onClose }) {
   const [value, setValue] = useState(String(height))
   const n = Number(value)
-  const valid = value.trim() !== '' && Number.isInteger(n) && n >= NOTE_HEIGHT.min && n <= NOTE_HEIGHT.max
+  const valid = value.trim() !== '' && Number.isInteger(n) && n >= NOTE_HEIGHT.min && n <= NOTE_HEIGHT.max && n % NOTE_HEIGHT.step === 0
   return (
     <BottomSheet title="Edit height" onClose={onClose}>
       <form onSubmit={e => { e.preventDefault(); if (valid) onSave(n) }} className="flex flex-col gap-3">
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="note-height">Height in pixels</Label>
-          <Input id="note-height" type="number" inputMode="numeric" min={NOTE_HEIGHT.min} max={NOTE_HEIGHT.max} value={value} onChange={e => setValue(e.target.value)} className="bg-background border-border font-normal" />
-          <p className="text-muted-foreground text-xs">From {NOTE_HEIGHT.min} to {NOTE_HEIGHT.max}. The default is {NOTE_HEIGHT.default}.</p>
+          <Input id="note-height" type="number" inputMode="numeric" min={NOTE_HEIGHT.min} max={NOTE_HEIGHT.max} step={NOTE_HEIGHT.step} value={value} onChange={e => setValue(e.target.value)} className="bg-background border-border font-normal" />
+          <p className="text-muted-foreground text-xs">From {NOTE_HEIGHT.min} to {NOTE_HEIGHT.max}, in steps of {NOTE_HEIGHT.step}. The default is {NOTE_HEIGHT.default}.</p>
         </div>
         <div className="flex justify-end gap-space-sm">
           <Button type="button" variant="secondary" onClick={onClose}>Cancel</Button>

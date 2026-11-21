@@ -2,7 +2,7 @@ import { useRef } from 'react'
 import { cn } from '@/lib/utils.js'
 
 // Drag handle on the right edge of a desktop panel, in the 16px gap to what
-// follows (also ←/→ keys, saved when let go; double click resets). `edge="bottom"`: on its bottom edge, in the gap
+// follows (also ←/→ keys, by `limits.step` or 16, saved when let go; double click resets). `edge="bottom"`: on its bottom edge, in the gap
 // under it, resizing its height (↑/↓ keys).
 // It resizes by how far it's dragged: `size` / `limits` ({ default, min, max }) / `onResize(px, save)`: `save` is
 // false while dragging and true when it ends, so it's stored once.
@@ -18,7 +18,8 @@ export default function ResizeHandle({ label, size, limits, onResize, edge = 'ri
     onResize(last.current, false)
   }
   const onPointerUp = e => { if (e.currentTarget.hasPointerCapture(e.pointerId)) onResize(last.current, true) }
-  const steps = bottom ? { ArrowUp: -16, ArrowDown: 16 } : { ArrowLeft: -16, ArrowRight: 16 }
+  const by = limits.step ?? 16
+  const steps = bottom ? { ArrowUp: -by, ArrowDown: by } : { ArrowLeft: -by, ArrowRight: by }
   const onKeyDown = e => {
     const step = steps[e.key]
     if (!step) return
