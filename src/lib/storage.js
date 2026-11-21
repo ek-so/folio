@@ -8,7 +8,6 @@ const USER_KEY = 'folio_user'
 const THEME_KEY = 'folio_theme'
 const TRAILS_KEY = 'folio_trails' // this tab's (sessionStorage); with `_<repo>`, where each repo was last left (localStorage)
 const PAGE_KEY = 'folio_page'
-const EXPANDED_KEY = 'folio_expanded'
 const RAIL_WIDTH_KEY = 'folio_rail_width'
 const RAIL_KEY = 'folio_rail_collapsed'
 const FILES_VIEW_KEY = 'folio_files_view'
@@ -74,11 +73,6 @@ export const storage = {
     write(sessionStorage, PAGE_KEY, page)
     write(localStorage, `${PAGE_KEY}_${repo}`, page)
   },
-  // Folders open in the title bar's folder tree
-  getExpanded: () => {
-    try { return JSON.parse(read(sessionStorage, EXPANDED_KEY)) || [] } catch { return [] }
-  },
-  setExpanded: (paths) => write(sessionStorage, EXPANDED_KEY, JSON.stringify(paths)),
   // The day picked on a planner's ribbon (`id`: its widget's), so it's still selected after a note is opened and closed; null: today
   getPlannerDay: (id) => {
     try { return JSON.parse(read(sessionStorage, PLANNER_DAYS_KEY))?.[id] ?? null } catch { return null }
@@ -109,7 +103,7 @@ export const storage = {
   // What's open in this tab, on switching repos: its page, trails, open folders and planners' picked days go (where each
   // repo was left, and recent files, are kept per repo on the device)
   clearRepoSession: () => {
-    for (const key of [TRAILS_KEY, PAGE_KEY, EXPANDED_KEY, PLANNER_DAYS_KEY]) write(sessionStorage, key, null)
+    for (const key of [TRAILS_KEY, PAGE_KEY, PLANNER_DAYS_KEY]) write(sessionStorage, key, null)
   },
   // Everything tied to the signed-in account; theme stays
   // The commits this device pushed to `repo` (their shas, latest first, the last PUSHED_MAX): Recent updates marks them ↑
@@ -126,7 +120,7 @@ export const storage = {
     try { recents = Object.keys(localStorage).filter(key => [RECENT_KEY, PUSHED_KEY, `${TRAILS_KEY}_`, `${PAGE_KEY}_`].some(prefix => key.startsWith(prefix))) } catch {}
     for (const key of recents) write(localStorage, key, null)
     for (const key of [TOKEN_KEY, REPO_KEY, REPOS_KEY, USER_KEY]) write(localStorage, key, null)
-    for (const key of [TRAILS_KEY, PAGE_KEY, EXPANDED_KEY, PLANNER_DAYS_KEY]) write(sessionStorage, key, null)
+    for (const key of [TRAILS_KEY, PAGE_KEY, PLANNER_DAYS_KEY]) write(sessionStorage, key, null)
   },
 }
 

@@ -12,8 +12,8 @@ import { fileItem } from '../lib/folderNotes.js'
 import { EmptyMessage, EMPTY } from './EmptyState.jsx'
 
 // What the title bar's folder tree needs from App: `listDir(dir)`, `symlinks`, the `current`
-// path (open file or folder), the open `file` (null for a folder), `dir` (the open folder, or the open file's), the open folders
-// (`expanded`, `onToggle`), `onOpenFolder` / `onOpenFile` (each row's ⋯ is ItemMenu, as in File manager), the title
+// path (open file or folder), the open `file` (null for a folder), `dir` (the open folder, or the open file's),
+// `onOpenFolder` / `onOpenFile` (each row's ⋯ is ItemMenu, as in File manager), the title
 // bar's `history` (Back and Forward: useAddressBar), `viewTree()` (on a view's page: its widgets and what they show, as nodes; null elsewhere), and for the root's RepoMenu the open `repo`, the `repos` used on
 // this device and `onSwitchRepo(repo)`.
 export const NavContext = createContext(null)
@@ -133,8 +133,24 @@ export const TitleMenuButton = forwardRef(function TitleMenuButton({ icon, child
   )
 })
 
-// The title of a file or folder: its `name` as a button that opens a popover with the tree of the folder
-// you're in (an open file's folder, or an open folder's parent with the folder itself open in it), its subfolders expandable; `badge` (symlinks pointing here) sits inside the button's outline, after ▾; on a view's page, the view's own
+// The folders holding the open item, from the root down (the open folder itself among them): `dir` 'a/b' → ['a', 'a/b']
+const pathTo = dir => dir ? dir.split('/').map((_, i, parts) => parts.slice(0, i + 1).join('/')) : []
+
+// The repo's tree in the popover, from the root, only the folders down to the open item expanded. What you open or close
+// in it lasts while it's open, apart from File manager's own open folders
+function RepoTree() {
+  const nav = useContext(NavContext)
+  const [expanded, setExpanded] = useState(() => new Set(pathTo(nav.dir)))
+  const onToggle = path => setExpanded(prev => { const next = new Set(prev); if (!next.delete(path)) next.add(path); return next })
+  return (
+    <NavContext.Provider value={{ ...nav, expanded, onToggle }}>
+      <ul><Rows dir="" depth={0} /></ul>
+    </NavContext.Provider>
+  )
+}
+
+// The title of a file or folder: its `name` as a button that opens a popover with the repo's tree from its root, only the folders
+// down to the open item expanded (RepoTree), so any folder or file above it is a tap away; `badge` (symlinks pointing here) sits inside the button's outline, after ▾; on a view's page, the view's own
 // tree instead (`viewTree`: its widgets and what they show). It opens scrolled to the open item. Choosing a note or folder opens it and closes the popover.
 export function FolderTreeMenu({ name, changed, badge }) {
   const nav = useContext(NavContext)
@@ -142,11 +158,7 @@ export function FolderTreeMenu({ name, changed, badge }) {
   if (!nav) return name
   const close = fn => path => { setOpen(false); fn(path) }
   const viewTree = open && nav.viewTree?.()
-  // An open folder is shown inside its parent, like an open file among its siblings: the folder itself (highlighted, open) with its neighbours
-  const inParent = !nav.viewTree && !nav.file && nav.dir !== ''
-  const top = inParent ? nav.dir.split('/').slice(0, -1).join('/') : nav.dir
-  const empty = nav.viewTree ? !viewTree?.length : !nav.listDir(top).length
-  const expanded = inParent ? new Set([...nav.expanded, nav.dir]) : nav.expanded
+  const empty = nav.viewTree ? !viewTree?.length : !nav.listDir('').length
   const trigger = (
     <PopoverTrigger asChild>
       <TitleMenuButton bare={!!badge} icon={<FileIcon path={nav.current ?? ''} dir={nav.current !== nav.file} />} changed={changed}>{withoutEmoji(name)}</TitleMenuButton>
@@ -160,8 +172,8 @@ export function FolderTreeMenu({ name, changed, badge }) {
           {empty
             ? <EmptyMessage size="sm" emoji={EMPTY.folder}>{nav.viewTree ? 'Nothing on this view yet' : 'Empty folder'}</EmptyMessage>
             : (
-              <NavContext.Provider value={{ ...nav, expanded, onToggle: path => path !== nav.dir && nav.onToggle(path), onOpenFolder: close(nav.onOpenFolder), onOpenFile: close(nav.onOpenFile) }}>
-                {viewTree ? <ViewTree nodes={viewTree} /> : <ul><Rows dir={top} depth={0} /></ul>}
+              <NavContext.Provider value={{ ...nav, onOpenFolder: close(nav.onOpenFolder), onOpenFile: close(nav.onOpenFile) }}>
+                {viewTree ? <ViewTree nodes={viewTree} /> : <RepoTree />}
               </NavContext.Provider>
             )}
         </div>

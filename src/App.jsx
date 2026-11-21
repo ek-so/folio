@@ -61,7 +61,6 @@ import { TooltipProvider } from './components/ui/tooltip.jsx'
 import { SingleOpenProvider } from './hooks/useSingleOpen.jsx'
 import { useSearchShortcut } from './hooks/useSearchShortcut.js'
 import { useAddressBar } from './hooks/useAddressBar.js'
-import { useExpandedFolders } from './hooks/useExpandedFolders.js'
 import { useAutoSync } from './hooks/useAutoSync.js'
 import { cache } from './lib/cache.js'
 import { archiveDay, inArchive, staleArchiveDays, KEEP_DAYS } from './lib/archive.js'
@@ -178,7 +177,6 @@ export default function App() {
   }, [auth.repo])
 
   // The title bar's folder tree: the folders open in it
-  const [expanded, toggleFolder] = useExpandedFolders()
 
   // The browser's address follows the page you're on and its view (Settings and the other fixed pages: `?page=` alone);
   // Back / Forward, the browser's or the title bar's, move between them (useAddressBar)
@@ -815,8 +813,6 @@ export default function App() {
           const type = widgetType(w.type)
           return { key: w.id, name: widgetTitle(w, widgetServices), icon: type?.icon, children: type?.tree?.(w.id, widgetServices) ?? [] }
         }) : null,
-        expanded,
-        onToggle: toggleFolder,
         onOpenFolder: openFolder,
         onOpenFile: setSelectedFile,
         history: addressBar, // the title bar's Back and Forward
