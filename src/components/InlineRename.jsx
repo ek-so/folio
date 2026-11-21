@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input.jsx'
 export default function InlineRename({ value, onChange, onSubmit, onCancel, label, canSave = true, autoCapitalize, children }) {
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-space-xs p-space-xs">
-      <div className="flex items-center gap-space-xs">
+      <div className="flex items-center gap-space-sm">
         <Input
           autoFocus
           value={value}

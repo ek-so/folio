@@ -28,7 +28,7 @@ export function EmojiGrid({ value, onPick, onDone }) {
   const pick = emoji => { onPick(emoji); onDone?.() }
   return (
     <div className="flex w-72 max-w-full flex-col gap-space-sm" onKeyDown={e => e.stopPropagation()}>
-      <div className="flex gap-space-xs">
+      <div className="flex gap-space-sm">
         <SearchInput
           value={query} placeholder="Search or paste an emoji" aria-label="Search emoji" wrapperClassName="min-w-0 flex-1"
           onChange={e => { const emoji = leadingEmoji(e.target.value.trim()); if (emoji) pick(emoji); else setQuery(e.target.value) }}

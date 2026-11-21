@@ -267,7 +267,7 @@ export default function Planner({ id, services, onRemove }) {
         {/* The ribbon in a tray like the cards' below, under a title row like a column's: the month in view, Today and a
             calendar to pick any day; it scrolls sideways to the tray's edges, fading out at both (a mask; its scrollbar hidden, which the mask would fade too: wheel, swipe, Today and the calendar move it), with room above and below for a lifted day's shadow */}
         <Tray>
-          <div className="flex items-center gap-space-xs">
+          <div className="flex items-center gap-space-sm">
             <div className="min-w-0 flex-1"><TrayTitle>{month}</TrayTitle></div>
             <Button variant="ghost-quiet" size="md" className={cn(TRAY_ROW, 'shrink-0 gap-1.5 px-space-sm', selected !== today && 'text-primary-ink hover:text-primary-ink')} onClick={goToday}><CrosshairSimple /> Today</Button>
             <DatePopover dayOnly date={keyDay(selected)} onPick={d => d && goToDay(dayKey(d))}>
