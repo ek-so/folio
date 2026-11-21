@@ -124,7 +124,8 @@ export function NavRail({ page, pages, hrefOf, viewActions, onPage, onSearch, re
   )
 }
 
-// Phones: a bar at the top with ☰ (every page, then the rest) and Search on the left, Sync on the right. It slides away while
+// Phones: a bar at the top with ☰ (every page, then the rest) and the app's logo and name on the left, Search and Sync
+// on the right. It slides away while
 // the content scrolls down and returns on scrolling up (`useHideOnScroll`): its row folds in 300ms with a gentle ease while
 // what's in it slides up and fades, so the page under it moves softly.
 export function TopBar({ host, resetKey, page, pages, viewActions, onPage, onSearch, renderSync, menu }) {
@@ -136,10 +137,10 @@ export function TopBar({ host, resetKey, page, pages, viewActions, onPage, onSea
     <div className={cn('transition-[translate,opacity] duration-300 ease-[cubic-bezier(0.2,0,0,1)]', hidden && '-translate-y-full opacity-0')}>
     <div className="flex items-center gap-space-sm px-space py-space">
       <AccountMenu {...menu} current={page} pages={pages} viewActions={viewActions} onNavigate={onPage} />
+      <span className="flex min-w-0 flex-1 items-center gap-space-sm"><AppLogo className="size-6 shrink-0" /><BrandName /></span>
       <Button variant="ghost-outline" size="icon" aria-label="Search" onClick={onSearch}>
         <MagnifyingGlass />
       </Button>
-      <div className="flex-1" />
       {renderSync(false, true)}
     </div>
     </div>

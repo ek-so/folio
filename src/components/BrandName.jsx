@@ -1,7 +1,7 @@
 import { cn } from '@/lib/utils.js'
 
 // The app's name "Folio" in the handwritten brand font (`font-brand`), a bit softer than the text.
-// `large`: the sign-in title; otherwise the size for the rail's and menu sheet's headers, nudged
+// `large`: the sign-in title; otherwise the size for the rail's header and the phone's top bar, nudged
 // 4px down to sit centered on the logo beside it (the font's letters sit high in their line).
 export default function BrandName({ large }) {
   return (

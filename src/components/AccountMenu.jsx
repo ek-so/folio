@@ -4,15 +4,13 @@ import { PAGE } from '../lib/pages.js'
 import ViewMenu, { ViewsTitle } from './ViewMenu.jsx'
 import PageTitle from './PageTitle.jsx'
 import PageIcon from './PageIcon.jsx'
-import AppLogo from './AppLogo.jsx'
-import BrandName from './BrandName.jsx'
 import BottomSheet from './BottomSheet.jsx'
 import { Button } from './ui/button.jsx'
 import { ListRow } from './ui/list-row.jsx'
 import { Separator } from './ui/separator.jsx'
 
-// The phone navigation: ☰ (on the top bar) opens a `BottomSheet` like every other prompt, titled with the app's
-// logo and name. First the views under their title (`ViewsTitle`: "Views" and its ⋯), each with its ⋯ (`ViewMenu`,
+// The phone navigation: ☰ (on the top bar, beside the app's logo and name) opens a `BottomSheet` like every other
+// prompt, titled Menu. First the views under their title (`ViewsTitle`: "Views" and its ⋯), each with its ⋯ (`ViewMenu`,
 // `viewActions`), then the other main pages (`pages`): File manager, Assets and Graph; then Recent updates, Broken
 // links (count), Documentation, Settings and Sign out. `current` is the open page, highlighted. Choosing a page closes it.
 export default function AccountMenu({ current, pages, viewActions, onNavigate, brokenCount, onSignOut }) {
@@ -37,7 +35,7 @@ export default function AccountMenu({ current, pages, viewActions, onNavigate, b
       </Button>
       {open && (
         <BottomSheet
-          title={<span className="flex items-center gap-space-sm"><AppLogo className="size-6 shrink-0" /><BrandName /></span>}
+          title="Menu"
           onClose={() => setOpen(false)}
           onOpenAutoFocus={e => e.preventDefault()}
         >
