@@ -11,7 +11,9 @@ function scrolledAncestor(el, root) {
 }
 
 // Drag down from the top to refresh. The whole screen slides down and a
-// spinner shows above it, below the status bar.
+// spinner shows above it, below the status bar. A drag that starts sideways (a wide table or code block scrolled across)
+// is never a pull: the first moves decide, so the screen doesn't slide under a sideways swipe.
+const DECIDE_PX = 6 // how far a touch moves before its direction is known
 export default function PullToRefresh({ onRefresh, children }) {
   const [pull, setPull] = useState(0)
   const [refreshing, setRefreshing] = useState(false)
@@ -24,12 +26,19 @@ export default function PullToRefresh({ onRefresh, children }) {
     const typing = document.activeElement?.matches('textarea, input')
     const optedOut = e.target.closest('[data-no-pull]')
     const blocked = refreshing || typing || optedOut || scrolledAncestor(e.target, rootRef.current)
-    pullStart.current = blocked ? null : e.touches[0].clientY
+    pullStart.current = blocked ? null : { x: e.touches[0].clientX, y: e.touches[0].clientY, down: false }
   }
 
   function onTouchMove(e) {
-    if (pullStart.current === null) return
-    const dy = e.touches[0].clientY - pullStart.current
+    const start = pullStart.current
+    if (start === null) return
+    const dx = e.touches[0].clientX - start.x
+    const dy = e.touches[0].clientY - start.y
+    if (!start.down) {
+      if (Math.abs(dx) < DECIDE_PX && Math.abs(dy) < DECIDE_PX) return // too early to tell
+      if (Math.abs(dx) >= Math.abs(dy) || dy < 0) { pullStart.current = null; return } // sideways or up: a scroll
+      start.down = true
+    }
     setPull(dy > 0 ? Math.min(dy / 2, 80) : 0)
   }
 
