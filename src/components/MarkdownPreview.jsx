@@ -1,7 +1,7 @@
 import { useMemo, useEffect, useLayoutEffect, useRef, useState, forwardRef, useImperativeHandle } from 'react'
 import { safeHtml } from '../lib/sanitize.js'
 import { withoutTitleHeading } from '../lib/frontmatter.js'
-import { renderBlocks, tapOffset, taskOffsets, resolveImage, linkSpans, splitImageAlt, imageSpans, withImageWidth, listsIn, moveListItem, moveBlock, firstWord } from '../lib/markdown.js'
+import { renderBlocks, keptSpaces, tapOffset, taskOffsets, resolveImage, linkSpans, splitImageAlt, imageSpans, withImageWidth, listsIn, moveListItem, moveBlock, firstWord } from '../lib/markdown.js'
 import { useRepoImages } from '../hooks/useRepoImages.js'
 import { linkSpots, openLink } from '../lib/previewLinks.js'
 import { cn, isPortaled } from '../lib/utils.js'
@@ -57,6 +57,20 @@ function breakLongWords(root) {
       return chunks.flatMap((chunk, j) => j ? [document.createElement('wbr'), chunk] : [chunk])
     })
     node.replaceWith(...parts)
+  }
+}
+
+// Spaces kept as written in the note's text (`keptSpaces`), not in code, where they already are
+function keepSpaces(root) {
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT)
+  const nodes = []
+  while (walker.nextNode()) {
+    const node = walker.currentNode
+    if (node.data.includes(' ') && !node.parentElement.closest('pre, code')) nodes.push(node)
+  }
+  for (const node of nodes) {
+    const kept = keptSpaces(node.data, node.previousSibling?.nodeName === 'BR')
+    if (kept !== node.data) node.data = kept
   }
 }
 
@@ -270,6 +284,7 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
       if (kind) block.dataset.diff = kind
     }
     breakLongWords(tpl.content)
+    keepSpaces(tpl.content)
     // Task list items: remove bullet, enable checkbox, record markdown offset
     for (const cb of tpl.content.querySelectorAll('input[type="checkbox"]')) {
       cb.closest('li')?.classList.add('task-item')

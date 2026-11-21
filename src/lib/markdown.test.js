@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest'
 // Date badges leave out this year (dateLabel): the tests' dates are read as of another year, so they keep theirs
 beforeAll(() => { vi.useFakeTimers({ now: new Date(2030, 0, 1), toFake: ['Date'] }) })
 afterAll(() => { vi.useRealTimers() })
-import { renderBlocks, tapOffset, taskOffsets, taskProgress, linkSpans, linkMarkdown, replaceLink, repoLink, listsIn, moveListItem, moveBlock, continueList, highlightMarkdown, keyLines, renderInline, splitImageAlt, imageSpans, withImageWidth, dateSpans } from './markdown.js'
+import { renderBlocks, keptSpaces, tapOffset, taskOffsets, taskProgress, linkSpans, linkMarkdown, replaceLink, repoLink, listsIn, moveListItem, moveBlock, continueList, highlightMarkdown, keyLines, renderInline, splitImageAlt, imageSpans, withImageWidth, dateSpans } from './markdown.js'
 
 describe('markdown', () => {
   it('tags each block with its source range', () => {
@@ -198,6 +198,19 @@ describe('continueList', () => {
     expect(withImageWidth(md, spans[0], 200)).toContain('![one|200](a.png)')
     expect(withImageWidth(md, spans[1], 300)).toContain('![two|300](b.png "t")')
     expect(withImageWidth(md, spans[1], null)).toContain('![two](b.png "t")')
+  })
+})
+
+describe('spaces as written', () => {
+  it('keeps runs of spaces and a line\'s opening spaces', () => {
+    expect(keptSpaces('F          G', false)).toBe('F' + '\u00a0'.repeat(10) + 'G')
+    expect(keptSpaces('  Am', true)).toBe('\u00a0\u00a0Am')
+    expect(keptSpaces(' a b', false)).toBe(' a b')
+  })
+  it('gives a block the blank lines written after it, past the first', () => {
+    const html = renderBlocks('D5 C5\n\n\n\n**Verse 1**\n\nNext\n')
+    expect(html).toContain('data-len="5" style="--gap-lines: 3"')
+    expect(html.match(/--gap-lines/g)).toHaveLength(1)
   })
 })
 

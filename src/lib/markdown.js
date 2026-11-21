@@ -215,11 +215,11 @@ export function renderBlocks(source) {
   const tokens = marked.lexer(markdown)
   marked.walkTokens(tokens, addDates)
   let offset = 0
-  let html = ''
+  const emitted = [] // { start, end, part }
   let group = null // { start, end, tokens, depth } while inside <details>
   const emit = (start, end, parts) => {
     const part = marked.parser(Object.assign(parts, { links: tokens.links }))
-    if (part) html += `<div data-src="${start}" data-len="${end - start}">${part}</div>`
+    if (part) emitted.push({ start, end, part })
   }
   for (const token of tokens) {
     const found = markdown.indexOf(token.raw, offset)
@@ -238,7 +238,23 @@ export function renderBlocks(source) {
     emit(start, offset, [token])
   }
   if (group) emit(group.start, group.end, group.tokens) // never closed: still one block
-  return html
+  // More than one blank line written after a block shows as more room under it (`--gap-lines`, App.css)
+  return emitted.map(({ start, end, part }, i) => {
+    const next = emitted[i + 1]
+    const blank = next ? blankLines(markdown.slice(start, next.start)) : 0
+    return `<div data-src="${start}" data-len="${end - start}"${blank > 1 ? ` style="--gap-lines: ${Math.min(blank, 20)}"` : ''}>${part}</div>`
+  }).join('')
+}
+
+// How many blank lines end `text` (a block's markdown and what follows it, up to the next block)
+const blankLines = text => (/\n((?:[ \t]*\n)+)[ \t]*$/.exec(text)?.[1].split('\n').length ?? 1) - 1
+
+// Spaces as written: in rendered text a run of two or more spaces, or spaces opening a line (after a line break), would
+// collapse into one or none; they become non-breaking spaces, so chords over lyrics and indents stay where they were
+// typed. `lineStart`: the text starts a line
+export function keptSpaces(text, lineStart) {
+  const kept = text.replace(/ {2,}/g, run => '\u00a0'.repeat(run.length))
+  return lineStart ? kept.replace(/^ +/, run => '\u00a0'.repeat(run.length)) : kept
 }
 
 // A note's body (the front matter left out) as its top-level blocks' markdown, each without the line breaks after it
