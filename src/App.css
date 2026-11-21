@@ -103,7 +103,7 @@
 .editor-preview { --cell-pad: 6px; }
 .editor-preview th, .editor-preview td { padding: var(--cell-pad) 8px; min-width: 10rem; border: 1px solid var(--border); text-align: left; vertical-align: middle; }
 /* A row's drag handle (ListGrip, `.row-grip`) at the start of its first cell, centred on the row: with a mouse shown while
-   the row is hovered, on touch always, faint; none while the table is shown sorted. Its drop line: the accent along the
+   the row is hovered, its text moving aside for it (no room kept), on touch always, faint, with room kept; none while the table is shown sorted. Its drop line: the accent along the
    top or bottom edge of the row it lands next to; the dragged row stays in place, faded */
 .editor-preview td:has(> .row-grip) { position: relative; padding-left: calc(var(--grip-w) + 4px); }
 .editor-preview .row-grip { position: absolute; left: 2px; top: 50%; translate: 0 -50%; width: var(--grip-w); height: 1lh; opacity: 0.8; }
@@ -113,6 +113,9 @@
 .editor-preview tr.list-drop-after > td { box-shadow: inset 0 -2px 0 var(--primary); }
 .editor-preview tr.list-dragging { opacity: 0.4; }
 @media (pointer: fine) {
+  /* With a mouse no room is kept for it: the first cell's text moves aside while the row is hovered */
+  .editor-preview td:has(> .row-grip) { padding-left: 8px; transition: padding-left 0.15s; }
+  .editor-preview table:not(.table-sorted) tr:is(:hover, .list-dragging) > td:has(> .row-grip) { padding-left: calc(var(--grip-w) + 4px); }
   .editor-preview .row-grip { opacity: 0; transition: opacity 0.15s; }
   .editor-preview tr:hover .row-grip, .editor-preview .row-grip:focus-within, .editor-preview tr.list-dragging .row-grip { opacity: 1; }
 }
