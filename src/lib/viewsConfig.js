@@ -91,6 +91,14 @@ export const removeWidget = (views, viewId, widgetId) => views.map(v => {
   return Object.fromEntries(Object.entries(v).filter(([key]) => key !== 'widgets')) // the last one gone: no empty list, the rest (its icon too) kept
 })
 
+// `views` with view `from`'s widget `widgetId` moved to the end of view `to`, as it is (its id, so its settings, and its
+// name); the same `views` when either isn't there
+export function moveWidgetTo(views, from, widgetId, to) {
+  const widget = views.find(v => v.id === from)?.widgets?.find(w => w.id === widgetId)
+  if (!widget || from === to || !views.some(v => v.id === to)) return views
+  return removeWidget(views, from, widgetId).map(v => v.id === to ? { ...v, widgets: [...(v.widgets ?? []), widget] } : v)
+}
+
 // `views` with view `viewId`'s widget `widgetId` named `name` (empty: its kind's name again)
 export const renameWidget = (views, viewId, widgetId, name) => views.map(v => v.id !== viewId ? v : {
   ...v, widgets: (v.widgets ?? []).map(w => w.id !== widgetId ? w : name.trim() ? { ...w, name: name.trim() } : { id: w.id, type: w.type }),

@@ -50,7 +50,7 @@ import DeleteModal from './components/DeleteModal.jsx'
 import { useTheme } from './hooks/useTheme.js'
 import { storage } from './lib/storage.js'
 import { PAGE, mainPages } from './lib/pages.js'
-import { isConfigPath, addView, renameView, removeView, VIEWS_PATH, DEFAULT_VIEWS, parseViews, serializeViews, addWidget, removeWidget, moveWidget, renameWidget, moveView, setViewIcon } from './lib/viewsConfig.js'
+import { isConfigPath, addView, renameView, removeView, VIEWS_PATH, DEFAULT_VIEWS, parseViews, serializeViews, addWidget, removeWidget, moveWidget, renameWidget, moveView, setViewIcon, moveWidgetTo } from './lib/viewsConfig.js'
 import { withKeys, withValue, copyTitled, withNoteTitle, noteTitle } from './lib/frontmatter.js'
 import { widgetType, widgetTitle } from './widgets/index.js'
 import { urlForPage, pageForUrl } from './lib/url.js'
@@ -846,6 +846,12 @@ export default function App() {
               onRemove={id => removeWidgetOf(page, id)}
               onMove={(from, to) => saveViews(moveWidget(views, page, from, to))}
               onRenameWidget={(id, name) => saveViews(renameWidget(views, page, id, name))}
+              views={pages.filter(p => p.view)}
+              onMoveWidget={(id, to) => {
+                saveViews(moveWidgetTo(views, page, id, to))
+                const target = pages.find(p => p.id === to)
+                toast.success(`Moved to ${target.untitled ? 'Untitled' : target.title}`, { action: { label: 'Open', onClick: () => choosePage(to) } })
+              }}
               view={pages.find(p => p.id === page)}
               viewActions={viewActions}
             />

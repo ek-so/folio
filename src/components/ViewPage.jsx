@@ -19,11 +19,12 @@ import { EmptyMessage, EMPTY } from './EmptyState.jsx'
 // and Add widget under them. Each widget is its kind's own component, given the app's `services`;
 // `onAdd(type)`, `onRemove(id)` (always confirmed first: a widget's own Remove asks here),
 // `onMove(from, to)` (Edit widgets: order and remove them in one sheet), `onRenameWidget(id, name)` (a widget's Rename, its
-// own name; empty: its kind's again). Its ⋯'s Edit widgets opens its own sheet.
+// own name; empty: its kind's again), `onMoveWidget(id, viewId)` (a widget's Move to view: `views`, every view's page). Its
+// ⋯'s Edit widgets opens its own sheet.
 // Until the settings are read (`services.canEdit` false) nothing can be added.
 // `error`: why the views can't be changed (shown on top), or null. `waiting`: the views aren't read yet: 'loading' (skeleton
 // rows in place of the widgets) or 'offline' (not on this device yet), else null.
-export default function ViewPage({ page, view, viewActions, widgets = [], error, waiting, services, onAdd, onRemove, onMove, onRenameWidget }) {
+export default function ViewPage({ page, view, viewActions, widgets = [], error, waiting, services, views = [], onAdd, onRemove, onMove, onRenameWidget, onMoveWidget }) {
   const { canEdit } = services
   const [removing, setRemoving] = useState(null) // the widget whose Remove is being confirmed
   const [editing, setEditing] = useState(false) // Edit widgets is open
@@ -60,7 +61,7 @@ export default function ViewPage({ page, view, viewActions, widgets = [], error,
               const type = widgetType(w.type)
               return type
                 ? (
-                  <WidgetContext.Provider key={w.id} value={{ name: w.name, onRename: canEdit ? () => setRenaming(w) : null }}>
+                  <WidgetContext.Provider key={w.id} value={{ name: w.name, onRename: canEdit ? () => setRenaming(w) : null, views: views.filter(v => v.id !== page), onMoveTo: canEdit ? viewId => onMoveWidget(w.id, viewId) : null }}>
                     <type.Widget id={w.id} services={services} onRemove={() => setRemoving(w)} />
                   </WidgetContext.Provider>
                 )

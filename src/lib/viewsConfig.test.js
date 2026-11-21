@@ -1,7 +1,17 @@
 import { describe, it, expect } from 'vitest'
-import { parseViews, serializeViews, addView, renameView, removeView, isConfigPath, DEFAULT_VIEWS, addWidget, removeWidget, moveWidget, moveView, setViewIcon, renameWidget } from './viewsConfig.js'
+import { parseViews, serializeViews, addView, renameView, removeView, isConfigPath, DEFAULT_VIEWS, addWidget, removeWidget, moveWidget, moveView, setViewIcon, renameWidget, moveWidgetTo } from './viewsConfig.js'
 
 describe('viewsConfig', () => {
+  it('moves a widget, as it is, to the end of another view', () => {
+    const views = [{ id: 'a', name: 'A', widgets: [{ id: 'w1', type: 'board', name: 'Mine' }] }, { id: 'b', name: 'B', widgets: [{ id: 'w2', type: 'pinned' }] }]
+    const moved = moveWidgetTo(views, 'a', 'w1', 'b')
+    expect(moved[0]).toEqual({ id: 'a', name: 'A' })
+    expect(moved[1].widgets).toEqual([{ id: 'w2', type: 'pinned' }, { id: 'w1', type: 'board', name: 'Mine' }])
+    expect(moveWidgetTo(views, 'a', 'w1', 'a')).toBe(views)
+    expect(moveWidgetTo(views, 'a', 'w1', 'x')).toBe(views)
+    expect(moveWidgetTo(views, 'a', 'nope', 'b')).toBe(views)
+  })
+
   it('has Home alone without a file, and nothing from text it can\'t read', () => {
     expect(parseViews(undefined)).toEqual(DEFAULT_VIEWS)
     expect(parseViews('{"views":[{"id":"a","name":"A","widgets":[{"id":"w","type":"note"}]}]}')[0].widgets).toEqual([{ id: 'w', type: 'pinned' }]) // the Notes widget's new name

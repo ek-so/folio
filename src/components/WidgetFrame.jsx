@@ -1,21 +1,25 @@
 import { createContext, useContext, useState } from 'react'
-import { Trash, FolderOpen, PencilSimple } from '@phosphor-icons/react'
+import { Trash, FolderOpen, PencilSimple, ArrowSquareRight } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils.js'
-import { DropdownMenuItem } from './ui/dropdown-menu.jsx'
+import { DropdownMenuItem, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent } from './ui/dropdown-menu.jsx'
+import PageIcon from './PageIcon.jsx'
+import PageTitle from './PageTitle.jsx'
 import Loading from './Loading.jsx'
 import EmptyState from './EmptyState.jsx'
 import FolderSheet from './FolderSheet.jsx'
 import MoreMenu from './MoreMenu.jsx'
 import { EmptyMessage } from './EmptyState.jsx'
 
-// What the view (ViewPage) tells each widget's frame: its own `name` (Rename in its ⋯; none: the kind's title) and
-// `onRename()` (null while the view can't be saved)
+// What the view (ViewPage) tells each widget's frame: its own `name` (Rename in its ⋯; none: the kind's title),
+// `onRename()` (null while the view can't be saved), and `views` (the other views' pages, lib/pages.js) with
+// `onMoveTo(viewId)` (null while the view can't be saved) for Move to view
 export const WidgetContext = createContext(null)
 
 // What every widget on a view is framed by (board, planner, pinned): its title row, then its body in one of its states.
 // Title row: `icon` (a Note widget's: its note's), its name (WidgetContext's, else `title`; bold) with `subtitle` under it (muted: a widget's folder), then
 // `controls` (the widget's own, such as the planner's calendar / list) and ⋯ (MoreMenu): the widget's
-// own `menu` items (or `menu(close)`, for an item that closes the menu itself: an Emoji sub menu), then Rename (WidgetContext's `onRename`), then Remove widget (red, Trash; `onRemove`, disabled
+// own `menu` items (or `menu(close)`, for an item that closes the menu itself: an Emoji sub menu), then Rename (WidgetContext's `onRename`)
+// and Move to view (a sub menu of the other views: the widget goes, as it is, to the end of the one picked), then Remove widget (red, Trash; `onRemove`, disabled
 // without `canEdit`). Body: a spinner until `ready`; "This `noun`'s settings can't be read."
 // when not `readable`; with `folder` ({ name, missing, folders, sheetTitle, sheetText, onPick }) gone, "Its folder … is gone."
 // and Select folder (FolderSheet: another folder for it); else `children()` (only called then: it may rely on the
@@ -42,7 +46,17 @@ export default function WidgetFrame({ icon, title, subtitle, noun, controls, men
           open={menuOpen} onOpenChange={setMenuOpen}
           sections={[
             typeof menu === 'function' ? menu(() => setMenuOpen(false)) : menu,
-            own && <DropdownMenuItem disabled={!own.onRename} onSelect={own.onRename}><PencilSimple /> Rename</DropdownMenuItem>,
+            own && <>
+              <DropdownMenuItem disabled={!own.onRename} onSelect={own.onRename}><PencilSimple /> Rename</DropdownMenuItem>
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger disabled={!own.onMoveTo || !own.views?.length}><ArrowSquareRight /> Move to view</DropdownMenuSubTrigger>
+                <DropdownMenuSubContent>
+                  {own.views?.map(v => (
+                    <DropdownMenuItem key={v.id} onSelect={() => own.onMoveTo(v.id)}><PageIcon page={v} /> <span className="min-w-0 truncate"><PageTitle page={v} /></span></DropdownMenuItem>
+                  ))}
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+            </>,
             <DropdownMenuItem variant="destructive" disabled={!canEdit} onSelect={onRemove}><Trash /> Remove widget</DropdownMenuItem>,
           ]}
         />
