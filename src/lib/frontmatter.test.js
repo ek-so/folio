@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { frontMatter, properties, withKeys, withKeysFirst, blankFrontMatter, valueList, noteTitle, withoutKeys, renameKey, keyNameError, withValue, valuesOf, valueColors, withoutValue, countValue, renameValue, withTitle, withNoteTitle, valueActions, copyTitled } from './frontmatter.js'
+import { frontMatter, properties, withKeys, withKeysFirst, blankFrontMatter, valueList, noteTitle, withoutKeys, renameKey, keyNameError, withValue, valuesOf, valueColors, withoutValue, countValue, renameValue, withTitle, withNoteTitle, valueActions, copyTitled, withoutTitleHeading } from './frontmatter.js'
 
 describe('front matter', () => {
   it('moves some properties to the top, in order', () => {
@@ -46,6 +46,14 @@ describe('front matter', () => {
     expect(noteTitle('---\ntitle: From props\n---\n# Heading\n', 'file')).toBe('From props')
     expect(noteTitle('---\ndescription: x\n---\nIntro\n\n# The heading #\n', 'file')).toBe('The heading')
     expect(noteTitle('## Only h2\n', 'file')).toBe('file')
+  })
+
+  it('blanks out the heading its title comes from, keeping every offset', () => {
+    const text = '---\ns: a\n---\n# Plan\n\nBody\n'
+    expect(withoutTitleHeading(text)).toBe('---\ns: a\n---\n      \n\nBody\n')
+    expect(withoutTitleHeading(text)).toHaveLength(text.length)
+    expect(withoutTitleHeading('---\ntitle: T\n---\n# Plan\n')).toBe('---\ntitle: T\n---\n# Plan\n')
+    expect(withoutTitleHeading('No title\n')).toBe('No title\n')
   })
 
   it('removes properties with their values', () => {

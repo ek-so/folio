@@ -11,7 +11,8 @@ import { PinPicker } from '../pinned/PinnedSetup.jsx'
 import { noteSettings, noteWrite, notePath, noteWidgetTitle } from './note.js'
 
 // The Note widget (note.js): the note's title (its own Rename overrides it) and its ⋯ (Change note…, Rename, Remove
-// widget) on top, then one card with the note's markdown as a preview (MarkdownPreview), capped in height (`max-h-96`):
+// widget) on top, then one card with the note's markdown as a preview (MarkdownPreview; without the heading its title
+// comes from, as that's the widget's title), capped in height (`max-h-96`):
 // what doesn't fit fades out at the bottom. Its links, checkboxes and badges work as in the note; any other tap opens
 // the note, a double tap opens it in the editor at the tapped word (`editFile`). A gone note's card is dashed: a tap
 // picks another.
@@ -74,7 +75,7 @@ function NotePreviewCard({ path, services, onReplace }) {
         <EmptyMessage>This note isn't saved on this device yet.</EmptyMessage>
       ) : (
         <MarkdownPreview
-          content={text} path={path} files={services.entries}
+          content={text} path={path} files={services.entries} hideTitle
           onDoubleTap={edit}
           onChange={locked ? undefined : next => services.update(ch => editNote(ch, services.remoteFiles, path, () => next, services.remoteText))}
           onOpenFile={services.openFile} onNavigate={services.openFolder}

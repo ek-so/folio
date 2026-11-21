@@ -278,6 +278,21 @@ export function noteTitle(text, fallback) {
   const fm = frontMatter(text)
   const title = fm?.props.find(p => p.key === 'title')?.value
   if (typeof title === 'string' && title.trim()) return title.trim()
-  const heading = text.slice(fm?.end ?? 0).match(/^ {0,3}#[ \t]+(.+?)[ \t#]*$/m)
-  return heading ? heading[1] : fallback
+  return titleHeading(text)?.title ?? fallback
+}
+
+// The first "# heading" after the front matter: { title, start, end } (its line's offsets), or null
+function titleHeading(text) {
+  const from = frontMatter(text)?.end ?? 0
+  const heading = text.slice(from).match(/^ {0,3}#[ \t]+(.+?)[ \t#]*$/m)
+  return heading && { title: heading[1], start: from + heading.index, end: from + heading.index + heading[0].length }
+}
+
+// `text` with the "# heading" its title comes from blanked out (spaces, so every offset stays where it is): what shows
+// under its title when the title is already shown above it (a Note widget's card). Unchanged when its title is a
+// `title` property or it has none
+export function withoutTitleHeading(text) {
+  const title = frontMatter(text)?.props.find(p => p.key === 'title')?.value
+  const heading = !(typeof title === 'string' && title.trim()) && titleHeading(text)
+  return heading ? text.slice(0, heading.start) + ' '.repeat(heading.end - heading.start) + text.slice(heading.end) : text
 }

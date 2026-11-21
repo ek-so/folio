@@ -1,5 +1,6 @@
 import { useMemo, useEffect, useLayoutEffect, useRef, useState, forwardRef, useImperativeHandle } from 'react'
 import { safeHtml } from '../lib/sanitize.js'
+import { withoutTitleHeading } from '../lib/frontmatter.js'
 import { renderBlocks, tapOffset, taskOffsets, resolveImage, linkSpans, splitImageAlt, imageSpans, withImageWidth, listsIn, moveListItem, moveBlock, firstWord } from '../lib/markdown.js'
 import { useRepoImages } from '../hooks/useRepoImages.js'
 import { linkSpots, openLink } from '../lib/previewLinks.js'
@@ -194,13 +195,14 @@ const repoImages = (root, notePath) => [...root.querySelectorAll('img')]
 // list items, and the note's blocks, into another order (with `onChange`). Double-tapping (or
 // double-clicking) text calls onDoubleTap with the markdown offset of the
 // tapped word (empty space: the end of the note). `marks` ({ offset: 'added' | 'removed' }, lib/versions.js
-// `diffNote`): the blocks starting there are colored as added or removed (a version's changes).
+// `diffNote`): the blocks starting there are colored as added or removed (a version's changes). `hideTitle`: the
+// "# heading" the note's title comes from isn't shown (`withoutTitleHeading`: its title shows above it already).
 // On mount, scrolls the block holding `scrollTo` (a markdown
 // offset) into view. The ref's
 // visibleOffset() is the markdown offset of the first block on screen, where
 // editing starts. `children` render above the note (a double tap there edits
 // from the start of the file) and `footer` below it; both scroll with it.
-const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, files, marks, scrollTo, onDoubleTap, onChange, onOpenFile, onNavigate, footer, children }, handle) {
+const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, files, marks, hideTitle, scrollTo, onDoubleTap, onChange, onOpenFile, onNavigate, footer, children }, handle) {
   const ref = useRef()
   const scrollRef = useRef()
   const lastTap = useRef(null) // { time, x, y } of the previous tap on text
@@ -237,7 +239,7 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
   const linkEdits = useLinkEdits(content, onChange)
   const dateProps = useDateEdits(content, onChange)
   const [html, imagePaths, lists, blocks, tables] = useMemo(() => {
-    const sanitized = safeHtml(renderBlocks(content))
+    const sanitized = safeHtml(renderBlocks(hideTitle ? withoutTitleHeading(content) : content))
     const tpl = document.createElement('template')
     tpl.innerHTML = sanitized
     linkSpots(tpl.content, path, files, spans)
@@ -287,7 +289,7 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
       frame.insertAdjacentHTML('beforeend', `<span class="image-handle" data-image="${i}"></span>`)
     })
     return [tpl.innerHTML, repoImages(tpl.content, path).map(([, repoPath]) => repoPath), lists, blocks, tables]
-  }, [content, path, files, spans, Boolean(onChange), picked, marks])
+  }, [content, path, files, spans, Boolean(onChange), picked, marks, hideTitle])
 
   const images = useRepoImages(imagePaths, files)
 
