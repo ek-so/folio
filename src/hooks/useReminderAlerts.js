@@ -34,11 +34,13 @@ const REMINDER_TOAST = {
 }
 
 const DISMISSED_KEY = 'folio_reminders_dismissed' // the ones taken out of Notifications on this device, by id
-const readDismissed = () => { try { return new Set(JSON.parse(localStorage.getItem(DISMISSED_KEY)) ?? []) } catch { return new Set() } }
-const writeDismissed = ids => { try { localStorage.setItem(DISMISSED_KEY, JSON.stringify([...ids].slice(-500))) } catch { /* back next time */ } }
+// Those told and those dismissed are kept per repo (`<key>_<repo>`: tabs in two repos can have notes at the same path);
+// one not kept that way yet starts from what this device kept for every repo before (`<key>`)
+const readIds = (key, repo) => {
+  try { return new Set(JSON.parse(localStorage.getItem(`${key}_${repo}`) ?? localStorage.getItem(key)) ?? []) } catch { return new Set() }
+}
+const writeIds = (key, repo, ids) => { try { localStorage.setItem(`${key}_${repo}`, JSON.stringify([...ids].slice(-500))) } catch { /* told or back again next time */ } }
 
-const readFired = () => { try { return new Set(JSON.parse(localStorage.getItem(FIRED_KEY)) ?? []) } catch { return new Set() } }
-const writeFired = ids => { try { localStorage.setItem(FIRED_KEY, JSON.stringify([...ids].slice(-500))) } catch { /* shown again next time */ } }
 
 // Asks the browser once to let Folio notify (in the tap that sets a reminder: browsers only ask then)
 export function askToNotify() {
@@ -62,18 +64,23 @@ export function useNotifyPermission() {
 // notification from the browser when allowed (askToNotify), a tap on it opening the note. Those that came due while
 // Folio wasn't on screen (closed, or in the background, its timers frozen or late: every one not told yet, up to
 // MISSED_DAYS back, none from before the device's first opening) are told in one toast on opening or coming back, "N reminders" with View (`onView`: opens
-// Notifications). Each is told once on this device. Every one that has come due stays in Notifications (`due`, latest
+// Notifications). Each is told once on this device, per repo. Every one that has come due stays in Notifications (`due`, latest
 // first) until it's dismissed (`dismiss(id)`, `dismissAll()`; remembered on this device: nothing's written to the
 // notes or `.folio`); `rung`: those as `rungKey`s, for their dates' badges (RungContext). The nav counts `due`.
 // Nothing reminds while Folio is closed.
-export function useReminderAlerts(notes, { onOpen: onOpenNow, onView }) {
+export function useReminderAlerts(notes, repo, { onOpen: onOpenNow, onView }) {
+  const repoRef = useRef(repo)
+  repoRef.current = repo
+  const readFired = () => readIds(FIRED_KEY, repoRef.current)
+  const writeFired = ids => writeIds(FIRED_KEY, repoRef.current, ids)
   const reminders = useMemo(() => remindersIn(notes), [notes])
   // Opened the way the app opens a note now (the page you're on), not as when the reminder was planned
   const actions = useRef()
   actions.current = { onOpen: onOpenNow, onView }
   const onOpen = path => actions.current.onOpen(path)
   const [now, setNow] = useState(Date.now) // what's due is as of this: moved on as reminders come due
-  const [dismissed, setDismissed] = useState(readDismissed)
+  const [dismissed, setDismissed] = useState(() => readIds(DISMISSED_KEY, repo))
+  useEffect(() => { setDismissed(readIds(DISMISSED_KEY, repo)) }, [repo]) // another repo signed in to without a reload
   const from = useRef(null)
   if (from.current === null) from.current = readFrom()
   const telling = useRef(true) // opened or back, and what was missed not told yet (once the notes are there)
@@ -150,7 +157,7 @@ export function useReminderAlerts(notes, { onOpen: onOpenNow, onView }) {
 
   const due = useMemo(() => dueReminders(reminders, now, dismissed), [reminders, now, dismissed])
   const rung = useMemo(() => new Set(due.map(r => rungKey(r.path, r.key))), [due])
-  const dismissAll = ids => setDismissed(prev => { const next = new Set([...prev, ...ids]); writeDismissed(next); return next })
+  const dismissAll = ids => setDismissed(prev => { const next = new Set([...prev, ...ids]); writeIds(DISMISSED_KEY, repo, next); return next })
   return {
     due,
     rung,

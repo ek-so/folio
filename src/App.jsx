@@ -645,7 +645,7 @@ export default function App() {
   }
 
   // Reminders set on dates, told while Folio is open, and Notifications (the page): those that have come due
-  const reminders = useReminderAlerts(links.notes, { onOpen: path => setSelectedFile(path), onView: () => setPage(PAGE.NOTIFICATIONS) })
+  const reminders = useReminderAlerts(links.notes, auth.repo, { onOpen: path => setSelectedFile(path), onView: () => setPage(PAGE.NOTIFICATIONS) })
 
   if (!auth.ready) {
     return (
