@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { toast } from 'sonner'
-import { getBlob } from '../lib/github.js'
+import { getBlob, isNetworkError, isNotText } from '../lib/github.js'
 import { withFixedDates } from '../lib/markdown.js'
 import { withKeys, withKeysFirst } from '../lib/frontmatter.js'
 
@@ -19,7 +19,7 @@ const fetchOriginal = sha => sha === null ? Promise.resolve('') : getBlob(sha)
 export function useNote(entry, edited, onEdit, required, order) {
   const [content, setContent] = useState('')
   const [loading, setLoading] = useState(true)
-  const [loadError, setLoadError] = useState(false)
+  const [loadError, setLoadError] = useState(null) // why it can't be shown: 'offline' | 'notText' | 'failed'; null when it is
   const originalRef = useRef(null)
   const pendingRef = useRef(null)
   const onEditRef = useRef(onEdit)
@@ -49,7 +49,9 @@ export function useNote(entry, edited, onEdit, required, order) {
   }
 
   // GitHub's version `sha`: the first one shows this device's text (or it); a later one (e.g. after Sync) is shown only
-  // when nothing is edited locally. Without GitHub's version edits can't be tracked, so none are allowed
+  // when nothing is edited locally. Without GitHub's version edits can't be tracked, so none are allowed. Offline, it's
+  // asked for again once back online; a later one that fails leaves the note shown as it is (edits compared with the
+  // version before) rather than taking it off the screen
   function load(sha) {
     fetchOriginal(sha).then(original => {
       if (shaRef.current !== sha) return
@@ -57,8 +59,11 @@ export function useNote(entry, edited, onEdit, required, order) {
       if (!loadedRef.current) show(editedRef.current ?? original)
       else if (editedRef.current === undefined && pendingRef.current === null) show(original)
       loadedRef.current = true
-    }).catch(() => {
-      if (shaRef.current === sha) setLoadError(true)
+      setLoadError(null)
+    }).catch(e => {
+      if (shaRef.current !== sha) return
+      if (isNetworkError(e)) window.addEventListener('online', () => { if (shaRef.current === sha) load(sha) }, { once: true })
+      if (!loadedRef.current) setLoadError(isNetworkError(e) ? 'offline' : isNotText(e) ? 'notText' : 'failed')
     }).finally(() => {
       if (shaRef.current === sha) setLoading(false)
     })

@@ -16,6 +16,7 @@ const FILES_VIEW_KEY = 'folio_files_view'
 const CHANGES_KEY = 'folio_changes_'
 const PLANNER_VIEW_KEY = 'folio_planner_view_'
 const PLANNER_DAYS_KEY = 'folio_planner_days'
+const REMINDERS_KEY = 'folio_reminders_' // hooks/useReminderAlerts.js: those told, dismissed and seen on this device
 
 function read(store, key) {
   try { return store.getItem(key) } catch { return null }
@@ -116,7 +117,6 @@ export const storage = {
   clearRepoSession: () => {
     for (const key of [TRAILS_KEY, PAGE_KEY, PLANNER_DAYS_KEY]) write(sessionStorage, key, null)
   },
-  // Everything tied to the signed-in account; theme stays
   // The commits this device pushed to `repo` (their shas, latest first, the last PUSHED_MAX): Recent updates marks them ↑
   getPushed: (repo) => {
     try { return JSON.parse(read(localStorage, PUSHED_KEY + repo)) || [] } catch { return [] }
@@ -126,9 +126,10 @@ export const storage = {
     try { shas = JSON.parse(read(localStorage, PUSHED_KEY + repo)) || [] } catch {}
     write(localStorage, PUSHED_KEY + repo, JSON.stringify([sha, ...shas.filter(s => s !== sha)].slice(0, PUSHED_MAX)))
   },
+  // Everything tied to the signed-in account, every repo's local changes too (signing out says how many); theme stays
   clearSession: () => {
     let recents = []
-    try { recents = Object.keys(localStorage).filter(key => [RECENT_KEY, PUSHED_KEY, `${TRAILS_KEY}_`, `${PAGE_KEY}_`].some(prefix => key.startsWith(prefix))) } catch {}
+    try { recents = Object.keys(localStorage).filter(key => [RECENT_KEY, PUSHED_KEY, CHANGES_KEY, REMINDERS_KEY, `${TRAILS_KEY}_`, `${PAGE_KEY}_`].some(prefix => key.startsWith(prefix))) } catch {}
     for (const key of recents) write(localStorage, key, null)
     for (const key of [TOKEN_KEY, REPO_KEY, REPOS_KEY, USER_KEY, ...Object.values(OLD_KEYS)]) write(localStorage, key, null)
     for (const key of [TRAILS_KEY, PAGE_KEY, PLANNER_DAYS_KEY]) write(sessionStorage, key, null)
@@ -142,6 +143,14 @@ export const localChanges = {
   // false when they couldn't be stored
   set: (repo, changes) => write(localStorage, CHANGES_KEY + repo, JSON.stringify(changes)),
   clear: (repo) => write(localStorage, CHANGES_KEY + repo, null),
+  // Every repo's stored local changes but `except`'s: [repo, changes]
+  others: (except) => {
+    let keys = []
+    try { keys = Object.keys(localStorage).filter(key => key.startsWith(CHANGES_KEY) && key !== CHANGES_KEY + except) } catch {}
+    return keys.map(key => {
+      try { return [key.slice(CHANGES_KEY.length), JSON.parse(read(localStorage, key))] } catch { return null }
+    }).filter(entry => entry?.[1])
+  },
   // Calls `fn(changes)` (null when cleared) when another tab stores this repo's local changes; returns the unsubscribe
   watch: (repo, fn) => {
     const onStorage = e => {

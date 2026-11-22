@@ -4,9 +4,15 @@ const STEPS = {
   read: 'Getting the latest version from GitHub',
   upload: 'Uploading your changes',
   save: 'Saving your changes to the branch',
+  merge: 'Merging what changed on both sides',
 }
 
-function explain(status, message) {
+function explain(status, message, step) {
+  if (step === 'merge') return [
+    'Files kept changing while merging',
+    'Notes changed here while Folio merged them with GitHub\'s version, so nothing was pushed.',
+    'Try again. Nothing is lost: your changes stay on this device.',
+  ]
   if (status === 401) return [
     'GitHub didn\'t accept your token',
     'The token has expired or was revoked.',
@@ -48,7 +54,7 @@ function explain(status, message) {
 export function describeSyncError(error) {
   const status = error?.status
   const message = error?.response?.data?.message || error?.message || 'No message'
-  const [title, explanation, hint] = explain(status, message)
+  const [title, explanation, hint] = explain(status, message, error?.step)
   const details = [
     error?.step && ['Step', STEPS[error.step] || error.step],
     status && ['Status', String(status)],

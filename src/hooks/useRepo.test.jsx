@@ -3,9 +3,9 @@
 // cache: pull, merge what changed on both sides, push; another device pushing in between; going offline.
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { renderHook, act, waitFor } from '@testing-library/react'
-import { setEdit } from '../lib/changes.js'
+import { setEdit, rename } from '../lib/changes.js'
 
-const server = vi.hoisted(() => ({ tree: null, blobs: {}, commits: [], refuse: 0, offline: false }))
+const server = vi.hoisted(() => ({ tree: null, blobs: {}, commits: [], refuse: 0, offline: false, onRead: null, treeCalls: 0, hold: null }))
 
 vi.mock('../lib/cache.js', () => ({
   cache: { getTree: async () => undefined, setTree: async () => {}, getBlob: async () => undefined, setBlob: async () => {}, deleteBlob: async () => {}, hasBlob: async () => false },
@@ -16,8 +16,14 @@ vi.mock('../lib/github.js', async importActual => {
   const offline = () => { if (server.offline) throw Object.assign(new Error('Failed to fetch'), { name: 'HttpError' }) }
   return {
     ...actual,
-    getTree: async () => { offline(); return structuredClone(server.tree) },
-    getBlob: async sha => { offline(); return server.blobs[sha] },
+    // GitHub's tree as it is when asked; `hold` ({ call, until }): that call's answer waits for `until` (a slow one)
+    getTree: async () => {
+      offline()
+      const tree = structuredClone(server.tree)
+      if (++server.treeCalls === server.hold?.call) await server.hold.until
+      return tree
+    },
+    getBlob: async sha => { offline(); const text = server.blobs[sha]; await server.onRead?.(sha); return text },
     getBlobBase64: async sha => btoa(server.blobs[sha] ?? ''),
     getLatestCommitSha: async () => { offline(); return server.tree.commitSha },
     changedFileCount: async () => 1,
@@ -60,8 +66,8 @@ async function opened() {
 }
 
 // This device's edit of `a.md` to `text`
-function edit({ result }, text) {
-  act(() => result.current.update(ch => setEdit(ch, result.current.virtual['a.md'], text, server.blobs[result.current.virtual['a.md'].sha])))
+function edit({ result }, text, path = 'a.md') {
+  act(() => result.current.update(ch => setEdit(ch, result.current.virtual[path], text, server.blobs[result.current.virtual[path].sha])))
 }
 
 beforeEach(() => {
@@ -71,6 +77,9 @@ beforeEach(() => {
   server.commits = []
   server.refuse = 0
   server.offline = false
+  server.onRead = null
+  server.treeCalls = 0
+  server.hold = null
 })
 
 describe('sync', () => {
@@ -101,6 +110,37 @@ describe('sync', () => {
     expect(result).toBe(true)
     expect(server.commits).toHaveLength(1)
     expect(hook.result.current.syncError).toBeNull()
+  })
+
+  it('merges a file edited here while the merge read the others, never pushing over GitHub\'s change', async () => {
+    server.blobs.b1 = 'x\ny\nw\n'
+    server.tree.files['b.md'] = { sha: 'b1', mode: '100644' }
+    const hook = await opened()
+    edit(hook, 'one\nmine\nthree\n')
+    act(() => hook.result.current.update(ch => rename(ch, hook.result.current.virtual, 'b.md', 'c.md', false)))
+    onGitHub('one\ntheirs\nthree\n', 'a2')
+    server.blobs.b2 = 'X\ny\nw\n'
+    server.tree.files['b.md'] = { sha: 'b2', mode: '100644' }
+    // While the merge reads a.md, the renamed note is edited here
+    server.onRead = sha => { if (sha === 'a2') { server.onRead = null; edit(hook, 'x\ny\nw\nz\n', 'c.md') } }
+    await act(() => hook.result.current.sync(true))
+    expect(server.blobs[server.tree.files['c.md'].sha]).toBe('X\ny\nw\nz\n')
+    expect(server.tree.files['b.md']).toBeUndefined()
+    expect(hook.result.current.changeCount).toBe(0)
+  })
+
+  it('never shows a tree asked for before a newer push', async () => {
+    const hook = await opened() // GitHub's tree asked for once
+    let release
+    server.hold = { call: 3, until: new Promise(r => { release = r }) } // the pull after the first push: slow
+    edit(hook, 'one\nTWO\nthree\n')
+    await act(() => hook.result.current.sync(true))
+    edit(hook, 'one\nTWO\nTHREE\n')
+    await act(() => hook.result.current.sync(true))
+    await act(async () => { release(); await new Promise(r => setTimeout(r)) })
+    expect(server.commits).toHaveLength(2)
+    expect(hook.result.current.remote.commitSha).toBe(server.tree.commitSha)
+    expect(hook.result.current.virtual['a.md'].sha).toBe(server.tree.files['a.md'].sha)
   })
 
   it('keeps the changes and opens no error when offline', async () => {

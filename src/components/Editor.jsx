@@ -28,6 +28,13 @@ import { EmptyMessage } from './EmptyState.jsx'
 // was tapped ("This note is locked", Unlock under it), with Unlock right there (the next double tap then edits). `editAt` ({ start, end }, a broken link's Open at
 // link): once the note is read, it opens in the editor with that text selected (a locked note: the preview at that
 // spot), then `onEditAtDone()`.
+// Why a note can't be shown (useNote's `loadError`): offline, not text Folio can read, or GitHub didn't send it
+const LOAD_ERRORS = {
+  offline: "Couldn't open this note: it isn't saved on this device yet. It opens once you're back online.",
+  notText: "Couldn't open this note: it isn't saved as UTF-8 text, so Folio can't show or edit it without changing it.",
+  failed: "Couldn't open this note: GitHub didn't send it. Try again later.",
+}
+
 export default function Editor({ linkedBy, onOpenLink, path, entry, files, notes, onEditNotes, tagColors, edited, onEdit, onNavigate, onOpenFile, columns, valueScope, backlinks, locked, onToggleLock, editAt, onEditAtDone }) {
   const { content, change, loading, loadError, beginEdit, endEdit } = useNote(entry, edited, onEdit, valueScope?.required, valueScope?.order)
   // A property's change made on the text as it is after the one just before it, so two in one tap (a date and its
@@ -135,9 +142,7 @@ export default function Editor({ linkedBy, onOpenLink, path, entry, files, notes
         loading ? (
           <Loading kind="text" />
         ) : (
-          <EmptyMessage size="lg" className="px-space">
-            Couldn't open this note. It isn't saved on this device yet — connect to the internet and pull to refresh.
-          </EmptyMessage>
+          <EmptyMessage size="lg" className="px-space">{LOAD_ERRORS[loadError]}</EmptyMessage>
         )
       ) : mode === 'edit' ? (
         <MarkdownEditor ref={textareaRef} content={content} onChange={history.onChange} onUndo={() => restore(history.undo())} onRedo={() => restore(history.redo())} onDone={finishEditing} locked={valueScope?.locked} files={files} path={path} />

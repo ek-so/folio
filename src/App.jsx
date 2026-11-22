@@ -44,7 +44,7 @@ import ViewPage from './components/ViewPage.jsx'
 import RenameModal from './components/RenameModal.jsx'
 import DeleteModal from './components/DeleteModal.jsx'
 import { useTheme } from './hooks/useTheme.js'
-import { storage } from './lib/storage.js'
+import { storage, localChanges } from './lib/storage.js'
 import { PAGE, mainPages } from './lib/pages.js'
 import { isConfigPath, addView, renameView, removeView, VIEWS_PATH, DEFAULT_VIEWS, parseViews, serializeViews, addWidget, removeWidget, moveWidget, renameWidget, moveView, setViewIcon, moveWidgetTo } from './lib/viewsConfig.js'
 import { withKeys, withValue, copyTitled, withNoteTitle, noteTitle } from './lib/frontmatter.js'
@@ -63,7 +63,7 @@ import { archiveDay, inArchive, staleArchiveDays, KEEP_DAYS } from './lib/archiv
 import { fileItem } from './lib/folderNotes.js'
 import {
   listDir, nameError, renameTarget, renameError, createError, add, setEdit, rename, remove, getAllFolders,
-  upload, replaceUpload, freePath, virtualFiles, splitName, editNote, duplicate, keptEdits, freeTarget as freeTargetIn, MAX_UPLOAD_BYTES,
+  upload, replaceUpload, freePath, virtualFiles, splitName, editNote, duplicate, keptEdits, freeTarget as freeTargetIn, MAX_UPLOAD_BYTES, count, normalize,
 } from './lib/changes.js'
 import { plural } from './lib/plural.js'
 import { useNoteExport } from './hooks/useNoteExport.js'
@@ -259,6 +259,12 @@ export default function App() {
   const guarded = fn => ch => keptEdits(ch, fn(ch), Object.entries(filesOf(ch)).filter(([path]) => locks.isLocked(path)).map(([, e]) => e.orig))
   // Locked: `item` itself, or for a folder a file in it
   const lockedIn = item => locks.isLocked(item.path) || (item.type === 'dir' && Object.keys(virtual).some(p => p.startsWith(item.path + '/') && locks.isLocked(p)))
+  // Whether `item` can't be removed (locked: a message says so). Every removal asks it (archive, removedForGood)
+  function refusedLocked(item) {
+    if (!lockedIn(item)) return false
+    toast.error(`“${item.name}” ${item.type === 'dir' ? 'has locked files' : 'is locked'}. Unlock ${item.type === 'dir' ? 'them' : 'it'} to remove it.`)
+    return true
+  }
 
   // The first free path for `item` at `wanted` in `ch`'s files (changes.js `freeTarget`)
   const freeTarget = (ch, item, wanted) => freeTargetIn(ch, filesOf(ch), item, wanted)
@@ -383,10 +389,12 @@ export default function App() {
     // A move that's refused shows as a toast; true when it's done
     move: (item, folder) => { const error = handleMove(item, folder); if (error) toast.error(error); return !error },
     moveAll,
-    // Several files to the archive at once (a board column's cards), told in one toast
+    // Several files to the archive at once (a board column's cards), told in one toast; locked ones stay, told in another
     removeAll: items => {
-      items.forEach(item => archive(item))
-      if (items.length) toast.success(`${plural(items.length, 'file')} moved to the archive`)
+      const locked = items.filter(lockedIn)
+      const moved = items.filter(item => !lockedIn(item) && archive(item))
+      if (moved.length) toast.success(`${plural(moved.length, 'file')} moved to the archive`)
+      if (locked.length) toast.error(`${plural(locked.length, 'locked file')} kept. Unlock ${locked.length === 1 ? 'it' : 'them'} to remove ${locked.length === 1 ? 'it' : 'them'}.`)
     },
     createFolder: (parent, name) => createFolder(parent, name),
     // `keys`: the properties it starts with, empty; `stay`: don't open it
@@ -394,7 +402,7 @@ export default function App() {
     // A Pinned widget's new note, made in one step with the widget (noteToAdd)
     addNote: (folder, name, title) => noteToAdd(folder, name, [], title),
     // A done note archived (archive): `edit` applied to its text first, in the same step. { to: its new path, text: its
-    // text as it was archived (with the typing flushed first), for an undo }
+    // text as it was archived (with the typing flushed first), for an undo }, or null when it's locked
     archive: (path, edit) => archive(fileItem(path), edit),
     unarchive: (from, to, text) => unarchive(fileItem(from), to, text),
   }
@@ -479,8 +487,10 @@ export default function App() {
   }
 
   // `item` (a file or folder) into the archive, in one step; `edit` first applied to its text (a note: a planner's done
-  // card). An open page showing it closes, as for a delete. { to, text: its text as it was archived, for an undo }
+  // card). An open page showing it closes, as for a delete. { to, text: its text as it was archived, for an undo }, or
+  // null when it's locked (refusedLocked: nothing moves)
   function archive(item, edit) {
+    if (refusedLocked(item)) return null
     window.dispatchEvent(new Event('folio:flush')) // typing in an open note first
     let to = item.path
     let text
@@ -504,12 +514,22 @@ export default function App() {
     })
   }
 
+  // `ch` with `item` deleted for good, and what Folio kept about it (a lock, an emoji, table columns, when it was added) with it
+  function removedForGood(ch, item) {
+    const isDir = item.type === 'dir'
+    return tables.removed(item.path, isDir)(assets.removed(item.path, isDir)(icons.removed(item.path, isDir)(locks.removed(item.path, isDir)(remove(ch, filesOf(ch), item.path, isDir)))))
+  }
+
   // Remove: a file or folder goes to the archive, with a toast to undo it; one already in the archive is deleted for good
   // A locked file (or a folder with one in it) isn't removed: a message says so
   function handleDelete(item) {
-    if (lockedIn(item)) return toast.error(`“${item.name}” ${item.type === 'dir' ? 'has locked files' : 'is locked'}. Unlock ${item.type === 'dir' ? 'them' : 'it'} to remove it.`)
-    if (inArchive(item.path)) return update(ch => tables.removed(item.path, item.type === 'dir')(assets.removed(item.path, item.type === 'dir')(icons.removed(item.path, item.type === 'dir')(locks.removed(item.path, item.type === 'dir')(remove(ch, filesOf(ch), item.path, item.type === 'dir'))))))
-    const { to } = archive(item)
+    if (inArchive(item.path)) {
+      if (!refusedLocked(item)) update(ch => removedForGood(ch, item))
+      return
+    }
+    const done = archive(item)
+    if (!done) return
+    const { to } = done
     toast.success(`“${item.name}” moved to the archive`, {
       action: { label: 'Undo', onClick: () => unarchive({ ...item, path: to, name: to.slice(to.lastIndexOf('/') + 1) }, item.path) },
     })
@@ -565,14 +585,12 @@ export default function App() {
       setUploadErrors([...fileList].map(f => [f.name, 'Files are still loading. Try again in a moment.']))
       return
     }
-    const remoteFiles = repo.remote.files
     const errors = []
-    let ch = changes
     for (const file of fileList) {
       const reason = nameError(file.name)
         || (file.size > MAX_UPLOAD_BYTES ? 'Larger than 25 MB, the most a phone can reliably handle.' : null)
       if (reason) { errors.push([file.name, reason]); continue }
-      const view = virtualFiles(remoteFiles, ch)
+      const view = virtualFiles(repo.remoteFiles(), repo.latest())
       let path = folder ? `${folder}/${file.name}` : file.name
       let replace = false
       if (view[path]) {
@@ -589,11 +607,11 @@ export default function App() {
         // Placed in the changes as they are when it's added (others may have been made while it was asked about or
         // stored): the file it replaces, if it's still there, else the first free name
         const apply = c => {
+          const remoteFiles = repo.remoteFiles() // GitHub's as they are now: a sync may have pulled while it was stored
           const now = virtualFiles(remoteFiles, c)
           const target = replace && now[path] ? path : freePath(c, now, path)
           return assets.record(target)(replace && now[path] ? replaceUpload(c, now[path], sha) : upload(c, remoteFiles, target, sha))
         }
-        ch = apply(ch)
         update(apply)
       } catch {
         errors.push([file.name, 'Couldn\'t store it on this device (storage full or unavailable).'])
@@ -625,18 +643,19 @@ export default function App() {
       .filter(path => !done.has(path))
     if (!stale.length) return
     stale.forEach(path => done.add(path))
-    update(ch => stale.reduce((c, path) => remove(c, filesOf(c), path, true), ch))
+    update(ch => stale.reduce((c, path) => removedForGood(c, { path, name: path.slice(path.lastIndexOf('/') + 1), type: 'dir' }), ch))
     toast.success(`What was archived more than ${KEEP_DAYS} days ago is removed. Sync to remove it from GitHub.`)
   }, [repo.remote, auth.repo]) // when the repo's files load or change by Sync or Pull, not on every edit
 
   // Recent updates' Undo: the commit `sha`'s files back to how they were before it, as local changes (lib/revert.js)
-  const revert = useRevert(repo)
+  const revert = useRevert(repo, locks.isLocked)
   async function undoUpdate(sha) {
     try {
-      const { kept, left } = await revert(sha)
+      const { kept, left, locked } = await revert(sha)
       const notes = [
         kept.length && `Kept what changed since in ${kept.map(displayName).join(', ')}.`,
         left.length && `Gone since, left as is: ${left.map(displayName).join(', ')}.`,
+        locked.length && `Locked, left as is: ${locked.map(displayName).join(', ')}.`,
       ].filter(Boolean)
       toast.success('Update undone. It goes to GitHub with the next sync.', notes.length ? { description: notes.join(' ') } : undefined)
     } catch (e) {
@@ -690,6 +709,7 @@ export default function App() {
   // One broken link changed by `edit(text, link)` in its note's latest text (the index may lag behind typing: the
   // same link is found again there)
   function editBrokenLink(broken, edit) {
+    if (locks.isLocked(broken.from)) return toast.error(`“${displayName(broken.from)}” is locked. Unlock it to change its links.`)
     const entry = virtual[broken.from]
     update(ch => {
       const text = ch.edits[entry.orig] ?? links.remoteText(entry.sha)
@@ -1011,17 +1031,22 @@ export default function App() {
           />
         )}
 
-        {confirmSignOut && (
+        {confirmSignOut && (() => {
+          // Every repo's unsynced changes go with signing out: this one's and those stored for others
+          const others = localChanges.others(auth.repo).map(([, ch]) => count(normalize(ch))).reduce((a, b) => a + b, 0)
+          const total = repo.changeCount + others
+          return (
           <ConfirmModal
             title="Sign out?"
-            description={repo.changeCount
-              ? `You have ${plural(repo.changeCount, 'unsynced change')}. Signing out removes them from this device.`
+            description={total
+              ? `You have ${plural(total, 'unsynced change')}${others ? ` (${others} in other repos)` : ''}. Signing out removes them from this device.`
               : 'The offline copies of your notes are removed from this device, and you\'ll need your token to sign in again.'}
             confirm="Sign out"
             onConfirm={signOut}
             onClose={() => setConfirmSignOut(false)}
           />
-        )}
+          )
+        })()}
 
         {newView && (
           <NewFileModal

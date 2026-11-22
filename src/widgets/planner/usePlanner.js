@@ -51,6 +51,7 @@ export function usePlanner(id, services) {
         return { next, undo: () => notes.setProperty(path, DATE, old) }
       }
       const archived = services.archive(path, markedDone)
+      if (!archived) return null // locked: a message says so
       return { next: null, undo: () => services.unarchive(archived.to, path, archived.text ?? text) }
     },
     // Another folder (its own is gone), its notes made cards as when the planner was set up

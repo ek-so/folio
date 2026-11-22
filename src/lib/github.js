@@ -72,9 +72,19 @@ export async function canWriteRepo(owner, name) {
   }
 }
 
+// A blob's text, UTF-8. Bytes that aren't (a note saved in another encoding) throw a `notText` error rather than being
+// shown changed: saving them back would replace those characters for good
+const utf8 = new TextDecoder('utf-8', { fatal: true })
 function decode(base64) {
-  return decodeURIComponent(escape(atob(base64)))
+  try {
+    return utf8.decode(Uint8Array.from(atob(base64), c => c.charCodeAt(0)))
+  } catch {
+    throw Object.assign(new Error('This file isn\'t UTF-8 text.'), { notText: true })
+  }
 }
+
+// The file isn't text Folio can read (decode), as opposed to not reaching GitHub
+export const isNotText = e => !!e?.notText
 
 async function getDefaultBranch() {
   if (!branch) {
@@ -182,14 +192,21 @@ export async function getBlob(sha) {
   return decode(await getBlobBase64(sha))
 }
 
-// The blob sha and mode of the file at `path` on `branch`, or null when there's none there: for a file a tree listing left
-// out (GitHub cuts a very large repo's listing short)
-export async function fileOn(path, branch) {
+// The blob sha and mode of the file at `path` on `ref` (a branch or a commit), or null when there's none there: for a
+// file a tree listing left out (GitHub cuts a very large repo's listing short), and a file in an older commit. Read from
+// its folder's git tree ("ref:folder"), which has the file's own mode and blob, a symlink's too (the contents API answers
+// with the file a symlink points to)
+export async function fileOn(path, ref) {
+  const slash = path.lastIndexOf('/')
+  const name = path.slice(slash + 1)
+  const encode = p => p.split('/').map(encodeURIComponent).join('/')
+  const treeRef = slash === -1 ? encode(ref) : `${encode(ref)}:${encode(path.slice(0, slash))}`
   try {
-    const { data } = await step('read', octokit.request('GET /repos/{owner}/{repo}/contents/{path}', { owner, repo, path, ref: branch, request: { fetch: fetchFresh } }))
-    return Array.isArray(data) || data.type !== 'file' ? null : { sha: data.sha, mode: '100644' }
+    const { data } = await step('read', octokit.request('GET /repos/{owner}/{repo}/git/trees/{+tree_sha}', { owner, repo, tree_sha: treeRef, request: { fetch: fetchFresh } }))
+    const item = data.tree.find(i => i.path === name && i.type === 'blob')
+    return item ? { sha: item.sha, mode: item.mode } : null
   } catch (e) {
-    if (e?.status === 404) return null
+    if (e?.status === 404 || e?.status === 422) return null // no such folder there
     throw e
   }
 }

@@ -13,6 +13,7 @@ import { displayName } from '../lib/files.js'
 const PREFETCH_WORKERS = 4
 const PULL_WAIT_MS = 15000 // how long Folio shows loading instead of a stored copy while GitHub's latest comes (opening, coming back to the screen)
 const UNSAVED = 'unsaved-changes' // the toast shown while local changes can't be stored
+const MERGE_ROUNDS = 3 // a merge reads what changed while it read the files again, this many times in all
 
 // Download every note not yet on this device, so all of them open offline.
 async function downloadNotes(files) {
@@ -77,6 +78,10 @@ export function useRepo(repo, onDone) {
   const flashTimer = useRef()
   const stored = useRef(true) // the local changes in memory are the ones stored (false while storage is full)
   const channel = useRef(null) // to the other tabs of this repo: GitHub's state after a pull or push
+  // GitHub's trees in the order they were asked for: each request (and a push, whose state is the newest) takes the next
+  // number, and a tree asked for before the one shown is never shown over it (a slow answer coming in late)
+  const treeOrder = useRef(0)
+  const shownOrder = useRef(0)
 
   useEffect(() => {
     if (!repo) return
@@ -96,17 +101,18 @@ export function useRepo(repo, onDone) {
       if (!tree?.commitSha || remoteRef.current) return refresh()
       const clean = () => count(changesRef.current) === 0
       if (clean() && navigator.onLine) {
+        const order = ++treeOrder.current
         const latest = getTree()
         const timeout = new Promise(resolve => setTimeout(resolve, PULL_WAIT_MS))
         const first = await Promise.race([latest.catch(() => null), timeout])
         if (cancelled) return
-        if (first) return applyTree(first)
+        if (first) return applyTree(first, order)
         // Late: the stored copy is open by now. Typing in an open note is saved first (as Pull does), and the latest
         // replaces it only when that left nothing unsynced and no sync step is running
         latest.then(t => {
           if (cancelled || busy.current) return
           window.dispatchEvent(new Event('folio:flush'))
-          if (clean()) applyTree(t)
+          if (clean()) applyTree(t, order)
         }, () => {})
       }
       setRemoteTree(tree)
@@ -139,6 +145,7 @@ export function useRepo(repo, onDone) {
     channel.current = ch
     if (ch) ch.onmessage = ({ data: tree }) => {
       if (!tree?.commitSha || tree.commitSha === remoteRef.current?.commitSha) return
+      shownOrder.current = ++treeOrder.current // newer than what this tab asked for before it
       setRemoteTree(tree)
       knownCommitSha.current = tree.commitSha
       setIncoming(null)
@@ -194,11 +201,15 @@ export function useRepo(repo, onDone) {
   }
 
   async function pull() {
-    return applyTree(await getTree())
+    const order = ++treeOrder.current
+    return applyTree(await getTree(), order)
   }
 
-  // GitHub's latest tree (getTree) as this device's: shown, stored, its notes downloaded
-  function applyTree(latest) {
+  // GitHub's latest tree (getTree, asked for as `order`) as this device's: shown, stored, its notes downloaded. One asked
+  // for before the tree shown now is older than it: the one shown stays, and is the latest
+  function applyTree(latest, order) {
+    if (order < shownOrder.current) return remoteRef.current
+    shownOrder.current = order
     setRemoteTree(latest)
     setOnline(true)
     shareTree(latest)
@@ -235,24 +246,34 @@ export function useRepo(repo, onDone) {
   // What changed both here and on GitHub since this device had it, merged into the local changes so nothing is lost
   // (lib/merge.js: line by line for text, both kept for other files); a toast names what was merged. Typing in an open
   // note is saved first
+  // The files are read first, then merged: one that changed here while they were read (a rename only, now edited too) is
+  // read and merged in another round, so none is ever merged without GitHub's text. Rejects when changes keep coming in
+  // (a sync then never pushes over what wasn't merged)
   async function mergeConflicts(latest) {
     window.dispatchEvent(new Event('folio:flush'))
-    const ch = changesRef.current
-    const origs = conflicts(ch, latest.files)
-    if (!origs.length) return
     const texts = {}
-    for (const orig of origs) {
-      const remote = latest.files[orig]
-      if (orig in ch.edits && remote) texts[orig] = { base: ch.base[orig] ? await getBlob(ch.base[orig]) : '', remote: await getBlob(remote.sha) }
-      // gone from GitHub, kept here only moved: its bytes are uploaded again, so this device must have them
-      else if (!remote && ch.moves[orig] && !(orig in ch.edits) && !(orig in ch.uploads)) await getBlobBase64(ch.base[orig])
-    }
+    const ready = new Map() // orig -> how it was when it was read: edited here (its texts read), or not
     let merged = []
-    update(current => {
-      const result = resolveConflicts(current, latest.files, conflicts(current, latest.files), texts)
-      merged = result.merged
-      return result.changes
-    })
+    for (let round = 0; round < MERGE_ROUNDS; round++) {
+      const ch = changesRef.current
+      const origs = conflicts(ch, latest.files)
+      if (!origs.length) break
+      for (const orig of origs) {
+        const remote = latest.files[orig]
+        const edited = orig in ch.edits
+        if (ready.get(orig) === edited) continue
+        if (edited && remote) texts[orig] = { base: ch.base[orig] ? await getBlob(ch.base[orig]) : '', remote: await getBlob(remote.sha) }
+        // gone from GitHub, kept here only moved: its bytes are uploaded again, so this device must have them
+        else if (!remote && ch.moves[orig] && !edited && !(orig in ch.uploads)) await getBlobBase64(ch.base[orig])
+        ready.set(orig, edited)
+      }
+      update(current => {
+        const result = resolveConflicts(current, latest.files, conflicts(current, latest.files).filter(orig => ready.get(orig) === (orig in current.edits)), texts)
+        merged = [...merged, ...result.merged]
+        return result.changes
+      })
+    }
+    if (conflicts(changesRef.current, latest.files).length) throw Object.assign(new Error('Files kept changing while they were merged with GitHub. Try again.'), { step: 'merge' })
     if (merged.length) toast.success(`Merged with GitHub: ${merged.map(displayName).join(', ')}`, { description: 'Changed both here and on GitHub. Both versions are kept where they overlap.' })
   }
 
@@ -294,6 +315,7 @@ export function useRepo(repo, onDone) {
       cache.setBlob(editShas[orig], encodeText(text))
     }
     const after = { ...latest, commitSha, treeSha, files: filesAfter(latest.files, committed, editShas) }
+    shownOrder.current = ++treeOrder.current // newer than any tree asked for before the push
     setRemoteTree(after)
     shareTree(after)
     knownCommitSha.current = commitSha
@@ -405,6 +427,8 @@ export function useRepo(repo, onDone) {
 
   return {
     remote, error, online, virtual, changes, changed, changeCount: count(changes),
-    syncing, catchingUp, syncState, incoming, syncError, dismissSyncError: () => setSyncError(null), update, latest: () => changesRef.current, sync, pullChanges, checkRemote, discardAll,
+    syncing, catchingUp, syncState, incoming, syncError, dismissSyncError: () => setSyncError(null), update, latest: () => changesRef.current,
+    remoteFiles: () => remoteRef.current?.files ?? {}, // GitHub's files as they are now (in a callback after a wait)
+    sync, pullChanges, checkRemote, discardAll,
   }
 }
