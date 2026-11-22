@@ -74,3 +74,16 @@ export function remindersIn(notes) {
   }
   return found.sort((a, b) => a.at - b.at)
 }
+
+// Notifications (the page): of `reminders` (remindersIn), those that have come due by `now` and weren't dismissed on
+// this device (`dismissed`: a Set of ids), latest first
+export const dueReminders = (reminders, now, dismissed) =>
+  reminders.filter(r => r.at <= now && !dismissed.has(r.id)).sort((a, b) => b.at - a.at)
+
+// How many of `due` (dueReminders) came due after `seenAt` (when Notifications was last opened, ms): its count
+export const unseenCount = (due, seenAt) => due.filter(r => r.at > seenAt).length
+
+// The reminders that came due while Folio wasn't on screen: after `since` (when it last was, ms), by `now`, not shown
+// yet (`fired`: a Set of ids); what's told on opening or coming back
+export const missedReminders = (reminders, since, now, fired) =>
+  reminders.filter(r => r.at > since && r.at <= now && !fired.has(r.id))

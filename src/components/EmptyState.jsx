@@ -18,6 +18,7 @@ export const EMPTY = {
   updates: '🕊️', // no updates
   graph: '🌌', // nothing to draw
   links: '✨', // no broken links
+  reminders: '🔕', // no reminders have come due
 }
 
 // A muted line for what a list or page has nothing of (No files found, No values yet), centered, under its `emoji`

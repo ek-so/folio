@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { SidebarSimple, MagnifyingGlass, Images, LinkBreak, BookOpen, UserCircle, ClockCounterClockwise } from '@phosphor-icons/react'
+import { SidebarSimple, MagnifyingGlass, Images, LinkBreak, BookOpen, UserCircle, ClockCounterClockwise, Bell } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils.js'
 import { Button } from './ui/button.jsx'
 import { Separator } from './ui/separator.jsx'
@@ -20,14 +20,14 @@ import PageTitle from './PageTitle.jsx'
 import PageIcon from './PageIcon.jsx'
 
 
-// The app's primary navigation, in place of a header. `menu`: brokenCount and
+// The app's primary navigation, in place of a header. `menu`: brokenCount, unseenReminders (Notifications' count: reminders come due since it was last opened) and
 // onProfile (the Profile sheet: the repository, settings and Sign out); `page` the open page; `renderSync(compact, bar)` makes the SyncButton (`bar`: the phone's top bar).
 // Desktop (768px+): a left rail, 16px from the top, left and bottom like the content boxes' 16px around; where
 // they meet, 8px each: the rail's right and the content box's left. On top a header row, level with the title
 // bars' rows (8px and a 1px top edge like the boxes' outline above it): the app's name (Folio, bold) and a
 // button that collapses the rail to icons only (remembered on this device; expanded, its edge is a drag handle);
 // then a separator like every other; Search and Sync, a separator, the views under their title (`ViewsTitle`: "Views" and its ⋯), a separator, File manager, Assets and Graph (plain items, no separator between them),
-// and at the bottom Recent updates, Broken links (count), Documentation and Profile.
+// and at the bottom Notifications (count), Recent updates, Broken links (count), Documentation and Profile.
 // `pages`: the main pages (lib/pages.js): the views, File manager and Graph. With a
 // mouse, a view shows its ⋯ (`ViewMenu`, `viewActions`) on hover; the collapsed rail has none of them, and the title only its ⋯.
 // A plain click (not one that opens a new tab or window): the app handles it in place
@@ -101,6 +101,12 @@ export function NavRail({ page, pages, hrefOf, viewActions, onPage, onSearch, re
       {pages.filter(p => p.id === PAGE.GRAPH).map(p => <div key={p.id}>{pageButton(p)}</div>)}
       <div className="flex-1" />
       {separator}
+      <Button variant="ghost" tooltip={hint('Notifications')} tooltipSide="right" aria-current={page === PAGE.NOTIFICATIONS ? 'page' : undefined} className={cn(item(PAGE.NOTIFICATIONS), 'relative')} onClick={() => onPage(PAGE.NOTIFICATIONS)}>
+        <Bell /> {label('Notifications')}
+        {menu.unseenReminders > 0 && (collapsed
+          ? <span className="absolute right-1.5 top-1.5 size-2 rounded-full bg-primary" aria-label={`${menu.unseenReminders} new`} />
+          : <span className="ml-auto text-primary-ink">{menu.unseenReminders}</span>)}
+      </Button>
       <Button variant="ghost" tooltip={hint('Recent updates')} tooltipSide="right" aria-current={page === PAGE.HISTORY ? 'page' : undefined} className={item(PAGE.HISTORY)} onClick={() => onPage(PAGE.HISTORY)}>
         <ClockCounterClockwise /> {label('Recent updates')}
       </Button>

@@ -77,6 +77,7 @@ import { later } from './lib/later.js'
 // Pages the first screen doesn't need: their code loads after it (lib/later.js)
 const Assets = later(() => import('./components/Assets.jsx'))
 const BrokenLinks = later(() => import('./components/BrokenLinks.jsx'))
+const Notifications = later(() => import('./components/Notifications.jsx'))
 const Documentation = later(() => import('./components/Documentation.jsx'))
 const GraphPage = later(() => import('./components/GraphPage.jsx'))
 
@@ -124,7 +125,7 @@ export default function App() {
   // Read for the repo the app opens (stored: `auth.repo` is set a moment later)
   const [openPage, setPage] = useState(() => (reloaded && storage.getPage(storage.getRepo())) || (deepLink ? deepLink.page : storage.getPage(storage.getRepo()) || PAGE.HOME))
   // A view that's gone (deleted here or on another device) falls back to the first page; until the config is read, the remembered page stays
-  const fixedPage = openPage === PAGE.LINKS || openPage === PAGE.DOCS || openPage === PAGE.ASSETS
+  const fixedPage = openPage === PAGE.LINKS || openPage === PAGE.DOCS || openPage === PAGE.ASSETS || openPage === PAGE.NOTIFICATIONS
   const page = fixedPage || !viewsFile.ready || pages.some(p => p.id === openPage) ? openPage : pages[0].id
   // The main page files and folders open in (File manager when Broken links / Documentation / Assets is open)
   const mainPage = fixedPage ? PAGE.FILES : page
@@ -739,8 +740,8 @@ export default function App() {
     setTrails(startTrails(pages.map(p => p.id)))
   }
 
-  // Reminders set on dates, shown while Folio is open (a notification, else a toast); a tap opens the note
-  useReminderAlerts(links.notes, path => setSelectedFile(path))
+  // Reminders set on dates, told while Folio is open, and Notifications (the page): those that have come due
+  const reminders = useReminderAlerts(links.notes, { onOpen: path => setSelectedFile(path), onView: () => setPage(PAGE.NOTIFICATIONS) })
 
   if (!auth.ready) {
     return (
@@ -782,6 +783,7 @@ export default function App() {
   }
   const menu = {
     brokenCount: links.index.broken.length,
+    unseenReminders: reminders.unseen,
     onProfile: from => { setProfileFrom(from ?? null); setProfileOpen(true) },
     open: menuOpen,
     onOpenChange: setMenuOpen,
@@ -881,6 +883,14 @@ export default function App() {
               }}
               view={pages.find(p => p.id === page)}
               viewActions={viewActions}
+            />
+          ) : page === PAGE.NOTIFICATIONS ? (
+            <Notifications
+              due={reminders.due}
+              onOpen={path => setSelectedFile(path)}
+              onDismiss={reminders.dismiss}
+              onDismissAll={reminders.dismissAll}
+              onSeen={reminders.markSeen}
             />
           ) : page === PAGE.LINKS ? (
             <BrokenLinks

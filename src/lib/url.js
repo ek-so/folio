@@ -39,7 +39,7 @@ export function urlForPage(base, page, view) {
   return `${url}?page=${page}${view && !view.file && !view.folder ? '&root' : ''}`
 }
 
-const FIXED = [PAGE.LINKS, PAGE.DOCS, PAGE.ASSETS]
+const FIXED = [PAGE.LINKS, PAGE.DOCS, PAGE.ASSETS, PAGE.NOTIFICATIONS]
 
 // { page, view } a location names, or null if it can't be read. The page may be
 // one that no longer exists (a deleted view): App falls back from it.
@@ -47,7 +47,7 @@ export function pageForUrl(base, pathname, search) {
   const params = new URLSearchParams(search)
   const page = params.get('page') ?? PAGE.FILES
   if (!/^[\w-]+$/.test(page)) return null
-  if (FIXED.includes(page)) return { page, view: null } // Broken links, Documentation, Assets: no view of their own
+  if (FIXED.includes(page)) return { page, view: null } // Broken links, Documentation, Assets, Notifications: no view of their own
   const view = viewForUrl(base, pathname)
   if (!view) return null
   const own = page !== PAGE.FILES && !view.file && !view.folder && !params.has('root')
