@@ -18,8 +18,8 @@ import { focusQuietly } from '@/lib/utils.js'
 // the app there, `onSwitchRepo(full)`), Switch to another repository… (its owner/repo field, a step of its own) and Open
 // on GitHub, as File manager's root menu (RepoMenu) has them; switching waits while a sync runs (`syncing`). `onBack`: its
 // ← back to the sheet it was opened from (the phone's menu); none from the rail. Settings (a step, ←): the theme
-// (`theme`, `onTheme`) and the emoji in names (`emojiNames`, { count, onMove }, null while icons can't be saved: how many
-// files and folders start their name with an emoji; Move to icons, confirmed in a step of its own, takes it out of their
+// (`theme`, `onTheme`) and the emoji in names (`emojiNames`, { count, onMove }, null while icons can't be saved or no name
+// has one, so it shows only while there's something to move: how many files and folders start their name with an emoji; Move to icons, confirmed in a step of its own, takes it out of their
 // names and makes it their icon, lib/icons.js) and Notifications (whether this browser lets Folio notify, with Turn on).
 const THEMES = [['light', 'Light', Sun], ['dark', 'Dark', Moon], ['system', 'System', Monitor]]
 
@@ -91,18 +91,16 @@ export default function ProfileSheet({ login, repo, repos = [], syncing, onSwitc
           <div className="flex flex-col items-start gap-space-sm">
             <Label>Emoji in names</Label>
             <p className="text-sm text-muted-foreground">
-              {emojiNames.count
-                ? `${plural(emojiNames.count, 'file or folder name')} start${emojiNames.count === 1 ? 's' : ''} with an emoji. Move it out of the name and make it the icon.`
-                : 'No file or folder starts its name with an emoji.'}
+              {`${plural(emojiNames.count, 'file or folder name')} start${emojiNames.count === 1 ? 's' : ''} with an emoji. Move it out of the name and make it the icon.`}
             </p>
-            <Button variant="secondary" disabled={!emojiNames.count} onClick={() => setStep('emoji')}>Move to icons</Button>
+            <Button variant="secondary" onClick={() => setStep('emoji')}>Move to icons</Button>
           </div>
         </>}
       </div>
     </BottomSheet>
   )
 
-  if (step === 'emoji') return (
+  if (step === 'emoji' && emojiNames) return ( // gone (nothing left to move): back on the main step
     <BottomSheet
       title="Move emojis to icons?"
       description={`${plural(emojiNames.count, 'name')} lose${emojiNames.count === 1 ? 's' : ''} the emoji, which becomes the icon kept in .folio. Files are renamed and every link to them is updated; Sync to apply it on GitHub.`}

@@ -993,7 +993,7 @@ export default function App() {
           <ProfileSheet
             login={auth.user.login}
             repo={auth.repo} repos={auth.repos} syncing={repo.syncing} onSwitchRepo={switchRepo}
-            theme={theme} onTheme={setTheme} emojiNames={icons.canEdit ? { count: emojiNames.length, onMove: moveEmojisToIcons } : null}
+            theme={theme} onTheme={setTheme} emojiNames={icons.canEdit && emojiNames.length ? { count: emojiNames.length, onMove: moveEmojisToIcons } : null}
             onSignOut={() => { setProfileOpen(false); setConfirmSignOut(true) }}
             onBack={profileFrom === 'menu' ? () => { setProfileOpen(false); setMenuOpen(true) } : undefined}
             onClose={() => setProfileOpen(false)}
