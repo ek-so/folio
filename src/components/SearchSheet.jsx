@@ -51,7 +51,9 @@ export default function SearchSheet({ onClose, onSelect, virtual, changes, recen
           onChange={e => setQuery(e.target.value)}
           placeholder={placeholder}
         />
-        <div className="-mx-space-xs min-h-0 flex-1 overflow-y-auto overscroll-contain" data-no-pull>
+        {/* A tap on a result keeps the focus in the field (as the date picker's Save does): on iOS, taking it out first
+            only closes the keyboard, and the result opens on the second tap */}
+        <div className="-mx-space-xs min-h-0 flex-1 overflow-y-auto overscroll-contain" data-no-pull onMouseDown={e => e.preventDefault()}>
           {top && <div className="mb-0.5">{top}</div>}
           {!q && recentFiles.length === 0 ? (
             <EmptyMessage size="sm" emoji={EMPTY.recent}>No recent files</EmptyMessage>
