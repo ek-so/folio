@@ -31,7 +31,9 @@ export default function SearchSheet({ onClose, onSelect, virtual, changes, recen
   ] : recentFiles.map(path => ({ path }))
   const results = found.slice(0, q ? 30 : 12)
 
+  // The field let go first (it kept the focus through the tap): its cursor would blink on as the sheet slides away
   function select({ path, dir }) {
+    inputRef.current?.blur()
     if (dir) onSelectFolder(path)
     else onSelect(path)
     onClose()
