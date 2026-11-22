@@ -45,13 +45,14 @@ function OverlayHeader({ title, description, onBack }) {
 // A sheet's buttons (Cancel, Save…), its last row: they stay at the bottom while what's above them scrolls (sticky in the
 // sheet's scrolling body, so they can sit inside a form and still submit it). `className` for their own alignment
 export function SheetActions({ className, children }) {
-  return <div className={cn('sticky bottom-0 z-10 -mb-1 flex justify-end gap-space-sm bg-card pt-space-sm pb-1', className)}>{children}</div>
+  return <div className={cn('sticky -bottom-1 z-10 -mb-1 flex justify-end gap-space-sm bg-card pt-space-sm pb-1', className)}>{children}</div>
 }
 
 // Every prompt: a sheet from the bottom on phones, a centered dialog from 768px, with the same header (`OverlayHeader`:
 // `title`, `description`, `onBack`). `onBack`: a ← before the title, back to where the sheet came from (a step inside
-// it); `wide`: a wider dialog, for content to read (a note). It's never taller than 85% of the screen (and, on a phone, stays above the keyboard): the
-// header stays put and the rest scrolls under it, its buttons (`SheetActions`) staying at the bottom
+// it); `wide`: a wider dialog, for content to read (a note). It reaches no higher than 24px from the screen's top on a
+// phone (above the keyboard), and keeps 64px clear above and below as a dialog: the header stays put and the rest
+// scrolls under it, its buttons (`SheetActions`) staying at the bottom
 export default function BottomSheet({ title, description, onBack, wide, onClose, onOpenAutoFocus, children }) {
   const isDesktop = useIsDesktop()
   const keyboard = useKeyboardInset()
@@ -68,7 +69,7 @@ export default function BottomSheet({ title, description, onBack, wide, onClose,
   if (isDesktop) {
     return (
       <Dialog open onOpenChange={open => !open && onClose()}>
-        <DialogContent className={cn('max-h-[85dvh]', wide && 'max-w-3xl')} showCloseButton={false} onOpenAutoFocus={onOpenAutoFocus} {...describedBy}>
+        <DialogContent className={cn('max-h-[calc(100dvh-2*4rem)]', wide && 'max-w-3xl')} showCloseButton={false} onOpenAutoFocus={onOpenAutoFocus} {...describedBy}>
           {header}
           {body}
         </DialogContent>
@@ -84,7 +85,7 @@ export default function BottomSheet({ title, description, onBack, wide, onClose,
         className="mx-auto w-full max-w-[680px] gap-space rounded-t-2xl bg-card p-space-lg"
         style={{
           bottom: keyboard,
-          maxHeight: `min(85dvh, calc(100dvh - ${keyboard}px - var(--safe-top) - var(--space-lg)))`, // 85% of the screen, and above the keyboard
+          maxHeight: `calc(100dvh - ${keyboard}px - var(--safe-top) - var(--space-lg))`, // up to 24px from the top, above the keyboard
           paddingBottom: keyboard ? '1.5rem' : 'calc(1.5rem + var(--safe-bottom))',
         }}
         onOpenAutoFocus={onOpenAutoFocus}
