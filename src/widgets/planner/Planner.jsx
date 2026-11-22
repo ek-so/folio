@@ -1,6 +1,6 @@
 import { toast } from 'sonner'
 import { Fragment, useState, useMemo, useRef, useCallback, useEffect, useLayoutEffect } from 'react'
-import { Tag, Plus, CalendarBlank, CrosshairSimple, CalendarDots, ListBullets, ArrowsClockwise, SortAscending, Check, FolderOpen } from '@phosphor-icons/react'
+import { Tag, Plus, CalendarBlank, CrosshairSimple, CalendarDots, ListBullets, ArrowsClockwise, SortAscending, Check, FolderOpen, BellSimple } from '@phosphor-icons/react'
 import { DndContext, DragOverlay, useDroppable, pointerWithin } from '@dnd-kit/core'
 import { SortableContext, useSortable, arrayMove, rectSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
@@ -32,6 +32,9 @@ import { plural } from '@/lib/plural.js'
 import LockMark from '@/components/LockMark.jsx'
 import { EmptyBox, EMPTY } from '@/components/EmptyState.jsx'
 import { storage } from '@/lib/storage.js'
+import { Dot } from '@/components/ui/dot.jsx'
+import { parseReminder, reminderKey } from '@/lib/reminders.js'
+import { useRung } from '@/hooks/useReminderAlerts.js'
 
 // The ribbon: each day takes DAY_WIDTH (its box and the gap around it), and a line between months MONTH_GAP (a box that
 // wide with the 1px line in its middle: the days' gap on each side), so the scrolling sums match what's drawn; it starts
@@ -386,6 +389,9 @@ function Day({ dayKey: key, today, selected, count, onSelect }) {
 function TaskRow({ path, text, overdue, locked, menu, onOpen }) {
   const date = text === undefined ? null : cardDate(text)
   const repeat = text === undefined ? '' : properties(text)[REPEAT]
+  // Its date's reminder, a bell after the date as on its card's badge (DateBadge), a red dot on it once it came due
+  const reminded = date && text !== undefined && parseReminder(properties(text)[reminderKey(DATE)])
+  const rang = useRung(path, DATE)
   const kind = parseRecurrence(repeat)?.kind
   return (
     <ListRow
@@ -393,6 +399,12 @@ function TaskRow({ path, text, overdue, locked, menu, onOpen }) {
       icon={<FileIcon path={path} />}
       description={<>
         <span className={cn(overdue && 'text-destructive-ink')}>{date ? (overdue && daysAgo(date)) || dateLabel(date) : 'No date'}</span>
+        {reminded && (
+          <span className="relative ml-1 inline-flex align-[-0.125em]">
+            <BellSimple aria-label={rang ? 'Reminder came due' : 'Reminder set'} className="size-3" />
+            {rang && <Dot tone="destructive" className="absolute -right-0.5 -top-0.5" />}
+          </span>
+        )}
         {(kind === 'repeat' || kind === 'unset') && <> · <ArrowsClockwise className="inline size-3 align-[-0.125em]" /> {repeatLabel(repeat)}</>}
       </>}
       bigDescription
