@@ -92,7 +92,7 @@ export default function DatePicker({ date, onPick, required, dayOnly, reminder, 
             </Later>
           </div>
           {!dayOnly && <>
-            <Separator className="my-space-sm" />
+            <Separator className="mt-space mb-space-sm" />
             <SectionTitle trailing={saved && (hasDay || keeps) && trash('Remove time', removeTime)}>Time</SectionTitle>
             <div className="px-space-xs">
               <Input
@@ -105,7 +105,7 @@ export default function DatePicker({ date, onPick, required, dayOnly, reminder, 
             </div>
           </>}
           {!dayOnly && reminder && <>
-            <Separator className="my-space-sm" />
+            <Separator className="mt-space mb-space-sm" />
             <SectionTitle trailing={reminder.value && trash('Remove reminder', () => reminder.onChange(''))}>Reminder</SectionTitle>
             {hasDay ? (
               <ul role="radiogroup" aria-label="When to remind">
