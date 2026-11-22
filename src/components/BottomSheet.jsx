@@ -1,7 +1,6 @@
 import { useEffect } from 'react'
 import { ArrowLeft, X } from '@phosphor-icons/react'
 import { Button } from './ui/button.jsx'
-import { Separator } from './ui/separator.jsx'
 import { cn } from '@/lib/utils.js'
 import { Sheet, SheetContent } from './ui/sheet.jsx'
 import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogClose } from './ui/dialog.jsx'
@@ -43,15 +42,21 @@ function OverlayHeader({ title, description, onBack }) {
   )
 }
 
-// A sheet's buttons (Cancel, Save…), its last row, split from what's above by a separator from edge to edge (reaching
-// over the sheet's 24px sides: so put it in no box with sides of its own, or the sheet scrolls sideways): they stay at the bottom while
-// the rest scrolls (sticky in the sheet's scrolling body, so they can sit inside a form and still submit it). `className`
-// for the buttons' own row (their alignment)
+// The 16px over the edge of a sheet's scrolling part, where what scrolls fades into the sheet's color: under the header
+// (`FADE_DOWN`) and over the buttons (`FADE_UP`), from edge to edge (over the sheet's 24px sides)
+const FADE = 'pointer-events-none absolute -inset-x-space-lg h-space from-card to-transparent'
+const FADE_DOWN = `${FADE} top-full bg-gradient-to-b`
+const FADE_UP = `${FADE} bottom-full bg-gradient-to-t`
+
+// A sheet's buttons (Cancel, Save…), its last row: they stay at the bottom while the rest scrolls (sticky in the sheet's
+// scrolling body, so they can sit inside a form and still submit it), what scrolls fading out above them. Their fade
+// reaches over the sheet's sides: so put them in no box with sides of its own, or the sheet scrolls sideways.
+// `className` for their own alignment
 export function SheetActions({ className, children }) {
   return (
-    <div className="sticky -bottom-1 z-10 -mb-1 flex flex-col gap-space bg-card pb-1">
-      <Separator className="-mx-space-lg data-[orientation=horizontal]:w-auto" />
-      <div className={cn('flex justify-end gap-space-sm', className)}>{children}</div>
+    <div className={cn('sticky -bottom-1 z-10 -mb-1 flex justify-end gap-space-sm bg-card pt-space-sm pb-1', className)}>
+      <div aria-hidden className={FADE_UP} />
+      {children}
     </div>
   )
 }
@@ -65,10 +70,16 @@ export default function BottomSheet({ title, description, onBack, wide, onClose,
   const isDesktop = useIsDesktop()
   const { keyboard, height: seen } = useVisualViewport()
   useEffect(() => releaseStalePageLock, [])
-  const header = <div className="shrink-0"><OverlayHeader title={title} description={description} onBack={onBack} /></div>
-  // The scrolling body reaches into the sheet's 24px sides (and 4px above and below) so rows that do, and focus rings, aren't cut off
+  const header = (
+    <div className="relative z-10 shrink-0">
+      <OverlayHeader title={title} description={description} onBack={onBack} />
+      <div aria-hidden className={FADE_DOWN} />
+    </div>
+  )
+  // The scrolling body reaches into the sheet's 24px sides (and 4px below) so rows that do, and focus rings, aren't cut
+  // off, and up to the header, so what scrolls passes under its fade (its content still starting 16px below it)
   const body = (
-    <div data-no-pull className="-mx-space-lg -my-1 flex min-h-0 flex-1 flex-col gap-space overflow-y-auto overflow-x-hidden overscroll-contain px-space-lg py-1">
+    <div data-no-pull className="-mx-space-lg -mt-space -mb-1 flex min-h-0 flex-1 flex-col gap-space overflow-y-auto overflow-x-hidden overscroll-contain px-space-lg pt-space pb-1">
       {children}
     </div>
   )
