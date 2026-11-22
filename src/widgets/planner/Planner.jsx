@@ -400,12 +400,12 @@ function TaskRow({ path, text, overdue, locked, menu, onOpen }) {
       description={<>
         <span className={cn(overdue && 'text-destructive-ink')}>{date ? (overdue && daysAgo(date)) || dateLabel(date) : 'No date'}</span>
         {reminded && (
-          <span className="relative ml-1 inline-flex align-[-0.125em]">
-            <BellSimple aria-label={rang ? 'Reminder came due' : 'Reminder set'} className="size-3" />
+          <span className="relative ml-1 inline-flex align-[-0.15em]">
+            <BellSimple aria-label={rang ? 'Reminder came due' : 'Reminder set'} className="size-3.5" />
             {rang && <Dot tone="destructive" className="absolute -right-0.5 -top-0.5" />}
           </span>
         )}
-        {(kind === 'repeat' || kind === 'unset') && <> · <ArrowsClockwise className="inline size-3 align-[-0.125em]" /> {repeatLabel(repeat)}</>}
+        {(kind === 'repeat' || kind === 'unset') && <> · <ArrowsClockwise className="inline size-3.5 align-[-0.15em]" /> {repeatLabel(repeat)}</>}
       </>}
       bigDescription
       trailing={menu}
