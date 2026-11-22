@@ -1,6 +1,6 @@
 import { useState, cloneElement } from 'react'
 import Later from './Later.jsx'
-import { Trash } from '@phosphor-icons/react'
+import { Trash, Plus } from '@phosphor-icons/react'
 import BottomSheet, { SheetActions } from './BottomSheet.jsx'
 import { ListRow } from './ui/list-row.jsx'
 import { Radio } from './ui/checkbox.jsx'
@@ -18,7 +18,9 @@ const pad = n => String(n).padStart(2, '0')
 // The one date picker, in a sheet (a centered dialog on a computer) opened by `children` (its trigger: a date badge, a
 // button), titled Date and time (Date for `dayOnly`): whatever is written (a day, a time, both, or nothing), in sections
 // under their titles (`SectionTitle`, like Views in the menu), each with a trash on the right of its title while it's
-// set (Remove date, Remove time, Remove reminder), 16px apart with no line between: Date, the Calendar in an outlined
+// set (Remove date, Remove time, Remove reminder), 16px apart with no line between. A section with nothing set (and
+// not just opened) shows "+ Add date", "+ Add time" or "+ Add reminder" under its title, which opens it (`adding`; the
+// time's field focused); one emptied by its trash goes back to that button. Date: the Calendar in an outlined
 // box (just that box for `dayOnly`); Time, its field (empty while there's none), and, with
 // `reminder` ({ value: its offset, '' for none, onChange(next) }: a date property's, lib/reminders.js), Reminder (only
 // once there's a day: a time alone or nothing never reminds; "Pick a day to add a reminder" until then): when, At the
@@ -38,7 +40,10 @@ export default function DatePicker({ date, onPick, required, dayOnly, reminder, 
   const saved = date?.hour === undefined ? '' : `${pad(date.hour)}:${pad(date.minute)}`
   const [typed, setTyped] = useState(null) // the time field's text while it differs from the saved one
   const time = typed ?? saved
-  const setOpen = next => { if (!next) setTyped(null); setOpenState(next) }
+  const [adding, setAdding] = useState(new Set()) // the empty sections opened by their + Add button
+  const add = section => setAdding(prev => new Set([...prev, section]))
+  const shut = section => setAdding(prev => { const next = new Set(prev); next.delete(section); return next })
+  const setOpen = next => { if (!next) { setTyped(null); setAdding(new Set()) } setOpenState(next) }
   const close = () => { saveTime(); setOpen(false) } // ✕ and Save: a time still being typed is kept
 
   const day = date && hasDay ? { year: date.year, month: date.month, day: date.day } : {}
@@ -54,10 +59,16 @@ export default function DatePicker({ date, onPick, required, dayOnly, reminder, 
   }
   function removeTime() {
     setTyped(null)
+    shut('time')
     pick(hasDay ? day : null)
   }
   function removeDay() {
+    shut('date')
     pick(time ? clock(time) : null)
+  }
+  function removeReminder() {
+    shut('reminder')
+    reminder.onChange('')
   }
   function remind(offset) {
     if (!reminder.value) askToNotify()
@@ -68,6 +79,19 @@ export default function DatePicker({ date, onPick, required, dayOnly, reminder, 
     <Button variant="ghost-destructive" size="icon-md" aria-label={label} tooltip={label} onMouseDown={e => e.preventDefault()} onClick={onClick}><Trash /></Button>
   )
 
+  // An empty section's button, under its title; it keeps the focus where it is, like the trashes (iOS would only close the
+  // keyboard on the first tap)
+  const addButton = (label, section) => (
+    <div className="px-space-xs">
+      <Button variant="secondary" onMouseDown={e => e.preventDefault()} onClick={() => add(section)}><Plus /> {label}</Button>
+    </div>
+  )
+  // What each section shows: its content while it's set or opened, else its + Add button. A date that can't be emptied
+  // (`required`) always shows its calendar
+  const showDay = dayOnly || hasDay || !keeps || adding.has('date')
+  const showTime = saved || typed !== null || adding.has('time')
+  const showReminder = reminder?.value || adding.has('reminder')
+
   // The trigger opens the sheet (its own click handler, a badge's that keeps the click from the note, still runs)
   const trigger = cloneElement(children, { onClick: e => { children.props.onClick?.(e); setOpen(true) } })
   return <>
@@ -77,7 +101,7 @@ export default function DatePicker({ date, onPick, required, dayOnly, reminder, 
         <div data-badge-popover className="-mx-space-xs flex flex-col">
           {!dayOnly && <SectionTitle trailing={hasDay && (time || keeps) && trash('Remove date', removeDay)}>Date</SectionTitle>}
           {/* The Calendar in an outlined box of its own */}
-          <div className="mx-space-xs rounded-lg border border-border p-space-sm">
+          {showDay ? <div className="mx-space-xs rounded-lg border border-border p-space-sm">
             <Later compact>
               <Calendar
                 fill
@@ -91,22 +115,22 @@ export default function DatePicker({ date, onPick, required, dayOnly, reminder, 
                 }}
               />
             </Later>
-          </div>
+          </div> : addButton('Add date', 'date')}
           {!dayOnly && <>
             <SectionTitle className="mt-space" trailing={saved && (hasDay || keeps) && trash('Remove time', removeTime)}>Time</SectionTitle>
-            <div className="px-space-xs">
+            {showTime ? <div className="px-space-xs">
               <Input
-                type="time" aria-label="Time" value={time}
+                type="time" aria-label="Time" value={time} autoFocus={adding.has('time') && !saved}
                 onChange={e => setTyped(e.target.value)}
                 onBlur={saveTime}
                 onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); saveTime() } }}
                 className="appearance-none [&::-webkit-calendar-picker-indicator]:hidden"
               />
-            </div>
+            </div> : addButton('Add time', 'time')}
           </>}
           {!dayOnly && reminder && <>
-            <SectionTitle className="mt-space" trailing={reminder.value && trash('Remove reminder', () => reminder.onChange(''))}>Reminder</SectionTitle>
-            {hasDay ? (
+            <SectionTitle className="mt-space" trailing={reminder.value && trash('Remove reminder', removeReminder)}>Reminder</SectionTitle>
+            {hasDay && !showReminder ? addButton('Add reminder', 'reminder') : hasDay ? (
               <ul role="radiogroup" aria-label="When to remind">
                 {REMINDERS.map(([value, label]) => (
                   <li key={value}>
