@@ -15,7 +15,7 @@ import { dateLabel } from '../lib/dates.js'
 // Notifications: every reminder that has come due (useReminderAlerts' `due`, latest first), each a row with its note's
 // icon and title, and which date it's for and when (`due · 25 Nov, 09:30`); a tap opens the note (`onOpen(path)`), its
 // red trash takes it off the list at once (`onDismiss(id)`: on this device; the reminder stays in the note, so nothing's
-// lost and nothing asks first), Clear all (red, with a trash) in the title bar takes them all off, confirmed. Being open
+// lost and nothing asks first), Clear all (red) in the title bar takes them all off, confirmed. Being open
 // counts them as seen (`onSeen`: the nav's count goes), as new ones come due too.
 export default function Notifications({ due, onOpen, onDismiss, onDismissAll, onSeen }) {
   const [clearing, setClearing] = useState(false)
@@ -24,7 +24,7 @@ export default function Notifications({ due, onOpen, onDismiss, onDismissAll, on
     <PageLayout>
       <Surface title={(
         <TitleBar page={PAGE.NOTIFICATIONS}>
-          {due.length > 0 && <Button variant="ghost-destructive" className="gap-space-sm" onClick={() => setClearing(true)}><Trash /> Clear all</Button>}
+          {due.length > 0 && <Button variant="ghost-destructive" onClick={() => setClearing(true)}>Clear all</Button>}
         </TitleBar>
       )}>
         <div className="flex-1 min-h-0 overflow-y-auto" data-no-pull>
