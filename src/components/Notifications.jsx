@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Trash } from '@phosphor-icons/react'
 import { EmptyMessage, EMPTY } from './EmptyState.jsx'
 import Surface from './Surface.jsx'
@@ -15,11 +15,10 @@ import { dateLabel } from '../lib/dates.js'
 // Notifications: every reminder that has come due (useReminderAlerts' `due`, latest first), each a row with its note's
 // icon and title, and which date it's for and when (`due · 25 Nov, 09:30`); a tap opens the note (`onOpen(path)`), its
 // red trash takes it off the list at once (`onDismiss(id)`: on this device; the reminder stays in the note, so nothing's
-// lost and nothing asks first), Clear all (red) in the title bar takes them all off, confirmed. Being open
-// counts them as seen (`onSeen`: the nav's count goes), as new ones come due too.
-export default function Notifications({ due, onOpen, onDismiss, onDismissAll, onSeen }) {
+// lost and nothing asks first), Clear all (red) in the title bar takes them all off, confirmed. The nav counts
+// them until they're taken off (App's `menu.dueReminders`), whether this page was opened or not.
+export default function Notifications({ due, onOpen, onDismiss, onDismissAll }) {
   const [clearing, setClearing] = useState(false)
-  useEffect(() => { onSeen() }, [due.length])
   return (
     <PageLayout>
       <Surface title={(

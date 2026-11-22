@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
-import { remindersIn, dueReminders, unseenCount, missedReminders } from '../lib/reminders.js'
+import { remindersIn, dueReminders, missedReminders } from '../lib/reminders.js'
 import { plural } from '../lib/plural.js'
 import { dateLabel } from '../lib/dates.js'
 
@@ -34,19 +34,8 @@ const REMINDER_TOAST = {
 }
 
 const DISMISSED_KEY = 'folio_reminders_dismissed' // the ones taken out of Notifications on this device, by id
-const LIST_SEEN_KEY = 'folio_reminders_list_seen' // when Notifications was last opened on this device (ms)
 const readDismissed = () => { try { return new Set(JSON.parse(localStorage.getItem(DISMISSED_KEY)) ?? []) } catch { return new Set() } }
 const writeDismissed = ids => { try { localStorage.setItem(DISMISSED_KEY, JSON.stringify([...ids].slice(-500))) } catch { /* back next time */ } }
-// Never opened on this device: as of now, so what was due before isn't counted as new
-const readListSeen = () => {
-  try {
-    const at = Number(localStorage.getItem(LIST_SEEN_KEY))
-    if (at) return at
-    localStorage.setItem(LIST_SEEN_KEY, String(Date.now()))
-  } catch { /* counted from now */ }
-  return Date.now()
-}
-const writeListSeen = at => { try { localStorage.setItem(LIST_SEEN_KEY, String(at)) } catch { /* counted again */ } }
 
 const readFired = () => { try { return new Set(JSON.parse(localStorage.getItem(FIRED_KEY)) ?? []) } catch { return new Set() } }
 const writeFired = ids => { try { localStorage.setItem(FIRED_KEY, JSON.stringify([...ids].slice(-500))) } catch { /* shown again next time */ } }
@@ -75,8 +64,7 @@ export function useNotifyPermission() {
 // MISSED_DAYS back, none from before the device's first opening) are told in one toast on opening or coming back, "N reminders" with View (`onView`: opens
 // Notifications). Each is told once on this device. Every one that has come due stays in Notifications (`due`, latest
 // first) until it's dismissed (`dismiss(id)`, `dismissAll()`; remembered on this device: nothing's written to the
-// notes or `.folio`); `rung`: those as `rungKey`s, for their dates' badges (RungContext); `unseen`: how many came due
-// since Notifications was last opened (`markSeen()`, as it is).
+// notes or `.folio`); `rung`: those as `rungKey`s, for their dates' badges (RungContext). The nav counts `due`.
 // Nothing reminds while Folio is closed.
 export function useReminderAlerts(notes, { onOpen: onOpenNow, onView }) {
   const reminders = useMemo(() => remindersIn(notes), [notes])
@@ -86,7 +74,6 @@ export function useReminderAlerts(notes, { onOpen: onOpenNow, onView }) {
   const onOpen = path => actions.current.onOpen(path)
   const [now, setNow] = useState(Date.now) // what's due is as of this: moved on as reminders come due
   const [dismissed, setDismissed] = useState(readDismissed)
-  const [seenAt, setSeenAt] = useState(readListSeen)
   const from = useRef(null)
   if (from.current === null) from.current = readFrom()
   const telling = useRef(true) // opened or back, and what was missed not told yet (once the notes are there)
@@ -167,10 +154,8 @@ export function useReminderAlerts(notes, { onOpen: onOpenNow, onView }) {
   return {
     due,
     rung,
-    unseen: unseenCount(due, seenAt),
     dismiss: id => dismissAll([id]),
     dismissAll: () => dismissAll(due.map(r => r.id)),
-    markSeen: () => { const at = Date.now(); writeListSeen(at); setSeenAt(at) },
   }
 }
 

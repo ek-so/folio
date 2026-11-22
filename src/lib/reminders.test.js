@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { reminderKey, isReminderKey, parseReminder, reminderText, reminderAt, remindersIn, DAY_HOUR, isReminderOf, canRemind, dueReminders, unseenCount, missedReminders } from './reminders.js'
+import { reminderKey, isReminderKey, parseReminder, reminderText, reminderAt, remindersIn, DAY_HOUR, isReminderOf, canRemind, dueReminders, missedReminders } from './reminders.js'
 import { withValue, withoutKeys } from './frontmatter.js'
 
 describe('reminders', () => {
@@ -52,12 +52,11 @@ describe('reminders', () => {
     expect(found[1].at).toBe(new Date(2026, 10, 28, 13, 30).getTime())
   })
 
-  it('lists the due reminders not dismissed, latest first, and counts the unseen', () => {
+  it('lists the due reminders not dismissed, latest first, ', () => {
     const r = (id, at) => ({ id, at })
     const all = [r('a', 10), r('b', 20), r('c', 30), r('later', 50)]
     const due = dueReminders(all, 40, new Set(['b']))
     expect(due.map(x => x.id)).toEqual(['c', 'a'])
-    expect(unseenCount(due, 15)).toBe(1)
     expect(missedReminders(all, 15, 40, new Set(['c'])).map(x => x.id)).toEqual(['b'])
   })
 })

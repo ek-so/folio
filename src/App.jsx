@@ -803,7 +803,7 @@ export default function App() {
   }
   const menu = {
     brokenCount: links.index.broken.length,
-    unseenReminders: reminders.unseen,
+    dueReminders: reminders.due.length,
     onProfile: from => { setProfileFrom(from ?? null); setProfileOpen(true) },
     open: menuOpen,
     onOpenChange: setMenuOpen,
@@ -911,7 +911,6 @@ export default function App() {
               onOpen={path => setSelectedFile(path)}
               onDismiss={reminders.dismiss}
               onDismissAll={reminders.dismissAll}
-              onSeen={reminders.markSeen}
             />
           ) : page === PAGE.LINKS ? (
             <BrokenLinks

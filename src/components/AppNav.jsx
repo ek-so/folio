@@ -22,7 +22,7 @@ import { Dot } from '@/components/ui/dot.jsx'
 import { Badge } from '@/components/ui/badge.jsx'
 
 
-// The app's primary navigation, in place of a header. `menu`: brokenCount, unseenReminders (Notifications' count: reminders come due since it was last opened) and
+// The app's primary navigation, in place of a header. `menu`: brokenCount, dueReminders (Notifications' count: reminders come due and not dismissed) and
 // onProfile (the Profile sheet: the repository, settings and Sign out); `page` the open page; `renderSync(compact, bar)` makes the SyncButton (`bar`: the phone's top bar).
 // Desktop (768px+): a left rail, 16px from the top, left and bottom like the content boxes' 16px around; where
 // they meet, 8px each: the rail's right and the content box's left. On top a header row, level with the title
@@ -105,9 +105,9 @@ export function NavRail({ page, pages, hrefOf, viewActions, onPage, onSearch, re
       {separator}
       <Button variant="ghost" tooltip={hint('Notifications')} tooltipSide="right" aria-current={page === PAGE.NOTIFICATIONS ? 'page' : undefined} className={cn(item(PAGE.NOTIFICATIONS), 'relative')} onClick={() => onPage(PAGE.NOTIFICATIONS)}>
         <Bell /> {label('Notifications')}
-        {menu.unseenReminders > 0 && (collapsed
-          ? <Dot tone="destructive" size="md" corner aria-label={`${menu.unseenReminders} new`} />
-          : <Badge className={cn('ml-auto h-5 min-w-5 justify-center bg-destructive py-0 text-xs text-destructive-foreground', menu.unseenReminders < 10 ? 'px-0' : 'px-1.5')}>{menu.unseenReminders}</Badge>)}
+        {menu.dueReminders > 0 && (collapsed
+          ? <Dot tone="destructive" size="md" corner aria-label={`${menu.dueReminders} notifications`} />
+          : <Badge className={cn('ml-auto h-5 min-w-5 justify-center bg-destructive py-0 text-xs text-destructive-foreground', menu.dueReminders < 10 ? 'px-0' : 'px-1.5')}>{menu.dueReminders}</Badge>)}
       </Button>
       <Button variant="ghost" tooltip={hint('Recent updates')} tooltipSide="right" aria-current={page === PAGE.HISTORY ? 'page' : undefined} className={item(PAGE.HISTORY)} onClick={() => onPage(PAGE.HISTORY)}>
         <ClockCounterClockwise /> {label('Recent updates')}
@@ -130,7 +130,7 @@ export function NavRail({ page, pages, hrefOf, viewActions, onPage, onSearch, re
 }
 
 // Phones: a bar at the top with the menu (the app's logo and name, an outlined button: every page, then the rest) on the
-// left, Notifications (its bell, with a red dot on its corner while some came due since it was last opened: `menu.unseenReminders`, like Sync's),
+// left, Notifications (its bell, with a red dot on its corner while some came due and aren't dismissed: `menu.dueReminders`, like Sync's),
 // Sync and Search (last) on the right. It slides away while
 // the content scrolls down and returns on scrolling up (`useHideOnScroll`): its row folds in 300ms with a gentle ease while
 // what's in it slides up and fades, so the page under it moves softly.
@@ -146,11 +146,11 @@ export function TopBar({ host, resetKey, page, pages, viewActions, onPage, onSea
       <div className="flex-1" />
       <Button
         variant="ghost-outline" size="icon" className={cn('relative', page === PAGE.NOTIFICATIONS && SELECTED)}
-        aria-label={menu.unseenReminders ? `Notifications, ${menu.unseenReminders} new` : 'Notifications'}
+        aria-label={menu.dueReminders ? `Notifications, ${menu.dueReminders}` : 'Notifications'}
         aria-current={page === PAGE.NOTIFICATIONS ? 'page' : undefined} onClick={() => onPage(PAGE.NOTIFICATIONS)}
       >
         <Bell />
-        {menu.unseenReminders > 0 && <Dot tone="destructive" size="md" corner />}
+        {menu.dueReminders > 0 && <Dot tone="destructive" size="md" corner />}
       </Button>
       {renderSync(false, true)}
       <Button variant="ghost-outline" size="icon" aria-label="Search" onClick={onSearch}>
