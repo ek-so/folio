@@ -152,7 +152,7 @@ function DateValue({ prop, reminder, withReminder, onChange, emptyLabel, late })
   return (
     <DateField
       label={date ? (late && daysAgo(date)) || dateLabel(date) : emptyLabel} date={date} onPick={onChange && pick}
-      reminder={!withReminder ? undefined : onChange ? reminded : reminded.value.offset ? reminded : undefined} title={prop.key}
+      reminder={!withReminder ? undefined : onChange ? reminded : reminded.value ? reminded : undefined} title={prop.key}
       tone={late ? 'var(--destructive)' : undefined}
       className={cn(!date && PLACEHOLDER)} {...(onChange ? own : {})}
     />

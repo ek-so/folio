@@ -3,7 +3,7 @@ import * as SwitchPrimitive from '@radix-ui/react-switch'
 import { cn } from '@/lib/utils'
 
 // shadcn's Switch (`npx shadcn add switch`), on the project's Radix package and `cn`, flat (controls have no shadow) and
-// with the fields' 1px focus ring: on or off, for a setting that applies at once (a reminder sent by email too)
+// with the fields' 1px focus ring: on or off, for a setting that applies at once (a date's reminder)
 function Switch({ className, ...props }) {
   return (
     <SwitchPrimitive.Root

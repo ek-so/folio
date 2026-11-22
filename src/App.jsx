@@ -63,16 +63,14 @@ import { archiveDay, inArchive, staleArchiveDays, KEEP_DAYS } from './lib/archiv
 import { fileItem } from './lib/folderNotes.js'
 import {
   listDir, nameError, renameTarget, renameError, createError, add, setEdit, rename, remove, getAllFolders,
-  upload, replaceUpload, freePath, virtualFiles, splitName, editNote, duplicate, keptEdits, freeTarget as freeTargetIn, MAX_UPLOAD_BYTES, discard,
+  upload, replaceUpload, freePath, virtualFiles, splitName, editNote, duplicate, keptEdits, freeTarget as freeTargetIn, MAX_UPLOAD_BYTES,
 } from './lib/changes.js'
 import { plural } from './lib/plural.js'
 import { useNoteExport } from './hooks/useNoteExport.js'
 import { useRevert } from './hooks/useRevert.js'
 import { useTables, TablesContext } from './hooks/useTables.js'
-import { useProfile, ProfileContext } from './hooks/useProfile.js'
 import { useReminderAlerts } from './hooks/useReminderAlerts.js'
 import ProfileSheet from './components/ProfileSheet.jsx'
-import { WORKFLOW_PATH, SCRIPT_PATH, WORKFLOW } from './lib/emailJob.js'
 import { useVisualViewport } from './hooks/useKeyboardInset.js'
 import { later } from './lib/later.js'
 
@@ -102,11 +100,9 @@ export default function App() {
   const locks = useLocks(config) // files locked against editing (lib/locks.js)
   const icons = useIcons(config) // the emoji icons of files and folders (lib/icons.js)
   const tables = useTables(config) // the types picked for notes' table columns (lib/tables.js)
-  const profile = useProfile(config) // the reminder email (lib/profile.js)
-  const [profileAt, setProfileAt] = useState(null) // the Profile sheet: 'main', or 'email' (opened at its email, from a date's reminder)
+  const [profileOpen, setProfileOpen] = useState(false) // the Profile sheet
   const [profileFrom, setProfileFrom] = useState(null) // 'menu': opened from the phone's menu, its ← back to it
   const [menuOpen, setMenuOpen] = useState(false) // the phone's menu sheet (AccountMenu)
-  const profileInfo = useMemo(() => ({ email: profile.email, onEditEmail: profile.canEdit ? () => setProfileAt('email') : null }), [profile.email, profile.canEdit])
   const tablesInfo = useMemo(() => ({
     of: tables.of,
     sortOf: tables.sortOf,
@@ -734,22 +730,6 @@ export default function App() {
     auth.switchRepo(full)
   }
 
-  // Email reminders (lib/emailJob.js): the job, built beside the app, and its workflow written into the repo, sent on the
-  // next Sync like any change
-  async function setUpEmailJob() {
-    let script
-    try {
-      const res = await fetch(`${BASE}folio-reminders.mjs`, { cache: 'no-cache' })
-      if (!res.ok) throw new Error(String(res.status))
-      script = await res.text()
-    } catch {
-      return toast.error(navigator.onLine === false ? 'Connect to the internet to set up email reminders.' : "Couldn't get the email job from Folio's site.")
-    }
-    // with the profile's time zone and Folio's address noted again (an address saved before had none)
-    update(ch => (profile.canEdit && profile.email ? profile.setEmail(profile.email) : c => c)(config.write(WORKFLOW_PATH, WORKFLOW)(config.write(SCRIPT_PATH, script)(ch))))
-    toast.success('Email reminders added. Sync, then add your Resend key on GitHub.')
-  }
-
   async function signOut() {
     setConfirmSignOut(false)
     setPage(PAGE.HOME)
@@ -802,7 +782,7 @@ export default function App() {
   }
   const menu = {
     brokenCount: links.index.broken.length,
-    onProfile: from => { setProfileFrom(from ?? null); setProfileAt('main') },
+    onProfile: from => { setProfileFrom(from ?? null); setProfileOpen(true) },
     open: menuOpen,
     onOpenChange: setMenuOpen,
   }
@@ -835,7 +815,6 @@ export default function App() {
     <LinksContext.Provider value={linkInfo}>
       <IconsContext.Provider value={iconsInfo}>
       <TablesContext.Provider value={tablesInfo}>
-      <ProfileContext.Provider value={profileInfo}>
       <ItemActionsContext.Provider value={itemActions}>
       <NavContext.Provider value={{
         listDir: dir => listDir(shown, dir, repo.changed),
@@ -978,7 +957,7 @@ export default function App() {
       )}
 
       {repo.syncError && (
-          <SyncErrorModal error={repo.syncError} onRetry={repo.syncError.retry} onDropJob={() => { update(ch => discard(ch, [WORKFLOW_PATH, SCRIPT_PATH])); toast.success('Email job taken out of your changes'); setTimeout(repo.syncError.retry) }} onClose={repo.dismissSyncError} />
+          <SyncErrorModal error={repo.syncError} onRetry={repo.syncError.retry} onClose={repo.dismissSyncError} />
         )}
 
         {uploadClash && (
@@ -1010,17 +989,14 @@ export default function App() {
           />
         )}
 
-        {profileAt && (
+        {profileOpen && (
           <ProfileSheet
-            key={profileAt}
-            login={auth.user.login} email={profile.email} start={profileAt}
+            login={auth.user.login}
             repo={auth.repo} repos={auth.repos} syncing={repo.syncing} onSwitchRepo={switchRepo}
             theme={theme} onTheme={setTheme} emojiNames={icons.canEdit ? { count: emojiNames.length, onMove: moveEmojisToIcons } : null}
-            emailJob={{ ready: WORKFLOW_PATH in virtual, onSetUp: repo.remote ? setUpEmailJob : null }}
-            onSaveEmail={profile.canEdit ? text => update(profile.setEmail(text)) : null}
-            onSignOut={() => { setProfileAt(null); setConfirmSignOut(true) }}
-            onBack={profileFrom === 'menu' ? () => { setProfileAt(null); setMenuOpen(true) } : undefined}
-            onClose={() => setProfileAt(null)}
+            onSignOut={() => { setProfileOpen(false); setConfirmSignOut(true) }}
+            onBack={profileFrom === 'menu' ? () => { setProfileOpen(false); setMenuOpen(true) } : undefined}
+            onClose={() => setProfileOpen(false)}
           />
         )}
 
@@ -1131,7 +1107,6 @@ export default function App() {
       </TooltipProvider>
       </NavContext.Provider>
       </ItemActionsContext.Provider>
-      </ProfileContext.Provider>
       </TablesContext.Provider>
       </IconsContext.Provider>
     </LinksContext.Provider>

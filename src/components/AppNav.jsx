@@ -21,7 +21,7 @@ import PageIcon from './PageIcon.jsx'
 
 
 // The app's primary navigation, in place of a header. `menu`: brokenCount and
-// onProfile (the Profile sheet: the reminder email and Sign out); `page` the open page; `renderSync(compact, bar)` makes the SyncButton (`bar`: the phone's top bar).
+// onProfile (the Profile sheet: the repository, settings and Sign out); `page` the open page; `renderSync(compact, bar)` makes the SyncButton (`bar`: the phone's top bar).
 // Desktop (768px+): a left rail, 16px from the top, left and bottom like the content boxes' 16px around; where
 // they meet, 8px each: the rail's right and the content box's left. On top a header row, level with the title
 // bars' rows (8px and a 1px top edge like the boxes' outline above it): the app's name (Folio, bold) and a

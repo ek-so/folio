@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { reminderKey, isReminderKey, parseReminder, reminderText, reminderAt, remindersIn, DAY_HOUR, emailsDue, keptSent, isReminderOf, canRemind } from './reminders.js'
+import { reminderKey, isReminderKey, parseReminder, reminderText, reminderAt, remindersIn, DAY_HOUR, isReminderOf, canRemind } from './reminders.js'
 import { withValue, withoutKeys } from './frontmatter.js'
 
 describe('reminders', () => {
@@ -7,14 +7,13 @@ describe('reminders', () => {
     expect(reminderKey('date')).toBe('date-reminder')
     expect(isReminderKey('date-reminder')).toBe(true)
     expect(isReminderKey('-reminder')).toBe(false)
-    expect(parseReminder(' 1h ')).toEqual({ offset: '1h', email: false })
-    expect(parseReminder('1h, email')).toEqual({ offset: '1h', email: true })
-    expect(parseReminder('email')).toEqual({ offset: '', email: false })
-    expect(parseReminder('5 years')).toEqual({ offset: '', email: false })
-    expect(parseReminder(['1h'])).toEqual({ offset: '', email: false })
-    expect(reminderText({ offset: '10m', email: true })).toBe('10m, email')
-    expect(reminderText({ offset: '1d', email: false })).toBe('1d')
-    expect(reminderText({ offset: '', email: true })).toBeNull()
+    expect(parseReminder(' 1h ')).toBe('1h')
+    expect(parseReminder('1h, email')).toBe('1h')
+    expect(parseReminder('email')).toBe('')
+    expect(parseReminder('5 years')).toBe('')
+    expect(parseReminder(['1h'])).toBe('')
+    expect(reminderText('1d')).toBe('1d')
+    expect(reminderText('')).toBeNull()
   })
 
   it('is a date\'s reminder only beside its date, with a reminder\'s value', () => {
@@ -49,14 +48,7 @@ describe('reminders', () => {
       '.archive/2026-11-21/d.md': '---\ndate: 2026-11-25\ndate-reminder: 0m\n---\n',
     }
     const found = remindersIn(notes)
-    expect(found.map(r => [r.path, r.title, r.email])).toEqual([['b.md', 'b', false], ['a.md', 'Dentist', true]])
+    expect(found.map(r => [r.path, r.title])).toEqual([['b.md', 'b'], ['a.md', 'Dentist']])
     expect(found[1].at).toBe(new Date(2026, 10, 28, 13, 30).getTime())
-  })
-  it('picks the email reminders a run sends, once each', () => {
-    const now = 1_000_000
-    const r = (id, at, email = true) => ({ id, at, email })
-    const all = [r('due', now - 60_000), r('sent', now - 60_000), r('late', now - 3_600_000), r('later', now + 60_000), r('browser', now - 60_000, false)]
-    expect(emailsDue(all, { sent: now - 50_000 }, now, 30 * 60_000).map(x => x.id)).toEqual(['due'])
-    expect(keptSent({ a: now - 1000, b: now - 9_000_000 }, now, 60_000)).toEqual({ a: now - 1000 })
   })
 })

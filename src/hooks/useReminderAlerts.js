@@ -48,8 +48,7 @@ export function useNotifyPermission() {
 // askToNotify) with the note's title and its date, a tap on it opening the note (`onOpen(path)`); without that
 // permission, an inverted toast with Open. Those that came due while Folio was closed on this device (since it was
 // last open, up to MISSED_DAYS back; none on a device's first opening) show on opening, as inverted toasts, stacked,
-// each with Open and ✕. Each shows once on this device. Nothing reminds while Folio is closed: that's for the email job
-// (the reminders set to email) and, later, push.
+// each with Open and ✕. Each shows once on this device. Nothing reminds while Folio is closed.
 export function useReminderAlerts(notes, onOpenNow) {
   const reminders = useMemo(() => remindersIn(notes), [notes])
   // Opened the way the app opens a note now (the page you're on), not as when the reminder was planned

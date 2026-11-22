@@ -329,7 +329,7 @@ export function useRepo(repo, onDone) {
         flash('offline')
       } else {
         flash('error')
-        setSyncError({ ...describeSyncError(e, [...changedPaths(changesRef.current)].some(p => p.startsWith('.github/workflows/'))), retry })
+        setSyncError({ ...describeSyncError(e), retry })
         busy.current = false
         setSyncing(false)
         return 'failed'
