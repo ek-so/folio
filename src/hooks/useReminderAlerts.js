@@ -1,16 +1,24 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { remindersIn, dueReminders, unseenCount, missedReminders } from '../lib/reminders.js'
 import { plural } from '../lib/plural.js'
 import { dateLabel } from '../lib/dates.js'
 
 const FIRED_KEY = 'folio_reminders_fired' // the reminders already shown on this device (localStorage), by id
-const SEEN_KEY = 'folio_reminders_seen' // when Folio was last open on this device (localStorage, ms)
-const MISSED_DAYS = 7 // missed reminders shown on opening reach back at most this far
+const FROM_KEY = 'folio_reminders_from' // when Folio first told reminders on this device (localStorage, ms)
+const MISSED_DAYS = 7 // missed reminders told on opening reach back at most this far
 const AHEAD_MS = 60 * 60_000 // timers are set for this far ahead; the rest are looked at again then
+const LATE_MS = 60_000 // a timer this late (the app was frozen in the background) leaves its reminder to the missed ones
 
-const readSeen = () => { try { return Number(localStorage.getItem(SEEN_KEY)) || null } catch { return null } }
-const writeSeen = () => { try { localStorage.setItem(SEEN_KEY, String(Date.now())) } catch { /* the next opening shows none missed */ } }
+// Noted on the device's first opening, so what came due before then isn't told as missed
+const readFrom = () => {
+  try {
+    const at = Number(localStorage.getItem(FROM_KEY))
+    if (at) return at
+    localStorage.setItem(FROM_KEY, String(Date.now()))
+  } catch { /* from now */ }
+  return Date.now()
+}
 
 // A reminder's toast: inverted (the foreground's color as its fill: dark in light mode, light in dark), so it stands
 // apart from the app's other toasts; it stays until closed or opened, stacked with the others (Sonner's stack, which
@@ -63,11 +71,12 @@ export function useNotifyPermission() {
 // screen shows as an inverted toast with the note's title, its date and Open (`onOpen(path)`); while it's in the
 // background (another tab or app; iOS stops a Home Screen app's timers there, so it never gets this), as a
 // notification from the browser when allowed (askToNotify), a tap on it opening the note. Those that came due while
-// Folio wasn't on screen (closed, or in the background: since it was last there, up to MISSED_DAYS back; none on a
-// device's first opening) are told in one toast on opening or coming back, "N reminders" with View (`onView`: opens
+// Folio wasn't on screen (closed, or in the background, its timers frozen or late: every one not told yet, up to
+// MISSED_DAYS back, none from before the device's first opening) are told in one toast on opening or coming back, "N reminders" with View (`onView`: opens
 // Notifications). Each is told once on this device. Every one that has come due stays in Notifications (`due`, latest
 // first) until it's dismissed (`dismiss(id)`, `dismissAll()`; remembered on this device: nothing's written to the
-// notes or `.folio`); `unseen`: how many came due since Notifications was last opened (`markSeen()`, as it is).
+// notes or `.folio`); `rung`: those as `rungKey`s, for their dates' badges (RungContext); `unseen`: how many came due
+// since Notifications was last opened (`markSeen()`, as it is).
 // Nothing reminds while Folio is closed.
 export function useReminderAlerts(notes, { onOpen: onOpenNow, onView }) {
   const reminders = useMemo(() => remindersIn(notes), [notes])
@@ -78,27 +87,22 @@ export function useReminderAlerts(notes, { onOpen: onOpenNow, onView }) {
   const [now, setNow] = useState(Date.now) // what's due is as of this: moved on as reminders come due
   const [dismissed, setDismissed] = useState(readDismissed)
   const [seenAt, setSeenAt] = useState(readListSeen)
-  // When Folio was last on screen here: read as it opens and as it comes back (null: never, so none are missed)
-  const since = useRef(null)
-  if (since.current === null) since.current = readSeen() ?? Date.now()
+  const from = useRef(null)
+  if (from.current === null) from.current = readFrom()
   const telling = useRef(true) // opened or back, and what was missed not told yet (once the notes are there)
   const [visits, setVisits] = useState(0)
 
-  // On screen now: noted every minute and as it's left
+  // What's due moves on every minute; coming back, what came due meanwhile is told (below)
   useEffect(() => {
-    writeSeen()
-    const every = setInterval(() => { writeSeen(); setNow(Date.now()) }, 60_000)
-    const change = () => {
-      if (document.visibilityState === 'hidden') return writeSeen()
-      since.current = readSeen() ?? Date.now() // back: what came due meanwhile is told (below)
+    const every = setInterval(() => setNow(Date.now()), 60_000)
+    const back = () => {
+      if (document.visibilityState === 'hidden') return
       telling.current = true
-      writeSeen()
       setNow(Date.now())
       setVisits(v => v + 1)
     }
-    document.addEventListener('visibilitychange', change)
-    window.addEventListener('pagehide', writeSeen)
-    return () => { clearInterval(every); document.removeEventListener('visibilitychange', change); window.removeEventListener('pagehide', writeSeen) }
+    document.addEventListener('visibilitychange', back)
+    return () => { clearInterval(every); document.removeEventListener('visibilitychange', back) }
   }, [])
 
   // Missed while away: one toast for all, on opening (once the notes are there) and on coming back; not as notes change
@@ -108,7 +112,7 @@ export function useReminderAlerts(notes, { onOpen: onOpenNow, onView }) {
     telling.current = false
     const at = Date.now()
     const fired = readFired()
-    const missed = missedReminders(reminders, Math.max(since.current, at - MISSED_DAYS * 24 * 60 * 60_000), at, fired)
+    const missed = missedReminders(reminders, Math.max(from.current, at - MISSED_DAYS * 24 * 60 * 60_000), at, fired)
     if (!missed.length) return
     missed.forEach(r => fired.add(r.id))
     writeFired(fired)
@@ -124,6 +128,7 @@ export function useReminderAlerts(notes, { onOpen: onOpenNow, onView }) {
     let timers = []
     const show = reminder => {
       setNow(Date.now())
+      if (Date.now() - reminder.at > LATE_MS) return // frozen meanwhile: told with the missed ones as it's back
       const fired = readFired()
       if (fired.has(reminder.id)) return
       fired.add(reminder.id)
@@ -157,12 +162,20 @@ export function useReminderAlerts(notes, { onOpen: onOpenNow, onView }) {
   }, [reminders])
 
   const due = useMemo(() => dueReminders(reminders, now, dismissed), [reminders, now, dismissed])
+  const rung = useMemo(() => new Set(due.map(r => rungKey(r.path, r.key))), [due])
   const dismissAll = ids => setDismissed(prev => { const next = new Set([...prev, ...ids]); writeDismissed(next); return next })
   return {
     due,
+    rung,
     unseen: unseenCount(due, seenAt),
     dismiss: id => dismissAll([id]),
     dismissAll: () => dismissAll(due.map(r => r.id)),
     markSeen: () => { const at = Date.now(); writeListSeen(at); setSeenAt(at) },
   }
 }
+
+// The date property `key` of the note at `path`, as `rung` holds it
+export const rungKey = (path, key) => `${path}|${key}`
+// The dates whose reminder has come due and is still in Notifications (`rung`): their badge's bell has a dot
+export const RungContext = createContext(new Set())
+export const useRung = (path, key) => useContext(RungContext).has(rungKey(path, key))

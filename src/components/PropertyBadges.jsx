@@ -18,6 +18,7 @@ import { DateField } from './DateBadge.jsx'
 import { valueDate } from '../lib/markdown.js'
 import { formatDate, dateLabel, daysAgo } from '../lib/dates.js'
 import { plural } from '../lib/plural.js'
+import { useRung } from '../hooks/useReminderAlerts.js'
 
 
 // A value badge's tone (Badge): its value's hue within its property (--tag-N, index.css); none (grey) when empty
@@ -71,7 +72,7 @@ export default function PropertyBadges({ props, all = props, withReminders, path
         {part.badges.map(({ id, prop, label }) => badges?.[prop.key]
           ? <Custom key={id} as={badges[prop.key]} prop={prop} props={props} onChange={onChange} />
           : isDateProp(prop, options, dateKeys)
-          ? <DateValue key={id} prop={prop} reminder={all.find(p => p.key === reminderKey(prop.key))?.value} withReminder={withReminders} onChange={onChange} emptyLabel={dateKeys?.includes(prop.key) ? 'No date' : prop.key} late={overdue && dateKeys?.includes(prop.key)} />
+          ? <DateValue key={id} prop={prop} path={path} reminder={all.find(p => p.key === reminderKey(prop.key))?.value} withReminder={withReminders} onChange={onChange} emptyLabel={dateKeys?.includes(prop.key) ? 'No date' : prop.key} late={overdue && dateKeys?.includes(prop.key)} />
           : onChange
           ? <EditableBadge key={id} prop={prop} label={label} color={colors[prop.key].get(label)} options={options} hidden={hiddenValues?.[prop.key]} onChange={onChange} onManage={(onEditValue || onRemoveValue) && (() => setManaging(prop.key))} />
           : (
@@ -142,7 +143,8 @@ function isDateProp(prop, options, dateKeys) {
 // A date property's badge, like a date in the text (DateField: a calendar icon on the left, no ▾): with `onChange`
 // it opens a calendar and a time field to change it (the same day again empties it). While empty, `emptyLabel` (its name, or "No date" for a planner's).
 // `late`: a past date, the whole badge red (Badge's red tone: its tint, text and icon), saying "N days ago" in place of the date
-function DateValue({ prop, reminder, withReminder, onChange, emptyLabel, late }) {
+function DateValue({ prop, path, reminder, withReminder, onChange, emptyLabel, late }) {
+  const rang = useRung(path, prop.key) // its reminder came due, still in Notifications: a dot on the bell
   const date = valueDate(prop.value)
   const pick = picked => {
     if (!picked && reminder !== undefined) onChange(reminderKey(prop.key), null) // emptied: its reminder goes too, never left unseen
@@ -152,7 +154,7 @@ function DateValue({ prop, reminder, withReminder, onChange, emptyLabel, late })
   return (
     <DateField
       label={date ? (late && daysAgo(date)) || dateLabel(date) : emptyLabel} date={date} onPick={onChange && pick}
-      reminder={!withReminder ? undefined : onChange ? reminded : reminded.value ? reminded : undefined}
+      reminder={!withReminder ? undefined : onChange ? reminded : reminded.value ? reminded : undefined} rang={withReminder && rang}
       tone={late ? 'var(--destructive)' : undefined}
       className={cn(!date && PLACEHOLDER)} {...(onChange ? own : {})}
     />

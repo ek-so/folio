@@ -12,12 +12,17 @@ import DatePicker from './DatePicker.jsx'
 // reminder is set)
 const TIME_ONLY = /^\d{2}:\d{2}$/
 
-const DateBadge = forwardRef(function DateBadge({ label, inline, reminded, className, ...props }, ref) {
+const DateBadge = forwardRef(function DateBadge({ label, inline, reminded, rang, className, ...props }, ref) {
   return (
     <Badge ref={ref} {...props} className={cn('whitespace-nowrap', !props.tone && 'text-muted-foreground', inline ? 'h-5 gap-space-xs px-1.5 py-0 align-[-0.15em] text-xs' : 'gap-1.5', className)}>
       {TIME_ONLY.test(label) ? <Clock className={cn('shrink-0', inline ? 'size-3.5' : 'size-4')} /> : <CalendarBlank className={cn('shrink-0', inline ? 'size-3.5' : 'size-4')} />}
       {label}
-      {reminded && <BellSimple aria-label="Reminder set" className={cn('shrink-0', inline ? 'size-3.5' : 'size-4')} />}
+      {reminded && (
+        <span className="relative flex shrink-0">
+          <BellSimple aria-label={rang ? 'Reminder came due' : 'Reminder set'} className={inline ? 'size-3.5' : 'size-4'} />
+          {rang && <span aria-hidden className="absolute -right-0.5 -top-0.5 size-1.5 rounded-full bg-primary ring-1 ring-card" />}
+        </span>
+      )}
     </Badge>
   )
 })
@@ -26,12 +31,12 @@ export default DateBadge
 // A date badge (`inline`: in a line of text) that, with `onPick(date)` (DatePicker's), opens the date picker to change
 // its day and time, add either or take either out; one in a line of text can't be emptied (`required`: its last part
 // stays). `dayOnly`: DatePicker's (a day and nothing else). `reminder` ({ value: its offset, onChange(next) }): a date property's, chosen in
-// the picker and shown as a bell. Without `onPick`, plain
-export function DateField({ label, date, onPick, dayOnly, reminder, className, ...props }) {
-  if (!onPick) return <DateBadge label={label} reminded={Boolean(reminder?.value)} className={className} {...props} />
+// the picker and shown as a bell; `rang`: it came due and is still in Notifications, a dot on the bell. Without `onPick`, plain
+export function DateField({ label, date, onPick, dayOnly, reminder, rang, className, ...props }) {
+  if (!onPick) return <DateBadge label={label} reminded={Boolean(reminder?.value)} rang={rang} className={className} {...props} />
   return (
     <DatePicker date={date} onPick={onPick} required={props.inline} dayOnly={dayOnly} reminder={reminder}>
-      <DateBadge as="button" type="button" label={label} reminded={Boolean(reminder?.value)} hoverable className={cn('cursor-pointer outline-none focus-visible:ring-1 focus-visible:ring-ring', className)} {...props} />
+      <DateBadge as="button" type="button" label={label} reminded={Boolean(reminder?.value)} rang={rang} hoverable className={cn('cursor-pointer outline-none focus-visible:ring-1 focus-visible:ring-ring', className)} {...props} />
     </DatePicker>
   )
 }

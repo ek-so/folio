@@ -42,20 +42,17 @@ function OverlayHeader({ title, description, onBack }) {
   )
 }
 
-// The 16px over the edge of a sheet's scrolling part, where what scrolls fades into the sheet's color: under the header
-// (`FADE_DOWN`) and over the buttons (`FADE_UP`), from edge to edge (over the sheet's 24px sides)
-const FADE = 'pointer-events-none absolute -inset-x-space-lg h-space from-card to-transparent'
-const FADE_DOWN = `${FADE} top-full bg-gradient-to-b`
-const FADE_UP = `${FADE} bottom-full bg-gradient-to-t`
+// Under the header, the 16px where what scrolls fades into the sheet's color, from edge to edge (over its 24px sides);
+// it lies over the scrolling part's own top padding, so it fades only what's scrolled under it
+const FADE_DOWN = 'pointer-events-none absolute -inset-x-space-lg top-full h-space bg-gradient-to-b from-card to-transparent'
 
 // A sheet's buttons (Cancel, Save…), its last row: they stay at the bottom while the rest scrolls (sticky in the sheet's
-// scrolling body, so they can sit inside a form and still submit it), what scrolls fading out above them. Their fade
-// reaches over the sheet's sides: so put them in no box with sides of its own, or the sheet scrolls sideways.
-// `className` for their own alignment
+// scrolling body, so they can sit inside a form and still submit it). Their row reaches the sheet's sides, its top 16px
+// a fade from clear into the sheet's color, so what scrolls under it fades out and what's above it at rest is never
+// covered: so put them in no box with sides of its own, or the sheet scrolls sideways. `className` for their own alignment
 export function SheetActions({ className, children }) {
   return (
-    <div className={cn('sticky -bottom-1 z-10 -mb-1 flex justify-end gap-space-sm bg-card pt-space-sm pb-1', className)}>
-      <div aria-hidden className={FADE_UP} />
+    <div className={cn('sticky -bottom-1 z-10 -mx-space-lg -mb-1 flex justify-end gap-space-sm bg-[linear-gradient(to_bottom,transparent,var(--card)_var(--space))] px-space-lg pt-space pb-1', className)}>
       {children}
     </div>
   )

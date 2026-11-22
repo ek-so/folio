@@ -69,7 +69,7 @@ import { plural } from './lib/plural.js'
 import { useNoteExport } from './hooks/useNoteExport.js'
 import { useRevert } from './hooks/useRevert.js'
 import { useTables, TablesContext } from './hooks/useTables.js'
-import { useReminderAlerts } from './hooks/useReminderAlerts.js'
+import { useReminderAlerts, RungContext } from './hooks/useReminderAlerts.js'
 import ProfileSheet from './components/ProfileSheet.jsx'
 import { useVisualViewport } from './hooks/useKeyboardInset.js'
 import { later } from './lib/later.js'
@@ -816,6 +816,7 @@ export default function App() {
   return (
     <LinksContext.Provider value={linkInfo}>
       <IconsContext.Provider value={iconsInfo}>
+      <RungContext.Provider value={reminders.rung}>
       <TablesContext.Provider value={tablesInfo}>
       <ItemActionsContext.Provider value={itemActions}>
       <NavContext.Provider value={{
@@ -1118,6 +1119,7 @@ export default function App() {
       </NavContext.Provider>
       </ItemActionsContext.Provider>
       </TablesContext.Provider>
+      </RungContext.Provider>
       </IconsContext.Provider>
     </LinksContext.Provider>
   )

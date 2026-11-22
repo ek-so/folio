@@ -128,7 +128,8 @@ export function NavRail({ page, pages, hrefOf, viewActions, onPage, onSearch, re
 }
 
 // Phones: a bar at the top with the menu (the app's logo and name, an outlined button: every page, then the rest) on the
-// left, Search and Sync on the right. It slides away while
+// left, Notifications (its bell, with how many came due since it was last opened on its corner: `menu.unseenReminders`),
+// Search and Sync on the right. It slides away while
 // the content scrolls down and returns on scrolling up (`useHideOnScroll`): its row folds in 300ms with a gentle ease while
 // what's in it slides up and fades, so the page under it moves softly.
 export function TopBar({ host, resetKey, page, pages, viewActions, onPage, onSearch, renderSync, menu }) {
@@ -141,6 +142,18 @@ export function TopBar({ host, resetKey, page, pages, viewActions, onPage, onSea
     <div className="flex items-center gap-space-sm px-space py-space">
       <AccountMenu {...menu} current={page} pages={pages} viewActions={viewActions} onNavigate={onPage} />
       <div className="flex-1" />
+      <Button
+        variant="ghost-outline" size="icon" className={cn('relative', page === PAGE.NOTIFICATIONS && SELECTED)}
+        aria-label={menu.unseenReminders ? `Notifications, ${menu.unseenReminders} new` : 'Notifications'}
+        aria-current={page === PAGE.NOTIFICATIONS ? 'page' : undefined} onClick={() => onPage(PAGE.NOTIFICATIONS)}
+      >
+        <Bell />
+        {menu.unseenReminders > 0 && (
+          <span aria-hidden className="absolute -right-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-xs font-semibold leading-none text-primary-foreground">
+            {menu.unseenReminders > 99 ? '99+' : menu.unseenReminders}
+          </span>
+        )}
+      </Button>
       <Button variant="ghost-outline" size="icon" aria-label="Search" onClick={onSearch}>
         <MagnifyingGlass />
       </Button>
