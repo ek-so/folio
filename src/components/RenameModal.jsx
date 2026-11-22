@@ -7,6 +7,7 @@ import { useTitleName } from '../hooks/useTitleName.js'
 import { splitName, renameTarget } from '../lib/changes.js'
 import { LinksContext } from '../hooks/useLinkIndex.js'
 import { plural } from '../lib/plural.js'
+import { focusQuietly } from '@/lib/utils.js'
 
 // kind: what's renamed when it's not a file or folder (a view): no file extension, no links to update
 // A note on this device (`titleOf` of LinksContext) is renamed with its Title and File name together (`TitleNameFields`):
@@ -38,7 +39,7 @@ export default function RenameModal({ item, onRename, onClose, kind, placeholder
     <BottomSheet
       title={`Rename ${kind ?? (isDir ? 'folder' : ext === '.md' ? 'note' : 'file')}`}
       onClose={onClose}
-      onOpenAutoFocus={e => { e.preventDefault(); inputRef.current?.select() }}
+      onOpenAutoFocus={e => { e.preventDefault(); focusQuietly(inputRef.current, true) }}
     >
       <form onSubmit={handleRename} className="flex flex-col gap-3">
         {withTitle ? <TitleNameFields fields={fields} ext={ext} onEdit={() => setError('')} /> : (

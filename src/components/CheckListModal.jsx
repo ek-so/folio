@@ -7,6 +7,7 @@ import { Checkbox } from '@/components/ui/checkbox.jsx'
 import BottomSheet, { SheetActions } from '@/components/BottomSheet.jsx'
 import AddNameField from '@/components/AddNameField.jsx'
 import { EmptyMessage } from './EmptyState.jsx'
+import { focusQuietly } from '@/lib/utils.js'
 
 // A sheet of names to tick (a board's columns to show, the properties its cards show):
 // `items` in the order listed (`locked`: names listed first, ticked and not to be changed, like a planner's date or a
@@ -32,7 +33,7 @@ export default function CheckListModal({ title, description, header, items, lock
 
   return (
     // Focus goes to the sheet itself, not its first row, so no row opens lit up
-    <BottomSheet title={title} description={description} onClose={onClose} onOpenAutoFocus={e => { e.preventDefault(); e.currentTarget?.focus() }}>
+    <BottomSheet title={title} description={description} onClose={onClose} onOpenAutoFocus={e => { e.preventDefault(); focusQuietly(e.currentTarget) }}>
       <div className="flex min-h-0 flex-1 flex-col gap-3">
         {header}
         <ListBox fill>

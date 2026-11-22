@@ -8,6 +8,7 @@ import BottomSheet, { SheetActions } from './BottomSheet.jsx'
 import ColorPicker from './ColorPicker.jsx'
 import { plural } from '../lib/plural.js'
 import { EmptyMessage, EMPTY } from './EmptyState.jsx'
+import { focusQuietly } from '@/lib/utils.js'
 
 // The dialog behind a property popover's Edit values: every value of the property `name`
 // (`values`, each with its color in `colors`, a Map) in one list, a field to add a new one
@@ -46,7 +47,7 @@ export default function ValuesModal({ name, values, colors, count, scopeName, re
       title={`Edit ${name}`}
       description={`Renaming or recoloring a value applies to every ${unit} that has it in ${scopeName}.`}
       onClose={onClose}
-      onOpenAutoFocus={e => { e.preventDefault(); e.currentTarget?.focus() }}
+      onOpenAutoFocus={e => { e.preventDefault(); focusQuietly(e.currentTarget) }}
     >
       <div className="flex min-h-0 flex-1 flex-col gap-3">
         <form onSubmit={add} className="flex gap-space-sm">

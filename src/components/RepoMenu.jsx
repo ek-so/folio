@@ -6,6 +6,7 @@ import BottomSheet, { SheetActions } from './BottomSheet.jsx'
 import RepoForm from './RepoForm.jsx'
 import FileIcon from './FileIcon.jsx'
 import { NavContext, TitleMenuButton } from './NavTree.jsx'
+import { focusQuietly } from '@/lib/utils.js'
 
 // The repo's name as File manager's root title, as a menu: the repos used on this
 // device (the open one checked; another one opens the app there), Switch
@@ -41,7 +42,7 @@ export default function RepoMenu() {
           title="Switch repository"
           description="Unsynced changes stay on this device with their repo."
           onClose={() => setSwitching(false)}
-          onOpenAutoFocus={e => { e.preventDefault(); inputRef.current?.select() }}
+          onOpenAutoFocus={e => { e.preventDefault(); focusQuietly(inputRef.current, true) }}
         >
           <RepoForm
             initial={nav.repo}

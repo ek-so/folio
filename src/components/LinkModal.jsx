@@ -3,6 +3,7 @@ import { Button } from './ui/button.jsx'
 import { Label } from './ui/label.jsx'
 import { Input } from './ui/input.jsx'
 import BottomSheet, { SheetActions } from './BottomSheet.jsx'
+import { focusQuietly } from '@/lib/utils.js'
 
 // Edit link: its name (the link text's markdown) and URL; `onSave(name, url)`
 export default function LinkModal({ name: initialName, url: initialUrl, onSave, onClose }) {
@@ -10,7 +11,7 @@ export default function LinkModal({ name: initialName, url: initialUrl, onSave, 
   const [url, setUrl] = useState(initialUrl)
   const nameRef = useRef()
   return (
-    <BottomSheet title="Edit link" onClose={onClose} onOpenAutoFocus={e => { e.preventDefault(); nameRef.current?.select() }}>
+    <BottomSheet title="Edit link" onClose={onClose} onOpenAutoFocus={e => { e.preventDefault(); focusQuietly(nameRef.current, true) }}>
       <form onSubmit={e => { e.preventDefault(); onSave(name, url) }} className="flex flex-col gap-3">
         <Label className="flex-col items-start gap-1.5 leading-5">
           Name

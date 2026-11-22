@@ -3,7 +3,7 @@ import { DndContext, closestCenter } from '@dnd-kit/core'
 import { useDragSensors } from '../hooks/useDragSensors.js'
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { cn } from '@/lib/utils.js'
+import { cn, focusQuietly } from '@/lib/utils.js'
 import { Button } from './ui/button.jsx'
 import { ListRow, ListBox } from './ui/list-row.jsx'
 import BottomSheet, { SheetActions } from './BottomSheet.jsx'
@@ -20,7 +20,7 @@ export default function EditListModal({ title, description, items, onMove, onRem
     if (over && active.id !== over.id) onMove(ids.indexOf(active.id), ids.indexOf(over.id))
   }
   return (
-    <BottomSheet title={title} description={description} onClose={onClose} onOpenAutoFocus={e => { e.preventDefault(); e.currentTarget?.focus() }}>
+    <BottomSheet title={title} description={description} onClose={onClose} onOpenAutoFocus={e => { e.preventDefault(); focusQuietly(e.currentTarget) }}>
       <div className="flex min-h-0 flex-1 flex-col gap-3">
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
           <SortableContext items={ids} strategy={verticalListSortingStrategy}>

@@ -7,6 +7,7 @@ import FileIcon from './FileIcon.jsx'
 import { ListRow } from './ui/list-row.jsx'
 import { EmptyMessage, EMPTY } from './EmptyState.jsx'
 import { searchNotes } from '../lib/search.js'
+import { focusQuietly } from '@/lib/utils.js'
 
 // Command-palette style search. Shows recently opened files when no query is typed (without `recent`:
 // the first files), then filters every visible file in the repo (notes, images, PDFs, …) by path.
@@ -40,7 +41,7 @@ export default function SearchSheet({ onClose, onSelect, virtual, changes, recen
     <BottomSheet
       title={title}
       onClose={onClose}
-      onOpenAutoFocus={e => { e.preventDefault(); inputRef.current?.focus() }}
+      onOpenAutoFocus={e => { e.preventDefault(); focusQuietly(inputRef.current) }}
     >
       {/* The field stays put; the results fill the rest of the sheet and scroll */}
       <div className="flex min-h-0 flex-1 flex-col gap-3">

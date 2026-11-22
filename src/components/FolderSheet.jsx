@@ -7,6 +7,7 @@ import { Button } from './ui/button.jsx'
 import { TreeRow } from './NavTree.jsx'
 import { folderRows } from '../lib/folderTree.js'
 import { EmptyMessage, EMPTY } from './EmptyState.jsx'
+import { focusQuietly } from '@/lib/utils.js'
 
 // A sheet to pick one of `folders` ('' is the root) (Move to…, a board's folder): the folder tree,
 // a tap selecting a folder and its button (`pickLabel`) picking it, until something is typed in the
@@ -37,7 +38,7 @@ export default function FolderSheet({ title, folders, onPick, onClose, pickLabel
     <BottomSheet
       title={title}
       onClose={onClose}
-      onOpenAutoFocus={e => { e.preventDefault(); e.currentTarget?.querySelector('input')?.focus() }}
+      onOpenAutoFocus={e => { e.preventDefault(); focusQuietly(e.currentTarget?.querySelector('input')) }}
     >
       {/* The field stays put; the folders fill the rest of the sheet and scroll */}
       <div className="flex min-h-0 flex-1 flex-col gap-3">

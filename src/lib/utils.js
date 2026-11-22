@@ -26,6 +26,14 @@ export const isPortaled = e => !e.currentTarget.contains(e.target)
 // cancels the dialog's scrolling
 export const own = { onClick: e => e.stopPropagation(), onMouseDown: e => e.stopPropagation(), onTouchStart: e => { if (!isPortaled(e)) e.stopPropagation() } }
 
+// Focuses `el` (selecting its text with `select`) without scrolling it into view: a sheet focuses its field as it opens,
+// while it still slides up from below the screen, and iOS would scroll the page to show the field there, taking the
+// sheet's top off the screen once it's in place
+export function focusQuietly(el, select = false) {
+  el?.focus({ preventScroll: true })
+  if (select) el?.select?.()
+}
+
 export function cn(...inputs) {
   return twMerge(clsx(inputs))
 }

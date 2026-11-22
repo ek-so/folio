@@ -10,6 +10,7 @@ import { Button } from './ui/button.jsx'
 import { Label } from './ui/label.jsx'
 import { ListRow } from './ui/list-row.jsx'
 import { Separator } from './ui/separator.jsx'
+import { focusQuietly } from '@/lib/utils.js'
 
 // Profile (the rail's and the phone menu's last item, in Sign out's old place): a sheet (a dialog on a computer) with who's
 // signed in (GitHub) and Sign out (red; App confirms it). The repository (`repo`) it's
@@ -50,7 +51,7 @@ export default function ProfileSheet({ login, repo, repos = [], syncing, onSwitc
     <BottomSheet
       title="Switch repository" description="Unsynced changes stay on this device with their repo."
       onBack={() => setStep('repo')} onClose={onClose}
-      onOpenAutoFocus={e => { e.preventDefault(); inputRef.current?.select() }}
+      onOpenAutoFocus={e => { e.preventDefault(); focusQuietly(inputRef.current, true) }}
     >
       <RepoForm
         initial={repo} onConnect={onSwitchRepo} inputRef={inputRef} inputClassName="font-mono"
