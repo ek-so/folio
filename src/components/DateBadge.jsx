@@ -20,7 +20,7 @@ const DateBadge = forwardRef(function DateBadge({ label, inline, reminded, rang,
       {reminded && (
         <span className="relative flex shrink-0">
           <BellSimple aria-label={rang ? 'Reminder came due' : 'Reminder set'} className={inline ? 'size-3.5' : 'size-4'} />
-          {rang && <span aria-hidden className="absolute -right-0.5 -top-0.5 size-1.5 rounded-full bg-primary ring-1 ring-card" />}
+          {rang && <span aria-hidden className="absolute -right-0.5 -top-0.5 size-1.5 rounded-full bg-destructive ring-1 ring-card" />}
         </span>
       )}
     </Badge>

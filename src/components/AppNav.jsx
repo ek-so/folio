@@ -104,8 +104,8 @@ export function NavRail({ page, pages, hrefOf, viewActions, onPage, onSearch, re
       <Button variant="ghost" tooltip={hint('Notifications')} tooltipSide="right" aria-current={page === PAGE.NOTIFICATIONS ? 'page' : undefined} className={cn(item(PAGE.NOTIFICATIONS), 'relative')} onClick={() => onPage(PAGE.NOTIFICATIONS)}>
         <Bell /> {label('Notifications')}
         {menu.unseenReminders > 0 && (collapsed
-          ? <span className="absolute right-1.5 top-1.5 size-2 rounded-full bg-primary" aria-label={`${menu.unseenReminders} new`} />
-          : <span className="ml-auto text-primary-ink">{menu.unseenReminders}</span>)}
+          ? <span className="absolute right-1.5 top-1.5 size-2 rounded-full bg-destructive" aria-label={`${menu.unseenReminders} new`} />
+          : <span className="ml-auto text-destructive-ink">{menu.unseenReminders}</span>)}
       </Button>
       <Button variant="ghost" tooltip={hint('Recent updates')} tooltipSide="right" aria-current={page === PAGE.HISTORY ? 'page' : undefined} className={item(PAGE.HISTORY)} onClick={() => onPage(PAGE.HISTORY)}>
         <ClockCounterClockwise /> {label('Recent updates')}
@@ -149,7 +149,7 @@ export function TopBar({ host, resetKey, page, pages, viewActions, onPage, onSea
       >
         <Bell />
         {menu.unseenReminders > 0 && (
-          <span aria-hidden className="absolute -right-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-xs font-semibold leading-none text-primary-foreground">
+          <span aria-hidden className="absolute -right-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-xs font-semibold leading-none text-destructive-foreground">
             {menu.unseenReminders > 99 ? '99+' : menu.unseenReminders}
           </span>
         )}

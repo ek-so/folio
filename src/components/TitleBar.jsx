@@ -4,10 +4,9 @@ import { pageInfo } from '../lib/pages.js'
 import { cn } from '@/lib/utils.js'
 import { NavContext, FolderTreeMenu } from './NavTree.jsx'
 import { Button } from './ui/button.jsx'
-import { ButtonGroup } from './ui/button-group.jsx'
 import PageTitle from './PageTitle.jsx'
 
-// Top of the content box, on every page: Back | Forward as one split button (ButtonGroup; the browser's history, only the app's own steps: `history`
+// Top of the content box, on every page: Back and Forward, two light buttons 8px apart (the browser's history, only the app's own steps: `history`
 // from App, useAddressBar; off when there's none that way), then for a file or folder its name as an outlined button with ▾ that opens the tree of the folder you're in
 // (FolderTreeMenu; `nameMenu` in its place: File manager's root has RepoMenu); `changed`: unsaved dot, inside the name button after the name. An app page
 // (`page`: Home, Graph…) shows its title in bold. `badge` (symlinks pointing here) inside the name button's outline, after ▾ (right after the title when there's no name button); `children`:
@@ -19,10 +18,10 @@ export default function TitleBar({ page, name, nameMenu, changed, badge, childre
     <div className="shrink-0 border-b border-border p-space">
       <div className="flex min-h-control items-center gap-space-sm">
         {history && (
-          <ButtonGroup aria-label="History">
-            <Button variant="outline" size="icon" aria-label="Back" tooltip="Back" disabled={!history.canBack} onClick={history.back}><ArrowLeft /></Button>
-            <Button variant="outline" size="icon" aria-label="Forward" tooltip="Forward" disabled={!history.canForward} onClick={history.forward}><ArrowRight /></Button>
-          </ButtonGroup>
+          <div role="group" aria-label="History" className="flex shrink-0 gap-space-sm">
+            <Button variant="ghost-outline" size="icon" aria-label="Back" tooltip="Back" disabled={!history.canBack} onClick={history.back}><ArrowLeft /></Button>
+            <Button variant="ghost-outline" size="icon" aria-label="Forward" tooltip="Forward" disabled={!history.canForward} onClick={history.forward}><ArrowRight /></Button>
+          </div>
         )}
         <div className="flex min-w-0 flex-1 items-center gap-space-sm">
           <h1 className={cn('min-w-0 truncate text-base font-bold', !page && 'flex')}>{page ? <PageTitle page={pageInfo(page, views)} /> : nameMenu ?? <FolderTreeMenu name={name} changed={changed} badge={badge} />}</h1>

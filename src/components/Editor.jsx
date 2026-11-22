@@ -3,7 +3,6 @@ import { flushSync } from 'react-dom'
 import { Check, PencilSimple, LockSimple, LockOpen, ArrowUUpLeft, ArrowUUpRight } from '@phosphor-icons/react'
 import { Popover, PopoverAnchor, PopoverContent } from './ui/popover.jsx'
 import { Button } from './ui/button.jsx'
-import { ButtonGroup, ButtonGroupSeparator } from './ui/button-group.jsx'
 import Loading from './Loading.jsx'
 import FilePage from './FilePage.jsx'
 import ColumnSubmenu from './ColumnSubmenu.jsx'
@@ -107,15 +106,14 @@ export default function Editor({ linkedBy, onOpenLink, path, entry, files, notes
       extra={columns && !locked && <ColumnSubmenu columns={columns.columns} column={columns.column} onSelect={columns.onSelect} />}
       menu={mode !== 'edit'}
       actions={<>
-        {mode === 'edit' && !locked && <ButtonGroup aria-label="Undo and redo">
+        {mode === 'edit' && !locked && <div role="group" aria-label="Undo and redo" className="flex gap-space-sm">
           <Button variant="ghost-outline" size="icon" aria-label="Undo" tooltip="Undo" disabled={!history.canUndo} onPointerDown={keepFocus} onMouseDown={keepFocus} onClick={() => restore(history.undo())}>
             <ArrowUUpLeft />
           </Button>
-          <ButtonGroupSeparator />
           <Button variant="ghost-outline" size="icon" aria-label="Redo" tooltip="Redo" disabled={!history.canRedo} onPointerDown={keepFocus} onMouseDown={keepFocus} onClick={() => restore(history.redo())}>
             <ArrowUUpRight />
           </Button>
-        </ButtonGroup>}
+        </div>}
         {locked ? (
           <Button variant="warning-light" size="icon" aria-label="Unlock" tooltip="Locked: tap to unlock" disabled={!onToggleLock} onClick={onToggleLock}>
             <LockSimple />
