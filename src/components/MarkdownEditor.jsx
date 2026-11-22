@@ -1,8 +1,8 @@
-import { forwardRef, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { forwardRef, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { highlightMarkdown, keyLines, continueList, repoLink } from '../lib/markdown.js'
 import { sharedItem } from '../lib/url.js'
-import { NavContext } from './NavTree.jsx'
+import { useNav } from '../hooks/useNav.js'
 import { typedLink, linkTargets } from '../lib/links.js'
 import { displayName } from '../lib/files.js'
 import { Popover, PopoverAnchor, PopoverContent } from './ui/popover.jsx'
@@ -36,7 +36,7 @@ const NONE = []
 const NO_FILES = {}
 
 const MarkdownEditor = forwardRef(function MarkdownEditor({ content, onChange, onUndo, onRedo, onDone, locked: lockedKeys = NONE, files = NO_FILES, path }, textareaRef) {
-  const repo = useContext(NavContext)?.repo
+  const repo = useNav()?.repo
   const lockedKey = lockedKeys.join('\n')
   const locked = useMemo(() => lockedKey ? lockedKey.split('\n') : NONE, [lockedKey]) // the same list while its keys are
   const highlightRef = useRef()

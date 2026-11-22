@@ -5,7 +5,8 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuIte
 import BottomSheet, { SheetActions } from './BottomSheet.jsx'
 import RepoForm from './RepoForm.jsx'
 import FileIcon from './FileIcon.jsx'
-import { NavContext, TitleMenuButton } from './NavTree.jsx'
+import { TitleMenuButton } from './NavTree.jsx'
+import { NavContext } from '../hooks/useNav.js'
 import { focusQuietly } from '@/lib/utils.js'
 
 // The repo's name as File manager's root title, as a menu: the repos used on this

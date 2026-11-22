@@ -1,4 +1,5 @@
-import { createContext, forwardRef, useContext, useState } from 'react'
+import { forwardRef, useContext, useState } from 'react'
+import { NavContext } from '../hooks/useNav.js'
 import { CaretDown, CaretRight } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils.js'
 import { Button } from './ui/button.jsx'
@@ -11,13 +12,6 @@ import { LINK_ERRORS } from '../lib/files.js'
 import { fileItem } from '../lib/folderNotes.js'
 import { EmptyMessage, EMPTY } from './EmptyState.jsx'
 import { Dot } from '@/components/ui/dot.jsx'
-
-// What the title bar's folder tree needs from App: `listDir(dir)`, `symlinks`, the `current`
-// path (open file or folder), the open `file` (null for a folder), `dir` (the open folder, or the open file's),
-// `onOpenFolder` / `onOpenFile` (each row's ⋯ is ItemMenu, as in File manager), the title
-// bar's `history` (Back and Forward: useAddressBar), `viewTree()` (on a view's page: its widgets and what they show, as nodes; null elsewhere), and for the root's RepoMenu the open `repo`, the `repos` used on
-// this device and `onSwitchRepo(repo)`.
-export const NavContext = createContext(null)
 
 // A row of a tree: indented by `depth`, a chevron when it has children (`open`, `onToggle`), then the ListRow
 // (`row`: its own props)

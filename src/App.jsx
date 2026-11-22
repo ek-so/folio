@@ -20,14 +20,14 @@ import ConfirmModal from './components/ConfirmModal.jsx'
 import VersionHistory from './components/VersionHistory.jsx'
 import UploadClashModal from './components/UploadClashModal.jsx'
 import UploadErrorsModal from './components/UploadErrorsModal.jsx'
-import { blobShaOf, toBase64, isNetworkError } from './lib/github.js'
+import { isNetworkError } from './lib/github.js'
 import SyncErrorModal from './components/SyncErrorModal.jsx'
 import { EMPTY } from './components/EmptyState.jsx'
 import SyncCheckModal from './components/SyncCheckModal.jsx'
 import { useLinkIndex, LinksContext } from './hooks/useLinkIndex.js'
 import { useSymlinks } from './hooks/useSymlinks.js'
 import { rewriteLinks, retargetLink, unlinked, missingNotePath, extractLinks, SYMLINK_MODE } from './lib/links.js'
-import { NavContext } from './components/NavTree.jsx'
+import { NavContext } from './hooks/useNav.js'
 import { NavRail, TopBar } from './components/AppNav.jsx'
 import Spinner from './components/Spinner.jsx'
 import Loading from './components/Loading.jsx'
@@ -49,7 +49,9 @@ import { PAGE, mainPages } from './lib/pages.js'
 import { isConfigPath, addView, renameView, removeView, VIEWS_PATH, DEFAULT_VIEWS, parseViews, serializeViews, addWidget, removeWidget, moveWidget, renameWidget, moveView, setViewIcon, moveWidgetTo } from './lib/viewsConfig.js'
 import { withKeys, withValue, copyTitled, withNoteTitle, noteTitle } from './lib/frontmatter.js'
 import { widgetType, widgetTitle } from './widgets/index.js'
-import { urlForPage, pageForUrl, placesOf } from './lib/url.js'
+import { urlForPage, pageForUrl } from './lib/url.js'
+import { useWidgetPlaces } from './hooks/useWidgetPlaces.js'
+import { useUploads } from './hooks/useUploads.js'
 import { fileView, folderView, startTrails, currentView, openView, trailTo, movedTrails, keptTrails } from './lib/views.js'
 import { toast } from 'sonner'
 import { Toaster } from './components/ui/sonner.jsx'
@@ -59,11 +61,11 @@ import { useSearchShortcut } from './hooks/useSearchShortcut.js'
 import { useAddressBar } from './hooks/useAddressBar.js'
 import { useAutoSync } from './hooks/useAutoSync.js'
 import { cache } from './lib/cache.js'
-import { archiveDay, inArchive, staleArchiveDays, KEEP_DAYS } from './lib/archive.js'
+import { useArchive } from './hooks/useArchive.js'
 import { fileItem } from './lib/folderNotes.js'
 import {
-  listDir, nameError, renameTarget, renameError, createError, add, setEdit, rename, remove, getAllFolders,
-  upload, replaceUpload, freePath, virtualFiles, splitName, editNote, duplicate, keptEdits, freeTarget as freeTargetIn, MAX_UPLOAD_BYTES, count, normalize,
+  listDir, nameError, renameTarget, renameError, createError, add, setEdit, rename, getAllFolders,
+  freePath, virtualFiles, splitName, editNote, duplicate, keptEdits, freeTarget as freeTargetIn, count, normalize,
 } from './lib/changes.js'
 import { plural } from './lib/plural.js'
 import { useNoteExport } from './hooks/useNoteExport.js'
@@ -169,17 +171,10 @@ export default function App() {
   useSearchShortcut(() => { if (auth.user && auth.repo) setSearchOpen(true) }) // ⌘K / Ctrl+K, signed in
   const [syncCheck, setSyncCheck] = useState(false) // broken-links sheet before syncing
   const [editAt, setEditAt] = useState(null) // { path, start, end }: a note to open in the editor with that text selected (Open at link)
-  const [uploadClash, setUploadClash] = useState(null) // { name, folder, resolve } while asking
-  const [uploadErrors, setUploadErrors] = useState([]) // [name, reason] after adding files
   const mainRef = useRef(null) // the page's column: the phone top bar hides while it scrolls
   const viewport = useVisualViewport() // the part of the screen seen with the keyboard open
 
-  // Where each widget is (a planner's view and day: { widget id: place }), in the address of its view's own content, so a
-  // change is a step Back goes through; one not set yet starts where its kind says (`place(id)` in widgets/<kind>)
-  const [places, setPlaces] = useState(() => placesOf(window.location.search))
-  const placeOf = id => places[id] ?? widgetType(widgets.find(w => w.id === id)?.type)?.place?.(id) ?? null
-  // The places of the widgets on page `id`'s own content (trail view null), for its address
-  const placesOn = (id, v) => v ? {} : Object.fromEntries((views.find(x => x.id === id)?.widgets ?? []).map(w => [w.id, placeOf(w.id)]).filter(([, p]) => p))
+  const { placeOf, placesOn, setPlace, setPlaces } = useWidgetPlaces(views) // each widget's place in the address (a planner's view and day)
 
   // A repo is remembered among those used on this device once its files have loaded: one a share link names that GitHub
   // refuses (or never answers for) stays out of the list
@@ -269,17 +264,13 @@ export default function App() {
   // `fn` (ch => ch) as a change that never edits a locked note's text: what it changed there is put back (keptEdits).
   // Every edit that isn't the app's own (renames, moves, link rewrites) goes through it: widgets, a note's values
   const guarded = fn => ch => keptEdits(ch, fn(ch), Object.entries(filesOf(ch)).filter(([path]) => locks.isLocked(path)).map(([, e]) => e.orig))
-  // Locked: `item` itself, or for a folder a file in it
-  const lockedIn = item => locks.isLocked(item.path) || (item.type === 'dir' && Object.keys(virtual).some(p => p.startsWith(item.path + '/') && locks.isLocked(p)))
-  // Whether `item` can't be removed (locked: a message says so). Every removal asks it (archive, removedForGood)
-  function refusedLocked(item) {
-    if (!lockedIn(item)) return false
-    toast.error(`“${item.name}” ${item.type === 'dir' ? 'has locked files' : 'is locked'}. Unlock ${item.type === 'dir' ? 'them' : 'it'} to remove it.`)
-    return true
-  }
-
   // The first free path for `item` at `wanted` in `ch`'s files (changes.js `freeTarget`)
   const freeTarget = (ch, item, wanted) => freeTargetIn(ch, filesOf(ch), item, wanted)
+
+  // Remove, the archive and putting back, never anything locked (hooks/useArchive.js)
+  const { lockedIn, archive, unarchive, remove: handleDelete } = useArchive({
+    repo, repoName: auth.repo, virtual, update, filesOf, freeTarget, relocated, remoteText: links.remoteText, locks, icons, assets, tables,
+  })
 
   // Every file and folder whose name starts with an emoji loses it, and the emoji becomes its icon (lib/icons.js
   // `emojiNamed`), in one step: shallowest first (a folder's files follow it), a taken name gets a number, links are
@@ -395,7 +386,7 @@ export default function App() {
     // Where widget `id` is (its kind's own text, such as a planner's view and day), kept in the page's address: each
     // change a step Back and Forward go through
     place: placeOf,
-    setPlace: (id, place) => setPlaces(o => ({ ...o, [id]: place })),
+    setPlace,
     openFile: path => setSelectedFile(path),
     // A note opened in the editor, the cursor at `offset` (a double tap on a Note widget's card)
     editFile: (path, offset = 0) => { setEditAt({ path, start: offset, end: offset }); setSelectedFile(path) },
@@ -494,63 +485,6 @@ export default function App() {
     return entry && entry.mode !== SYMLINK_MODE ? ch.edits[entry.orig] ?? links.remoteText(entry.sha) : undefined
   })
 
-  // `ch` with `item` moved into today's folder of the archive (lib/archive.js; a taken name gets a number), and its path there
-  // Links to it are rewritten (so an undo puts them back); widgets and pages don't follow it: for them it's gone
-  function archived(ch, item) {
-    const now = new Date()
-    const to = freeTarget(ch, item, `${archiveDay({ year: now.getFullYear(), month: now.getMonth() + 1, day: now.getDate() })}/${item.name}`)
-    return { next: relocated(ch, item, to, false), to }
-  }
-
-  // `item` (a file or folder) into the archive, in one step; `edit` first applied to its text (a note: a planner's done
-  // card). An open page showing it closes, as for a delete. { to, text: its text as it was archived, for an undo }, or
-  // null when it's locked (refusedLocked: nothing moves)
-  function archive(item, edit) {
-    if (refusedLocked(item)) return null
-    window.dispatchEvent(new Event('folio:flush')) // typing in an open note first
-    let to = item.path
-    let text
-    update(ch => {
-      const entry = filesOf(ch)[item.path]
-      text = entry && item.path.endsWith('.md') ? ch.edits[entry.orig] ?? links.remoteText(entry.sha) : undefined
-      const done = archived(edit ? editNote(ch, repo.remote?.files ?? {}, item.path, edit, links.remoteText) : ch, item)
-      to = done.to
-      return done.next
-    })
-    return { to, text }
-  }
-
-  // An archive undone: `item` (in the archive) back at `to` (its own place, or a free name next to it if something else
-  // took it since), a note with its text `text`
-  function unarchive(item, to, text) {
-    update(ch => {
-      const back = freeTarget(ch, item, to)
-      const next = relocated(ch, item, back, false)
-      return text === undefined ? next : editNote(next, repo.remote?.files ?? {}, back, () => text, links.remoteText)
-    })
-  }
-
-  // `ch` with `item` deleted for good, and what Folio kept about it (a lock, an emoji, table columns, when it was added) with it
-  function removedForGood(ch, item) {
-    const isDir = item.type === 'dir'
-    return tables.removed(item.path, isDir)(assets.removed(item.path, isDir)(icons.removed(item.path, isDir)(locks.removed(item.path, isDir)(remove(ch, filesOf(ch), item.path, isDir)))))
-  }
-
-  // Remove: a file or folder goes to the archive, with a toast to undo it; one already in the archive is deleted for good
-  // A locked file (or a folder with one in it) isn't removed: a message says so
-  function handleDelete(item) {
-    if (inArchive(item.path)) {
-      if (!refusedLocked(item)) update(ch => removedForGood(ch, item))
-      return
-    }
-    const done = archive(item)
-    if (!done) return
-    const { to } = done
-    toast.success(`“${item.name}” moved to the archive`, {
-      action: { label: 'Undo', onClick: () => unarchive({ ...item, path: to, name: to.slice(to.lastIndexOf('/') + 1) }, item.path) },
-    })
-  }
-
   // A new folder `name` in `parent` (kept by an empty .gitkeep): an error message, or null
   function createFolder(parent, name) {
     if (!repo.remote) return 'Files are still loading.'
@@ -593,75 +527,8 @@ export default function App() {
     return null
   }
 
-  // Files dropped or picked on this device, added to `folder` as local
-  // changes (synced with everything else). Each file's bytes are stored in
-  // the offline cache first; only then is the change recorded.
-  async function handleUpload(fileList, folder) {
-    if (!repo.remote) {
-      setUploadErrors([...fileList].map(f => [f.name, 'Files are still loading. Try again in a moment.']))
-      return
-    }
-    const errors = []
-    for (const file of fileList) {
-      const reason = nameError(file.name)
-        || (file.size > MAX_UPLOAD_BYTES ? 'Larger than 25 MB, the most a phone can reliably handle.' : null)
-      if (reason) { errors.push([file.name, reason]); continue }
-      const view = virtualFiles(repo.remoteFiles(), repo.latest())
-      let path = folder ? `${folder}/${file.name}` : file.name
-      let replace = false
-      if (view[path]) {
-        const choice = await new Promise(resolve => setUploadClash({ name: file.name, folder, resolve }))
-        setUploadClash(null)
-        if (choice === 'skip') continue
-        if (choice === 'replace') replace = true
-      }
-      try {
-        const bytes = new Uint8Array(await file.arrayBuffer())
-        const sha = await blobShaOf(bytes)
-        await cache.setBlob(sha, toBase64(bytes))
-        if (await cache.getBlob(sha) === undefined) throw new Error()
-        // Placed in the changes as they are when it's added (others may have been made while it was asked about or
-        // stored): the file it replaces, if it's still there, else the first free name
-        const apply = c => {
-          const remoteFiles = repo.remoteFiles() // GitHub's as they are now: a sync may have pulled while it was stored
-          const now = virtualFiles(remoteFiles, c)
-          const target = replace && now[path] ? path : freePath(c, now, path)
-          return assets.record(target)(replace && now[path] ? replaceUpload(c, now[path], sha) : upload(c, remoteFiles, target, sha))
-        }
-        update(apply)
-      } catch {
-        errors.push([file.name, 'Couldn\'t store it on this device (storage full or unavailable).'])
-      }
-    }
-    setUploadErrors(errors)
-  }
-
-  // Dropping a file outside the drop area would open it in place of the app
-  useEffect(() => {
-    const block = e => { if (e.dataTransfer?.types.includes('Files')) e.preventDefault() }
-    window.addEventListener('dragover', block)
-    window.addEventListener('drop', block)
-    return () => {
-      window.removeEventListener('dragover', block)
-      window.removeEventListener('drop', block)
-    }
-  }, [])
-
-  // The archive's day folders older than KEEP_DAYS are removed when Folio opens (lib/archive.js), as local changes shown
-  // before Sync; each one once a session per repo, so one put back by a discard stays until Folio opens again
-  const cleaned = useRef({ repo: null, paths: new Set() })
-  useEffect(() => {
-    if (!repo.remote) return
-    if (cleaned.current.repo !== auth.repo) cleaned.current = { repo: auth.repo, paths: new Set() }
-    const done = cleaned.current.paths
-    const now = new Date()
-    const stale = staleArchiveDays(Object.keys(virtual), { year: now.getFullYear(), month: now.getMonth() + 1, day: now.getDate() })
-      .filter(path => !done.has(path))
-    if (!stale.length) return
-    stale.forEach(path => done.add(path))
-    update(ch => stale.reduce((c, path) => removedForGood(c, { path, name: path.slice(path.lastIndexOf('/') + 1), type: 'dir' }), ch))
-    toast.success(`What was archived more than ${KEEP_DAYS} days ago is removed. Sync to remove it from GitHub.`)
-  }, [repo.remote, auth.repo]) // when the repo's files load or change by Sync or Pull, not on every edit
+  // Files dropped or picked on this device, added as local changes (useUploads)
+  const uploads = useUploads(repo, assets)
 
   // Recent updates' Undo: the commit `sha`'s files back to how they were before it, as local changes (lib/revert.js)
   const revert = useRevert(repo, locks.isLocked)
@@ -978,7 +845,7 @@ export default function App() {
               notice={repo.remote?.truncated ? 'This repo is too large to list in full; some files are missing.' : ''}
               onSelect={setSelectedFile}
               onNewFile={(f, kind) => setNewFile({ folder: f, kind })}
-              onUpload={handleUpload}
+              onUpload={uploads.add}
               onDropMove={handleDropMove}
               symlinks={symlinks}
               linkedBy={folder ? linkedBy[folder] : undefined}
@@ -1007,12 +874,12 @@ export default function App() {
           <SyncErrorModal error={repo.syncError} onRetry={repo.syncError.retry} onClose={repo.dismissSyncError} />
         )}
 
-        {uploadClash && (
-          <UploadClashModal name={uploadClash.name} folder={uploadClash.folder} onChoose={uploadClash.resolve} />
+        {uploads.clash && (
+          <UploadClashModal name={uploads.clash.name} folder={uploads.clash.folder} onChoose={uploads.clash.resolve} />
         )}
 
-        {uploadErrors.length > 0 && (
-          <UploadErrorsModal errors={uploadErrors} onClose={() => setUploadErrors([])} />
+        {uploads.errors.length > 0 && (
+          <UploadErrorsModal errors={uploads.errors} onClose={uploads.clearErrors} />
         )}
 
         {historyOf && virtual[historyOf] && (

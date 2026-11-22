@@ -43,6 +43,10 @@ App flow: **Auth → RepoSetup → FileBrowser / Editor / FileViewer**. `App.jsx
 - `useUndo` — the editor's undo and redo over a note's text: `onChange`, `undo()`, `redo()` (each giving where the cursor goes), `canUndo`, `canRedo`.
 - `useHistory` — Recent updates' commits with their files: the cached list at once, the latest 20 from GitHub (`commitPage`), `more()`, `status` (loading, more, offline, failed, idle), `retry()`.
 - `useFileHistory` — Version history's versions of a note on GitHub: the cached list at once, the latest 20 (`commitPage` with its path), `more()`, `status`, `busy`, `retry()`, `textOf(version)`, `textBefore(sha)`.
+- `useNav` — `NavContext`: what App gives the title bar, its folder tree and what acts on the open repo (share links, RepoMenu).
+- `useUploads` — files dropped or picked, stored on the device and recorded as uploads (`add`, the name `clash` asked meanwhile, `errors`).
+- `useArchive` — Remove: to the archive and back (`archive`, `unarchive`), deleted for good in the archive with what Folio kept about it, nothing locked, and the archive's old days removed on opening.
+- `useWidgetPlaces` — each widget's place in the address (`placeOf`, `placesOn`, `setPlace`), for Back and Forward inside a widget.
 - `useRevert` — Recent updates' Undo: `revert(sha)` reads each file before and after the commit from GitHub (`commitParent`, `fileOn`), then records `reverted` through `update`.
 - `useEmojis` — the emoji picker's whole list (`unicode-emoji-json`, its own chunk, loaded once), without what the device can't draw.
 - `useAddressBar` — the browser's address follows the main page and its view (a history entry each); Back / Forward show what it names (`replaceNext()` after a rename or delete).
