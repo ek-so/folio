@@ -10,7 +10,6 @@ import { askToNotify } from '../hooks/useReminderAlerts.js'
 import { SectionTitle } from './ui/section-title.jsx'
 import { Input } from './ui/input.jsx'
 import { Button } from './ui/button.jsx'
-import { Separator } from './ui/separator.jsx'
 
 const Calendar = later(() => import('./ui/calendar.jsx'), m => m.Calendar) // its date library stays out of the first screen
 
@@ -19,7 +18,8 @@ const pad = n => String(n).padStart(2, '0')
 // The one date picker, in a sheet (a centered dialog on a computer) opened by `children` (its trigger: a date badge, a
 // button), titled Date and time (Date for `dayOnly`): whatever is written (a day, a time, both, or nothing), in sections
 // under their titles (`SectionTitle`, like Views in the menu), each with a trash on the right of its title while it's
-// set (Remove date, Remove time, Remove reminder): Date, the Calendar (just the Calendar for `dayOnly`); Time, its field (empty while there's none), and, with
+// set (Remove date, Remove time, Remove reminder), 16px apart with no line between: Date, the Calendar in an outlined
+// box (just that box for `dayOnly`); Time, its field (empty while there's none), and, with
 // `reminder` ({ value: its offset, '' for none, onChange(next) }: a date property's, lib/reminders.js), Reminder (only
 // once there's a day: a time alone or nothing never reminds; "Pick a day to add a reminder" until then): when, At the
 // time, 10 minutes, 1 hour or 1 day before, none chosen while there's none (choosing the first asks the browser to let
@@ -76,7 +76,8 @@ export default function DatePicker({ date, onPick, required, dayOnly, reminder, 
       <BottomSheet title={dayOnly ? 'Date' : 'Date and time'} onClose={close} onOpenAutoFocus={e => e.preventDefault()}>
         <div data-badge-popover className="-mx-space-xs flex flex-col">
           {!dayOnly && <SectionTitle trailing={hasDay && (time || keeps) && trash('Remove date', removeDay)}>Date</SectionTitle>}
-          <div className="px-space-xs">
+          {/* The Calendar in an outlined box of its own */}
+          <div className="mx-space-xs rounded-lg border border-border p-space-sm">
             <Later compact>
               <Calendar
                 fill
@@ -92,8 +93,7 @@ export default function DatePicker({ date, onPick, required, dayOnly, reminder, 
             </Later>
           </div>
           {!dayOnly && <>
-            <Separator className="mt-space mb-space-sm" />
-            <SectionTitle trailing={saved && (hasDay || keeps) && trash('Remove time', removeTime)}>Time</SectionTitle>
+            <SectionTitle className="mt-space" trailing={saved && (hasDay || keeps) && trash('Remove time', removeTime)}>Time</SectionTitle>
             <div className="px-space-xs">
               <Input
                 type="time" aria-label="Time" value={time}
@@ -105,8 +105,7 @@ export default function DatePicker({ date, onPick, required, dayOnly, reminder, 
             </div>
           </>}
           {!dayOnly && reminder && <>
-            <Separator className="mt-space mb-space-sm" />
-            <SectionTitle trailing={reminder.value && trash('Remove reminder', () => reminder.onChange(''))}>Reminder</SectionTitle>
+            <SectionTitle className="mt-space" trailing={reminder.value && trash('Remove reminder', () => reminder.onChange(''))}>Reminder</SectionTitle>
             {hasDay ? (
               <ul role="radiogroup" aria-label="When to remind">
                 {REMINDERS.map(([value, label]) => (
