@@ -39,7 +39,8 @@ export default function FolderSheet({ title, folders, onPick, onClose, pickLabel
       onClose={onClose}
       onOpenAutoFocus={e => { e.preventDefault(); e.currentTarget?.querySelector('input')?.focus() }}
     >
-      <div className="flex flex-col gap-3">
+      {/* The field stays put; the folders fill the rest of the sheet and scroll */}
+      <div className="flex min-h-0 flex-1 flex-col gap-3">
         <SearchInput
           placeholder="Search folders…"
           value={query}
@@ -47,7 +48,7 @@ export default function FolderSheet({ title, folders, onPick, onClose, pickLabel
         />
         {error && <p className="text-destructive-ink text-xs">{error}</p>}
         {children}
-        <ul className="flex flex-col gap-0.5 max-h-64 overflow-y-auto -mx-space-xs">
+        <ul className="-mx-space-xs flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto overscroll-contain" data-no-pull>
           {q ? filtered.map(folder => (
             <li key={folder || '__root__'}>
               <ListRow icon={<FileIcon path={folder} dir />} title={folder || '(root)'} onClick={() => pick(folder)} />

@@ -43,6 +43,7 @@ export default function DatePicker({ date, onPick, required, dayOnly, reminder, 
   const timeRef = useRef()
   const time = typed ?? saved
   const setOpen = next => { if (!next) { setTyped(null); setAdding(false) }; setOpenState(next) }
+  const close = () => { saveTime(); setOpen(false) } // ✕ and Save: a time still being typed is kept
 
   const day = date && hasDay ? { year: date.year, month: date.month, day: date.day } : {}
   const clock = value => { const [hour, minute] = value.split(':').map(Number); return { hour, minute } }
@@ -74,7 +75,7 @@ export default function DatePicker({ date, onPick, required, dayOnly, reminder, 
   return <>
     {trigger}
     {open && (
-      <BottomSheet title={title} onClose={() => { saveTime(); setOpen(false) }} onOpenAutoFocus={e => e.preventDefault()}>
+      <BottomSheet title={title} onClose={close} onOpenAutoFocus={e => e.preventDefault()}>
         <div {...own} data-badge-popover className="-mx-space-xs flex flex-col">
           <div className="px-space-xs">
             <Later compact>
@@ -139,7 +140,7 @@ export default function DatePicker({ date, onPick, required, dayOnly, reminder, 
           </>}
           {!dayOnly && (
             <SheetActions className="px-space-xs">
-              <Button onMouseDown={e => e.preventDefault()} onClick={() => { saveTime(); setOpen(false) }}>Save</Button>
+              <Button onMouseDown={e => e.preventDefault()} onClick={close}>Save</Button>
             </SheetActions>
           )}
         </div>

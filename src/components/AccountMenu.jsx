@@ -40,7 +40,7 @@ export default function AccountMenu({ current, pages, viewActions, onNavigate, b
           onClose={() => setOpen(false)}
           onOpenAutoFocus={e => e.preventDefault()}
         >
-          <nav aria-label="Main" className="-mx-space-xs max-h-[70dvh] overflow-y-auto overscroll-y-contain" data-no-pull>
+          <nav aria-label="Main" className="-mx-space-xs">
             <ViewsTitle actions={viewActions} onPick={() => setOpen(false)} className="pr-2" />
             <ul>
               {pages.filter(p => p.view).map(page)}

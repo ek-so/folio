@@ -14,7 +14,7 @@ export default function SyncCheckModal({ broken, files, actions, onOpenPage, onS
       onClose={onClose}
       onOpenAutoFocus={e => e.preventDefault()} // nothing focused at first: no ring on the first note's name
     >
-      <div className="flex max-h-72 flex-col gap-space-sm overflow-y-auto" data-no-pull>
+      <div className="flex flex-col gap-space-sm">
         <BrokenLinkList broken={broken} files={files} actions={actions} />
       </div>
       <SheetActions className="flex-wrap">

@@ -4,7 +4,7 @@ import { Button } from './ui/button.jsx'
 import { Input } from './ui/input.jsx'
 import { ListRow, ListBox } from './ui/list-row.jsx'
 import InlineRename from './InlineRename.jsx'
-import BottomSheet from './BottomSheet.jsx'
+import BottomSheet, { SheetActions } from './BottomSheet.jsx'
 import ColorPicker from './ColorPicker.jsx'
 import { plural } from '../lib/plural.js'
 import { EmptyMessage, EMPTY } from './EmptyState.jsx'
@@ -48,7 +48,7 @@ export default function ValuesModal({ name, values, colors, count, scopeName, re
       onClose={onClose}
       onOpenAutoFocus={e => { e.preventDefault(); e.currentTarget?.focus() }}
     >
-      <div className="flex flex-col gap-3">
+      <div className="flex min-h-0 flex-1 flex-col gap-3">
         <form onSubmit={add} className="flex gap-space-sm">
           <Input
             value={typed}
@@ -59,7 +59,7 @@ export default function ValuesModal({ name, values, colors, count, scopeName, re
           <Button type="submit" variant="success" size="icon" aria-label="Add" tooltip="Add" disabled={!query} className="shrink-0"><Check /></Button>
         </form>
         {replaces && query && query !== replaces && <p className="-mt-space-xs px-space-xs text-xs text-muted-foreground">Adding it replaces “{replaces}” on this {unit}.</p>}
-        <ListBox>
+        <ListBox fill>
           {values.map(v => editing?.value === v ? (
             <li key={v}>
               <InlineRename
@@ -88,7 +88,7 @@ export default function ValuesModal({ name, values, colors, count, scopeName, re
           ))}
           {!values.length && <EmptyMessage size="sm" emoji={EMPTY.values}>No values yet. Type one to add it.</EmptyMessage>}
         </ListBox>
-        <div className="flex justify-end"><Button variant="secondary" onClick={onClose}>Done</Button></div>
+        <SheetActions><Button variant="secondary" onClick={onClose}>Done</Button></SheetActions>
       </div>
     </BottomSheet>
   )

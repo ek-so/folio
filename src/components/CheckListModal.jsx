@@ -33,9 +33,9 @@ export default function CheckListModal({ title, description, header, items, lock
   return (
     // Focus goes to the sheet itself, not its first row, so no row opens lit up
     <BottomSheet title={title} description={description} onClose={onClose} onOpenAutoFocus={e => { e.preventDefault(); e.currentTarget?.focus() }}>
-      <div className="flex flex-col gap-3">
+      <div className="flex min-h-0 flex-1 flex-col gap-3">
         {header}
-        <ListBox>
+        <ListBox fill>
           {locked.map(item => (
             <li key={item}>
               <ListRow icon={<Checkbox checked disabled />} title={item} description={lockedDescription} disabled />

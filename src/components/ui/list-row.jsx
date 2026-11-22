@@ -56,8 +56,10 @@ export function ListRow({ icon, title, description, bigDescription, leading, tra
   )
 }
 
-// The scrolling list of rows in a dialog or popover (Properties, Edit widgets, Edit values): up to 256px tall, then it scrolls,
-// reaching 4px past its box so the rows' hover fill lines up with the dialog's padding. Pull to refresh stays off.
-export function ListBox({ className, ...props }) {
-  return <ul data-no-pull className={cn('-mx-1 flex max-h-64 flex-col gap-0.5 overflow-y-auto', className)} {...props} />
+// The scrolling list of rows in a popover or sheet (Properties, Edit widgets, Edit values): up to 256px tall, then it scrolls,
+// reaching 4px past its box so the rows' hover fill lines up with the dialog's padding. Pull to refresh stays off. `fill`:
+// in a sheet, it takes the sheet's room left instead (its parent a flex column that can shrink, `min-h-0 flex-1`), so
+// what's around it stays put while only it scrolls
+export function ListBox({ fill, className, ...props }) {
+  return <ul data-no-pull className={cn('-mx-1 flex flex-col gap-0.5 overflow-y-auto', fill ? 'min-h-0 flex-1 overscroll-contain' : 'max-h-64', className)} {...props} />
 }

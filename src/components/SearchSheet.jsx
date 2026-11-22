@@ -42,14 +42,15 @@ export default function SearchSheet({ onClose, onSelect, virtual, changes, recen
       onClose={onClose}
       onOpenAutoFocus={e => { e.preventDefault(); inputRef.current?.focus() }}
     >
-      <div className="flex flex-col gap-3">
+      {/* The field stays put; the results fill the rest of the sheet and scroll */}
+      <div className="flex min-h-0 flex-1 flex-col gap-3">
         <SearchInput
           ref={inputRef}
           value={query}
           onChange={e => setQuery(e.target.value)}
           placeholder={placeholder}
         />
-        <div className="overflow-y-auto max-h-64 -mx-space-xs" data-no-pull>
+        <div className="-mx-space-xs min-h-0 flex-1 overflow-y-auto overscroll-contain" data-no-pull>
           {top && <div className="mb-0.5">{top}</div>}
           {!q && recentFiles.length === 0 ? (
             <EmptyMessage size="sm" emoji={EMPTY.recent}>No recent files</EmptyMessage>

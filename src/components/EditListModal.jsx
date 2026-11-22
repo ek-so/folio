@@ -21,10 +21,10 @@ export default function EditListModal({ title, description, items, onMove, onRem
   }
   return (
     <BottomSheet title={title} description={description} onClose={onClose} onOpenAutoFocus={e => { e.preventDefault(); e.currentTarget?.focus() }}>
-      <div className="flex flex-col gap-3">
+      <div className="flex min-h-0 flex-1 flex-col gap-3">
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
           <SortableContext items={ids} strategy={verticalListSortingStrategy}>
-            <ListBox>
+            <ListBox fill>
               {items.map(item => <Row key={item.id} item={item} onRemove={onRemove} />)}
               {!items.length && <EmptyMessage size="sm" emoji={empty.emoji}>{empty.text}</EmptyMessage>}
             </ListBox>

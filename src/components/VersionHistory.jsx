@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ArrowUp, ArrowDown, WifiSlash, Warning, ArrowCounterClockwise } from '@phosphor-icons/react'
-import BottomSheet from './BottomSheet.jsx'
+import BottomSheet, { SheetActions } from './BottomSheet.jsx'
 import MarkdownPreview from './MarkdownPreview.jsx'
 import PropertyBadges from './PropertyBadges.jsx'
 import ConfirmModal from './ConfirmModal.jsx'
@@ -67,17 +67,18 @@ export default function VersionHistory({ repo, path, githubPath, remote, online,
         </Notice>
       ) : <>
         {diff.props.length > 0 && <p className="text-sm text-muted-foreground">Properties changed: {diff.props.join(', ')}</p>}
-        <div className="-mx-space-lg flex h-[55dvh] flex-col border-y border-border">
+        {/* The version fills the rest of the sheet and scrolls itself, the title and Restore staying put */}
+        <div className="-mx-space-lg flex min-h-40 flex-1 flex-col border-y border-border">
           <MarkdownPreview content={diff.text} marks={diff.marks} path={open.path} files={files}>
             {(frontMatter(diff.text)?.props.length ?? 0) > 0 && <PropertyBadges props={frontMatter(diff.text).props} path={open.path} files={files} title="Properties" className="px-space pt-space" />}
           </MarkdownPreview>
         </div>
         {openKey !== current && (
-          <div className="flex justify-end">
+          <SheetActions>
             <Button disabled={locked} tooltip={locked ? 'The note is locked' : undefined} onClick={() => setRestoring(true)}>
               <ArrowCounterClockwise /> Restore
             </Button>
-          </div>
+          </SheetActions>
         )}
         {restoring && (
           <ConfirmModal
@@ -94,7 +95,7 @@ export default function VersionHistory({ repo, path, githubPath, remote, online,
 
   return (
     <BottomSheet title="Version history" description={displayName(path)} onClose={onClose} onOpenAutoFocus={e => e.preventDefault()}>
-      <div className="-mx-space-xs flex max-h-[60dvh] flex-col gap-space-sm overflow-y-auto [&>*]:shrink-0" data-no-pull>
+      <div className="-mx-space-xs flex flex-col gap-space-sm [&>*]:shrink-0">
         {history.status === 'offline' && <Notice icon={WifiSlash}>Offline. {history.versions?.length ? 'Showing what was loaded before.' : 'Connect to the internet to see the versions.'}</Notice>}
         {history.status === 'failed' && <Notice icon={Warning} action={<Button variant="secondary" onClick={history.retry}>Try again</Button>}>Couldn't load the versions from GitHub.</Notice>}
         {history.versions === null || (history.status === 'loading' && !entries.length) ? <Loading rows={4} />
