@@ -11,9 +11,11 @@ const writeDepth = n => { try { sessionStorage.setItem(DEPTH_KEY, String(n)) } c
 // what's left of it (`known()`: { files, folders } as they are now), through `setPage` and `setTrails`. `base`: the
 // app's base path. Each entry the app makes carries its step (`history.state.step`, 0 for the first), and the tab
 // remembers how many steps there are, so the title bar's Back and Forward know when there's one to go to (`canBack`,
-// `canForward`) and never leave the app (on an older entry without a step both stay on). Returns { replaceNext() (the next change of address replaces the history entry
+// `canForward`) and never leave the app (on an older entry without a step both stay on). `repo`: in every address (lib/url.js). Returns { replaceNext() (the next change of address replaces the history entry
 // instead: a rename or delete followed), back(), forward(), canBack, canForward }.
-export function useAddressBar(base, url, known, setPage, setTrails) {
+export function useAddressBar(base, url, repo, known, setPage, setTrails) {
+  const repoRef = useRef(repo)
+  repoRef.current = repo
   const started = useRef(false) // false until the first address is set (replaced, not pushed)
   const replacing = useRef(false)
   const knownRef = useRef(known)
@@ -46,7 +48,7 @@ export function useAddressBar(base, url, known, setPage, setTrails) {
       let { page: to, view } = found
       const { files, folders } = knownRef.current()
       if (view && files.size) view = existingView(view, files, folders)
-      if (urlForPage(base, to, view) !== window.location.pathname + window.location.search) replacing.current = true
+      if (urlForPage(base, to, view, repoRef.current) !== window.location.pathname + window.location.search) replacing.current = true
       setPage(to)
       setTrails(o => ({ ...o, [to]: trailTo(to, o[to], view) }))
     }

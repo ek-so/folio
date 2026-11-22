@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { urlForView, viewForUrl, existingView, urlForPage, pageForUrl } from './url.js'
+import { urlForView, viewForUrl, existingView, urlForPage, pageForUrl, repoOf, shareUrl, sharedItem } from './url.js'
 
 describe('url', () => {
   it('round-trips files and folders, including odd names', () => {
@@ -43,5 +43,24 @@ describe('url', () => {
     expect(read('/folio/?page=links')).toEqual({ page: 'links', view: null })
     expect(read(urlForPage('/folio/', 'docs', null))).toEqual({ page: 'docs', view: null })
     expect(read('/folio/?page=a%20b')).toBeNull()
+  })
+
+  it('carries the repo in every address, read back by repoOf', () => {
+    const read = url => { const u = new URL(url, 'https://x'); return [pageForUrl('/folio/', u.pathname, u.search), repoOf(u.search)] }
+    expect(urlForPage('/folio/', 'files', { file: 'a/b.md', folder: 'a' }, 'me/notes')).toBe('/folio/a/b.md?repo=me/notes')
+    expect(urlForPage('/folio/', 'home', { file: null, folder: '' }, 'me/notes')).toBe('/folio/?page=home&root&repo=me/notes')
+    expect(read('/folio/?page=home&root&repo=me/notes')).toEqual([{ page: 'home', view: { file: null, folder: '' } }, 'me/notes'])
+    expect(repoOf('?repo=me')).toBeNull()
+    expect(repoOf('?repo=../x/y')).toBeNull()
+  })
+
+  it('makes share links and reads one pasted back, only for this repo', () => {
+    const link = shareUrl('https://app.io', '/folio/', 'me/notes', 'Projects/plan x.md')
+    expect(link).toBe('https://app.io/folio/Projects/plan%20x.md?repo=me/notes')
+    expect(sharedItem(link, 'https://app.io', '/folio/', 'me/notes')).toEqual({ path: 'Projects/plan x.md', dir: false })
+    expect(sharedItem(shareUrl('https://app.io', '/folio/', 'me/notes', 'Projects', true), 'https://app.io', '/folio/', 'me/notes')).toEqual({ path: 'Projects', dir: true })
+    expect(sharedItem(link, 'https://app.io', '/folio/', 'me/other')).toBeNull()
+    expect(sharedItem(link + ' and more', 'https://app.io', '/folio/', 'me/notes')).toBeNull()
+    expect(sharedItem('https://evil.io/folio/a.md?repo=me/notes', 'https://app.io', '/folio/', 'me/notes')).toBeNull()
   })
 })

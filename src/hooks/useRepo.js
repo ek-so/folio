@@ -237,7 +237,9 @@ export function useRepo(repo, onDone) {
     }
   }
 
+  // Offline, no access (GitHub answers a repo the token can't see as missing: a share link to someone else's repo), or broken
   function handleError(e) {
+    if (e?.status === 404) return setError(`You can't open ${repo}: it doesn't exist, or your GitHub token has no access to it. Ask its owner to add you on GitHub, or switch to another repo.`)
     if (!isNetworkError(e)) return setError('Failed to load files.')
     setOnline(false)
     if (!remoteRef.current) setError('You\'re offline, and this repo isn\'t saved on this device yet.')

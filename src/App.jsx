@@ -191,8 +191,9 @@ export default function App() {
 
   // The browser's address follows the page you're on and its view (Broken links, Documentation and Assets: `?page=` alone);
   // Back / Forward, the browser's or the title bar's, move between them (useAddressBar)
-  const url = urlForPage(BASE, page, fixedPage ? null : view)
-  const addressBar = useAddressBar(BASE, url, () => ({ files, folders: allFolders }), setPage, setTrails)
+  // The repo in it too (a share link), once there's one; signed out, the address is left alone
+  const url = auth.repo ? urlForPage(BASE, page, fixedPage ? null : view, auth.repo) : null
+  const addressBar = useAddressBar(BASE, url, auth.repo, () => ({ files, folders: allFolders }), setPage, setTrails)
   const replaceNext = addressBar.replaceNext
 
   // What File manager, the folder tree and Search show: the config folder stays out of them
@@ -427,7 +428,7 @@ export default function App() {
   // Every page's trail after a rename, delete or discard (`next`); the address
   // is replaced, not added to history (only when it shows: not on Broken links / Documentation / Assets)
   function followTrails(next) {
-    if (page === mainPage && urlForPage(BASE, page, currentView(page, next[page])) !== url) replaceNext()
+    if (page === mainPage && urlForPage(BASE, page, currentView(page, next[page]), auth.repo) !== url) replaceNext()
     setTrails(next)
   }
 
@@ -758,6 +759,7 @@ export default function App() {
     await cache.clearAll()
     auth.signOut()
     setTrails(startTrails(pages.map(p => p.id)))
+    history.replaceState(null, '', BASE) // the repo's address goes too
   }
 
   // Reminders set on dates, told while Folio is open, and Notifications (the page): those that have come due
@@ -867,7 +869,7 @@ export default function App() {
         <Toaster theme={theme} />
         <PullToRefresh onRefresh={() => window.location.reload()}>
           <div className="flex flex-1 min-h-0">
-          <NavRail page={page} pages={pages} hrefOf={id => urlForPage(BASE, id, currentView(id, trailOf(id)))} viewActions={viewActions} onPage={choosePage} onSearch={() => setSearchOpen(true)} renderSync={renderSync} menu={menu} />
+          <NavRail page={page} pages={pages} hrefOf={id => urlForPage(BASE, id, currentView(id, trailOf(id)), auth.repo)} viewActions={viewActions} onPage={choosePage} onSearch={() => setSearchOpen(true)} renderSync={renderSync} menu={menu} />
           <main ref={mainRef} className="flex flex-col flex-1 min-w-0 min-h-0">
           <TopBar host={mainRef} resetKey={`${page}|${selectedFile}|${folder}`} page={page} pages={pages} viewActions={viewActions} onPage={choosePage} onSearch={() => setSearchOpen(true)} renderSync={renderSync} menu={menu} />
           {/* A page or widget whose code hasn't loaded yet (lib/later.js) shows Loading meanwhile, or why it can't (Later) */}

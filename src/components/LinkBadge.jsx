@@ -8,7 +8,7 @@ import { Badge } from './ui/badge.jsx'
 import { Button } from './ui/button.jsx'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from './ui/dropdown-menu.jsx'
 import { useSingleOpen } from '../hooks/useSingleOpen.jsx'
-import { repoLink } from '../lib/markdown.js'
+import { useShareLink } from '../hooks/useShareLink.js'
 import { useIconsContext } from '../hooks/useIcons.js'
 
 const REPO_ICONS = { note: FileText, file: File, folder: Folder, missing: LinkBreak }
@@ -26,11 +26,12 @@ function Favicon({ href }) {
 // it points to in the repo (its emoji when it has one, lib/icons.js; grey when it's missing), and its text, a bit softer than the note's; at most 420px wide (less where its container is), a longer text cut
 // in the middle (`MiddleCut`). A tap
 // opens it (whoever shows it handles that). Beside it, split off by a 1px gap, a ⋯ of its own (`own`: a
-// click on it never opens a board card) with Copy link (`CopyLinkItem`: what it points to in the repo as a markdown link, as every Copy link does; a website's
+// click on it never opens a board card) with Copy link (`CopyLinkItem`: the share link of what it points to in the repo, as every Copy link does; a website's
 // address, or the link as written when what it points to is missing), Edit link and Remove (the last two only
 // with `onEdit` / `onRemove`).
 export default function LinkBadge({ href, text, kind, path, onEdit, onRemove }) {
-  const copied = path && kind !== 'missing' ? repoLink(path) : href
+  const shareLink = useShareLink()
+  const copied = path && kind !== 'missing' ? shareLink(path, kind === 'folder') : href
   const [open, setOpen] = useSingleOpen()
   const Icon = REPO_ICONS[kind]
   const emoji = useIconsContext().iconOf(path && kind !== 'missing' ? path : '') // a note's or folder's emoji in place of its icon

@@ -8,7 +8,7 @@ import MoveModal from './MoveModal.jsx'
 import { EmojiSubmenu } from './EmojiPicker.jsx'
 import CopyLinkItem from './CopyLinkItem.jsx'
 import MoreMenu from './MoreMenu.jsx'
-import { repoLink } from '../lib/markdown.js'
+import { useShareLink } from '../hooks/useShareLink.js'
 import { useIsDesktop } from '../hooks/useIsDesktop.js'
 
 // What every item's ⋯ does, given once by App: `onRename(item, name, title)` and `onMove(item, folder)` (an error
@@ -33,6 +33,7 @@ const VIEWS = [['list', 'List', Rows], ['cards', 'Cards', SquaresFour], ['column
 
 export default function ItemMenu({ item, extra, remove, view, onView, inList, hoverReveal, label = 'More actions', className }) {
   const actions = useContext(ItemActionsContext)
+  const shareLink = useShareLink()
   const [renaming, setRenaming] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [moving, setMoving] = useState(false)
@@ -47,7 +48,7 @@ export default function ItemMenu({ item, extra, remove, view, onView, inList, ho
     <EmojiSubmenu path={item.path} onDone={() => setOpen(false)} />
     <DropdownMenuItem onSelect={() => setMoving(true)}><Folder /> Move to…</DropdownMenuItem>
     {file && <DropdownMenuItem onSelect={() => actions.onDuplicate(item)}><Copy /> Duplicate</DropdownMenuItem>}
-    <CopyLinkItem link={repoLink(item.path)} />
+    <CopyLinkItem link={shareLink(item.path, item.type === 'dir')} />
     {github && (
       <DropdownMenuItem asChild>
         <a href={github} target="_blank" rel="noreferrer"><GithubLogo /> Open on GitHub</a>

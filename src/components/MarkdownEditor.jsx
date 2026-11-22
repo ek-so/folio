@@ -1,6 +1,8 @@
-import { forwardRef, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { forwardRef, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { highlightMarkdown, keyLines, continueList, repoLink } from '../lib/markdown.js'
+import { sharedItem } from '../lib/url.js'
+import { NavContext } from './NavTree.jsx'
 import { typedLink, linkTargets } from '../lib/links.js'
 import { displayName } from '../lib/files.js'
 import { Popover, PopoverAnchor, PopoverContent } from './ui/popover.jsx'
@@ -20,7 +22,8 @@ const TEXT_LAYOUT = 'w-full h-full p-space font-mono text-base leading-relaxed w
 // Typing `[[` suggests the repo's files (`files`, never the note's own `path`) in a popover at the caret, narrowed by
 // what's typed after it (`typedLink`, `linkTargets`); ↑ ↓ choose, Enter (once something's typed or chosen; right after
 // `[[` it's a new line) or Tab or a tap puts in the link to it, from the
-// repo's root as Copy link makes it (`repoLink`), and Escape closes the list (not the editor).
+// repo's root (`repoLink`), and Escape closes the list (not the editor). Pasting a share link (Copy link's, lib/url.js
+// `sharedItem`) to a file or folder of this repo puts in that same link instead, so it follows renames like any.
 // The line the cursor is on (the whole line, over every row it wraps to) has a highlighter band behind it (`bg-marker`: a light, bright yellow-green),
 // found with an invisible copy laid out as the textarea, so where a double tap put the cursor, and where it is now, shows.
 // It glides to a new line (150ms) but moves with the text as it scrolls, clipped to the editor, and never blinks: the
@@ -33,6 +36,7 @@ const NONE = []
 const NO_FILES = {}
 
 const MarkdownEditor = forwardRef(function MarkdownEditor({ content, onChange, onUndo, onRedo, onDone, locked: lockedKeys = NONE, files = NO_FILES, path }, textareaRef) {
+  const repo = useContext(NavContext)?.repo
   const lockedKey = lockedKeys.join('\n')
   const locked = useMemo(() => lockedKey ? lockedKey.split('\n') : NONE, [lockedKey]) // the same list while its keys are
   const highlightRef = useRef()
@@ -104,6 +108,14 @@ const MarkdownEditor = forwardRef(function MarkdownEditor({ content, onChange, o
       t.setRangeText(text, from, to, 'end')
       handleChange({ target: t, currentTarget: t })
     }
+  }
+
+  // A share link of this repo pasted: the note link to what it names
+  function handlePaste(e) {
+    const item = sharedItem(e.clipboardData.getData('text/plain'), window.location.origin, import.meta.env.BASE_URL, repo)
+    if (!item) return
+    e.preventDefault()
+    insert(e.currentTarget, e.currentTarget.selectionStart, e.currentTarget.selectionEnd, repoLink(item.path))
   }
 
   function pick(target) {
@@ -200,6 +212,7 @@ const MarkdownEditor = forwardRef(function MarkdownEditor({ content, onChange, o
         onFocus={e => follow(e.currentTarget.selectionEnd, content)}
         onBlur={() => { setCaret(null); setCursor(null); onDone() }}
         onKeyDown={handleKeyDown}
+        onPaste={handlePaste}
         spellCheck="true"
         autoCorrect="on"
         placeholder="Start writing…"

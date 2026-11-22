@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { init, setRepo, getUser, isAuthError } from '../lib/github.js'
 import { storage } from '../lib/storage.js'
+import { repoOf } from '../lib/url.js'
 
 function applyRepo(full) {
   const slash = full.indexOf('/')
@@ -64,6 +65,9 @@ export function useAuth() {
     storage.setUser(u)
     setUser(u)
     setEditingToken(false)
+    // A tab opened by a share link before signing in (or whose token expired on the way): on to its repo
+    const linked = storage.getRepo() ?? repoOf(window.location.search)
+    if (linked && !repo) { applyRepo(linked); storage.startTab(linked); remember(linked); setRepoState(linked) }
   }
 
   function selectRepo(full) {

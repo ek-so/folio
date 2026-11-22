@@ -2,7 +2,8 @@ const RECENT_KEY = 'folio_recent_'
 const PUSHED_KEY = 'folio_pushed_'
 const PUSHED_MAX = 500
 const TOKEN_KEY = 'folio_token'
-const REPO_KEY = 'folio_repo'
+const REPO_KEY = 'folio_repo' // the repo last opened on this device: a new tab's
+const TAB_REPO_KEY = 'folio_tab_repo' // this tab's repo (sessionStorage): tabs can be in different repos
 // The names they were kept under before, moved to the new ones on first read so no one is signed out
 const OLD_KEYS = { [TOKEN_KEY]: 'brain_gh_token', [REPO_KEY]: 'brain_gh_repo' }
 const REPOS_KEY = 'folio_repos'
@@ -45,8 +46,19 @@ function write(store, key, value) {
 export const storage = {
   getToken: () => readMoved(TOKEN_KEY),
   setToken: (token) => write(localStorage, TOKEN_KEY, token),
-  getRepo: () => readMoved(REPO_KEY),
-  setRepo: (repo) => write(localStorage, REPO_KEY, repo),
+  // This tab's repo, else the one last opened on the device (a new tab)
+  getRepo: () => read(sessionStorage, TAB_REPO_KEY) ?? readMoved(REPO_KEY),
+  // Chosen in the app: this tab's, and the device's last
+  setRepo: (repo) => { write(sessionStorage, TAB_REPO_KEY, repo); return write(localStorage, REPO_KEY, repo) },
+  // As the tab starts: the repo a link names (`linked`, lib/url.js repoOf) becomes this tab's alone, what was open in the
+  // tab going with the repo it was in; without one, the tab keeps the repo it opens in, whatever other tabs choose later
+  startTab: (linked) => {
+    const current = storage.getRepo()
+    if (linked && linked !== current) {
+      storage.clearRepoSession()
+      write(sessionStorage, TAB_REPO_KEY, linked)
+    } else if (current) write(sessionStorage, TAB_REPO_KEY, current)
+  },
   // Last signed-in GitHub user, so the app can start offline
   getUser: () => {
     try { return JSON.parse(read(localStorage, USER_KEY)) } catch { return null }
@@ -132,7 +144,7 @@ export const storage = {
     try { recents = Object.keys(localStorage).filter(key => [RECENT_KEY, PUSHED_KEY, CHANGES_KEY, REMINDERS_KEY, `${TRAILS_KEY}_`, `${PAGE_KEY}_`].some(prefix => key.startsWith(prefix))) } catch {}
     for (const key of recents) write(localStorage, key, null)
     for (const key of [TOKEN_KEY, REPO_KEY, REPOS_KEY, USER_KEY, ...Object.values(OLD_KEYS)]) write(localStorage, key, null)
-    for (const key of [TRAILS_KEY, PAGE_KEY, PLANNER_DAYS_KEY]) write(sessionStorage, key, null)
+    for (const key of [TRAILS_KEY, PAGE_KEY, PLANNER_DAYS_KEY, TAB_REPO_KEY]) write(sessionStorage, key, null)
   },
 }
 

@@ -32,11 +32,38 @@ export function existingView({ file, folder }, files, folders) {
 
 // Address bar <-> a page and its view (lib/views.js). File manager's is
 // the plain view URL; every other page (a view such as Home, Graph, or Broken links and the other fixed pages) adds
-// `?page=<id>`, and a page's own content (view null) has no path. Their root folder adds `&root`.
-export function urlForPage(base, page, view) {
+// `?page=<id>`, and a page's own content (view null) has no path. Their root folder adds `root`. `repo` ('owner/name')
+// adds `repo=owner/name` last, so any address opens the same thing in that repo (a share link)
+export function urlForPage(base, page, view, repo) {
   const url = view ? urlForView(base, view) : base
-  if (page === PAGE.FILES) return url
-  return `${url}?page=${page}${view && !view.file && !view.folder ? '&root' : ''}`
+  const query = [
+    page !== PAGE.FILES && `page=${page}`,
+    page !== PAGE.FILES && view && !view.file && !view.folder && 'root',
+    repo && `repo=${repo}`,
+  ].filter(Boolean)
+  return query.length ? `${url}?${query.join('&')}` : url
+}
+
+const REPO = /^[\w.-]+\/[\w.-]+$/
+
+// The repo an address names ('owner/name'), or null
+export function repoOf(search) {
+  const repo = new URLSearchParams(search).get('repo')
+  return repo && REPO.test(repo) ? repo : null
+}
+
+// A file's or folder's share link (Copy link): its address in File manager, at `origin`, in `repo`
+export const shareUrl = (origin, base, repo, path, isDir) => origin + urlForPage(base, PAGE.FILES, isDir ? { file: null, folder: path } : { file: path, folder: '' }, repo)
+
+// The file or folder (its path, and whether it's a folder) a share link of `repo` names, or null: `text` is one link
+// and nothing else, at `origin` + `base`, in `repo` (a link to another repo stays a web address)
+export function sharedItem(text, origin, base, repo) {
+  let url
+  try { url = new URL(text.trim()) } catch { return null }
+  if (url.origin !== origin || repoOf(url.search) !== repo || new URLSearchParams(url.search).has('page')) return null
+  const view = viewForUrl(base, url.pathname)
+  if (!view || (!view.file && !view.folder)) return null
+  return view.file ? { path: view.file, dir: false } : { path: view.folder, dir: true }
 }
 
 const FIXED = [PAGE.LINKS, PAGE.DOCS, PAGE.ASSETS, PAGE.NOTIFICATIONS]
