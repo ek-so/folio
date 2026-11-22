@@ -26,33 +26,58 @@ const pad = n => String(n).padStart(2, '0')
 // once there's a day: a time alone or nothing never reminds; "Pick a day to add a reminder" until then): when, At the
 // time, 10 minutes, 1 hour or 1 day before, none chosen while there's none (choosing the first asks the browser to let
 // Folio notify). `date`: { year, month, day, hour?, minute? }, { hour, minute } (a time alone) or null (an empty date
-// property); `onPick(date)` gets the new one: a picked day keeps the time; a time, saved on Enter or when the field is
-// left, keeps the day; taking out the day (Remove date, or the selected day tapped again) keeps the time, and taking out
-// the last of the two gives null. Each change is saved at once and the sheet stays open for the next; Save (on the
-// right, last) saves a time still being typed and closes it, as ✕ does, but for `dayOnly`: a day and nothing else
-// (going to a day, a repeat's end, a new task's day): no time or reminder, it can't be emptied, and picking a day closes
-// it. `required`: it can't be emptied (a date in a note's text: the last part has no Remove). (Saving rewrites the note,
-// which draws its badges anew, so a time isn't saved on every keystroke.)
-export default function DatePicker({ date, onPick, required, dayOnly, reminder, children }) {
+// property). Changes are a draft (`draft`: the date and the reminder) until Save (on the right, last), which gives
+// `onPick(date)` the new date, when it changed, and the reminder its new offset (a time still being typed is kept);
+// ✕ (or closing the sheet) drops the draft. In it, a picked day keeps the time; a time, set on Enter or when the field
+// is left, keeps the day; taking out the day (Remove date, or the selected day tapped again) keeps the time and takes the
+// reminder out (it needs a day), and taking out the last of the two leaves nothing (null once saved). `dayOnly`: a day
+// and nothing else (going to a day, a repeat's end, a new task's day): no time or reminder, it can't be emptied, and
+// picking a day gives it to `onPick` at once and closes it. `required`: it can't be emptied (a date in a note's text:
+// the last part has no Remove).
+export default function DatePicker({ date: value, onPick, required, dayOnly, reminder, children }) {
   const [open, setOpenState] = useState(false)
+  const [draft, setDraft] = useState(null) // { date, reminder } while the sheet is open (not for `dayOnly`)
+  const date = draft ? draft.date : value
+  const reminderValue = draft ? draft.reminder : reminder?.value
   const hasDay = date?.year !== undefined
   const selected = hasDay ? new Date(date.year, date.month - 1, date.day) : undefined
   const saved = date?.hour === undefined ? '' : `${pad(date.hour)}:${pad(date.minute)}`
   const [typed, setTyped] = useState(null) // the time field's text while it differs from the saved one
   const time = typed ?? saved
-  const setOpen = next => { if (!next) setTyped(null); setOpenState(next) }
-  const close = () => { saveTime(); setOpen(false) } // ✕ and Save: a time still being typed is kept
+  const setOpen = next => {
+    setTyped(null)
+    setDraft(next && !dayOnly ? { date: value, reminder: reminder?.value ?? '' } : null)
+    setOpenState(next)
+  }
 
   const day = date && hasDay ? { year: date.year, month: date.month, day: date.day } : {}
   const clock = value => { const [hour, minute] = value.split(':').map(Number); return { hour, minute } }
   // `parts` ({ year, month, day } or {}) at the time in the field, if any; null when nothing is left
   const at = parts => time ? { ...parts, ...clock(time) } : parts.year !== undefined ? parts : null
   const keeps = !(required || dayOnly) // the last part can be taken out
-  const pick = next => { if (next || keeps) onPick(next) }
+  // `next` as the draft's date (a reminder goes without a day); `dayOnly`: given to onPick at once
+  const pick = next => {
+    if (!next && !keeps) return
+    if (dayOnly) return onPick(next)
+    setDraft(d => ({ date: next, reminder: next?.year === undefined ? '' : d.reminder }))
+  }
 
+  // The time being typed, when it differs from the draft's: the draft's date with it
+  const typedDate = () => typed !== null && typed !== saved && typed ? { ...day, ...clock(typed) } : null
   function saveTime() {
-    if (typed !== null && typed !== saved && typed) pick({ ...day, ...clock(typed) })
+    const next = typedDate()
+    if (next) pick(next)
     setTyped(null)
+  }
+
+  // Save: the draft (with a time still being typed) into the note: the date when it changed, then the reminder when it
+  // did (taken out with the date by onPick when nothing's left)
+  function save() {
+    const next = typedDate() ?? draft.date
+    const remindAt = next?.year === undefined ? '' : draft.reminder
+    if (JSON.stringify(next) !== JSON.stringify(value) && (next || keeps)) onPick(next)
+    if (reminder && next && remindAt !== (reminder.value ?? '')) reminder.onChange(remindAt)
+    setOpen(false)
   }
   function removeTime() {
     setTyped(null)
@@ -72,8 +97,8 @@ export default function DatePicker({ date, onPick, required, dayOnly, reminder, 
     pick({ ...day, hour: now.getHours(), minute: now.getMinutes() })
   }
   function remind(offset) {
-    if (!reminder.value) askToNotify()
-    reminder.onChange(offset)
+    if (!reminderValue) askToNotify()
+    setDraft(d => ({ ...d, reminder: offset }))
   }
   // A section's trash, on the right of its title
   const trash = (label, onClick) => (
@@ -97,7 +122,7 @@ export default function DatePicker({ date, onPick, required, dayOnly, reminder, 
   return <>
     {trigger}
     {open && (
-      <BottomSheet title={dayOnly ? 'Date' : 'Date and time'} onClose={close} onOpenAutoFocus={e => e.preventDefault()}>
+      <BottomSheet title={dayOnly ? 'Date' : 'Date and time'} onClose={() => setOpen(false)} onOpenAutoFocus={e => e.preventDefault()}>
         <div data-badge-popover className="-mx-space-xs flex flex-col">
           {!dayOnly && <SectionTitle trailing={hasDay && (time || keeps) && trash('Remove date', removeDay)}>Date</SectionTitle>}
           {/* The Calendar in an outlined box of its own */}
@@ -129,12 +154,12 @@ export default function DatePicker({ date, onPick, required, dayOnly, reminder, 
             </div> : addButton('Add time', addTime)}
           </>}
           {!dayOnly && reminder && <>
-            <SectionTitle className="mt-space" trailing={reminder.value && trash('Remove reminder', () => reminder.onChange(''))}>Reminder</SectionTitle>
-            {hasDay && !reminder.value ? addButton('Add reminder', () => remind(REMINDERS[0][0])) : hasDay ? (
+            <SectionTitle className="mt-space" trailing={reminderValue && trash('Remove reminder', () => remind(''))}>Reminder</SectionTitle>
+            {hasDay && !reminderValue ? addButton('Add reminder', () => remind(REMINDERS[0][0])) : hasDay ? (
               <ul role="radiogroup" aria-label="When to remind">
                 {REMINDERS.map(([value, label]) => (
                   <li key={value}>
-                    <ListRow icon={<Radio checked={reminder.value === value} />} title={label} onClick={() => remind(value)} />
+                    <ListRow icon={<Radio checked={reminderValue === value} />} title={label} onClick={() => remind(value)} />
                   </li>
                 ))}
               </ul>
@@ -144,7 +169,7 @@ export default function DatePicker({ date, onPick, required, dayOnly, reminder, 
         {/* Out of the box above, which reaches 4px into the sides: the buttons' separator spans the sheet exactly */}
         {!dayOnly && (
           <SheetActions>
-            <Button onMouseDown={e => e.preventDefault()} onClick={close}>Save</Button>
+            <Button onMouseDown={e => e.preventDefault()} onClick={save}>Save</Button>
           </SheetActions>
         )}
       </BottomSheet>
