@@ -5,7 +5,7 @@ import { Separator } from './ui/separator.jsx'
 import { cn } from '@/lib/utils.js'
 import { Sheet, SheetContent } from './ui/sheet.jsx'
 import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogClose } from './ui/dialog.jsx'
-import { useKeyboardInset } from '../hooks/useKeyboardInset.js'
+import { useVisualViewport } from '../hooks/useKeyboardInset.js'
 import { useIsDesktop } from '../hooks/useIsDesktop.js'
 
 // Radix locks the page while a dialog is open. If a lock outlives every open
@@ -63,7 +63,7 @@ export function SheetActions({ className, children }) {
 // scrolls under it, its buttons (`SheetActions`) staying at the bottom
 export default function BottomSheet({ title, description, onBack, wide, onClose, onOpenAutoFocus, children }) {
   const isDesktop = useIsDesktop()
-  const keyboard = useKeyboardInset()
+  const { keyboard, height: seen } = useVisualViewport()
   useEffect(() => releaseStalePageLock, [])
   const header = <div className="shrink-0"><OverlayHeader title={title} description={description} onBack={onBack} /></div>
   // The scrolling body reaches into the sheet's 24px sides (and 4px above and below) so rows that do, and focus rings, aren't cut off
@@ -93,7 +93,9 @@ export default function BottomSheet({ title, description, onBack, wide, onClose,
         className="mx-auto w-full max-w-[680px] gap-space rounded-t-2xl bg-card p-space-lg"
         style={{
           bottom: keyboard,
-          maxHeight: `calc(100dvh - ${keyboard}px - var(--safe-top) - var(--space-lg))`, // up to 24px from the top, above the keyboard
+          // Up to 24px from the top of what's seen: with the keyboard open, the part of the screen above it (iOS also
+          // shifts that part down the page to show the field, so the screen's own height would take the top off)
+          maxHeight: `calc(${keyboard ? `${seen}px` : '100dvh'} - var(--safe-top) - var(--space-lg))`,
           paddingBottom: keyboard ? '1.5rem' : 'calc(1.5rem + var(--safe-bottom))',
         }}
         onOpenAutoFocus={onOpenAutoFocus}

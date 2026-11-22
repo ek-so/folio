@@ -34,6 +34,3 @@ export function useVisualViewport() {
 
   return frame
 }
-
-// Height of the on-screen keyboard (0 when closed)
-export const useKeyboardInset = () => useVisualViewport().keyboard
