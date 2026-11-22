@@ -50,7 +50,7 @@ export function SheetActions({ className, children }) {
 
 // Every prompt: a sheet from the bottom on phones, a centered dialog from 768px, with the same header (`OverlayHeader`:
 // `title`, `description`, `onBack`). `onBack`: a ← before the title, back to where the sheet came from (a step inside
-// it); `wide`: a wider dialog, for content to read (a note). It's never taller than the screen (above the keyboard): the
+// it); `wide`: a wider dialog, for content to read (a note). It's never taller than 85% of the screen (and, on a phone, stays above the keyboard): the
 // header stays put and the rest scrolls under it, its buttons (`SheetActions`) staying at the bottom
 export default function BottomSheet({ title, description, onBack, wide, onClose, onOpenAutoFocus, children }) {
   const isDesktop = useIsDesktop()
@@ -68,7 +68,7 @@ export default function BottomSheet({ title, description, onBack, wide, onClose,
   if (isDesktop) {
     return (
       <Dialog open onOpenChange={open => !open && onClose()}>
-        <DialogContent className={cn('max-h-[calc(100dvh-2*var(--space-lg))]', wide && 'max-w-3xl')} showCloseButton={false} onOpenAutoFocus={onOpenAutoFocus} {...describedBy}>
+        <DialogContent className={cn('max-h-[85dvh]', wide && 'max-w-3xl')} showCloseButton={false} onOpenAutoFocus={onOpenAutoFocus} {...describedBy}>
           {header}
           {body}
         </DialogContent>
@@ -84,7 +84,7 @@ export default function BottomSheet({ title, description, onBack, wide, onClose,
         className="mx-auto w-full max-w-[680px] gap-space rounded-t-2xl bg-card p-space-lg"
         style={{
           bottom: keyboard,
-          maxHeight: `calc(100dvh - ${keyboard}px - var(--safe-top) - var(--space-lg))`,
+          maxHeight: `min(85dvh, calc(100dvh - ${keyboard}px - var(--safe-top) - var(--space-lg)))`, // 85% of the screen, and above the keyboard
           paddingBottom: keyboard ? '1.5rem' : 'calc(1.5rem + var(--safe-bottom))',
         }}
         onOpenAutoFocus={onOpenAutoFocus}
