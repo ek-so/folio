@@ -17,9 +17,9 @@ const Calendar = later(() => import('./ui/calendar.jsx'), m => m.Calendar) // it
 const pad = n => String(n).padStart(2, '0')
 
 // The one date picker, in a sheet (a centered dialog on a computer) opened by `children` (its trigger: a date badge, a
-// button), titled Date and time (Date for `dayOnly`): whatever is written (a day, a time, both, or nothing), the Calendar,
-// then Remove date when there's a day, then two sections under their titles (`SectionTitle`, like Views in the menu),
-// each with a trash on the right of its title while it's set: Time, its field (empty while there's none), and, with
+// button), titled Date and time (Date for `dayOnly`): whatever is written (a day, a time, both, or nothing), in sections
+// under their titles (`SectionTitle`, like Views in the menu), each with a trash on the right of its title while it's
+// set (Remove date, Remove time, Remove reminder): Date, the Calendar (just the Calendar for `dayOnly`); Time, its field (empty while there's none), and, with
 // `reminder` ({ value: its offset, '' for none, onChange(next) }: a date property's, lib/reminders.js), Reminder (only
 // once there's a day: a time alone or nothing never reminds; "Pick a day to add a reminder" until then): when, At the
 // time, 10 minutes, 1 hour or 1 day before, none chosen while there's none (choosing the first asks the browser to let
@@ -75,6 +75,7 @@ export default function DatePicker({ date, onPick, required, dayOnly, reminder, 
     {open && (
       <BottomSheet title={dayOnly ? 'Date' : 'Date and time'} onClose={close} onOpenAutoFocus={e => e.preventDefault()}>
         <div data-badge-popover className="-mx-space-xs flex flex-col">
+          {!dayOnly && <SectionTitle trailing={hasDay && (time || keeps) && trash('Remove date', removeDay)}>Date</SectionTitle>}
           <div className="px-space-xs">
             <Later compact>
               <Calendar
@@ -90,9 +91,6 @@ export default function DatePicker({ date, onPick, required, dayOnly, reminder, 
               />
             </Later>
           </div>
-          {hasDay && (time || keeps) && (
-            <Button variant="ghost-destructive" className="w-full justify-start gap-space-sm px-3" onClick={removeDay}><Trash /> Remove date</Button>
-          )}
           {!dayOnly && <>
             <Separator className="my-space-sm" />
             <SectionTitle trailing={saved && (hasDay || keeps) && trash('Remove time', removeTime)}>Time</SectionTitle>
