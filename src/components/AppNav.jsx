@@ -130,7 +130,7 @@ export function NavRail({ page, pages, hrefOf, viewActions, onPage, onSearch, re
 
 // Phones: a bar at the top with the menu (the app's logo and name, an outlined button: every page, then the rest) on the
 // left, Notifications (its bell, with a red dot on its corner while some came due since it was last opened: `menu.unseenReminders`, like Sync's),
-// Search and Sync on the right. It slides away while
+// Sync and Search (last) on the right. It slides away while
 // the content scrolls down and returns on scrolling up (`useHideOnScroll`): its row folds in 300ms with a gentle ease while
 // what's in it slides up and fades, so the page under it moves softly.
 export function TopBar({ host, resetKey, page, pages, viewActions, onPage, onSearch, renderSync, menu }) {
@@ -151,10 +151,10 @@ export function TopBar({ host, resetKey, page, pages, viewActions, onPage, onSea
         <Bell />
         {menu.unseenReminders > 0 && <Dot tone="destructive" size="md" corner />}
       </Button>
+      {renderSync(false, true)}
       <Button variant="ghost-outline" size="icon" aria-label="Search" onClick={onSearch}>
         <MagnifyingGlass />
       </Button>
-      {renderSync(false, true)}
     </div>
     </div>
     </nav>
