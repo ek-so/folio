@@ -32,7 +32,7 @@ const pad = n => String(n).padStart(2, '0')
 // minute } (a time alone) or null (an empty date property); `onPick(date)` gets the new one: a picked day keeps the time;
 // a time, saved on Enter or when the field is left, keeps the day; taking out the day (Remove date, or the selected day
 // tapped again) keeps the time, and taking out the last of the two gives null. Each change is saved at once and the
-// sheet stays open for the next (✕ closes it), but for `dayOnly`: a day and nothing else (going to a day, a repeat's
+// sheet stays open for the next; Save (full width, last) saves a time still being typed and closes it, as ✕ does, but for `dayOnly`: a day and nothing else (going to a day, a repeat's
 // end, a new task's day): no time or reminder, it can't be emptied, and picking a day closes it. `required`: it can't
 // be emptied (a date in a note's text: the last part has no Remove). (Saving rewrites the note, which draws its badges
 // anew, so a time isn't saved on every keystroke.)
@@ -151,6 +151,7 @@ export default function DatePicker({ date, onPick, required, dayOnly, reminder, 
               </div>
             </>}
           </>}
+          {!dayOnly && <Button className="mx-space-xs mt-space" onMouseDown={e => e.preventDefault()} onClick={() => { saveTime(); setOpen(false) }}>Save</Button>}
         </div>
       </BottomSheet>
     )}
