@@ -21,8 +21,10 @@ export const isPortaled = e => !e.currentTarget.contains(e.target)
 // note's or the card's (open it, start a drag, double tap to edit): React
 // events pass through portals to the parent. Not on its dialogs: a press or click in them must reach the page,
 // or a popover in them (a value's colors) doesn't close on a click beside it; the note and the card ignore
-// events from portals instead (`isPortaled`)
-export const own = { onClick: e => e.stopPropagation(), onMouseDown: e => e.stopPropagation(), onTouchStart: e => e.stopPropagation() }
+// events from portals instead (`isPortaled`). A touch from a dialog opened inside (a portal) is never stopped: React
+// stops it on the page too, so the dialog's scroll lock, listening on the document, never sees the touch begin and
+// cancels the dialog's scrolling
+export const own = { onClick: e => e.stopPropagation(), onMouseDown: e => e.stopPropagation(), onTouchStart: e => { if (!isPortaled(e)) e.stopPropagation() } }
 
 export function cn(...inputs) {
   return twMerge(clsx(inputs))

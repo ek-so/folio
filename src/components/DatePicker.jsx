@@ -9,7 +9,6 @@ import { later } from '@/lib/later.js'
 import { REMINDERS } from '@/lib/reminders.js'
 import { askToNotify } from '../hooks/useReminderAlerts.js'
 import { Switch } from './ui/switch.jsx'
-import { own } from '../lib/utils.js'
 import { Input } from './ui/input.jsx'
 import { Label } from './ui/label.jsx'
 import { Button } from './ui/button.jsx'
@@ -76,7 +75,7 @@ export default function DatePicker({ date, onPick, required, dayOnly, reminder, 
     {trigger}
     {open && (
       <BottomSheet title={title} onClose={close} onOpenAutoFocus={e => e.preventDefault()}>
-        <div {...own} data-badge-popover className="-mx-space-xs flex flex-col">
+        <div data-badge-popover className="-mx-space-xs flex flex-col">
           <div className="px-space-xs">
             <Later compact>
               <Calendar
