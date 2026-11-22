@@ -19,6 +19,7 @@ import ViewMenu, { ViewsTitle } from './ViewMenu.jsx'
 import PageTitle from './PageTitle.jsx'
 import PageIcon from './PageIcon.jsx'
 import { Dot } from '@/components/ui/dot.jsx'
+import { Badge } from '@/components/ui/badge.jsx'
 
 
 // The app's primary navigation, in place of a header. `menu`: brokenCount, unseenReminders (Notifications' count: reminders come due since it was last opened) and
@@ -106,7 +107,7 @@ export function NavRail({ page, pages, hrefOf, viewActions, onPage, onSearch, re
         <Bell /> {label('Notifications')}
         {menu.unseenReminders > 0 && (collapsed
           ? <Dot tone="destructive" size="md" corner aria-label={`${menu.unseenReminders} new`} />
-          : <span className="ml-auto text-destructive-ink">{menu.unseenReminders}</span>)}
+          : <Badge tone="var(--destructive)" className="ml-auto">{menu.unseenReminders}</Badge>)}
       </Button>
       <Button variant="ghost" tooltip={hint('Recent updates')} tooltipSide="right" aria-current={page === PAGE.HISTORY ? 'page' : undefined} className={item(PAGE.HISTORY)} onClick={() => onPage(PAGE.HISTORY)}>
         <ClockCounterClockwise /> {label('Recent updates')}
