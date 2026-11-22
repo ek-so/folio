@@ -43,13 +43,14 @@ function OverlayHeader({ title, description, onBack }) {
   )
 }
 
-// A sheet's buttons (Cancel, Save…), its last row, split from what's above by a separator: they stay at the bottom while
+// A sheet's buttons (Cancel, Save…), its last row, split from what's above by a separator from edge to edge (reaching
+// over the sheet's 24px sides: so put it in no box with sides of its own, or the sheet scrolls sideways): they stay at the bottom while
 // the rest scrolls (sticky in the sheet's scrolling body, so they can sit inside a form and still submit it). `className`
 // for the buttons' own row (their alignment)
 export function SheetActions({ className, children }) {
   return (
     <div className="sticky -bottom-1 z-10 -mb-1 flex flex-col gap-space bg-card pb-1">
-      <Separator />
+      <Separator className="-mx-space-lg data-[orientation=horizontal]:w-auto" />
       <div className={cn('flex justify-end gap-space-sm', className)}>{children}</div>
     </div>
   )
@@ -67,7 +68,7 @@ export default function BottomSheet({ title, description, onBack, wide, onClose,
   const header = <div className="shrink-0"><OverlayHeader title={title} description={description} onBack={onBack} /></div>
   // The scrolling body reaches into the sheet's 24px sides (and 4px above and below) so rows that do, and focus rings, aren't cut off
   const body = (
-    <div data-no-pull className="-mx-space-lg -my-1 flex min-h-0 flex-1 flex-col gap-space overflow-y-auto overscroll-contain px-space-lg py-1">
+    <div data-no-pull className="-mx-space-lg -my-1 flex min-h-0 flex-1 flex-col gap-space overflow-y-auto overflow-x-hidden overscroll-contain px-space-lg py-1">
       {children}
     </div>
   )

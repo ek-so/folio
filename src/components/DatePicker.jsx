@@ -137,12 +137,13 @@ export default function DatePicker({ date, onPick, required, dayOnly, reminder, 
               </ul>
             )}
           </>}
-          {!dayOnly && (
-            <SheetActions className="px-space-xs">
-              <Button onMouseDown={e => e.preventDefault()} onClick={close}>Save</Button>
-            </SheetActions>
-          )}
         </div>
+        {/* Out of the box above, which reaches 4px into the sides: the buttons' separator spans the sheet exactly */}
+        {!dayOnly && (
+          <SheetActions>
+            <Button onMouseDown={e => e.preventDefault()} onClick={close}>Save</Button>
+          </SheetActions>
+        )}
       </BottomSheet>
     )}
   </>
