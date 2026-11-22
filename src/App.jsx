@@ -181,6 +181,10 @@ export default function App() {
   // The places of the widgets on page `id`'s own content (trail view null), for its address
   const placesOn = (id, v) => v ? {} : Object.fromEntries((views.find(x => x.id === id)?.widgets ?? []).map(w => [w.id, placeOf(w.id)]).filter(([, p]) => p))
 
+  // A repo is remembered among those used on this device once its files have loaded: one a share link names that GitHub
+  // refuses (or never answers for) stays out of the list
+  useEffect(() => { if (repo.remote && auth.repo) auth.remember(auth.repo) }, [!!repo.remote, auth.repo])
+
   // Saved for the repo they belong to (none while signed out)
   useEffect(() => { storage.setTrails(auth.repo, trails) }, [trails])
   useEffect(() => { storage.setPage(auth.repo, page) }, [page])

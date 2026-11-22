@@ -16,6 +16,7 @@ export function useAuth() {
   const [ready, setReady] = useState(false)
   const [repoList, setRepoList] = useState(null) // the repos the token can reach, as the repo step loaded them; kept while the token is
   const [repos, setRepos] = useState(storage.getRepos) // used on this device, latest first
+  // A repo that opened (its files loaded: App), first in the list of those used on this device; one that GitHub refuses never gets there
   const remember = full => { storage.addRepo(full); setRepos(storage.getRepos()) }
 
   useEffect(() => {
@@ -23,7 +24,7 @@ export function useAuth() {
     if (!token) return setReady(true)
     init(token)
     const savedRepo = storage.getRepo()
-    if (savedRepo) { applyRepo(savedRepo); remember(savedRepo) }
+    if (savedRepo) applyRepo(savedRepo)
 
     const cachedUser = storage.getUser()
     if (cachedUser) {
@@ -67,21 +68,19 @@ export function useAuth() {
     setEditingToken(false)
     // A tab opened by a share link before signing in (or whose token expired on the way): on to its repo
     const linked = storage.getRepo() ?? repoOf(window.location.search)
-    if (linked && !repo) { applyRepo(linked); storage.startTab(linked); remember(linked); setRepoState(linked) }
+    if (linked && !repo) { applyRepo(linked); storage.startTab(linked); setRepoState(linked) }
   }
 
   function selectRepo(full) {
     applyRepo(full)
     storage.setRepo(full)
-    remember(full)
     setRepoState(full)
   }
 
   // Open the app in another repo: a fresh start there, nothing carried over
   // but the page. Its local changes stay stored under each repo.
   function switchRepo(full) {
-    storage.setRepo(full)
-    storage.addRepo(full) // the app reloads: no state to update
+    storage.setRepo(full) // the app reloads, and remembers it once it opens
     storage.clearRepoSession()
     window.location.assign(import.meta.env.BASE_URL)
   }
@@ -95,7 +94,7 @@ export function useAuth() {
   }
 
   return {
-    user, repo, repos, repoList, setRepoList, ready, authenticate, selectRepo, switchRepo, signOut,
+    user, repo, repos, remember, repoList, setRepoList, ready, authenticate, selectRepo, switchRepo, signOut,
     editingToken, editToken: () => setEditingToken(true), token: () => storage.getToken() ?? '',
   }
 }

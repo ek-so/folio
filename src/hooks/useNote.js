@@ -34,6 +34,7 @@ export function useNote(entry, edited, onEdit, required, order) {
   requiredRef.current = required
   const orderRef = useRef(order)
   orderRef.current = order
+  const retries = useRef(new Set()) // 'online' listeners loading a version again: removed when the note closes
 
   useEffect(() => { onEditRef.current = onEdit }, [onEdit])
 
@@ -62,7 +63,11 @@ export function useNote(entry, edited, onEdit, required, order) {
       setLoadError(null)
     }).catch(e => {
       if (shaRef.current !== sha) return
-      if (isNetworkError(e)) window.addEventListener('online', () => { if (shaRef.current === sha) load(sha) }, { once: true })
+      if (isNetworkError(e)) {
+        const retry = () => { retries.current.delete(retry); if (shaRef.current === sha) load(sha) }
+        retries.current.add(retry)
+        window.addEventListener('online', retry, { once: true })
+      }
       if (!loadedRef.current) setLoadError(isNetworkError(e) ? 'offline' : isNotText(e) ? 'notText' : 'failed')
     }).finally(() => {
       if (shaRef.current === sha) setLoading(false)
@@ -77,6 +82,7 @@ export function useNote(entry, edited, onEdit, required, order) {
     return () => {
       window.removeEventListener('pagehide', flush)
       window.removeEventListener('folio:flush', flush)
+      for (const retry of retries.current) window.removeEventListener('online', retry)
       const done = fixed()
       if (done !== latestRef.current) pendingRef.current = done
       flush()

@@ -68,11 +68,12 @@ export function repoOf(search) {
 export const shareUrl = (origin, base, repo, path, isDir) => origin + urlForPage(base, PAGE.FILES, isDir ? { file: null, folder: path } : { file: path, folder: '' }, repo)
 
 // The file or folder (its path, and whether it's a folder) a share link of `repo` names, or null: `text` is one link
-// and nothing else, at `origin` + `base`, in `repo` (a link to another repo stays a web address)
+// and nothing else, at `origin` + `base`, in `repo` (a link to another repo stays a web address), on any page (an address
+// copied while a note was open on a view names it too); a page's own content or the root names nothing
 export function sharedItem(text, origin, base, repo) {
   let url
   try { url = new URL(text.trim()) } catch { return null }
-  if (url.origin !== origin || repoOf(url.search) !== repo || new URLSearchParams(url.search).has('page')) return null
+  if (url.origin !== origin || repoOf(url.search) !== repo) return null
   const view = viewForUrl(base, url.pathname)
   if (!view || (!view.file && !view.folder)) return null
   return view.file ? { path: view.file, dir: false } : { path: view.folder, dir: true }

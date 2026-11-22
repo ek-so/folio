@@ -61,6 +61,8 @@ describe('url', () => {
     expect(sharedItem(shareUrl('https://app.io', '/folio/', 'me/notes', 'Projects', true), 'https://app.io', '/folio/', 'me/notes')).toEqual({ path: 'Projects', dir: true })
     expect(sharedItem(link, 'https://app.io', '/folio/', 'me/other')).toBeNull()
     expect(sharedItem(link + ' and more', 'https://app.io', '/folio/', 'me/notes')).toBeNull()
+    expect(sharedItem('https://app.io/folio/a/b.md?page=home&at=w1~list&repo=me/notes', 'https://app.io', '/folio/', 'me/notes')).toEqual({ path: 'a/b.md', dir: false })
+    expect(sharedItem('https://app.io/folio/?page=home&repo=me/notes', 'https://app.io', '/folio/', 'me/notes')).toBeNull()
     expect(sharedItem('https://evil.io/folio/a.md?repo=me/notes', 'https://app.io', '/folio/', 'me/notes')).toBeNull()
   })
 
