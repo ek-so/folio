@@ -152,8 +152,8 @@ export default function Planner({ id, services, onRemove }) {
     setPicked(pick)
     bring(key)
   }
-  // A day tapped on the ribbon: selected where it is
-  const tapDay = key => { placed.current = key; setPicked(key) }
+  // A day tapped on the ribbon: selected and brought to the middle
+  const tapDay = key => goTo(key, key)
   const goToday = () => goTo(today, null)
   const goToDay = key => goTo(key, key) // a day picked in the calendar
   useLayoutEffect(() => {
