@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { ArrowLeft, X } from '@phosphor-icons/react'
 import { Button } from './ui/button.jsx'
+import { Separator } from './ui/separator.jsx'
 import { cn } from '@/lib/utils.js'
 import { Sheet, SheetContent } from './ui/sheet.jsx'
 import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogClose } from './ui/dialog.jsx'
@@ -42,10 +43,16 @@ function OverlayHeader({ title, description, onBack }) {
   )
 }
 
-// A sheet's buttons (Cancel, Save…), its last row: they stay at the bottom while what's above them scrolls (sticky in the
-// sheet's scrolling body, so they can sit inside a form and still submit it). `className` for their own alignment
+// A sheet's buttons (Cancel, Save…), its last row, split from what's above by a separator: they stay at the bottom while
+// the rest scrolls (sticky in the sheet's scrolling body, so they can sit inside a form and still submit it). `className`
+// for the buttons' own row (their alignment)
 export function SheetActions({ className, children }) {
-  return <div className={cn('sticky -bottom-1 z-10 -mb-1 flex justify-end gap-space-sm bg-card pt-space-sm pb-1', className)}>{children}</div>
+  return (
+    <div className="sticky -bottom-1 z-10 -mb-1 flex flex-col gap-space bg-card pb-1">
+      <Separator />
+      <div className={cn('flex justify-end gap-space-sm', className)}>{children}</div>
+    </div>
+  )
 }
 
 // Every prompt: a sheet from the bottom on phones, a centered dialog from 768px, with the same header (`OverlayHeader`:
