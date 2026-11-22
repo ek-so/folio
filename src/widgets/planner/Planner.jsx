@@ -31,7 +31,6 @@ import { WEEKDAYS, parseRecurrence, repeatLabel } from './recurrence.js'
 import { plural } from '@/lib/plural.js'
 import LockMark from '@/components/LockMark.jsx'
 import { EmptyBox, EMPTY } from '@/components/EmptyState.jsx'
-import { storage } from '@/lib/storage.js'
 import { Dot } from '@/components/ui/dot.jsx'
 import { parseReminder, reminderKey } from '@/lib/reminders.js'
 import { useRung } from '@/hooks/useReminderAlerts.js'
@@ -74,9 +73,9 @@ export default function Planner({ id, services, onRemove }) {
   const { notes, canEdit, openFile, openFolder } = services
   const files = useMemo(() => Object.fromEntries(services.files.map(f => [f, true])), [services.files]) // as the preview's links want them
   const today = useToday()
-  // The day chosen on the ribbon; none follows today. Kept for the session, so it's still selected after opening a note and coming back
-  const [picked, setPicked] = useState(() => { const key = storage.getPlannerDay(id); return /^\d{4}-\d{2}-\d{2}$/.test(key ?? '') ? key : null })
-  useEffect(() => { storage.setPlannerDay(id, picked) }, [id, picked])
+  // The day chosen on the ribbon; none follows today. Its place in the page's address (usePlanner), so it's still selected
+  // after opening a note and coming back, and Back returns to the day picked before
+  const { day: picked, setDay: setPicked } = act
   const selected = picked ?? today
   const [anchor, setAnchor] = useState(selected) // the ribbon's days are counted from where it started, so a new day doesn't shift them
   const [expanded, setExpanded] = useState(() => new Set()) // keys of the days showing all their cards (`list:` and a group's key: a list group)
@@ -105,11 +104,19 @@ export default function Planner({ id, services, onRemove }) {
     const at = days.indexOf(key)
     if (el && at >= 0) el.scrollTo({ left: offsets[at] - el.clientWidth / 2 + DAY_WIDTH / 2, behavior })
   }, [days, offsets])
-  // The ribbon starts with the selected day (today, or the one picked before a note was opened) in the middle
+  // The ribbon starts with the selected day (today, or the one picked before a note was opened or the list shown) in the
+  // middle; one it doesn't hold (a far day picked, then Back) is brought there as a jump is
+  const now = useRef() // the selected day, the days and bring as of this render, for the ribbon's first centering
+  now.current = { selected, days, bring }
   const setScroller = useCallback(el => {
     scroller.current = el
     if (!el) centered.current = false // gone (the list view): centered again when it's back
-    if (el && !centered.current) { centered.current = true; el.scrollLeft = offsets[range.before] - el.clientWidth / 2 + DAY_WIDTH / 2 }
+    if (el && !centered.current) {
+      centered.current = true
+      const at = now.current.days.indexOf(now.current.selected)
+      if (at < 0) return now.current.bring(now.current.selected)
+      el.scrollLeft = offsets[at] - el.clientWidth / 2 + DAY_WIDTH / 2
+    }
   }, [range.before, offsets])
   // Days added before the first keep what was in view where it was
   useLayoutEffect(() => {
@@ -123,16 +130,30 @@ export default function Planner({ id, services, onRemove }) {
     if (el.scrollLeft < EDGE) { grown.current = true; setRange(r => ({ ...r, before: r.before + MORE_DAYS })) }
     else if (el.scrollWidth - el.scrollLeft - el.clientWidth < EDGE) setRange(r => ({ ...r, after: r.after + MORE_DAYS }))
   }
-  // Select the day `key` (`pick`: null for today, which then follows the date) and bring it to the middle: it scrolls there
-  // when the ribbon has it, else the ribbon starts anew around it (it never grows all the way to a far day) and is there at once
-  function goTo(key, pick) {
-    setPicked(pick)
+  // The day `key` brought to the middle: it scrolls there when the ribbon has it, else the ribbon starts anew around it
+  // (it never grows all the way to a far day) and is there at once
+  function bring(key) {
     setMonth(monthLabel(key)) // a jump may land where the ribbon already was, with no scroll to name the month
     if (days.includes(key)) return scrollToDay(key)
     setAnchor(key)
     setRange({ before: MORE_DAYS, after: MORE_DAYS * 2 })
     setJumping(key)
   }
+  // The day selected here (`placed`), so one selected from elsewhere (Back, Forward) is brought to the middle too
+  const placed = useRef(selected)
+  useEffect(() => {
+    if (selected === placed.current) return
+    placed.current = selected
+    bring(selected)
+  }, [selected])
+  // Select the day `key` (`pick`: null for today, which then follows the date) and bring it to the middle
+  function goTo(key, pick) {
+    placed.current = key
+    setPicked(pick)
+    bring(key)
+  }
+  // A day tapped on the ribbon: selected where it is
+  const tapDay = key => { placed.current = key; setPicked(key) }
   const goToday = () => goTo(today, null)
   const goToDay = key => goTo(key, key) // a day picked in the calendar
   useLayoutEffect(() => {
@@ -279,7 +300,7 @@ export default function Planner({ id, services, onRemove }) {
             </DatePicker>
           </div>
           <div ref={setScroller} onScroll={onScroll} data-no-pull className="-mx-space-sm -mt-space-sm overflow-x-auto p-space-sm [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [mask-image:linear-gradient(to_right,transparent,black_2rem,black_calc(100%-2rem),transparent)]">
-            <Ribbon days={days} today={today} selected={selected} count={arranged.count} onSelect={setPicked} />
+            <Ribbon days={days} today={today} selected={selected} count={arranged.count} onSelect={tapDay} />
           </div>
         </Tray>
         {/* The selected day's cards in a tray like a board's column, its title with + (New task on that day): its first cards and Show N more; a day without any is empty */}

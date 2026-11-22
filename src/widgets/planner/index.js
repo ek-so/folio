@@ -1,7 +1,8 @@
 import { CalendarDots } from '@phosphor-icons/react'
 import { later } from '@/lib/later.js'
 import { BADGES } from './RecurrenceField.jsx'
-import { plannerPath, plannerTitle, parsePlanner, serializePlanner, movedPlanner, FIXED, ORDER } from './planner.js'
+import { plannerPath, plannerTitle, parsePlanner, serializePlanner, movedPlanner, placeText, FIXED, ORDER, VIEWS } from './planner.js'
+import { storage } from '@/lib/storage.js'
 import { isTechnical } from '@/lib/folderNotes.js'
 import { displayName } from '@/lib/files.js'
 
@@ -49,4 +50,11 @@ export default {
     return planner && inPlanner(path) ? { name: 'this planner', includes: inPlanner, required: FIXED, locked: FIXED, order: ORDER, badges: BADGES } : null
   },
   removed: (ch, id, { config }) => config.erase(plannerPath(id))(ch),
+  // Where it starts before its page's address names its place (planner.js `placeText`): this device's view and the day
+  // picked in this tab
+  place(id) {
+    const view = storage.getPlannerView(id)
+    const day = storage.getPlannerDay(id)
+    return placeText({ view: VIEWS.includes(view) ? view : VIEWS[0], day: /^\d{4}-\d{2}-\d{2}$/.test(day ?? '') ? day : null })
+  },
 }

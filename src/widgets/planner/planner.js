@@ -13,6 +13,14 @@ import { parseRecurrence, nextOccurrence } from './recurrence.js'
 
 export const plannerPath = id => `.folio/planners/${id}.json`
 
+// A planner's place in the page's address (App's widget places, lib/url.js `at`): its view and the day picked on its
+// ribbon, if any ("list", "calendar.2026-11-24"), so switching either is a step Back goes through
+export const placeText = ({ view, day }) => day ? `${view}.${day}` : view
+export function readPlace(text) {
+  const [view, day] = (text ?? '').split('.')
+  return { view: VIEWS.includes(view) ? view : null, day: /^\d{4}-\d{2}-\d{2}$/.test(day ?? '') ? day : null }
+}
+
 // The property that holds a card's day
 export const DATE = 'date'
 // The property that says whether a card happens once or how it repeats (recurrence.js)

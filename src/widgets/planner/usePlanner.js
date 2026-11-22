@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react'
-import { plannerPath, parsePlanner, serializePlanner, keyDay, droppedDate, doneNext, asCard, orderedDay, restoredDay, renamedProperty, removedProperty, DATE, REPEAT, ORDER, VIEWS } from './planner.js'
+import { useMemo } from 'react'
+import { plannerPath, parsePlanner, serializePlanner, readPlace, placeText, keyDay, droppedDate, doneNext, asCard, orderedDay, restoredDay, renamedProperty, removedProperty, DATE, REPEAT, ORDER, VIEWS } from './planner.js'
 import { storage } from '@/lib/storage.js'
 import { ONE_TIME } from './recurrence.js'
 import { formatDate } from '@/lib/dates.js'
@@ -26,8 +26,12 @@ export function usePlanner(id, services) {
     const now = typeof text === 'string' ? parsePlanner(text) : null
     return now ? write(edit(now))(ch) : ch
   })
-  // Calendar or list: this device's choice, kept here (never in .folio, which holds no state of a screen)
-  const [view, setViewState] = useState(() => VIEWS.includes(storage.getPlannerView(id)) ? storage.getPlannerView(id) : VIEWS[0])
+  // Calendar or list, and the day picked on the ribbon (null: today): its place in the page's address (services.place),
+  // each change a step Back goes through; the view also remembered on this device, the day in this tab (index.js
+  // `place`: where it starts). Never in .folio, which holds no state of a screen
+  const place = readPlace(services.place(id))
+  const view = place.view ?? VIEWS[0]
+  const day = place.day
 
   return {
     ready: file.ready,
@@ -56,9 +60,11 @@ export function usePlanner(id, services) {
     },
     // Another folder (its own is gone), its notes made cards as when the planner was set up
     setFolder: folder => update(ch => editNotes(write({ ...planner, folder })(ch), services.remoteFiles, folder, asCard, services.remoteText)),
-    // Calendar or list (planner.js VIEWS), remembered on this device
+    // Calendar or list (planner.js VIEWS), and the picked day (a key, or null for today), as above
     view,
-    setView: next => { setViewState(next); storage.setPlannerView(id, next) },
+    setView: next => { storage.setPlannerView(id, next); services.setPlace(id, placeText({ view: next, day })) },
+    day,
+    setDay: next => { storage.setPlannerDay(id, next); services.setPlace(id, placeText({ view, day: next })) },
     // How a day's cards are ordered (planner.js SORTS, or a property's "property:<key>"); a manual order is kept for when it's picked again
     setSort: sort => save({ ...planner, sort }),
     // The day `key`'s cards dragged into the order `paths` (as of `today`): the planner sorts manually from now on. Returns

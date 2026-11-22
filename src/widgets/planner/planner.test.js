@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { parsePlanner, serializePlanner, newPlanner, movedPlanner, orderedDay, restoredDay, renamedProperty, removedProperty, addDays, daysBetween, dayOffsets, dayAt, dayKey, plan, cardDate, doneNext, droppedDate, listed, monthLabel } from './planner.js'
+import { parsePlanner, serializePlanner, newPlanner, movedPlanner, orderedDay, restoredDay, renamedProperty, removedProperty, addDays, daysBetween, dayOffsets, dayAt, dayKey, plan, cardDate, doneNext, droppedDate, listed, monthLabel, placeText, readPlace } from './planner.js'
 
 const note = (date, extra = '') => `---\n${date === null ? '' : `date: ${date}\n`}${extra}---\n# T\n`
 
@@ -152,5 +152,12 @@ describe('planner', () => {
     expect(groups[0].cards[0]).toEqual({ path: 'T/late.md', overdue: true, undated: false })
     expect(groups[0].cards[2]).toEqual({ path: 'T/week.md', overdue: false, undated: true })
     expect(listed([card('wed', '11 Nov 2026')], '2026-11-09').map(g => g.key)).toEqual(['week']) // from a Monday
+  })
+
+  it('writes and reads its place: the view and the picked day', () => {
+    expect(placeText({ view: 'list', day: null })).toBe('list')
+    expect(readPlace(placeText({ view: 'calendar', day: '2026-11-24' }))).toEqual({ view: 'calendar', day: '2026-11-24' })
+    expect(readPlace('nope.24-11')).toEqual({ view: null, day: null })
+    expect(readPlace(null)).toEqual({ view: null, day: null })
   })
 })

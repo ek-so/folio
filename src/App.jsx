@@ -49,7 +49,7 @@ import { PAGE, mainPages } from './lib/pages.js'
 import { isConfigPath, addView, renameView, removeView, VIEWS_PATH, DEFAULT_VIEWS, parseViews, serializeViews, addWidget, removeWidget, moveWidget, renameWidget, moveView, setViewIcon, moveWidgetTo } from './lib/viewsConfig.js'
 import { withKeys, withValue, copyTitled, withNoteTitle, noteTitle } from './lib/frontmatter.js'
 import { widgetType, widgetTitle } from './widgets/index.js'
-import { urlForPage, pageForUrl } from './lib/url.js'
+import { urlForPage, pageForUrl, placesOf } from './lib/url.js'
 import { fileView, folderView, startTrails, currentView, openView, trailTo, movedTrails, keptTrails } from './lib/views.js'
 import { toast } from 'sonner'
 import { Toaster } from './components/ui/sonner.jsx'
@@ -174,6 +174,13 @@ export default function App() {
   const mainRef = useRef(null) // the page's column: the phone top bar hides while it scrolls
   const viewport = useVisualViewport() // the part of the screen seen with the keyboard open
 
+  // Where each widget is (a planner's view and day: { widget id: place }), in the address of its view's own content, so a
+  // change is a step Back goes through; one not set yet starts where its kind says (`place(id)` in widgets/<kind>)
+  const [places, setPlaces] = useState(() => placesOf(window.location.search))
+  const placeOf = id => places[id] ?? widgetType(widgets.find(w => w.id === id)?.type)?.place?.(id) ?? null
+  // The places of the widgets on page `id`'s own content (trail view null), for its address
+  const placesOn = (id, v) => v ? {} : Object.fromEntries((views.find(x => x.id === id)?.widgets ?? []).map(w => [w.id, placeOf(w.id)]).filter(([, p]) => p))
+
   // Saved for the repo they belong to (none while signed out)
   useEffect(() => { storage.setTrails(auth.repo, trails) }, [trails])
   useEffect(() => { storage.setPage(auth.repo, page) }, [page])
@@ -192,8 +199,8 @@ export default function App() {
   // The browser's address follows the page you're on and its view (Broken links, Documentation and Assets: `?page=` alone);
   // Back / Forward, the browser's or the title bar's, move between them (useAddressBar)
   // The repo in it too (a share link), once there's one; signed out, the address is left alone
-  const url = auth.repo ? urlForPage(BASE, page, fixedPage ? null : view, auth.repo) : null
-  const addressBar = useAddressBar(BASE, url, auth.repo, () => ({ files, folders: allFolders }), setPage, setTrails)
+  const url = auth.repo ? urlForPage(BASE, page, fixedPage ? null : view, auth.repo, fixedPage ? {} : placesOn(page, view)) : null
+  const addressBar = useAddressBar(BASE, url, auth.repo, () => ({ files, folders: allFolders }), setPage, setTrails, setPlaces)
   const replaceNext = addressBar.replaceNext
 
   // What File manager, the folder tree and Search show: the config folder stays out of them
@@ -381,6 +388,10 @@ export default function App() {
     config,
     tagColors,
     update: fn => update(guarded(fn)), // a widget never edits a locked note
+    // Where widget `id` is (its kind's own text, such as a planner's view and day), kept in the page's address: each
+    // change a step Back and Forward go through
+    place: placeOf,
+    setPlace: (id, place) => setPlaces(o => ({ ...o, [id]: place })),
     openFile: path => setSelectedFile(path),
     // A note opened in the editor, the cursor at `offset` (a double tap on a Note widget's card)
     editFile: (path, offset = 0) => { setEditAt({ path, start: offset, end: offset }); setSelectedFile(path) },
@@ -428,7 +439,7 @@ export default function App() {
   // Every page's trail after a rename, delete or discard (`next`); the address
   // is replaced, not added to history (only when it shows: not on Broken links / Documentation / Assets)
   function followTrails(next) {
-    if (page === mainPage && urlForPage(BASE, page, currentView(page, next[page]), auth.repo) !== url) replaceNext()
+    if (page === mainPage && urlForPage(BASE, page, currentView(page, next[page]), auth.repo, placesOn(page, currentView(page, next[page]))) !== url) replaceNext()
     setTrails(next)
   }
 

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { urlForView, viewForUrl, existingView, urlForPage, pageForUrl, repoOf, shareUrl, sharedItem } from './url.js'
+import { urlForView, viewForUrl, existingView, urlForPage, pageForUrl, repoOf, shareUrl, sharedItem, placesOf } from './url.js'
 
 describe('url', () => {
   it('round-trips files and folders, including odd names', () => {
@@ -62,5 +62,12 @@ describe('url', () => {
     expect(sharedItem(link, 'https://app.io', '/folio/', 'me/other')).toBeNull()
     expect(sharedItem(link + ' and more', 'https://app.io', '/folio/', 'me/notes')).toBeNull()
     expect(sharedItem('https://evil.io/folio/a.md?repo=me/notes', 'https://app.io', '/folio/', 'me/notes')).toBeNull()
+  })
+
+  it('carries the widgets\' places on a view\'s own content', () => {
+    const url = urlForPage('/folio/', 'home', null, 'me/notes', { w2: 'calendar', w1: 'list.2026-11-24', w3: null })
+    expect(url).toBe('/folio/?page=home&at=w1~list.2026-11-24,w2~calendar&repo=me/notes')
+    expect(placesOf(new URL(url, 'https://x').search)).toEqual({ w1: 'list.2026-11-24', w2: 'calendar' })
+    expect(placesOf('?at=w1~bad place,~x,w2~list')).toEqual({ w2: 'list' })
   })
 })

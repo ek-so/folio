@@ -32,16 +32,28 @@ export function existingView({ file, folder }, files, folders) {
 
 // Address bar <-> a page and its view (lib/views.js). File manager's is
 // the plain view URL; every other page (a view such as Home, Graph, or Broken links and the other fixed pages) adds
-// `?page=<id>`, and a page's own content (view null) has no path. Their root folder adds `root`. `repo` ('owner/name')
-// adds `repo=owner/name` last, so any address opens the same thing in that repo (a share link)
-export function urlForPage(base, page, view, repo) {
+// `?page=<id>`, and a page's own content (view null) has no path. Their root folder adds `root`. `at` ({ widget id:
+// its place }, a view's own content: where each widget is, such as a planner's view and day) adds
+// `at=<id>~<place>,…`, so moving inside a widget is a step Back and Forward go through. `repo` ('owner/name') adds
+// `repo=owner/name` last, so any address opens the same thing in that repo (a share link)
+export function urlForPage(base, page, view, repo, at = {}) {
   const url = view ? urlForView(base, view) : base
+  const places = Object.keys(at).filter(id => at[id]).sort().map(id => `${id}~${at[id]}`).join(',')
   const query = [
     page !== PAGE.FILES && `page=${page}`,
     page !== PAGE.FILES && view && !view.file && !view.folder && 'root',
+    places && `at=${places}`,
     repo && `repo=${repo}`,
   ].filter(Boolean)
   return query.length ? `${url}?${query.join('&')}` : url
+}
+
+const PLACE = /^([\w-]+)~([\w.-]+)$/
+
+// The widgets' places an address names ({ id: place }, urlForPage's `at`)
+export function placesOf(search) {
+  const text = new URLSearchParams(search).get('at') ?? ''
+  return Object.fromEntries(text.split(',').map(part => PLACE.exec(part)).filter(Boolean).map(([, id, place]) => [id, place]))
 }
 
 const REPO = /^[\w.-]+\/[\w.-]+$/
