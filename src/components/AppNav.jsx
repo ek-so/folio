@@ -107,7 +107,7 @@ export function NavRail({ page, pages, hrefOf, viewActions, onPage, onSearch, re
         <Bell /> {label('Notifications')}
         {menu.unseenReminders > 0 && (collapsed
           ? <Dot tone="destructive" size="md" corner aria-label={`${menu.unseenReminders} new`} />
-          : <Badge tone="var(--destructive)" className="ml-auto">{menu.unseenReminders}</Badge>)}
+          : <Badge className={cn('ml-auto h-5 min-w-5 justify-center bg-destructive py-0 text-xs text-destructive-foreground', menu.unseenReminders < 10 ? 'px-0' : 'px-1.5')}>{menu.unseenReminders}</Badge>)}
       </Button>
       <Button variant="ghost" tooltip={hint('Recent updates')} tooltipSide="right" aria-current={page === PAGE.HISTORY ? 'page' : undefined} className={item(PAGE.HISTORY)} onClick={() => onPage(PAGE.HISTORY)}>
         <ClockCounterClockwise /> {label('Recent updates')}
