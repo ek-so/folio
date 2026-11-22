@@ -1,8 +1,10 @@
 const RECENT_KEY = 'folio_recent_'
 const PUSHED_KEY = 'folio_pushed_'
 const PUSHED_MAX = 500
-const TOKEN_KEY = 'brain_gh_token'
-const REPO_KEY = 'brain_gh_repo'
+const TOKEN_KEY = 'folio_token'
+const REPO_KEY = 'folio_repo'
+// The names they were kept under before, moved to the new ones on first read so no one is signed out
+const OLD_KEYS = { [TOKEN_KEY]: 'brain_gh_token', [REPO_KEY]: 'brain_gh_repo' }
 const REPOS_KEY = 'folio_repos'
 const USER_KEY = 'folio_user'
 const THEME_KEY = 'folio_theme'
@@ -19,6 +21,15 @@ function read(store, key) {
   try { return store.getItem(key) } catch { return null }
 }
 
+// `key`'s value, taking it from its old name (OLD_KEYS) the first time
+function readMoved(key) {
+  const value = read(localStorage, key)
+  if (value !== null) return value
+  const old = read(localStorage, OLD_KEYS[key])
+  if (old !== null && write(localStorage, key, old)) write(localStorage, OLD_KEYS[key], null)
+  return old
+}
+
 // false when it couldn't be stored (storage full or blocked)
 function write(store, key, value) {
   try {
@@ -31,9 +42,9 @@ function write(store, key, value) {
 }
 
 export const storage = {
-  getToken: () => read(localStorage, TOKEN_KEY),
+  getToken: () => readMoved(TOKEN_KEY),
   setToken: (token) => write(localStorage, TOKEN_KEY, token),
-  getRepo: () => read(localStorage, REPO_KEY),
+  getRepo: () => readMoved(REPO_KEY),
   setRepo: (repo) => write(localStorage, REPO_KEY, repo),
   // Last signed-in GitHub user, so the app can start offline
   getUser: () => {
@@ -119,7 +130,7 @@ export const storage = {
     let recents = []
     try { recents = Object.keys(localStorage).filter(key => [RECENT_KEY, PUSHED_KEY, `${TRAILS_KEY}_`, `${PAGE_KEY}_`].some(prefix => key.startsWith(prefix))) } catch {}
     for (const key of recents) write(localStorage, key, null)
-    for (const key of [TOKEN_KEY, REPO_KEY, REPOS_KEY, USER_KEY]) write(localStorage, key, null)
+    for (const key of [TOKEN_KEY, REPO_KEY, REPOS_KEY, USER_KEY, ...Object.values(OLD_KEYS)]) write(localStorage, key, null)
     for (const key of [TRAILS_KEY, PAGE_KEY, PLANNER_DAYS_KEY]) write(sessionStorage, key, null)
   },
 }

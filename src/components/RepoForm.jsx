@@ -15,7 +15,7 @@ export default function RepoForm({ initial, onConnect, inputRef, inputClassName,
   async function handleSubmit(e) {
     e.preventDefault()
     const parsed = parseRepo(value)
-    if (!parsed) return setError('Use owner/repo format, e.g. ek-so/brain')
+    if (!parsed) return setError('Use owner/repo format, e.g. octocat/notes')
     if (!navigator.onLine) return setError("You're offline. Connect to the internet to check the repo.")
     setBusy(true)
     setError('')
