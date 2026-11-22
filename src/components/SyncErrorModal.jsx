@@ -1,5 +1,5 @@
 import { Button } from './ui/button.jsx'
-import BottomSheet from './BottomSheet.jsx'
+import BottomSheet, { SheetActions } from './BottomSheet.jsx'
 
 // Why a sync or pull failed: plain explanation, what to do, and GitHub's
 // raw answer underneath.
@@ -15,10 +15,10 @@ export default function SyncErrorModal({ error, onRetry, onClose }) {
           </div>
         ))}
       </dl>
-      <div className="flex gap-space-sm">
+      <SheetActions>
         <Button variant="secondary" className="flex-1" onClick={onClose}>Close</Button>
         <Button className="flex-1" onClick={() => { onClose(); onRetry() }}>Try again</Button>
-      </div>
+      </SheetActions>
     </BottomSheet>
   )
 }

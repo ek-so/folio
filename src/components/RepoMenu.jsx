@@ -2,7 +2,7 @@ import { useContext, useRef, useState } from 'react'
 import { ArrowSquareOut, Check, GitBranch } from '@phosphor-icons/react'
 import { Button } from './ui/button.jsx'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from './ui/dropdown-menu.jsx'
-import BottomSheet from './BottomSheet.jsx'
+import BottomSheet, { SheetActions } from './BottomSheet.jsx'
 import RepoForm from './RepoForm.jsx'
 import FileIcon from './FileIcon.jsx'
 import { NavContext, TitleMenuButton } from './NavTree.jsx'
@@ -49,10 +49,10 @@ export default function RepoMenu() {
             inputRef={inputRef}
             inputClassName="font-mono"
             actions={({ busy, empty }) => (
-              <div className="flex justify-end gap-space-sm">
+              <SheetActions>
                 <Button type="button" variant="secondary" onClick={() => setSwitching(false)}>Cancel</Button>
                 <Button type="submit" disabled={busy || empty || nav.syncing}>{busy ? 'Checking…' : nav.syncing ? 'Syncing…' : 'Switch'}</Button>
-              </div>
+              </SheetActions>
             )}
           />
         </BottomSheet>

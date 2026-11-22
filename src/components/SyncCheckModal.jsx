@@ -1,5 +1,5 @@
 import { Button } from './ui/button.jsx'
-import BottomSheet from './BottomSheet.jsx'
+import BottomSheet, { SheetActions } from './BottomSheet.jsx'
 import BrokenLinkList from './BrokenLinkList.jsx'
 import { plural } from '../lib/plural.js'
 
@@ -17,11 +17,11 @@ export default function SyncCheckModal({ broken, files, actions, onOpenPage, onS
       <div className="flex max-h-72 flex-col gap-space-sm overflow-y-auto" data-no-pull>
         <BrokenLinkList broken={broken} files={files} actions={actions} />
       </div>
-      <div className="flex flex-wrap justify-end gap-space-sm">
+      <SheetActions className="flex-wrap">
         <Button variant="secondary" onClick={onClose}>Cancel</Button>
         <Button variant="secondary" onClick={onOpenPage}>Open Broken links</Button>
         <Button onClick={onSyncAnyway}>Sync anyway</Button>
-      </div>
+      </SheetActions>
     </BottomSheet>
   )
 }

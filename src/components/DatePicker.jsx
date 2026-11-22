@@ -2,7 +2,7 @@ import { useState, useRef, cloneElement } from 'react'
 import Later from './Later.jsx'
 import { flushSync } from 'react-dom'
 import { Plus, Trash } from '@phosphor-icons/react'
-import BottomSheet from './BottomSheet.jsx'
+import BottomSheet, { SheetActions } from './BottomSheet.jsx'
 import { ListRow } from './ui/list-row.jsx'
 import { Radio } from './ui/checkbox.jsx'
 import { later } from '@/lib/later.js'
@@ -138,9 +138,9 @@ export default function DatePicker({ date, onPick, required, dayOnly, reminder, 
             )}
           </>}
           {!dayOnly && (
-            <div className="flex justify-end px-space-xs pt-space">
+            <SheetActions className="px-space-xs">
               <Button onMouseDown={e => e.preventDefault()} onClick={() => { saveTime(); setOpen(false) }}>Save</Button>
-            </div>
+            </SheetActions>
           )}
         </div>
       </BottomSheet>

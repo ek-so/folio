@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button.jsx'
 import { Input } from '@/components/ui/input.jsx'
 import { DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu.jsx'
 import ColumnSubmenu from '@/components/ColumnSubmenu.jsx'
-import BottomSheet from '@/components/BottomSheet.jsx'
+import BottomSheet, { SheetActions } from '@/components/BottomSheet.jsx'
 import { cn, own } from '@/lib/utils.js'
 import { fileItem } from '@/lib/folderNotes.js'
 import { properties, valueList, DESCRIPTION } from '@/lib/frontmatter.js'
@@ -56,10 +56,10 @@ function TextModal({ title, description, label, value: initial, onSave, onClose 
     <BottomSheet title={title} description={description} onClose={onClose}>
       <form onSubmit={e => { e.preventDefault(); onSave(value.trim()) }} className="flex flex-col gap-3">
         <Input value={value} onChange={e => setValue(e.target.value)} aria-label={label} placeholder={label} autoCorrect="off" />
-        <div className="flex justify-end gap-space-sm">
+        <SheetActions>
           <Button type="button" variant="secondary" onClick={onClose}>Cancel</Button>
           <Button type="submit">Save</Button>
-        </div>
+        </SheetActions>
       </form>
     </BottomSheet>
   )

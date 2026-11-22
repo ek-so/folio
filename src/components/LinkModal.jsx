@@ -2,7 +2,7 @@ import { useState, useRef } from 'react'
 import { Button } from './ui/button.jsx'
 import { Label } from './ui/label.jsx'
 import { Input } from './ui/input.jsx'
-import BottomSheet from './BottomSheet.jsx'
+import BottomSheet, { SheetActions } from './BottomSheet.jsx'
 
 // Edit link: its name (the link text's markdown) and URL; `onSave(name, url)`
 export default function LinkModal({ name: initialName, url: initialUrl, onSave, onClose }) {
@@ -20,10 +20,10 @@ export default function LinkModal({ name: initialName, url: initialUrl, onSave, 
           URL
           <Input value={url} onChange={e => setUrl(e.target.value)} autoCorrect="off" autoCapitalize="off" spellCheck={false} />
         </Label>
-        <div className="flex justify-end gap-space-sm">
+        <SheetActions>
           <Button type="button" variant="secondary" onClick={onClose}>Cancel</Button>
           <Button type="submit" disabled={!url.trim()}>Save</Button>
-        </div>
+        </SheetActions>
       </form>
     </BottomSheet>
   )

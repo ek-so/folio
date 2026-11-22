@@ -5,7 +5,7 @@ import { useNotifyPermission } from '../hooks/useReminderAlerts.js'
 import { plural } from '../lib/plural.js'
 import { Radio } from './ui/checkbox.jsx'
 import RepoForm from './RepoForm.jsx'
-import BottomSheet from './BottomSheet.jsx'
+import BottomSheet, { SheetActions } from './BottomSheet.jsx'
 import { Button } from './ui/button.jsx'
 import { Label } from './ui/label.jsx'
 import { ListRow } from './ui/list-row.jsx'
@@ -55,10 +55,10 @@ export default function ProfileSheet({ login, repo, repos = [], syncing, onSwitc
       <RepoForm
         initial={repo} onConnect={onSwitchRepo} inputRef={inputRef} inputClassName="font-mono"
         actions={({ busy, empty }) => (
-          <div className="flex justify-end gap-space-sm">
+          <SheetActions>
             <Button type="button" variant="secondary" onClick={() => setStep('repo')}>Cancel</Button>
             <Button type="submit" disabled={busy || empty || syncing}>{busy ? 'Checking…' : syncing ? 'Syncing…' : 'Switch'}</Button>
-          </div>
+          </SheetActions>
         )}
       />
     </BottomSheet>
@@ -107,10 +107,10 @@ export default function ProfileSheet({ login, repo, repos = [], syncing, onSwitc
       description={`${plural(emojiNames.count, 'name')} lose${emojiNames.count === 1 ? 's' : ''} the emoji, which becomes the icon kept in .folio. Files are renamed and every link to them is updated; Sync to apply it on GitHub.`}
       onBack={() => setStep('settings')} onClose={onClose}
     >
-      <div className="flex flex-wrap justify-end gap-space-sm">
+      <SheetActions className="flex-wrap">
         <Button variant="secondary" onClick={() => setStep('settings')}>Cancel</Button>
         <Button onClick={() => { emojiNames.onMove(); setStep('settings') }}>Move to icons</Button>
-      </div>
+      </SheetActions>
     </BottomSheet>
   )
 

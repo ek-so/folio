@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button.jsx'
 import InlineRename from './InlineRename.jsx'
 import { ListRow, ListBox } from '@/components/ui/list-row.jsx'
 import { Checkbox } from '@/components/ui/checkbox.jsx'
-import BottomSheet from '@/components/BottomSheet.jsx'
+import BottomSheet, { SheetActions } from '@/components/BottomSheet.jsx'
 import AddNameField from '@/components/AddNameField.jsx'
 import { EmptyMessage } from './EmptyState.jsx'
 
@@ -80,9 +80,9 @@ export default function CheckListModal({ title, description, header, items, lock
           {!items.length && <EmptyMessage size="sm" emoji={empty.emoji}>{empty.text}</EmptyMessage>}
         </ListBox>
         {onAdd && <AddNameField label={addLabel} onAdd={onAdd} />}
-        <div className="flex justify-end">
+        <SheetActions>
           <Button onClick={onClose}>Done</Button>
-        </div>
+        </SheetActions>
       </div>
     </BottomSheet>
   )

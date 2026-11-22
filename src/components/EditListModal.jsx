@@ -6,7 +6,7 @@ import { CSS } from '@dnd-kit/utilities'
 import { cn } from '@/lib/utils.js'
 import { Button } from './ui/button.jsx'
 import { ListRow, ListBox } from './ui/list-row.jsx'
-import BottomSheet from './BottomSheet.jsx'
+import BottomSheet, { SheetActions } from './BottomSheet.jsx'
 import { EmptyMessage } from './EmptyState.jsx'
 
 // A sheet to edit a list of `items` ([{ id, icon, title, label? (its name when `title` isn't text) }]; a view's widgets, the views, a Pinned widget's notes and folders): drag them into
@@ -30,9 +30,9 @@ export default function EditListModal({ title, description, items, onMove, onRem
             </ListBox>
           </SortableContext>
         </DndContext>
-        <div className="flex justify-end">
+        <SheetActions>
           <Button onClick={onClose}>Done</Button>
-        </div>
+        </SheetActions>
       </div>
     </BottomSheet>
   )

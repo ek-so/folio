@@ -1,7 +1,7 @@
 import { useState, useRef, useContext } from 'react'
 import { Button } from './ui/button.jsx'
 import { Input } from './ui/input.jsx'
-import BottomSheet from './BottomSheet.jsx'
+import BottomSheet, { SheetActions } from './BottomSheet.jsx'
 import TitleNameFields from './TitleNameFields.jsx'
 import { useTitleName } from '../hooks/useTitleName.js'
 import { splitName, renameTarget } from '../lib/changes.js'
@@ -58,10 +58,10 @@ export default function RenameModal({ item, onRename, onClose, kind, placeholder
         {linkCount > 0 && (
           <p className="text-muted-foreground text-xs">Also updates links in {plural(linkCount, 'note')}.</p>
         )}
-        <div className="flex justify-end gap-space-sm">
+        <SheetActions>
           <Button type="button" variant="secondary" onClick={onClose}>Cancel</Button>
           <Button type="submit" disabled={(!name.trim() && placeholder === undefined) || (withTitle && !fields.title.trim())}>Save</Button>
-        </div>
+        </SheetActions>
       </form>
     </BottomSheet>
   )

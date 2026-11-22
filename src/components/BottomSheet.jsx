@@ -42,22 +42,35 @@ function OverlayHeader({ title, description, onBack }) {
   )
 }
 
+// A sheet's buttons (Cancel, Save…), its last row: they stay at the bottom while what's above them scrolls (sticky in the
+// sheet's scrolling body, so they can sit inside a form and still submit it). `className` for their own alignment
+export function SheetActions({ className, children }) {
+  return <div className={cn('sticky bottom-0 z-10 -mb-1 flex justify-end gap-space-sm bg-card pt-space-sm pb-1', className)}>{children}</div>
+}
+
 // Every prompt: a sheet from the bottom on phones, a centered dialog from 768px, with the same header (`OverlayHeader`:
 // `title`, `description`, `onBack`). `onBack`: a ← before the title, back to where the sheet came from (a step inside
-// it); `wide`: a wider dialog, for content to read (a note)
+// it); `wide`: a wider dialog, for content to read (a note). It's never taller than the screen (above the keyboard): the
+// header stays put and the rest scrolls under it, its buttons (`SheetActions`) staying at the bottom
 export default function BottomSheet({ title, description, onBack, wide, onClose, onOpenAutoFocus, children }) {
   const isDesktop = useIsDesktop()
   const keyboard = useKeyboardInset()
   useEffect(() => releaseStalePageLock, [])
-  const header = <OverlayHeader title={title} description={description} onBack={onBack} />
+  const header = <div className="shrink-0"><OverlayHeader title={title} description={description} onBack={onBack} /></div>
+  // The scrolling body reaches into the sheet's 24px sides (and 4px above and below) so rows that do, and focus rings, aren't cut off
+  const body = (
+    <div data-no-pull className="-mx-space-lg -my-1 flex min-h-0 flex-1 flex-col gap-space overflow-y-auto overscroll-contain px-space-lg py-1">
+      {children}
+    </div>
+  )
   const describedBy = description ? {} : { 'aria-describedby': undefined }
 
   if (isDesktop) {
     return (
       <Dialog open onOpenChange={open => !open && onClose()}>
-        <DialogContent className={cn(wide && 'max-w-3xl')} showCloseButton={false} onOpenAutoFocus={onOpenAutoFocus} {...describedBy}>
+        <DialogContent className={cn('max-h-[calc(100dvh-2*var(--space-lg))]', wide && 'max-w-3xl')} showCloseButton={false} onOpenAutoFocus={onOpenAutoFocus} {...describedBy}>
           {header}
-          {children}
+          {body}
         </DialogContent>
       </Dialog>
     )
@@ -71,13 +84,14 @@ export default function BottomSheet({ title, description, onBack, wide, onClose,
         className="mx-auto w-full max-w-[680px] gap-space rounded-t-2xl bg-card p-space-lg"
         style={{
           bottom: keyboard,
+          maxHeight: `calc(100dvh - ${keyboard}px - var(--safe-top) - var(--space-lg))`,
           paddingBottom: keyboard ? '1.5rem' : 'calc(1.5rem + var(--safe-bottom))',
         }}
         onOpenAutoFocus={onOpenAutoFocus}
         {...describedBy}
       >
         {header}
-        {children}
+        {body}
       </SheetContent>
     </Sheet>
   )

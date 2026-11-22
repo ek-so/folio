@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Button } from './ui/button.jsx'
 import { Input } from './ui/input.jsx'
-import BottomSheet from './BottomSheet.jsx'
+import BottomSheet, { SheetActions } from './BottomSheet.jsx'
 import TitleNameFields from './TitleNameFields.jsx'
 import { useTitleName } from '../hooks/useTitleName.js'
 import { DateField } from './DateBadge.jsx'
@@ -53,10 +53,10 @@ export default function NewFileModal({ folder, kind, date: startDate, onCreate, 
           </div>
         )}
         {error && <p className="text-destructive-ink text-xs">{error}</p>}
-        <div className="flex justify-end gap-space-sm">
+        <SheetActions>
           <Button type="button" variant="secondary" onClick={onClose}>Cancel</Button>
           <Button type="submit" disabled={!ready}>Create</Button>
-        </div>
+        </SheetActions>
       </form>
     </BottomSheet>
   )

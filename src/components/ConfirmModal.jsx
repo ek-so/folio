@@ -1,5 +1,5 @@
 import { Button } from './ui/button.jsx'
-import BottomSheet from './BottomSheet.jsx'
+import BottomSheet, { SheetActions } from './BottomSheet.jsx'
 
 // The one confirmation for every destructive action (delete, discard, sign
 // out, remove): `title`, `description`, Cancel and the red `confirm` button
@@ -9,11 +9,11 @@ import BottomSheet from './BottomSheet.jsx'
 export default function ConfirmModal({ title, description, confirm = 'Remove', onConfirm, alternative, safe, onClose }) {
   return (
     <BottomSheet title={title} description={description} onClose={onClose}>
-      <div className="flex flex-wrap justify-end gap-space-sm">
+      <SheetActions className="flex-wrap">
         <Button variant="secondary" onClick={onClose}>Cancel</Button>
         {alternative && <Button variant="secondary" onClick={alternative.onSelect}>{alternative.label}</Button>}
         <Button variant={safe ? 'default' : 'destructive'} onClick={onConfirm}>{confirm}</Button>
-      </div>
+      </SheetActions>
     </BottomSheet>
   )
 }
