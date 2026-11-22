@@ -10,6 +10,7 @@ import { ListRow } from './ui/list-row.jsx'
 import { LINK_ERRORS } from '../lib/files.js'
 import { fileItem } from '../lib/folderNotes.js'
 import { EmptyMessage, EMPTY } from './EmptyState.jsx'
+import { Dot } from '@/components/ui/dot.jsx'
 
 // What the title bar's folder tree needs from App: `listDir(dir)`, `symlinks`, the `current`
 // path (open file or folder), the open `file` (null for a folder), `dir` (the open folder, or the open file's),
@@ -137,7 +138,7 @@ export const TitleMenuButton = forwardRef(function TitleMenuButton({ icon, child
     <Button ref={ref} variant={bare ? 'ghost' : 'outline'} className={cn('min-w-0 max-w-full gap-space-sm px-3', className)} {...props}>
       {icon}
       <span className="truncate">{children}</span>
-      {changed && <span aria-label="Unsaved changes" className="size-1.5 shrink-0 rounded-full bg-primary" />}
+      {changed && <Dot aria-label="Unsaved changes" />}
       <CaretDown className="text-muted-foreground" />
     </Button>
   )

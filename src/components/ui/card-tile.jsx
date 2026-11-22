@@ -1,5 +1,6 @@
 import { cn } from '@/lib/utils'
 import { Tip } from './tooltip.jsx'
+import { Dot } from './dot.jsx'
 
 // The tinted square behind a card's icon (`tint`: { className, style }, FileIcon's iconTint); also on an audio file's page
 export function TileIcon({ tint, children }) {
@@ -35,7 +36,7 @@ export function CardTile({ icon, title, trailing, onClick, tint, tall, dimmed, c
         <span className={cn('line-clamp-2 w-full break-words', tall && 'min-h-[2lh]')}>
           <span data-card-label>
             {title}
-            {changed && <span className="ml-1.5 inline-block size-1.5 rounded-full bg-primary align-middle" />}
+            {changed && <Dot className="ml-1.5 align-middle" />}
           </span>
         </span>
       </button>

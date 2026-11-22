@@ -3,6 +3,7 @@ import { CalendarBlank, Clock, BellSimple } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils.js'
 import { Badge } from './ui/badge.jsx'
 import DatePicker from './DatePicker.jsx'
+import { Dot } from '@/components/ui/dot.jsx'
 
 // A date (lib/dates.js) as a grey badge (or in Badge's `tone`: a late one red), its calendar icon (a clock for a time alone) grey too, then the date as "17 Oct 2026, 14:30" (its spot,
 // a <time>, holds the machine-readable date). In a line of text (`inline`) it's small, so the line keeps its
@@ -20,7 +21,7 @@ const DateBadge = forwardRef(function DateBadge({ label, inline, reminded, rang,
       {reminded && (
         <span className="relative flex shrink-0">
           <BellSimple aria-label={rang ? 'Reminder came due' : 'Reminder set'} className={inline ? 'size-3.5' : 'size-4'} />
-          {rang && <span aria-hidden className="absolute -right-0.5 -top-0.5 size-1.5 rounded-full bg-destructive ring-1 ring-card" />}
+          {rang && <Dot tone="destructive" className="absolute -right-0.5 -top-0.5" />}
         </span>
       )}
     </Badge>

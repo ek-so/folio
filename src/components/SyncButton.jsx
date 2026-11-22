@@ -2,6 +2,7 @@ import { ArrowUp, ArrowDown, ArrowsClockwise, X, CloudSlash, Trash } from '@phos
 import { cn } from '@/lib/utils.js'
 import { Button } from './ui/button.jsx'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from './ui/dropdown-menu.jsx'
+import { Dot } from '@/components/ui/dot.jsx'
 
 const LOOK = {
   idle: { label: 'Sync' },
@@ -44,7 +45,7 @@ export default function SyncButton({ className, compact, bar, syncState, syncing
   const StateIcon = Icon || ArrowsClockwise
   const icon = syncing ? <span className="size-4 rounded-full border border-current border-t-transparent animate-spin opacity-60" /> : <StateIcon />
   const iconOnly = compact || bar
-  const dot = pending && <span aria-label={directions} className="absolute right-1.5 top-1.5 size-2 rounded-full bg-primary" />
+  const dot = pending && <Dot size="md" corner aria-label={directions} />
 
   return (
     <DropdownMenu>

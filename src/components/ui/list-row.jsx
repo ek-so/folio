@@ -1,6 +1,7 @@
 import { cn } from '@/lib/utils'
 import { Tip } from './tooltip.jsx'
 import { Button } from './button.jsx'
+import { Dot } from './dot.jsx'
 
 // One row of any list (file manager, folder tree, search, move, backlinks): a
 // base-height (40px), rounded row, highlighted on hover or while its ⋯ menu is
@@ -44,7 +45,7 @@ export function ListRow({ icon, title, description, bigDescription, leading, tra
         <span className="min-w-0 flex-1">
           <span className="block truncate">
             {title}
-            {changed && <span className="ml-1.5 inline-block size-1.5 rounded-full bg-primary align-middle" />}
+            {changed && <Dot className="ml-1.5 align-middle" />}
           </span>
           {description && <span className={cn('block truncate text-muted-foreground @min-[40rem]:hidden', bigDescription ? 'text-sm' : 'text-xs')}>{description}</span>}
         </span>

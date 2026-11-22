@@ -18,6 +18,7 @@ import BrandName from './BrandName.jsx'
 import ViewMenu, { ViewsTitle } from './ViewMenu.jsx'
 import PageTitle from './PageTitle.jsx'
 import PageIcon from './PageIcon.jsx'
+import { Dot } from '@/components/ui/dot.jsx'
 
 
 // The app's primary navigation, in place of a header. `menu`: brokenCount, unseenReminders (Notifications' count: reminders come due since it was last opened) and
@@ -104,7 +105,7 @@ export function NavRail({ page, pages, hrefOf, viewActions, onPage, onSearch, re
       <Button variant="ghost" tooltip={hint('Notifications')} tooltipSide="right" aria-current={page === PAGE.NOTIFICATIONS ? 'page' : undefined} className={cn(item(PAGE.NOTIFICATIONS), 'relative')} onClick={() => onPage(PAGE.NOTIFICATIONS)}>
         <Bell /> {label('Notifications')}
         {menu.unseenReminders > 0 && (collapsed
-          ? <span className="absolute right-1.5 top-1.5 size-2 rounded-full bg-destructive" aria-label={`${menu.unseenReminders} new`} />
+          ? <Dot tone="destructive" size="md" corner aria-label={`${menu.unseenReminders} new`} />
           : <span className="ml-auto text-destructive-ink">{menu.unseenReminders}</span>)}
       </Button>
       <Button variant="ghost" tooltip={hint('Recent updates')} tooltipSide="right" aria-current={page === PAGE.HISTORY ? 'page' : undefined} className={item(PAGE.HISTORY)} onClick={() => onPage(PAGE.HISTORY)}>
@@ -113,7 +114,7 @@ export function NavRail({ page, pages, hrefOf, viewActions, onPage, onSearch, re
       <Button variant="ghost" tooltip={hint('Broken links')} tooltipSide="right" aria-current={page === PAGE.LINKS ? 'page' : undefined} className={cn(item(PAGE.LINKS), 'relative')} onClick={() => onPage(PAGE.LINKS)}>
         <LinkBreak /> {label('Broken links')}
         {menu.brokenCount > 0 && (collapsed
-          ? <span className="absolute right-1.5 top-1.5 size-2 rounded-full bg-muted-foreground" aria-label={`${menu.brokenCount} broken`} />
+          ? <Dot tone="muted" size="md" corner aria-label={`${menu.brokenCount} broken`} />
           : <span className="ml-auto text-muted-foreground">{menu.brokenCount}</span>)}
       </Button>
       <Button variant="ghost" tooltip={hint('Documentation')} tooltipSide="right" aria-current={page === PAGE.DOCS ? 'page' : undefined} className={item(PAGE.DOCS)} onClick={() => onPage(PAGE.DOCS)}>
@@ -128,7 +129,7 @@ export function NavRail({ page, pages, hrefOf, viewActions, onPage, onSearch, re
 }
 
 // Phones: a bar at the top with the menu (the app's logo and name, an outlined button: every page, then the rest) on the
-// left, Notifications (its bell, with how many came due since it was last opened on its corner: `menu.unseenReminders`),
+// left, Notifications (its bell, with a red dot on its corner while some came due since it was last opened: `menu.unseenReminders`, like Sync's),
 // Search and Sync on the right. It slides away while
 // the content scrolls down and returns on scrolling up (`useHideOnScroll`): its row folds in 300ms with a gentle ease while
 // what's in it slides up and fades, so the page under it moves softly.
@@ -148,11 +149,7 @@ export function TopBar({ host, resetKey, page, pages, viewActions, onPage, onSea
         aria-current={page === PAGE.NOTIFICATIONS ? 'page' : undefined} onClick={() => onPage(PAGE.NOTIFICATIONS)}
       >
         <Bell />
-        {menu.unseenReminders > 0 && (
-          <span aria-hidden className="absolute -right-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-xs font-semibold leading-none text-destructive-foreground">
-            {menu.unseenReminders > 99 ? '99+' : menu.unseenReminders}
-          </span>
-        )}
+        {menu.unseenReminders > 0 && <Dot tone="destructive" size="md" corner />}
       </Button>
       <Button variant="ghost-outline" size="icon" aria-label="Search" onClick={onSearch}>
         <MagnifyingGlass />
