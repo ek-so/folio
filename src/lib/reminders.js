@@ -3,9 +3,8 @@ import { valueDate } from './markdown.js'
 
 // A date property's reminder: how long before its date and time to remind. Kept in the note, beside the date, as a
 // property of its own named after it: `date-reminder: 1h` for `date` (the note's content, not Folio's settings: it says
-// when its event needs you). The offsets, with their labels in the date picker; '' is none (the property is taken out)
+// when its event needs you). The offsets, with their labels in the date picker ('' is none: the property is taken out)
 export const REMINDERS = [
-  ['', 'None'],
   ['0m', 'At the time'],
   ['10m', '10 minutes before'],
   ['1h', '1 hour before'],

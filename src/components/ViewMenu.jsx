@@ -3,7 +3,7 @@ import { PencilSimple, Trash, SquaresFour, SlidersHorizontal, Plus } from '@phos
 import { EmojiSubmenu } from './EmojiPicker.jsx'
 import { DropdownMenuItem } from './ui/dropdown-menu.jsx'
 import MoreMenu from './MoreMenu.jsx'
-import { cn } from '@/lib/utils.js'
+import { SectionTitle } from './ui/section-title.jsx'
 
 // A view's ⋯. On its page's title bar: Edit widgets (its Edit widgets sheet), then Rename and Emoji, then Remove; `inRow`, on
 // its row in the navigation (rail and the phone's ☰ sheet; a medium ⋯ shown while the row is hovered, with a mouse; always
@@ -40,15 +40,19 @@ export function ViewsTitle({ actions, onPick = () => {}, className, collapsed })
   const disabled = !actions.canEdit
   const pick = fn => () => { onPick(); fn() }
   return (
-    <div className={cn('flex min-h-control items-center gap-space-sm', collapsed ? 'justify-center' : 'pl-3 pr-1', className)}>
-      <h2 className={collapsed ? 'sr-only' : 'min-w-0 flex-1 truncate text-xs font-medium text-muted-foreground'}>Views</h2>
-      <MoreMenu
-        label="Views actions" inRow
-        sections={[<>
-          <DropdownMenuItem disabled={disabled} onSelect={pick(actions.onNewView)}><Plus /> New view</DropdownMenuItem>
-          <DropdownMenuItem disabled={disabled} onSelect={pick(actions.onEditViews)}><SlidersHorizontal /> Edit views</DropdownMenuItem>
-        </>]}
-      />
-    </div>
+    <SectionTitle
+      hidden={collapsed} className={className}
+      trailing={(
+        <MoreMenu
+          label="Views actions" inRow
+          sections={[<>
+            <DropdownMenuItem disabled={disabled} onSelect={pick(actions.onNewView)}><Plus /> New view</DropdownMenuItem>
+            <DropdownMenuItem disabled={disabled} onSelect={pick(actions.onEditViews)}><SlidersHorizontal /> Edit views</DropdownMenuItem>
+          </>]}
+        />
+      )}
+    >
+      Views
+    </SectionTitle>
   )
 }
