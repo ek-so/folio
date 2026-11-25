@@ -61,7 +61,7 @@ const NoteCard = forwardRef(function NoteCard({ path, text, dir, properties = []
       </div>
       {detail && <p className="break-words pt-space-xs text-sm text-muted-foreground">{detail}</p>}
       <PropertyBadges afterDescription={upNext && (
-        <div key="up-next" className="flex items-start gap-space-sm">
+        <div key="up-next" className="flex items-start gap-space-sm pl-0.5">
           <span className="flex h-5 shrink-0 items-center"><Dot tone="destructive" /></span>
           <InlineMarkdown text={upNext} path={path} files={files} className="min-w-0 break-words text-sm text-muted-foreground line-clamp-3" />
         </div>

@@ -66,7 +66,7 @@ export default function PropertyBadges({ props, all = props, withReminders, path
   const colors = Object.fromEntries([...new Set(props.map(p => p.key))].map(key =>
     [key, valueColors(key, [...(options?.(key) ?? []), ...valueList(props.find(p => p.key === key).value)], chosen?.[key])]))
   const body = parts.map((part, i) => part.text
-    ? <InlineMarkdown key={i} text={part.text} path={path} files={files} onChange={onChange && (text => onChange(DESCRIPTION, text))} className={cn('break-words text-sm text-muted-foreground', clamp && 'line-clamp-3')} />
+    ? <InlineMarkdown key={i} text={part.text} path={path} files={files} onChange={onChange && (text => onChange(DESCRIPTION, text))} className={cn('break-words text-sm text-muted-foreground', clamp && 'line-clamp-3 pl-0.5')} />
     : (
       <div key={i} data-badges className="flex flex-wrap gap-space-xs">
         {part.badges.map(({ id, prop, label }) => badges?.[prop.key]
