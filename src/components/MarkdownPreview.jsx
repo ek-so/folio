@@ -160,9 +160,10 @@ function placeMenus(root) {
     spot.style.left = spot.style.top = ''
     const owner = spot.parentElement
     const range = document.createRange()
+    let nested = null // a list item's sub-list, not part of its own line
     if (owner.tagName === 'LI') {
       const own = [...owner.childNodes].filter(n => !(n.nodeType === Node.ELEMENT_NODE && n.matches('ul, ol, .item-menu, .list-grip')))
-      const nested = owner.querySelector(':scope > ul, :scope > ol')
+      nested = owner.querySelector(':scope > ul, :scope > ol')
       const content = own.filter(n => !nested || !(nested.compareDocumentPosition(n) & Node.DOCUMENT_POSITION_FOLLOWING))
       if (!content.length) continue
       range.setStartBefore(content[0])
@@ -173,7 +174,9 @@ function placeMenus(root) {
       range.selectNodeContents(text)
     }
     // the text's last line: what sits level with its lowest box (a link badge wrapped onto a line of its own counts whole)
-    const rects = [...range.getClientRects()].filter(r => r.width)
+    // (the range lists a selected element's own box only, not its children's: an inline link badge lives in them)
+    const inside = [...range.commonAncestorContainer.querySelectorAll('*')].filter(el => range.intersectsNode(el) && !el.closest('.item-menu, .list-grip') && !nested?.contains(el))
+    const rects = [...range.getClientRects(), ...inside.flatMap(el => [...el.getClientRects()])].filter(r => r.width)
     const lowest = rects.reduce((a, r) => !a || r.bottom > a.bottom ? r : a, null)
     const line = lowest && rects.filter(r => (r.top + r.bottom) / 2 > lowest.top && (r.top + r.bottom) / 2 < lowest.bottom)
     const last = lowest && { right: Math.max(...line.map(r => r.right)), top: lowest.top, height: lowest.height }
