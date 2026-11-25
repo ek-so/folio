@@ -711,7 +711,7 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
             onRemove={() => onChange(removeListItem(content, lists, [Number(list), Number(item)]))}
           />, spot, `menu-${list}-${item}`)
       })}
-      {tagSpots.map((spot, i) => createPortal(<Badge tone="var(--destructive)" className="mr-space-xs h-5 whitespace-nowrap px-1.5 py-0 align-[-0.15em] text-xs">Up next</Badge>, spot, `up-next-${i}`))}
+      {tagSpots.map((spot, i) => createPortal(<Badge tone="var(--destructive)" className="mr-space-xs h-5 whitespace-nowrap px-1.5 py-0 align-middle text-xs">Up next</Badge>, spot, `up-next-${i}`))}
       {columnSpots.map(spot => {
         const { table: t, col: c } = spot.dataset
         const col = tables[t]?.columns[c]
