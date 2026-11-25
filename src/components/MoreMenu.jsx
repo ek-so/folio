@@ -13,13 +13,14 @@ export const REVEAL = 'pointer-fine:opacity-0 pointer-fine:group-hover:opacity-1
 // Open on GitHub · Export · Lock), then Remove, last.
 // The button is always empty (no fill, no border) until hovered or open, in two sizes: in a title row (the view's, a
 // widget's, an item's) a `ghost` base-size button with a 20px ⋯, or `inRow`, inside something that is itself hoverable (a
-// list row, a card, a tray's title) a quiet medium one with a 16px ⋯. `reveal`: shown only while its row is hovered (REVEAL; or a class
+// list row, a card, a tray's title) a quiet medium one with a 16px ⋯, or `small`, a quiet 24px one where a line is too short for
+// more (the note preview's item menus, BlockMenu). `reveal`: shown only while its row is hovered (REVEAL; or a class
 // string for another group). `label` is its aria-label; `open` / `onOpenChange` control it; `align` places the menu.
-export default function MoreMenu({ label, inRow, reveal, disabled, className, align = 'end', open, onOpenChange, sections }) {
+export default function MoreMenu({ label, inRow, small, reveal, disabled, className, align = 'end', open, onOpenChange, sections }) {
   return (
     <DropdownMenu open={open} onOpenChange={onOpenChange}>
       <DropdownMenuTrigger asChild>
-        <MoreButton inRow={inRow} reveal={reveal} disabled={disabled} className={className} aria-label={label} />
+        <MoreButton inRow={inRow} small={small} reveal={reveal} disabled={disabled} className={className} aria-label={label} />
       </DropdownMenuTrigger>
       <DropdownMenuContent align={align} className="w-56" onCloseAutoFocus={e => e.preventDefault()}>
         {menuSections(sections)}
@@ -43,16 +44,16 @@ const hasItems = node => !node && node !== 0 ? false
   : Array.isArray(node) ? node.some(hasItems)
   : true
 
-const MoreButton = forwardRef(function MoreButton({ inRow, reveal, className, ...props }, ref) {
+const MoreButton = forwardRef(function MoreButton({ inRow, small, reveal, className, ...props }, ref) {
   return (
     <Button
       ref={ref}
-      variant={inRow ? 'ghost-quiet' : 'ghost'}
-      size={inRow ? 'icon-md' : 'icon'}
+      variant={inRow || small ? 'ghost-quiet' : 'ghost'}
+      size={small ? 'icon-sm' : inRow ? 'icon-md' : 'icon'}
       className={cn(!inRow && 'data-[state=open]:bg-secondary', reveal === true ? REVEAL : reveal, className)}
       {...props}
     >
-      <DotsThree weight="bold" size={inRow ? 16 : 20} />
+      <DotsThree weight="bold" size={inRow || small ? 16 : 20} />
     </Button>
   )
 })

@@ -124,6 +124,12 @@ marked.use({
   }],
 })
 
+// The Up next flag: a note's one task or item the board card shows under its description. It is written in the item,
+// first in its text (after the list marker and the checkbox), so it stays with the item and the note carries its meaning
+const UP_NEXT_START = /^==Up next==[ \t]*/
+const ITEM_LEAD = String.raw`[ \t]*(?:[-*+]|\d{1,9}[.)])[ \t]+(?:\[[ xX]\][ \t]+)?`
+const FLAGGED_LINE = new RegExp(`^(${ITEM_LEAD})==Up next==[ \\t]*`)
+
 const escapeAttr = s => s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 
 // Where the preview shows plain text (where it shows dates as badges): [start, end] of each piece of `markdown`'s
@@ -195,8 +201,21 @@ export function valueDate(value, now = new Date()) {
 // One line of markdown as HTML (a property's value, such as a description), its dates as date spots
 export const renderInline = text => marked.Parser.parseInline(withDates(marked.Lexer.lexInline(text)))
 
+// A list item opening with the Up next marker has it as a token of its own: an empty <span class="up-next-spot"> the
+// preview fills with a tag
+marked.use({ extensions: [{ name: 'upNext', renderer: () => '<span class="up-next-spot"></span>' }] })
+const markUpNext = token => {
+  const inline = token.type === 'list_item' && ['text', 'paragraph'].includes(token.tokens?.[0]?.type) ? token.tokens[0].tokens : null
+  const first = inline?.[0]
+  const m = first?.type === 'text' && UP_NEXT_START.exec(first.text)
+  if (!m) return
+  const rest = first.text.slice(m[0].length)
+  inline.splice(0, 1, { type: 'upNext', raw: m[0] }, ...(rest ? [{ ...first, raw: rest, text: rest }] : []))
+}
+
 // Run on the lexed tokens (renderBlocks lexes and parses separately, so marked's own walkTokens doesn't run)
 const addDates = token => {
+  markUpNext(token)
   if (token.type === 'table') for (const cell of [...token.header, ...token.rows.flat()]) cell.tokens = withDates(cell.tokens)
   else if (token.tokens && ['paragraph', 'heading', 'text'].includes(token.type)) token.tokens = withDates(token.tokens)
 }
@@ -405,7 +424,7 @@ export function listsIn(raw) {
         stack.push(top)
       }
       top.content = indent + Math.max(m[0].length - m[1].length, m[2].length + 1) // where its text starts
-      const item = { start: at, end: raw.length, word: firstWord(line.slice(m[0].length).replace(/^\[[ xX]\][ \t]*/, '')) }
+      const item = { start: at, end: raw.length, word: firstWord(line.slice(m[0].length).replace(/^\[[ xX]\][ \t]*/, '').replace(UP_NEXT_START, '')) }
       top.list.items.push(item)
       for (const prev of marks) if (prev.item.end === raw.length && prev.item !== item && indent < prev.content) prev.item.end = at
       marks.push({ item, content: top.content })
@@ -414,6 +433,9 @@ export function listsIn(raw) {
   }
   return lists
 }
+
+// Where an item's text ends: before the line breaks that end it
+const itemTextEnd = (text, i) => i.start + text.slice(i.start, i.end).replace(/\n+$/, '').length
 
 // `text` with the item `from` ([list, item]; lists from listsIn, offsets into `text`) moved before the
 // item `to` ([list, item]), or after it (`after`), into any list, its sub-items with it. It takes the
@@ -426,7 +448,7 @@ export function moveListItem(text, lists, from, to, after = false) {
   const target = targetList.items[to[1]]
   const next = targetList.items[to[1] + (after ? 1 : 0)]
   if ((target.start >= item.start && target.start < item.end) || next === item) return text
-  const textEnd = i => i.start + text.slice(i.start, i.end).replace(/\n+$/, '').length
+  const textEnd = i => itemTextEnd(text, i)
   const itemEnd = textEnd(item)
   const prev = source.items[from[1] - 1]
   // the item and the gap after it go; the last item of a list takes the gap before it instead
@@ -457,11 +479,41 @@ export function moveListItem(text, lists, from, to, after = false) {
   // renumber the ordered lists where the item left and where it landed
   const landed = at > cut[0] ? at - (cut[1] - cut[0]) : at
   const left = at > cut[0] ? cut[0] : cut[0] + insert.length
-  let result = out
-  const fixes = listsIn(out).filter(l => l.ordered && [landed, left].some(p => p >= l.items[0].start && p <= l.items.at(-1).end))
-    .flatMap(l => l.items.map((it, k) => ({ it, number: l.first + k }))).sort((a, b) => b.it.start - a.it.start)
+  return renumbered(out, [landed, left])
+}
+
+// `text` with the ordered lists around the offsets `points` numbered again from their first number (`first`: the one it had)
+function renumbered(text, points, first) {
+  let result = text
+  const fixes = listsIn(text).filter(l => l.ordered && points.some(p => p >= l.items[0].start && p <= l.items.at(-1).end))
+    .flatMap(l => l.items.map((it, k) => ({ it, number: (first ?? l.first) + k }))).sort((a, b) => b.it.start - a.it.start)
   for (const { it, number } of fixes) result = result.slice(0, it.start) + result.slice(it.start).replace(/^([ \t]*)\d+/, (_, sp) => sp + number)
   return result
+}
+
+// `text` without the item `from` ([list, item]; lists from listsIn), its sub-items with it (and the gap after it; the last
+// item of a list takes the gap before it instead), the ordered list it was in numbered again
+export function removeListItem(text, lists, from) {
+  const { items } = lists[from[0]]
+  const item = items[from[1]]
+  const prev = items[from[1] - 1]
+  const last = from[1] === items.length - 1
+  const cut = last && prev ? [itemTextEnd(text, prev), itemTextEnd(text, item)] : [item.start, item.end]
+  const before = text.slice(0, cut[0])
+  // the list's only item: the blank lines around it go with it, the gap before it stays
+  const after = prev || !last ? text.slice(cut[1]) : text.slice(cut[1]).replace(/^\n+/, '')
+  return renumbered(after ? before + after : before.replace(/\n{2,}$/, '\n'), [cut[0]], lists[from[0]].first)
+}
+
+// `text` without the block at `at` of `blocks` (as moveBlock's), a heading's section with it, the gap after it (the last
+// block takes the gap before it instead)
+export function removeBlock(text, blocks, at) {
+  const bodies = blocks.map(b => text.slice(b.start, b.end).replace(/\s+$/, ''))
+  const [first, end] = blockSection(bodies, at)
+  const stop = blocks[end - 1].start + bodies[end - 1].length
+  if (end < blocks.length) return text.slice(0, blocks[first].start) + text.slice(blocks[end].start)
+  const from = first ? blocks[first - 1].start + bodies[first - 1].length : blocks[first].start
+  return text.slice(0, from) + text.slice(stop)
 }
 
 // A block's heading level (1-6), or 0 when it isn't a heading; whether it's a list
@@ -511,6 +563,36 @@ export function moveBlock(text, blocks, from, at) {
 // "[x]" further along in its text.
 const TASK = /^[ \t>]*(?:[-*+]|\d+[.)])[ \t]+\[[ xX]\]/gm
 export const taskOffsets = raw => [...raw.matchAll(TASK)].map(m => m.index + m[0].length - 2)
+
+// `text` with the checkbox at `offset` (taskOffsets) ticked or not; ticking an item takes its Up next flag off
+export function withTick(text, offset, checked) {
+  const out = text.slice(0, offset) + (checked ? 'x' : ' ') + text.slice(offset + 1)
+  if (!checked) return out
+  const start = out.lastIndexOf('\n', offset) + 1
+  const m = FLAGGED_LINE.exec(out.slice(start).split('\n', 1)[0])
+  return m ? out.slice(0, start + m[1].length) + out.slice(start + m[0].length) : out
+}
+
+// Whether the list item starting at `at` is flagged Up next
+export const isUpNext = (text, at) => FLAGGED_LINE.test(text.slice(at).split('\n', 1)[0])
+
+// `text` with the list item starting at `at` flagged Up next, the flag taken off any other item (one flag in a note), or off
+// that item when it has it
+export function withUpNext(text, at) {
+  const was = isUpNext(text, at)
+  let moved = 0 // what the flags before the item took out
+  const clean = text.replace(new RegExp(FLAGGED_LINE.source, 'gm'), (m, lead, i) => { if (i < at) moved += m.length - lead.length; return lead })
+  if (was) return clean
+  const start = at - moved
+  const lead = new RegExp(`^${ITEM_LEAD}`).exec(clean.slice(start).split('\n', 1)[0])
+  return lead ? clean.slice(0, start + lead[0].length) + '==Up next== ' + clean.slice(start + lead[0].length) : clean
+}
+
+// The text of a note's Up next item (its first line, after its marker and checkbox), '' without one; a board card shows it
+export function upNextText(text) {
+  const line = blankFrontMatter(text).replace(FENCE, '').split('\n').find(l => FLAGGED_LINE.test(l))
+  return line ? line.replace(FLAGGED_LINE, '').trim() : ''
+}
 
 // { done, total } of a note's task checkboxes, outside its front matter and code fences
 const FENCE = /^ {0,3}(`{3,}|~{3,})[\s\S]*?(?:^ {0,3}\1[ \t]*$|(?![\s\S]))/gm

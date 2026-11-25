@@ -1,17 +1,20 @@
 import { useMemo, useEffect, useLayoutEffect, useRef, useState, forwardRef, useImperativeHandle } from 'react'
 import { safeHtml } from '../lib/sanitize.js'
 import { withoutTitleHeading, titleHeadingSpan } from '../lib/frontmatter.js'
-import { renderBlocks, keptSpaces, tapOffset, taskOffsets, resolveImage, linkSpans, splitImageAlt, imageSpans, withImageWidth, listsIn, moveListItem, moveBlock, firstWord } from '../lib/markdown.js'
+import { renderBlocks, keptSpaces, tapOffset, taskOffsets, resolveImage, linkSpans, splitImageAlt, imageSpans, withImageWidth, listsIn, moveListItem, moveBlock, firstWord, removeListItem, removeBlock, withTick, withUpNext, isUpNext } from '../lib/markdown.js'
 import { useRepoImages } from '../hooks/useRepoImages.js'
 import { linkSpots, openLink } from '../lib/previewLinks.js'
 import { cn, isPortaled } from '../lib/utils.js'
-import { CaretRight } from '@phosphor-icons/react'
+import { CaretRight, Flag, Trash } from '@phosphor-icons/react'
 import { createPortal } from 'react-dom'
 import LinkBadge from './LinkBadge.jsx'
 import { DateField } from './DateBadge.jsx'
 import { useDateEdits } from '../hooks/useDateEdits.js'
 import { useLinkEdits } from '../hooks/useLinkEdits.jsx'
 import ListGrip from './ListGrip.jsx'
+import BlockMenu from './BlockMenu.jsx'
+import { Badge } from './ui/badge.jsx'
+import { DropdownMenuItem } from './ui/dropdown-menu.jsx'
 import ImageHandle from './ImageHandle.jsx'
 import TableColumn from './TableColumn.jsx'
 import TableCell from './TableCell.jsx'
@@ -34,7 +37,7 @@ function caretAt(x, y) {
 // Two taps within this time and distance count as a double tap
 export const DOUBLE_TAP_MS = 350
 // What in the preview handles its own taps (a link, an accordion's summary, a grip, a table's menus): never a double tap
-export const OWN_CLICKS = 'a, img, summary, .link-spot, .list-grip, .block-grip, .row-grip, .image-handle, .table-column, .table-cell, .table-filter-empty'
+export const OWN_CLICKS = 'a, img, summary, .link-spot, .list-grip, .block-grip, .item-menu, .row-grip, .image-handle, .table-column, .table-cell, .table-filter-empty'
 const DOUBLE_TAP_PX = 30
 
 const LONG_WORD = /(\S{16,})/
@@ -81,10 +84,11 @@ function itemWord(li) {
   copy.querySelectorAll('ul, ol').forEach(l => l.remove())
   copy.querySelectorAll('.link-spot').forEach(s => s.replaceWith(s.dataset.text))
   copy.querySelectorAll('.date-spot').forEach(s => s.replaceWith(s.dataset.raw))
+  copy.querySelectorAll('.up-next-spot').forEach(s => s.remove())
   return firstWord(copy.textContent)
 }
 
-// List items get a `.list-grip` spot to drag them by (ListGrip): `data-list` (its list's index in
+// List items get a `.list-grip` spot to drag them by (ListGrip) and an `.item-menu` spot for their ⋯ (BlockMenu): `data-list` (its list's index in
 // the returned lists, offsets into the note) and `data-item`. Only where the block's lists line up
 // with its markdown (listsIn: as many lists and items, each starting with the same word): not in a
 // quote, for one
@@ -97,21 +101,25 @@ function listGrips(root, content) {
     if (!found.length || found.length !== rendered.length || found.some((l, i) => l.items.length !== rendered[i].length || l.items.some((it, j) => it.word !== itemWord(rendered[i][j])))) continue
     found.forEach((list, i) => {
       const key = lists.push({ ...list, items: list.items.map(it => ({ start: start + it.start, end: start + it.end })) }) - 1
-      rendered[i].forEach((li, j) => li.insertAdjacentHTML('afterbegin', `<span class="list-grip" data-list="${key}" data-item="${j}"></span>`))
+      rendered[i].forEach((li, j) => li.insertAdjacentHTML('afterbegin', `<span class="item-menu" data-list="${key}" data-item="${j}"></span><span class="list-grip" data-list="${key}" data-item="${j}"></span>`))
     })
   }
   return lists
 }
 
 // Every top-level block (paragraph, heading, list, quote, code, accordion…) gets a `.block-grip` spot to drag it by
-// (ListGrip, in the note's left gutter: App.css), `data-item` its index; returns the blocks' markdown spans
+// (ListGrip, in the note's left gutter: App.css) and an `.item-menu` spot for its ⋯ (BlockMenu, in the right one), `data-item` its index; returns the blocks' markdown spans
 function blockGrips(root) {
   return [...root.children].filter(el => el.matches('[data-src]')).map((block, i) => {
-    block.insertAdjacentHTML('afterbegin', `<span class="block-grip" data-item="${i}"></span>`)
+    block.insertAdjacentHTML('afterbegin', `<span class="item-menu" data-block="${i}"></span><span class="block-grip" data-item="${i}"></span>`)
     const start = Number(block.dataset.src)
     return { start, end: start + Number(block.dataset.len) }
   })
 }
+
+// What a block is called in its ⋯'s dialog
+const BLOCK_NOUNS = { P: 'paragraph', TABLE: 'table', BLOCKQUOTE: 'quote', PRE: 'code block', UL: 'list', OL: 'list', DETAILS: 'accordion', HR: 'divider', H1: 'heading', H2: 'heading', H3: 'heading', H4: 'heading', H5: 'heading', H6: 'heading' }
+const blockNoun = block => BLOCK_NOUNS[[...block.children].find(el => !el.matches('.block-grip, .item-menu'))?.tagName] ?? 'block'
 
 const BLOCKS = 'blocks' // the blocks' ids ("blocks:3"), beside the lists' ("2:1": list, item) and table rows' ("row:0:2": table, row)
 const ROW = 'row'
@@ -171,7 +179,7 @@ const upAndDown = ({ transform }) => ({ ...transform, x: 0 })
 function ghostHtml(item) {
   const copy = item.cloneNode(true)
   copy.classList.remove('list-drop-before', 'list-drop-after')
-  copy.querySelectorAll('.block-grip, .list-grip, .row-grip').forEach(g => g.remove()) // its handles stay behind
+  copy.querySelectorAll('.block-grip, .list-grip, .item-menu, .row-grip').forEach(g => g.remove()) // its handles stay behind
   if (item.tagName === 'TR') return `<table><tbody>${copy.outerHTML}</tbody></table>`
   if (item.tagName !== 'LI') return copy.outerHTML
   const list = item.parentElement
@@ -266,6 +274,8 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
   const [ghost, setGhost] = useState(null) // the dragged item's HTML, for its copy under the pointer
   const [blockSpots, setBlockSpots] = useState([]) // block spots for ListGrip
   const [rowSpots, setRowSpots] = useState([]) // table rows' spots for ListGrip
+  const [menuSpots, setMenuSpots] = useState([]) // list items' and blocks' spots for BlockMenu
+  const [tagSpots, setTagSpots] = useState([]) // the Up next item's spot for its tag
   const [handles, setHandles] = useState([]) // image spots for ImageHandle
   const [columnSpots, setColumnSpots] = useState([]) // table header spots for TableColumn
   const [cellSpots, setCellSpots] = useState([]) // table cell spots for TableCell
@@ -386,6 +396,8 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
     setGrips([...ref.current.querySelectorAll('.list-grip')])
     setBlockSpots([...ref.current.querySelectorAll('.block-grip')])
     setRowSpots([...ref.current.querySelectorAll('.row-grip')])
+    setMenuSpots([...ref.current.querySelectorAll('.item-menu')])
+    setTagSpots([...ref.current.querySelectorAll('.up-next-spot')])
     setHandles([...ref.current.querySelectorAll('.image-handle')])
     setColumnSpots([...ref.current.querySelectorAll('.table-column')])
     setCellSpots([...ref.current.querySelectorAll('.table-cell')])
@@ -568,11 +580,11 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
   }
 
   function handleClick(e) {
+    if (isPortaled(e)) return // a dialog or menu opened from the note
     if (e.target.matches('input[type="checkbox"]')) {
       const offset = Number(e.target.dataset.offset)
       if (onChange && !isNaN(offset)) {
-        const char = e.target.checked ? 'x' : ' '
-        onChange(content.slice(0, offset) + char + content.slice(offset + 1))
+        onChange(withTick(content, offset, e.target.checked))
       }
       return
     }
@@ -647,6 +659,27 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
           {ghost && <div className="editor-preview drag-ghost leading-relaxed text-base" dangerouslySetInnerHTML={{ __html: ghost }} />}
         </DragOverlay>
       </DndContext>
+      {menuSpots.map(spot => {
+        const { list, item, block } = spot.dataset
+        if (block !== undefined) {
+          const noun = blockNoun(spot.parentElement)
+          return createPortal(
+            <BlockMenu noun={noun} removes={noun === 'heading' ? 'Everything under it, down to the next heading of its level or higher, goes with it.' : undefined} onRemove={() => onChange(removeBlock(content, blocks, Number(block)))} />,
+            spot, `menu-block-${block}`)
+        }
+        const target = lists[list]?.items[item]
+        if (!target) return null
+        const flagged = isUpNext(content, target.start)
+        return createPortal(
+          <BlockMenu
+            noun="item" removes={spot.parentElement.querySelector('ul, ol') ? 'Its sub-items go with it.' : undefined}
+            extra={flagged
+              ? <DropdownMenuItem variant="destructive" onSelect={() => onChange(withUpNext(content, target.start))}><Trash /> Remove “Up next” flag</DropdownMenuItem>
+              : <DropdownMenuItem onSelect={() => onChange(withUpNext(content, target.start))}><Flag /> Flag as “Up next”</DropdownMenuItem>}
+            onRemove={() => onChange(removeListItem(content, lists, [Number(list), Number(item)]))}
+          />, spot, `menu-${list}-${item}`)
+      })}
+      {tagSpots.map((spot, i) => createPortal(<Badge tone="var(--destructive)" className="mr-space-xs h-5 whitespace-nowrap px-1.5 py-0 align-[-0.15em] text-xs">Up next</Badge>, spot, `up-next-${i}`))}
       {columnSpots.map(spot => {
         const { table: t, col: c } = spot.dataset
         const col = tables[t]?.columns[c]

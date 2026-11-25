@@ -21,6 +21,10 @@
 .editor-preview .image-frame { position: relative; display: inline-block; max-width: 100%; vertical-align: top; }
 .editor-preview .image-handle { position: absolute; top: 50%; right: 8px; translate: 0 -50%; }
 .editor-preview .list-grip { position: absolute; right: 100%; width: var(--grip-w); height: 1lh; opacity: 0.8; }
+/* An item's ⋯ (BlockMenu, `.item-menu`) is the grip's counterpart in a gutter of the same width on the note's right, placed the same way
+   (a list item's on its first line, a block's at its top, sized like its grip below) */
+.editor-preview .item-menu { position: absolute; left: 100%; width: var(--grip-w); height: 1lh; display: flex; align-items: center; justify-content: center; opacity: 0.8; }
+.editor-preview .item-menu[data-block] { top: 0; }
 /* Where a dragged item or block lands, as Notion shows it: a line in the gap above or under the one it's over, the
    resize handle's (2px, the accent, rounded), taking no room. The dragged one stays in place, faded; its copy under the
    pointer (DragOverlay, `.drag-ghost`) is half see-through, so the line shows through it */
@@ -38,22 +42,22 @@
 .editor-preview > [data-diff=added] { background: color-mix(in oklab, var(--success) var(--tag-tint), var(--card)); }
 .editor-preview > [data-diff=removed] { background: color-mix(in oklab, var(--destructive) var(--tag-tint), var(--card)); color: var(--color-destructive-ink); text-decoration: line-through; }
 /* Blocks' grips: in a left gutter as wide as a grip, at the block's first line; with a mouse only while it's hovered, on touch faint */
-.editor-preview:has(> [data-src] > .block-grip) { padding-left: calc(var(--space) + var(--grip-w)); }
+.editor-preview:has(> [data-src] > .block-grip) { padding-inline: calc(var(--space) + var(--grip-w)); }
 .editor-preview > [data-src]:has(> .block-grip) { position: relative; }
 .editor-preview .block-grip { position: absolute; top: 0; right: 100%; width: var(--grip-w); height: 1lh; opacity: 0.8; }
 /* Beside a heading, its line is the heading's: the grip's font size is the heading's (h1–h3 above), so 1lh matches it and the grip is centred on its text */
 /* An accordion titled by a heading (<summary>### Title</summary>) the same, on its title's first line */
-.editor-preview > [data-src]:is(:has(> h1), :has(> details > summary > .summary-title > h1:first-child)) > .block-grip { font-size: 24px; }
-.editor-preview > [data-src]:is(:has(> h2), :has(> details > summary > .summary-title > h2:first-child)) > .block-grip { font-size: 20px; }
-.editor-preview > [data-src]:is(:has(> h3), :has(> details > summary > .summary-title > h3:first-child)) > .block-grip { font-size: 17px; }
+.editor-preview > [data-src]:is(:has(> h1), :has(> details > summary > .summary-title > h1:first-child)) > :is(.block-grip, .item-menu[data-block]) { font-size: 24px; }
+.editor-preview > [data-src]:is(:has(> h2), :has(> details > summary > .summary-title > h2:first-child)) > :is(.block-grip, .item-menu[data-block]) { font-size: 20px; }
+.editor-preview > [data-src]:is(:has(> h3), :has(> details > summary > .summary-title > h3:first-child)) > :is(.block-grip, .item-menu[data-block]) { font-size: 17px; }
 /* Beside a table, as tall as its header row (a column's menu button, the cell's padding above and below, a border), so it's centred on it */
-.editor-preview > [data-src]:has(> table) > .block-grip { height: calc(var(--spacing-control-sm) + 2 * var(--cell-pad) + 1px); }
+.editor-preview > [data-src]:has(> table) > :is(.block-grip, .item-menu[data-block]) { height: calc(var(--spacing-control-sm) + 2 * var(--cell-pad) + 1px); }
 /* A list has no grip of its own: its items are dragged one by one (it still takes drops, the grip's block is its drop target) */
-.editor-preview > [data-src]:has(> :is(ul, ol) > li > .list-grip) > .block-grip { display: none; }
+.editor-preview > [data-src]:has(> :is(ul, ol) > li > .list-grip) > :is(.block-grip, .item-menu[data-block]) { display: none; }
 @media (pointer: fine) {
-  .editor-preview :is(.block-grip, .list-grip) { opacity: 0; transition: opacity 0.15s; }
-  .editor-preview li:hover:not(:has(li:hover)) > .list-grip, .editor-preview .list-grip:focus-within, .editor-preview li.list-dragging > .list-grip { opacity: 1; }
-  .editor-preview > [data-src]:hover > .block-grip, .editor-preview .block-grip:focus-within, .editor-preview > .list-dragging > .block-grip { opacity: 1; }
+  .editor-preview :is(.block-grip, .list-grip, .item-menu) { opacity: 0; transition: opacity 0.15s; }
+  .editor-preview li:hover:not(:has(li:hover)) > :is(.list-grip, .item-menu), .editor-preview :is(.list-grip, .item-menu):focus-within, .editor-preview li.list-dragging > :is(.list-grip, .item-menu), .editor-preview .item-menu:has([data-state=open]) { opacity: 1; }
+  .editor-preview > [data-src]:hover > :is(.block-grip, .item-menu[data-block]), .editor-preview .block-grip:focus-within, .editor-preview > .list-dragging > :is(.block-grip, .item-menu[data-block]) { opacity: 1; }
 }
 .editor-preview ul:has(> .task-item) { padding-left: 0; }
 /* A plain item among tasks: its bullet in the checkbox's place, its text in line with theirs */

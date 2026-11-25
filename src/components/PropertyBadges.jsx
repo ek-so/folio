@@ -47,8 +47,8 @@ const toneOf = color => color === undefined ? undefined : `var(--tag-${color})`
 // `overdue`: their dates are past (a planner's late card): red.
 // `badges` ({ key: Component }): properties a widget shows its own way (a planner's type: widgets/planner/RecurrenceField.jsx),
 // one badge for the property, given `prop`, all `props` and `onChange`. `unit`: what has the values in the dialogs' words
-// ('note'; a table's cell: 'row').
-export default function PropertyBadges({ props, all = props, withReminders, path, files, clamp, title, className, onChange, options, onRemoveValue, valueCount, scopeName, onEditValue, chosen, dateKeys, badges, overdue, hiddenValues, unit = 'note' }) {
+// ('note'; a table's cell: 'row'). `afterDescription`: an element (with its key) shown under the description, or first without one.
+export default function PropertyBadges({ props, all = props, withReminders, path, files, clamp, title, className, onChange, options, onRemoveValue, valueCount, scopeName, onEditValue, chosen, dateKeys, badges, overdue, hiddenValues, afterDescription, unit = 'note' }) {
   const [removing, setRemoving] = useState(null) // { key, value } being confirmed
   const [managing, setManaging] = useState(null) // the key whose values are in the dialog
   const parts = [] // [{ text }] or [{ badges: [{ id, prop, label }] }], in order
@@ -61,7 +61,7 @@ export default function PropertyBadges({ props, all = props, withReminders, path
     const labels = badges?.[prop.key] || !values.length ? [values[0] ?? null] : values
     parts.at(-1).badges.push(...labels.map((label, i) => ({ id: `${prop.key}:${i}`, prop, label })))
   }
-  if (!parts.length) return null
+  if (!parts.length && !afterDescription) return null
   // Each property's values (all it can have, so none shares a color with another)
   const colors = Object.fromEntries([...new Set(props.map(p => p.key))].map(key =>
     [key, valueColors(key, [...(options?.(key) ?? []), ...valueList(props.find(p => p.key === key).value)], chosen?.[key])]))
@@ -80,6 +80,7 @@ export default function PropertyBadges({ props, all = props, withReminders, path
           ))}
       </div>
     ))
+  if (afterDescription) body.splice(parts[0]?.text ? 1 : 0, 0, afterDescription) // under the description, else first
   const confirm = removing && (
     <ConfirmModal
       title={`Remove “${removing.value}” from ${removing.key}?`}

@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest'
 // Date badges leave out this year (dateLabel): the tests' dates are read as of another year, so they keep theirs
 beforeAll(() => { vi.useFakeTimers({ now: new Date(2030, 0, 1), toFake: ['Date'] }) })
 afterAll(() => { vi.useRealTimers() })
-import { renderBlocks, keptSpaces, tapOffset, taskOffsets, taskProgress, linkSpans, linkMarkdown, replaceLink, repoLink, listsIn, moveListItem, moveBlock, continueList, highlightMarkdown, keyLines, renderInline, splitImageAlt, imageSpans, withImageWidth, dateSpans } from './markdown.js'
+import { renderBlocks, keptSpaces, tapOffset, taskOffsets, taskProgress, linkSpans, linkMarkdown, replaceLink, repoLink, listsIn, moveListItem, moveBlock, continueList, highlightMarkdown, keyLines, renderInline, splitImageAlt, imageSpans, withImageWidth, dateSpans, withUpNext, withTick, isUpNext, upNextText, removeListItem, removeBlock } from './markdown.js'
 
 describe('markdown', () => {
   it('tags each block with its source range', () => {
@@ -254,5 +254,49 @@ describe('moveBlock', () => {
     const md = '---\ntags: [a]\n---\nOne [x].\n\n[x]: https://a.b\n\nTwo.\n'
     const out = moveBlock(md, blocksOf(md), 1, 0)
     expect(out).toBe('---\ntags: [a]\n---\nTwo.\n\n[x]: https://a.b\n\nOne [x].\n')
+  })
+})
+
+describe('Up next', () => {
+  const note = '- [ ] one\n- [ ] ==Up next== two\n- three'
+  it('is one flag: flagging another item moves it, flagging the same takes it off', () => {
+    expect(withUpNext(note, 0)).toBe('- [ ] ==Up next== one\n- [ ] two\n- three')
+    expect(withUpNext(note, note.indexOf('- three'))).toBe('- [ ] one\n- [ ] two\n- ==Up next== three')
+    expect(withUpNext(note, note.indexOf('- [ ] ==Up'))).toBe('- [ ] one\n- [ ] two\n- three')
+  })
+  it('knows the flagged item and its text', () => {
+    expect(isUpNext(note, note.indexOf('- [ ] ==Up'))).toBe(true)
+    expect(isUpNext(note, 0)).toBe(false)
+    expect(upNextText(note)).toBe('two')
+    expect(upNextText('- [ ] one')).toBe('')
+  })
+  it('comes off when the item is ticked', () => {
+    expect(withTick(note, note.indexOf('[ ] ==Up') + 1, true)).toBe('- [ ] one\n- [x] two\n- three')
+    expect(withTick(note, 3, true)).toBe('- [ ] one'.replace('[ ]', '[x]') + '\n- [ ] ==Up next== two\n- three')
+  })
+  it('shows as a tag spot before the text', () => {
+    expect(renderBlocks(note)).toContain('<span class="up-next-spot"></span>two')
+  })
+})
+
+describe('removing', () => {
+  it('removes a list item with its sub-items and numbers the rest again', () => {
+    const t = '1. a\n2. b\n3. c'
+    expect(removeListItem(t, listsIn(t), [0, 0])).toBe('1. b\n2. c')
+    expect(removeListItem(t, listsIn(t), [0, 2])).toBe('1. a\n2. b')
+    const nested = '- a\n  - sub\n- b'
+    expect(removeListItem(nested, listsIn(nested), [0, 0])).toBe('- b')
+  })
+  it('removes a block, a heading with its section', () => {
+    const t = '# A\n\ntext\n\n## B\n\nmore\n\n# C\n\nlast'
+    let at = 0
+    const blocks = ['# A', 'text', '## B', 'more', '# C', 'last'].map(b => {
+      const start = t.indexOf(b, at)
+      at = start + b.length
+      return { start, end: at }
+    })
+    expect(removeBlock(t, blocks, 0)).toBe('# C\n\nlast')
+    expect(removeBlock(t, blocks, 2)).toBe('# A\n\ntext\n\n# C\n\nlast')
+    expect(removeBlock(t, blocks, 5)).toBe('# A\n\ntext\n\n## B\n\nmore\n\n# C')
   })
 })
