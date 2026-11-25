@@ -5,7 +5,7 @@ import { renderBlocks, keptSpaces, tapOffset, taskOffsets, resolveImage, linkSpa
 import { useRepoImages } from '../hooks/useRepoImages.js'
 import { linkSpots, openLink } from '../lib/previewLinks.js'
 import { cn, isPortaled } from '../lib/utils.js'
-import { CaretRight, Flag, Trash } from '@phosphor-icons/react'
+import { CaretRight, Flag, MinusCircle } from '@phosphor-icons/react'
 import { createPortal } from 'react-dom'
 import LinkBadge from './LinkBadge.jsx'
 import { DateField } from './DateBadge.jsx'
@@ -706,7 +706,7 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
           <BlockMenu
             noun="item" removes={spot.parentElement.querySelector('ul, ol') ? 'Its sub-items go with it.' : undefined}
             extra={flagged
-              ? <DropdownMenuItem variant="destructive" onSelect={() => onChange(withUpNext(content, target.start))}><Trash /> Remove “Up next” flag</DropdownMenuItem>
+              ? <DropdownMenuItem onSelect={() => onChange(withUpNext(content, target.start))}><MinusCircle /> Take off “Up next”</DropdownMenuItem>
               : <DropdownMenuItem onSelect={() => onChange(withUpNext(content, target.start))}><Flag /> Flag as “Up next”</DropdownMenuItem>}
             onRemove={() => onChange(removeListItem(content, lists, [Number(list), Number(item)]))}
           />, spot, `menu-${list}-${item}`)

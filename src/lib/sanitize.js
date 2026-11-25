@@ -11,9 +11,9 @@ const LIFTING = /^(position|inset|inset-[a-z-]+|top|right|bottom|left|z-index|tr
 // A property's name as written plainly; one with an escape or anything else in it (`p\osition`) is dropped, as the
 // browser could read it as one of the above
 const PLAIN_NAME = /^-{0,2}[a-z][a-z0-9-]*$/i
-// The classes Folio's own markdown rendering gives (lib/markdown.js: callouts, a list item's gap, date spots; marked's
+// The classes Folio's own markdown rendering gives (lib/markdown.js: callouts, a list item's gap, date spots, the Up next tag's spot; marked's
 // code language); any other class in a note is dropped
-const OWN_CLASS = /^(callout(-[a-z]+)?|gap-after|date-spot|language-[\w-]+)$/
+const OWN_CLASS = /^(callout(-[a-z]+)?|gap-after|date-spot|up-next-spot|language-[\w-]+)$/
 
 // A style attribute without the declarations that would place the element outside the note's flow. Comments go first
 // (`position/**/: fixed` is still a position; an unclosed one runs to the end, as in the browser)
