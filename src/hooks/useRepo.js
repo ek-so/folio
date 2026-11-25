@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { toast } from 'sonner'
-import { getTree, getBlob, getBlobBase64, fileOn, isOutOfDate, commitTree, isNetworkError, getLatestCommitSha, changedFileCount, blobSha, encodeText, uploadBlob } from '../lib/github.js'
+import { getTree, getBlob, getBlobBase64, fileOn, isOutOfDate, commitTree, isNetworkError, getLatestCommitSha, changedFileCount, compareCommits, blobSha, encodeText, uploadBlob } from '../lib/github.js'
 import { cache } from '../lib/cache.js'
 import { storage, localChanges } from '../lib/storage.js'
 import { describeSyncError } from '../lib/syncErrors.js'
@@ -9,6 +9,7 @@ import {
 } from '../lib/changes.js'
 import { resolveConflicts } from '../lib/merge.js'
 import { displayName } from '../lib/files.js'
+import { isStale } from '../lib/treeOrder.js'
 
 const PREFETCH_WORKERS = 4
 const PULL_WAIT_MS = 15000 // how long Folio shows loading instead of a stored copy while GitHub's latest comes (opening, coming back to the screen)
@@ -206,9 +207,24 @@ export function useRepo(repo, onDone) {
   }
 
   // GitHub's latest tree (getTree, asked for as `order`) as this device's: shown, stored, its notes downloaded. One asked
-  // for before the tree shown now is older than it: the one shown stays, and is the latest
-  function applyTree(latest, order) {
+  // for before the tree shown now is older than it: the one shown stays, and is the latest. So does one whose commit is
+  // older than the shown one's (GitHub can answer with the branch as it was just before a push): showing it would bring
+  // back what was removed. Offline while that's checked, the shown one stays
+  async function applyTree(latest, order) {
     if (order < shownOrder.current) return remoteRef.current
+    const held = remoteRef.current
+    if (held?.commitSha && latest.commitSha !== held.commitSha) {
+      let status
+      try {
+        status = await compareCommits(held.commitSha, latest.commitSha)
+      } catch (e) {
+        if (!isNetworkError(e)) throw e
+        setOnline(false)
+        return held
+      }
+      if (order < shownOrder.current || remoteRef.current !== held) return remoteRef.current // a newer one came meanwhile
+      if (isStale(status)) return held
+    }
     shownOrder.current = order
     setRemoteTree(latest)
     setOnline(true)

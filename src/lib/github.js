@@ -118,6 +118,18 @@ export async function changedFileCount(base, head) {
   }
 }
 
+// How `head` stands to `base` on GitHub: 'ahead' | 'identical' | 'behind' (an older commit) | 'diverged', or null when
+// GitHub can't compare them (e.g. history was rewritten). Fresh: the answer decides whether a fetched state is stale
+export async function compareCommits(base, head) {
+  try {
+    const { data } = await octokit.request('GET /repos/{owner}/{repo}/compare/{basehead}', { owner, repo, basehead: `${base}...${head}`, per_page: 1, request: { fetch: fetchFresh } })
+    return data.status ?? null
+  } catch (e) {
+    if (isNetworkError(e)) throw e
+    return null
+  }
+}
+
 // Up to `count` commits of `branch`, newest first, from `from` (a sha: that one first) or the branch's latest:
 // [{ sha, date }]. With `path`, only the commits that changed that path (a file's versions)
 export async function listCommits(branch, count, from, path) {

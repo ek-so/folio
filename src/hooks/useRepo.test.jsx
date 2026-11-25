@@ -3,9 +3,9 @@
 // cache: pull, merge what changed on both sides, push; another device pushing in between; going offline.
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { renderHook, act, waitFor } from '@testing-library/react'
-import { setEdit, rename } from '../lib/changes.js'
+import { setEdit, rename, remove } from '../lib/changes.js'
 
-const server = vi.hoisted(() => ({ tree: null, blobs: {}, commits: [], refuse: 0, offline: false, onRead: null, treeCalls: 0, hold: null }))
+const server = vi.hoisted(() => ({ tree: null, blobs: {}, commits: [], refuse: 0, offline: false, onRead: null, treeCalls: 0, hold: null, stale: null }))
 
 vi.mock('../lib/cache.js', () => ({
   cache: { getTree: async () => undefined, setTree: async () => {}, getBlob: async () => undefined, setBlob: async () => {}, deleteBlob: async () => {}, hasBlob: async () => false },
@@ -19,7 +19,7 @@ vi.mock('../lib/github.js', async importActual => {
     // GitHub's tree as it is when asked; `hold` ({ call, until }): that call's answer waits for `until` (a slow one)
     getTree: async () => {
       offline()
-      const tree = structuredClone(server.tree)
+      const tree = structuredClone(server.stale ?? server.tree) // `stale`: GitHub still answering with the branch before a push
       if (++server.treeCalls === server.hold?.call) await server.hold.until
       return tree
     },
@@ -27,6 +27,7 @@ vi.mock('../lib/github.js', async importActual => {
     getBlobBase64: async sha => btoa(server.blobs[sha] ?? ''),
     getLatestCommitSha: async () => { offline(); return server.tree.commitSha },
     changedFileCount: async () => 1,
+    compareCommits: async (base, head) => { offline(); return head === 'c1' && base !== 'c1' ? 'behind' : 'ahead' },
     uploadBlob: async () => {},
     fileOn: async path => server.tree.files[path] ?? null,
     commitTree: async (latest, entries, message) => {
@@ -80,9 +81,23 @@ beforeEach(() => {
   server.onRead = null
   server.treeCalls = 0
   server.hold = null
+  server.stale = null
 })
 
 describe('sync', () => {
+  it('keeps what it pushed when GitHub still answers with the branch from before the push', async () => {
+    server.blobs.b1 = 'x\n'
+    server.tree.files['b.md'] = { sha: 'b1', mode: '100644' }
+    const hook = await opened()
+    server.stale = structuredClone(server.tree) // c1, with b.md
+    act(() => hook.result.current.update(ch => remove(ch, hook.result.current.virtual, 'b.md', false)))
+    await act(() => hook.result.current.sync(true))
+    await act(async () => { await new Promise(r => setTimeout(r)) })
+    expect(server.tree.files['b.md']).toBeUndefined()
+    expect(hook.result.current.remote.files['b.md']).toBeUndefined()
+    expect(hook.result.current.remote.commitSha).toBe(server.tree.commitSha)
+  })
+
   it('pushes this device\'s changes', async () => {
     const hook = await opened()
     edit(hook, 'one\nTWO\nthree\n')
