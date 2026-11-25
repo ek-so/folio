@@ -172,7 +172,11 @@ function placeMenus(root) {
       if (!text?.matches('p, h1, h2, h3, h4, h5, h6')) continue
       range.selectNodeContents(text)
     }
-    const last = [...range.getClientRects()].filter(r => r.width).at(-1)
+    // the text's last line: what sits level with its lowest box (a link badge wrapped onto a line of its own counts whole)
+    const rects = [...range.getClientRects()].filter(r => r.width)
+    const lowest = rects.reduce((a, r) => !a || r.bottom > a.bottom ? r : a, null)
+    const line = lowest && rects.filter(r => (r.top + r.bottom) / 2 > lowest.top && (r.top + r.bottom) / 2 < lowest.bottom)
+    const last = lowest && { right: Math.max(...line.map(r => r.right)), top: lowest.top, height: lowest.height }
     const box = spot.offsetParent?.getBoundingClientRect()
     if (!last || !box) continue
     const left = last.right - box.left + MENU_GAP
@@ -480,6 +484,12 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
     placeRowGrips(ref.current)
   }, [withImages, tables, tableViews, sorts])
   useLayoutEffect(() => placeMenus(ref.current), [withImages, menuSpots, tagSpots])
+  // Link badges and tags size themselves once drawn (a long link is cut in the middle): the ⋯ follows them
+  useLayoutEffect(() => {
+    const resizes = new ResizeObserver(() => placeMenus(ref.current))
+    ref.current.querySelectorAll('.link-badge, .up-next-spot').forEach(el => resizes.observe(el))
+    return () => resizes.disconnect()
+  }, [links, tagSpots])
   // Rows grow and shrink with the preview's width: their grips follow
   useLayoutEffect(() => {
     const resizes = new ResizeObserver(() => { placeRowGrips(ref.current); placeMenus(ref.current) })
