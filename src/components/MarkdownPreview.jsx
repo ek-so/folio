@@ -151,6 +151,37 @@ function placeRowGrips(root) {
   }
 }
 
+// Each item's ⋯ right after the end of its text (a list item's own line, not its sub-items'; a paragraph's or heading's last
+// line), a short gap off it, so it isn't far from a short line; where there's no room left on the line, and for any other
+// block (a table, a quote, code), it stays in the gutter on the note's right (App.css)
+const MENU_GAP = 4
+function placeMenus(root) {
+  for (const spot of root.querySelectorAll('.item-menu')) {
+    spot.style.left = spot.style.top = ''
+    const owner = spot.parentElement
+    const range = document.createRange()
+    if (owner.tagName === 'LI') {
+      const own = [...owner.childNodes].filter(n => !(n.nodeType === Node.ELEMENT_NODE && n.matches('ul, ol, .item-menu, .list-grip')))
+      const nested = owner.querySelector(':scope > ul, :scope > ol')
+      const content = own.filter(n => !nested || !(nested.compareDocumentPosition(n) & Node.DOCUMENT_POSITION_FOLLOWING))
+      if (!content.length) continue
+      range.setStartBefore(content[0])
+      range.setEndAfter(content.at(-1))
+    } else {
+      const text = [...owner.children].find(el => !el.matches('.block-grip, .item-menu'))
+      if (!text?.matches('p, h1, h2, h3, h4, h5, h6')) continue
+      range.selectNodeContents(text)
+    }
+    const last = [...range.getClientRects()].filter(r => r.width).at(-1)
+    const box = spot.offsetParent?.getBoundingClientRect()
+    if (!last || !box) continue
+    const left = last.right - box.left + MENU_GAP
+    if (left + spot.offsetWidth > box.width) continue
+    spot.style.left = `${left}px`
+    spot.style.top = `${last.top + last.height / 2 - box.top - spot.offsetHeight / 2}px`
+  }
+}
+
 // What a drag moves: a block, a table's row (rows of that table only) or a list item
 const kindOf = id => {
   const [kind, t] = String(id).split(':')
@@ -448,9 +479,10 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
     })
     placeRowGrips(ref.current)
   }, [withImages, tables, tableViews, sorts])
+  useLayoutEffect(() => placeMenus(ref.current), [withImages, menuSpots, tagSpots])
   // Rows grow and shrink with the preview's width: their grips follow
   useLayoutEffect(() => {
-    const resizes = new ResizeObserver(() => placeRowGrips(ref.current))
+    const resizes = new ResizeObserver(() => { placeRowGrips(ref.current); placeMenus(ref.current) })
     resizes.observe(ref.current)
     return () => resizes.disconnect()
   }, [])
