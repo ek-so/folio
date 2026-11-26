@@ -1,4 +1,4 @@
-import { Folder, FileText, FilePdf, FileImage, FileAudio, File, ArrowUpRight } from '@phosphor-icons/react'
+import { Folder, FileText, FilePdf, FileImage, FileAudio, FileHtml, File, ArrowUpRight } from '@phosphor-icons/react'
 import { fileKind } from '../lib/files.js'
 import { cn } from '@/lib/utils.js'
 import { emojiColor } from '../lib/emojiColor.js'
@@ -10,6 +10,7 @@ const ICONS = {
   pdf: [FilePdf, 'text-destructive', 'bg-destructive/10 group-hover:bg-destructive/20'],
   image: [FileImage, 'text-file-image', 'bg-file-image/10 group-hover:bg-file-image/20'],
   audio: [FileAudio, 'text-primary', 'bg-primary/10 group-hover:bg-primary/20'],
+  html: [FileHtml, 'text-primary', 'bg-primary/10 group-hover:bg-primary/20'],
   file: [File, 'text-primary', 'bg-primary/10 group-hover:bg-primary/20'],
 }
 const FOLDER_TINT = 'bg-folder/10 group-hover:bg-folder/20'

@@ -10,12 +10,15 @@ import { fileKind, imageMime, audioMime } from '../lib/files.js'
 import { useObjectUrl } from '../hooks/useObjectUrl.js'
 import { EmptyMessage } from './EmptyState.jsx'
 
+// The frame's document can render inline styles and embedded images without fetching resources.
+const HTML_PREVIEW_HEAD = `<!doctype html><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src data:; font-src data:; base-uri 'none'">`
+
 const MESSAGES = {
   offline: "Couldn't open this file. It isn't saved on this device yet — connect to the internet and pull to refresh.",
   failed: "Couldn't load this file from GitHub.",
 }
 
-// An image, PDF or audio file, read-only. Rename it from ⋯. Audio plays in the browser's own player, under its icon
+// An image, PDF, audio or HTML file, read-only. Rename it from ⋯. Audio plays in the browser's own player, under its icon
 // in a tinted square as on its card (TileIcon) and the file's name; a format this browser can't play says so.
 export default function FileViewer({ path, entry, ...page }) {
   const { base64, error } = useBlob(entry.sha)
@@ -26,10 +29,18 @@ export default function FileViewer({ path, entry, ...page }) {
     <FilePage path={path} name={name} {...page}>
       {error ? (
         <EmptyMessage size="lg" className="px-space">{MESSAGES[error]}</EmptyMessage>
-      ) : !base64 ? (
+      ) : base64 === null || (!base64 && kind !== 'html') ? (
         <Loading kind="block" />
       ) : kind === 'pdf' ? (
         <PdfView base64={base64} />
+      ) : kind === 'html' ? (
+        <iframe
+          className="w-full flex-1 min-h-0"
+          title={name}
+          sandbox=""
+          referrerPolicy="no-referrer"
+          srcDoc={HTML_PREVIEW_HEAD + new TextDecoder().decode(Uint8Array.from(atob(base64), byte => byte.charCodeAt(0)))}
+        />
       ) : kind === 'audio' ? (
         <AudioView base64={base64} path={path} name={name} />
       ) : (

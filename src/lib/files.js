@@ -26,11 +26,12 @@ export function audioMime(path) {
 }
 
 // What a file is, for its icon and how it opens: 'note' (markdown, edited),
-// 'image' and 'pdf' (viewed), 'audio' (played), or 'file' (can't be opened)
+// 'image', 'pdf' and 'html' (viewed), 'audio' (played), or 'file' (can't be opened)
 export function fileKind(path) {
   const ext = extension(path)
   if (ext === 'md') return 'note'
   if (ext === 'pdf') return 'pdf'
+  if (ext === 'html' || ext === 'htm') return 'html'
   return IMAGE_MIME[ext] ? 'image' : AUDIO_MIME[ext] ? 'audio' : 'file'
 }
 
