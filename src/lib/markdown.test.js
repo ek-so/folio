@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest'
 // Date badges leave out this year (dateLabel): the tests' dates are read as of another year, so they keep theirs
 beforeAll(() => { vi.useFakeTimers({ now: new Date(2030, 0, 1), toFake: ['Date'] }) })
 afterAll(() => { vi.useRealTimers() })
-import { renderBlocks, keptSpaces, tapOffset, taskOffsets, taskProgress, linkSpans, linkMarkdown, replaceLink, repoLink, listsIn, moveListItem, moveBlock, continueList, highlightMarkdown, keyLines, renderInline, splitImageAlt, imageSpans, withImageWidth, dateSpans, withUpNext, withTick, isUpNext, upNextTexts, upNextFull, removeListItem, removeBlock } from './markdown.js'
+import { renderBlocks, keptSpaces, tapOffset, taskOffsets, taskProgress, linkSpans, linkMarkdown, replaceLink, repoLink, listsIn, moveListItem, moveBlock, continueList, highlightMarkdown, keyLines, renderInline, splitImageAlt, imageSpans, withImageWidth, dateSpans, withImportant, withTick, isImportant, importantTexts, importantFull, removeListItem, removeBlock } from './markdown.js'
 
 describe('markdown', () => {
   it('tags each block with its source range', () => {
@@ -257,29 +257,29 @@ describe('moveBlock', () => {
   })
 })
 
-describe('Up next', () => {
-  const note = '- [ ] one\n- [ ] ==Up next== two\n- three'
+describe('Important', () => {
+  const note = '- [ ] one\n- [ ] ==Important== two\n- three'
   it('flags up to three items; a flagged one is unflagged', () => {
-    expect(withUpNext(note, 0)).toBe('- [ ] ==Up next== one\n- [ ] ==Up next== two\n- three')
-    expect(withUpNext(note, note.indexOf('- [ ] ==Up'))).toBe('- [ ] one\n- [ ] two\n- three')
-    const full = '- ==Up next== a\n- ==Up next== b\n- ==Up next== c\n- d'
-    expect(upNextFull(full)).toBe(true)
-    expect(withUpNext(full, full.indexOf('- d'))).toBe(full)
-    expect(withUpNext(full, 0)).toBe('- a\n- ==Up next== b\n- ==Up next== c\n- d')
+    expect(withImportant(note, 0)).toBe('- [ ] ==Important== one\n- [ ] ==Important== two\n- three')
+    expect(withImportant(note, note.indexOf('- [ ] ==Im'))).toBe('- [ ] one\n- [ ] two\n- three')
+    const full = '- ==Important== a\n- ==Important== b\n- ==Important== c\n- d'
+    expect(importantFull(full)).toBe(true)
+    expect(withImportant(full, full.indexOf('- d'))).toBe(full)
+    expect(withImportant(full, 0)).toBe('- a\n- ==Important== b\n- ==Important== c\n- d')
   })
   it('knows the flagged items and their texts, in the note\'s order', () => {
-    expect(isUpNext(note, note.indexOf('- [ ] ==Up'))).toBe(true)
-    expect(isUpNext(note, 0)).toBe(false)
-    expect(upNextTexts(note)).toEqual(['two'])
-    expect(upNextTexts('- ==Up next== x\n- [ ] y\n- [x] ==Up next== z')).toEqual(['x', 'z'])
-    expect(upNextTexts('- [ ] one')).toEqual([])
+    expect(isImportant(note, note.indexOf('- [ ] ==Im'))).toBe(true)
+    expect(isImportant(note, 0)).toBe(false)
+    expect(importantTexts(note)).toEqual(['two'])
+    expect(importantTexts('- ==Important== x\n- [ ] y\n- [x] ==Important== z')).toEqual(['x', 'z'])
+    expect(importantTexts('- [ ] one')).toEqual([])
   })
   it('comes off when the item is ticked', () => {
-    expect(withTick(note, note.indexOf('[ ] ==Up') + 1, true)).toBe('- [ ] one\n- [x] two\n- three')
-    expect(withTick(note, 3, true)).toBe('- [ ] one'.replace('[ ]', '[x]') + '\n- [ ] ==Up next== two\n- three')
+    expect(withTick(note, note.indexOf('[ ] ==Im') + 1, true)).toBe('- [ ] one\n- [x] two\n- three')
+    expect(withTick(note, 3, true)).toBe('- [ ] one'.replace('[ ]', '[x]') + '\n- [ ] ==Important== two\n- three')
   })
   it('shows as a tag spot before the text', () => {
-    expect(renderBlocks(note)).toContain('<span class="up-next-spot"></span>two')
+    expect(renderBlocks(note)).toContain('<span class="important-spot"></span>two')
   })
 })
 

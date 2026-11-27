@@ -124,11 +124,11 @@ marked.use({
   }],
 })
 
-// The Up next flag: up to three of a note's tasks or items the board card shows under its description. It is written in the item,
+// The Important flag: up to three of a note's tasks or items the board card shows under its description. It is written in the item,
 // first in its text (after the list marker and the checkbox), so it stays with the item and the note carries its meaning
-const UP_NEXT_START = /^==Up next==[ \t]*/
+const IMPORTANT_START = /^==Important==[ \t]*/
 const ITEM_LEAD = String.raw`[ \t]*(?:[-*+]|\d{1,9}[.)])[ \t]+(?:\[[ xX]\][ \t]+)?`
-const FLAGGED_LINE = new RegExp(`^(${ITEM_LEAD})==Up next==[ \\t]*`)
+const FLAGGED_LINE = new RegExp(`^(${ITEM_LEAD})==Important==[ \\t]*`)
 
 const escapeAttr = s => s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 
@@ -201,21 +201,21 @@ export function valueDate(value, now = new Date()) {
 // One line of markdown as HTML (a property's value, such as a description), its dates as date spots
 export const renderInline = text => marked.Parser.parseInline(withDates(marked.Lexer.lexInline(text)))
 
-// A list item opening with the Up next marker has it as a token of its own: an empty <span class="up-next-spot"> the
+// A list item opening with the Important marker has it as a token of its own: an empty <span class="important-spot"> the
 // preview fills with a tag
-marked.use({ extensions: [{ name: 'upNext', renderer: () => '<span class="up-next-spot"></span>' }] })
-const markUpNext = token => {
+marked.use({ extensions: [{ name: 'important', renderer: () => '<span class="important-spot"></span>' }] })
+const markImportant = token => {
   const inline = token.type === 'list_item' && ['text', 'paragraph'].includes(token.tokens?.[0]?.type) ? token.tokens[0].tokens : null
   const first = inline?.[0]
-  const m = first?.type === 'text' && UP_NEXT_START.exec(first.text)
+  const m = first?.type === 'text' && IMPORTANT_START.exec(first.text)
   if (!m) return
   const rest = first.text.slice(m[0].length)
-  inline.splice(0, 1, { type: 'upNext', raw: m[0] }, ...(rest ? [{ ...first, raw: rest, text: rest }] : []))
+  inline.splice(0, 1, { type: 'important', raw: m[0] }, ...(rest ? [{ ...first, raw: rest, text: rest }] : []))
 }
 
 // Run on the lexed tokens (renderBlocks lexes and parses separately, so marked's own walkTokens doesn't run)
 const addDates = token => {
-  markUpNext(token)
+  markImportant(token)
   if (token.type === 'table') for (const cell of [...token.header, ...token.rows.flat()]) cell.tokens = withDates(cell.tokens)
   else if (token.tokens && ['paragraph', 'heading', 'text'].includes(token.type)) token.tokens = withDates(token.tokens)
 }
@@ -424,7 +424,7 @@ export function listsIn(raw) {
         stack.push(top)
       }
       top.content = indent + Math.max(m[0].length - m[1].length, m[2].length + 1) // where its text starts
-      const item = { start: at, end: raw.length, word: firstWord(line.slice(m[0].length).replace(/^\[[ xX]\][ \t]*/, '').replace(UP_NEXT_START, '')) }
+      const item = { start: at, end: raw.length, word: firstWord(line.slice(m[0].length).replace(/^\[[ xX]\][ \t]*/, '').replace(IMPORTANT_START, '')) }
       top.list.items.push(item)
       for (const prev of marks) if (prev.item.end === raw.length && prev.item !== item && indent < prev.content) prev.item.end = at
       marks.push({ item, content: top.content })
@@ -564,7 +564,7 @@ export function moveBlock(text, blocks, from, at) {
 const TASK = /^[ \t>]*(?:[-*+]|\d+[.)])[ \t]+\[[ xX]\]/gm
 export const taskOffsets = raw => [...raw.matchAll(TASK)].map(m => m.index + m[0].length - 2)
 
-// `text` with the checkbox at `offset` (taskOffsets) ticked or not; ticking an item takes its Up next flag off
+// `text` with the checkbox at `offset` (taskOffsets) ticked or not; ticking an item takes its Important flag off
 export function withTick(text, offset, checked) {
   const out = text.slice(0, offset) + (checked ? 'x' : ' ') + text.slice(offset + 1)
   if (!checked) return out
@@ -573,31 +573,31 @@ export function withTick(text, offset, checked) {
   return m ? out.slice(0, start + m[1].length) + out.slice(start + m[0].length) : out
 }
 
-// Whether the list item starting at `at` is flagged Up next
-export const isUpNext = (text, at) => FLAGGED_LINE.test(text.slice(at).split('\n', 1)[0])
+// Whether the list item starting at `at` is flagged Important
+export const isImportant = (text, at) => FLAGGED_LINE.test(text.slice(at).split('\n', 1)[0])
 
-// How many items a note can have flagged Up next
-export const UP_NEXT_MAX = 3
+// How many items a note can have flagged Important
+export const IMPORTANT_MAX = 3
 
-// The lines of a note's Up next items, outside its front matter and code fences
+// The lines of a note's Important items, outside its front matter and code fences
 const flaggedLines = text => blankFrontMatter(text).replace(FENCE, '').split('\n').filter(l => FLAGGED_LINE.test(l))
 
-// `text` with the list item starting at `at` flagged Up next, or, when it has the flag, without it; unchanged when it
-// has none and the note already has `UP_NEXT_MAX`
-export function withUpNext(text, at) {
+// `text` with the list item starting at `at` flagged Important, or, when it has the flag, without it; unchanged when it
+// has none and the note already has `IMPORTANT_MAX`
+export function withImportant(text, at) {
   const line = text.slice(at).split('\n', 1)[0]
   const flagged = FLAGGED_LINE.exec(line)
   if (flagged) return text.slice(0, at + flagged[1].length) + text.slice(at + flagged[0].length)
-  if (flaggedLines(text).length >= UP_NEXT_MAX) return text
+  if (flaggedLines(text).length >= IMPORTANT_MAX) return text
   const lead = new RegExp(`^${ITEM_LEAD}`).exec(line)
-  return lead ? text.slice(0, at + lead[0].length) + '==Up next== ' + text.slice(at + lead[0].length) : text
+  return lead ? text.slice(0, at + lead[0].length) + '==Important== ' + text.slice(at + lead[0].length) : text
 }
 
-// Whether a note has all its Up next flags in use
-export const upNextFull = text => flaggedLines(text).length >= UP_NEXT_MAX
+// Whether a note has all its Important flags in use
+export const importantFull = text => flaggedLines(text).length >= IMPORTANT_MAX
 
-// The texts of a note's Up next items (each its first line, after its marker and checkbox) in the note's order; a board card shows them
-export const upNextTexts = text => flaggedLines(text).map(l => l.replace(FLAGGED_LINE, '').trim()).filter(Boolean)
+// The texts of a note's Important items (each its first line, after its marker and checkbox) in the note's order; a board card shows them
+export const importantTexts = text => flaggedLines(text).map(l => l.replace(FLAGGED_LINE, '').trim()).filter(Boolean)
 
 // { done, total } of a note's task checkboxes, outside its front matter and code fences
 const FENCE = /^ {0,3}(`{3,}|~{3,})[\s\S]*?(?:^ {0,3}\1[ \t]*$|(?![\s\S]))/gm

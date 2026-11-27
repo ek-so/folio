@@ -1,7 +1,7 @@
 import { useMemo, useEffect, useLayoutEffect, useRef, useState, forwardRef, useImperativeHandle } from 'react'
 import { safeHtml } from '../lib/sanitize.js'
 import { withoutTitleHeading, titleHeadingSpan } from '../lib/frontmatter.js'
-import { renderBlocks, keptSpaces, tapOffset, taskOffsets, resolveImage, linkSpans, splitImageAlt, imageSpans, withImageWidth, listsIn, moveListItem, moveBlock, firstWord, removeListItem, removeBlock, withTick, withUpNext, isUpNext, upNextFull } from '../lib/markdown.js'
+import { renderBlocks, keptSpaces, tapOffset, taskOffsets, resolveImage, linkSpans, splitImageAlt, imageSpans, withImageWidth, listsIn, moveListItem, moveBlock, firstWord, removeListItem, removeBlock, withTick, withImportant, isImportant, importantFull } from '../lib/markdown.js'
 import { useRepoImages } from '../hooks/useRepoImages.js'
 import { linkSpots, openLink } from '../lib/previewLinks.js'
 import { cn, isPortaled } from '../lib/utils.js'
@@ -84,7 +84,7 @@ function itemWord(li) {
   copy.querySelectorAll('ul, ol').forEach(l => l.remove())
   copy.querySelectorAll('.link-spot').forEach(s => s.replaceWith(s.dataset.text))
   copy.querySelectorAll('.date-spot').forEach(s => s.replaceWith(s.dataset.raw))
-  copy.querySelectorAll('.up-next-spot').forEach(s => s.remove())
+  copy.querySelectorAll('.important-spot').forEach(s => s.remove())
   return firstWord(copy.textContent)
 }
 
@@ -313,7 +313,7 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
   const [blockSpots, setBlockSpots] = useState([]) // block spots for ListGrip
   const [rowSpots, setRowSpots] = useState([]) // table rows' spots for ListGrip
   const [menuSpots, setMenuSpots] = useState([]) // list items' and blocks' spots for BlockMenu
-  const [tagSpots, setTagSpots] = useState([]) // the Up next item's spot for its tag
+  const [tagSpots, setTagSpots] = useState([]) // the Important item's spot for its tag
   const [handles, setHandles] = useState([]) // image spots for ImageHandle
   const [columnSpots, setColumnSpots] = useState([]) // table header spots for TableColumn
   const [cellSpots, setCellSpots] = useState([]) // table cell spots for TableCell
@@ -435,7 +435,7 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
     setBlockSpots([...ref.current.querySelectorAll('.block-grip')])
     setRowSpots([...ref.current.querySelectorAll('.row-grip')])
     setMenuSpots([...ref.current.querySelectorAll('.item-menu')])
-    setTagSpots([...ref.current.querySelectorAll('.up-next-spot')])
+    setTagSpots([...ref.current.querySelectorAll('.important-spot')])
     setHandles([...ref.current.querySelectorAll('.image-handle')])
     setColumnSpots([...ref.current.querySelectorAll('.table-column')])
     setCellSpots([...ref.current.querySelectorAll('.table-cell')])
@@ -490,7 +490,7 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
   // Link badges and tags size themselves once drawn (a long link is cut in the middle): the ⋯ follows them
   useLayoutEffect(() => {
     const resizes = new ResizeObserver(() => placeMenus(ref.current))
-    ref.current.querySelectorAll('.link-badge, .up-next-spot').forEach(el => resizes.observe(el))
+    ref.current.querySelectorAll('.link-badge, .important-spot').forEach(el => resizes.observe(el))
     return () => resizes.disconnect()
   }, [links, tagSpots])
   // Rows grow and shrink with the preview's width: their grips follow
@@ -714,17 +714,17 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
         }
         const target = lists[list]?.items[item]
         if (!target) return null
-        const flagged = isUpNext(content, target.start)
+        const flagged = isImportant(content, target.start)
         return createPortal(
           <BlockMenu
             noun="item" removes={spot.parentElement.querySelector('ul, ol') ? 'Its sub-items go with it.' : undefined}
             extra={flagged
-              ? <DropdownMenuItem onSelect={() => onChange(withUpNext(content, target.start))}><MinusCircle /> Take off “Up next”</DropdownMenuItem>
-              : <DropdownMenuItem disabled={upNextFull(content)} onSelect={() => onChange(withUpNext(content, target.start))}><Flag /> {upNextFull(content) ? 'Up next is full (3)' : 'Flag as “Up next”'}</DropdownMenuItem>}
+              ? <DropdownMenuItem onSelect={() => onChange(withImportant(content, target.start))}><MinusCircle /> Take off “Important”</DropdownMenuItem>
+              : <DropdownMenuItem disabled={importantFull(content)} onSelect={() => onChange(withImportant(content, target.start))}><Flag /> {importantFull(content) ? 'Important is full (3)' : 'Flag as “Important”'}</DropdownMenuItem>}
             onRemove={() => onChange(removeListItem(content, lists, [Number(list), Number(item)]))}
           />, spot, `menu-${list}-${item}`)
       })}
-      {tagSpots.map((spot, i) => createPortal(<Badge tone="var(--destructive)" className="mr-space-xs h-5 whitespace-nowrap px-1.5 py-0 align-baseline text-xs relative -top-0.5">Up next</Badge>, spot, `up-next-${i}`))}
+      {tagSpots.map((spot, i) => createPortal(<Badge tone="var(--destructive)" className="mr-space-xs h-5 whitespace-nowrap px-1.5 py-0 align-baseline text-xs relative -top-0.5">Important</Badge>, spot, `important-${i}`))}
       {columnSpots.map(spot => {
         const { table: t, col: c } = spot.dataset
         const col = tables[t]?.columns[c]

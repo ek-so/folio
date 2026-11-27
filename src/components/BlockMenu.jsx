@@ -8,7 +8,7 @@ import { own } from '@/lib/utils.js'
 
 // The ⋯ of every individual item in the note preview, on its right (the drag handle's counterpart on the left): a list
 // item, a heading, a paragraph, a table, a quote… `noun` names it in the dialog. Its menu: what only this kind of item
-// offers (`extra`: a list item's Up next), then Remove (the item with what belongs to it, confirmed: `removes` says what
+// offers (`extra`: a list item's Important), then Remove (the item with what belongs to it, confirmed: `removes` says what
 // goes with it, in the dialog), the same for all.
 export default function BlockMenu({ noun, removes, extra, onRemove }) {
   const [open, setOpen] = useSingleOpen()
