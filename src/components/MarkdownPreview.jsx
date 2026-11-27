@@ -152,8 +152,9 @@ function placeRowGrips(root) {
 }
 
 // Each item's ⋯ right after the end of its text (a list item's own line, not its sub-items'; a paragraph's or heading's last
-// line), a short gap off it, so it isn't far from a short line; where there's no room left on the line, and for any other
-// block (a table, a quote, code), it stays in the gutter on the note's right (App.css)
+// line), a short gap off it, so it isn't far from a short line; where there's no room left on the line it goes to the
+// gutter on the note's right, still level with that line (a link badge's ⋯ there: a badge is taller than a line of text);
+// any other block (a table, a quote, code) keeps it in the gutter at its top (App.css)
 const MENU_GAP = 4
 function placeMenus(root) {
   for (const spot of root.querySelectorAll('.item-menu')) {
@@ -183,8 +184,7 @@ function placeMenus(root) {
     const box = spot.offsetParent?.getBoundingClientRect()
     if (!last || !box) continue
     const left = last.right - box.left + MENU_GAP
-    if (left + spot.offsetWidth > box.width) continue
-    spot.style.left = `${left}px`
+    if (left + spot.offsetWidth <= box.width) spot.style.left = `${left}px`
     spot.style.top = `${last.top + last.height / 2 - box.top - spot.offsetHeight / 2}px`
   }
 }
