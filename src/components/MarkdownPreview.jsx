@@ -1,7 +1,7 @@
 import { useMemo, useEffect, useLayoutEffect, useRef, useState, forwardRef, useImperativeHandle } from 'react'
 import { safeHtml } from '../lib/sanitize.js'
 import { withoutTitleHeading, titleHeadingSpan } from '../lib/frontmatter.js'
-import { renderBlocks, keptSpaces, tapOffset, taskOffsets, resolveImage, linkSpans, splitImageAlt, imageSpans, withImageWidth, listsIn, moveListItem, moveBlock, firstWord, removeListItem, removeBlock, withTick, withUpNext, isUpNext } from '../lib/markdown.js'
+import { renderBlocks, keptSpaces, tapOffset, taskOffsets, resolveImage, linkSpans, splitImageAlt, imageSpans, withImageWidth, listsIn, moveListItem, moveBlock, firstWord, removeListItem, removeBlock, withTick, withUpNext, isUpNext, upNextFull } from '../lib/markdown.js'
 import { useRepoImages } from '../hooks/useRepoImages.js'
 import { linkSpots, openLink } from '../lib/previewLinks.js'
 import { cn, isPortaled } from '../lib/utils.js'
@@ -720,7 +720,7 @@ const MarkdownPreview = forwardRef(function MarkdownPreview({ content, path, fil
             noun="item" removes={spot.parentElement.querySelector('ul, ol') ? 'Its sub-items go with it.' : undefined}
             extra={flagged
               ? <DropdownMenuItem onSelect={() => onChange(withUpNext(content, target.start))}><MinusCircle /> Take off “Up next”</DropdownMenuItem>
-              : <DropdownMenuItem onSelect={() => onChange(withUpNext(content, target.start))}><Flag /> Flag as “Up next”</DropdownMenuItem>}
+              : <DropdownMenuItem disabled={upNextFull(content)} onSelect={() => onChange(withUpNext(content, target.start))}><Flag /> {upNextFull(content) ? 'Up next is full (3)' : 'Flag as “Up next”'}</DropdownMenuItem>}
             onRemove={() => onChange(removeListItem(content, lists, [Number(list), Number(item)]))}
           />, spot, `menu-${list}-${item}`)
       })}

@@ -124,7 +124,7 @@ marked.use({
   }],
 })
 
-// The Up next flag: a note's one task or item the board card shows under its description. It is written in the item,
+// The Up next flag: up to three of a note's tasks or items the board card shows under its description. It is written in the item,
 // first in its text (after the list marker and the checkbox), so it stays with the item and the note carries its meaning
 const UP_NEXT_START = /^==Up next==[ \t]*/
 const ITEM_LEAD = String.raw`[ \t]*(?:[-*+]|\d{1,9}[.)])[ \t]+(?:\[[ xX]\][ \t]+)?`
@@ -576,23 +576,28 @@ export function withTick(text, offset, checked) {
 // Whether the list item starting at `at` is flagged Up next
 export const isUpNext = (text, at) => FLAGGED_LINE.test(text.slice(at).split('\n', 1)[0])
 
-// `text` with the list item starting at `at` flagged Up next, the flag taken off any other item (one flag in a note), or off
-// that item when it has it
+// How many items a note can have flagged Up next
+export const UP_NEXT_MAX = 3
+
+// The lines of a note's Up next items, outside its front matter and code fences
+const flaggedLines = text => blankFrontMatter(text).replace(FENCE, '').split('\n').filter(l => FLAGGED_LINE.test(l))
+
+// `text` with the list item starting at `at` flagged Up next, or, when it has the flag, without it; unchanged when it
+// has none and the note already has `UP_NEXT_MAX`
 export function withUpNext(text, at) {
-  const was = isUpNext(text, at)
-  let moved = 0 // what the flags before the item took out
-  const clean = text.replace(new RegExp(FLAGGED_LINE.source, 'gm'), (m, lead, i) => { if (i < at) moved += m.length - lead.length; return lead })
-  if (was) return clean
-  const start = at - moved
-  const lead = new RegExp(`^${ITEM_LEAD}`).exec(clean.slice(start).split('\n', 1)[0])
-  return lead ? clean.slice(0, start + lead[0].length) + '==Up next== ' + clean.slice(start + lead[0].length) : clean
+  const line = text.slice(at).split('\n', 1)[0]
+  const flagged = FLAGGED_LINE.exec(line)
+  if (flagged) return text.slice(0, at + flagged[1].length) + text.slice(at + flagged[0].length)
+  if (flaggedLines(text).length >= UP_NEXT_MAX) return text
+  const lead = new RegExp(`^${ITEM_LEAD}`).exec(line)
+  return lead ? text.slice(0, at + lead[0].length) + '==Up next== ' + text.slice(at + lead[0].length) : text
 }
 
-// The text of a note's Up next item (its first line, after its marker and checkbox), '' without one; a board card shows it
-export function upNextText(text) {
-  const line = blankFrontMatter(text).replace(FENCE, '').split('\n').find(l => FLAGGED_LINE.test(l))
-  return line ? line.replace(FLAGGED_LINE, '').trim() : ''
-}
+// Whether a note has all its Up next flags in use
+export const upNextFull = text => flaggedLines(text).length >= UP_NEXT_MAX
+
+// The texts of a note's Up next items (each its first line, after its marker and checkbox) in the note's order; a board card shows them
+export const upNextTexts = text => flaggedLines(text).map(l => l.replace(FLAGGED_LINE, '').trim()).filter(Boolean)
 
 // { done, total } of a note's task checkboxes, outside its front matter and code fences
 const FENCE = /^ {0,3}(`{3,}|~{3,})[\s\S]*?(?:^ {0,3}\1[ \t]*$|(?![\s\S]))/gm

@@ -6,7 +6,7 @@ import InlineMarkdown from './InlineMarkdown.jsx'
 import { Dot } from './ui/dot.jsx'
 import { fileName } from '@/lib/files.js'
 import { frontMatter, noteTitle, DESCRIPTION } from '@/lib/frontmatter.js'
-import { taskProgress, upNextText } from '@/lib/markdown.js'
+import { taskProgress, upNextTexts } from '@/lib/markdown.js'
 import LockMark from './LockMark.jsx'
 import { TreeView } from '@phosphor-icons/react'
 import FileIcon from './FileIcon.jsx'
@@ -32,7 +32,7 @@ export const cardClick = (path, files, onOpen, onOpenFolder) => e => {
 // note's icon, or a folder's with `dir`: a pinned folder),
 // the note's title, `detail` (a muted line under it, where a description sits and like one: how much a pinned folder holds), its description, the chosen `properties`'
 // values, then `location` (a last line, lighter still, after a folder-tree icon: where a pinned note or folder is) (`overdue`: a planner's late card, its title faded and its date red; `locked`: a small lock before its title) and its
-// checklist progress (`progress`; not on a Pinned widget's card), and with it the note's Up next item (`upNextText`), a line like the description under it, after a small red dot. Stretched taller (a grid's row), its last badges sit at the bottom. A div, not a button: the badges in it are buttons
+// checklist progress (`progress`; not on a Pinned widget's card), and with it the note's Up next items (`upNextTexts`, up to three), a line each like the description under it, each after a small red dot. Stretched taller (a grid's row), its last badges sit at the bottom. A div, not a button: the badges in it are buttons
 const NoteCard = forwardRef(function NoteCard({ path, text, dir, properties = [], detail, location, progress = true, always = [], scopeName, files, menu, onChange, options, onRemoveValue, valueCount, chosen, onEditValue, dateKeys, badges, overdue, locked, className, ...props }, ref) {
   const fm = text === undefined ? [] : frontMatter(text)?.props ?? []
   // With `always` (a planner's date and repeat): the description first, then those in that order (shown empty when the
@@ -41,7 +41,7 @@ const NoteCard = forwardRef(function NoteCard({ path, text, dir, properties = []
   const first = text === undefined ? [] : always.map(key => fm.find(p => p.key === key) ?? { key, value: '' })
   const rest = fm.filter(p => !always.includes(p.key) && !description.includes(p) && (p.key === DESCRIPTION || properties.includes(p.key)))
   const shown = [...description, ...first, ...rest]
-  const upNext = progress && text !== undefined ? upNextText(text) : ''
+  const upNext = progress && text !== undefined ? upNextTexts(text) : []
   return (
     <div
       ref={ref}
@@ -60,10 +60,14 @@ const NoteCard = forwardRef(function NoteCard({ path, text, dir, properties = []
         {menu}
       </div>
       {detail && <p className="break-words pt-space-xs text-sm text-muted-foreground">{detail}</p>}
-      <PropertyBadges afterDescription={upNext && (
-        <div key="up-next" className="flex items-start gap-space-sm pl-0.5">
-          <span className="flex h-5 shrink-0 items-center"><Dot tone="destructive" /></span>
-          <InlineMarkdown text={upNext} path={path} files={files} className="min-w-0 break-words text-sm text-muted-foreground line-clamp-3" />
+      <PropertyBadges afterDescription={upNext.length > 0 && (
+        <div key="up-next" className="flex flex-col gap-space-xs">
+          {upNext.map((line, i) => (
+            <div key={i} className="flex items-start gap-space-sm pl-0.5">
+              <span className="flex h-5 shrink-0 items-center"><Dot tone="destructive" /></span>
+              <InlineMarkdown text={line} path={path} files={files} className="min-w-0 break-words text-sm text-muted-foreground line-clamp-3" />
+            </div>
+          ))}
         </div>
       )} props={shown} all={fm} withReminders path={path} files={files} clamp className="flex-1 pt-space-xs [&>[data-badges]:last-child]:mt-auto" onChange={onChange} options={options} onRemoveValue={onRemoveValue} valueCount={valueCount} scopeName={scopeName} chosen={chosen} onEditValue={onEditValue} dateKeys={dateKeys} badges={badges} overdue={overdue} />
       {location && <p className={cn('flex items-start gap-space-xs break-words text-sm', PLACEHOLDER)}><TreeView aria-hidden className="size-4 shrink-0 translate-y-0.5" /><span className="min-w-0">{location}</span></p>}
